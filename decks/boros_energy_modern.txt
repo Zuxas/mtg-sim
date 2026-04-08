@@ -1,0 +1,34 @@
+// Boros Energy (modern)
+4 Ajani, Nacatl Pariah
+3 Arena of Glory
+4 Arid Mesa
+2 Elegant Parlor
+4 Flooded Strand
+4 Galvanic Discharge
+3 Goblin Bombardment
+4 Guide of Souls
+2 Marsh Flats
+1 Mountain
+4 Ocelot Pride
+4 Phlage, Titan of Fire's Fury
+2 Plains
+4 Ragavan, Nimble Pilferer
+3 Sacred Foundry
+3 Seasoned Pyromancer
+3 Static Prison
+2 Thraben Charm
+3 Voice of Victory
+1 Windswept Heath
+
+Sideboard
+2 Blood Moon
+2 Celestial Purge
+1 Clarion Conqueror
+1 Deafening Silence
+1 High Noon
+1 Meltdown
+2 Surgical Extraction
+1 The Legend of Roku
+1 Vexing Bauble
+1 Wear/Tear
+2 Wrath of the Skies

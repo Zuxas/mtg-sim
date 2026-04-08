@@ -156,6 +156,14 @@ def run_simulation(
     start = time.perf_counter()
 
     for i in range(n):
+        # Reset event bus each game so opponent model starts fresh
+        from engine.game_events import reset_event_bus
+        reset_event_bus()
+        # Re-subscribe if APL has an opponent model
+        if hasattr(apl, 'opp_model') and apl.opp_model is not None:
+            from engine.opponent_model import OpponentHandModel
+            apl.set_opponent(apl.opp_model.archetype_key, apl.opp_model.on_play)
+
         game_on_play = on_play
         if mixed_play_draw:
             game_on_play = random.random() < 0.5

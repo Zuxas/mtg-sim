@@ -29,7 +29,7 @@ ARCHETYPE_CLOCKS = {
     "elves":            {2: 15.0, 3: 40.0, 4: 25.0, 5: 12.0, 6: 5.0, 7: 3.0},
     "delver":           {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},
     "izzet delver":     {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},
-    "dimir tempo":      {3: 6.0, 4: 28.0, 5: 34.0, 6: 20.0, 7: 9.0, 8: 3.0},
+    "dimir tempo":      {3: 6.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 9.0, 8: 5.0},
     "lands":            {2: 5.0, 3: 25.0, 4: 30.0, 5: 20.0, 6: 12.0, 7: 5.0, 8: 3.0},
     "painter":          {2: 8.0, 3: 28.0, 4: 30.0, 5: 20.0, 6: 10.0, 7: 4.0},
     "mono red painter": {2: 8.0, 3: 28.0, 4: 30.0, 5: 20.0, 6: 10.0, 7: 4.0},
@@ -55,17 +55,52 @@ ARCHETYPE_CLOCKS = {
     "affinity":         {3: 15.0, 4: 40.0, 5: 30.0, 6: 12.0, 7: 3.0},
     "tron":             {4: 10.0, 5: 30.0, 6: 35.0, 7: 15.0, 8: 7.0, 9: 3.0},
     "murktide":         {3: 10.0, 4: 30.0, 5: 35.0, 6: 18.0, 7: 5.0, 8: 2.0},
-    "yawgmoth":         {4: 8.0, 5: 28.0, 6: 35.0, 7: 20.0, 8: 7.0, 9: 2.0},
-    "living end":       {3: 20.0, 4: 40.0, 5: 25.0, 6: 10.0, 7: 5.0},
-    "amulet":           {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0},
-    "boros energy":     {3: 10.0, 4: 35.0, 5: 35.0, 6: 15.0, 7: 4.0, 8: 1.0},
+    "yawgmoth":         {4: 2.4, 5: 19.0, 6: 19.8, 7: 20.6, 8: 11.2, 9: 8.6, 10: 5.6, 11: 4.8},  # measured
+    "living end":       {4: 3.4, 5: 37.4, 6: 24.0, 7: 11.0, 8: 9.8, 9: 4.4, 10: 3.0, 11: 2.0},  # measured
+    "amulet":           {5: 6.0, 6: 8.6, 7: 21.8, 8: 5.6, 9: 4.8, 10: 3.6, 11: 4.8, 12: 3.6, 13: 2.4},  # measured
+    "borosenergy":      {4: 6.2, 5: 17.6, 6: 23.2, 7: 22.4, 8: 12.4, 9: 6.0, 10: 3.4, 11: 3.4, 12: 1.6},  # measured
+    "boros energy":     {4: 6.2, 5: 17.6, 6: 23.2, 7: 22.4, 8: 12.4, 9: 6.0, 10: 3.4},
     "control":          {5: 5.0, 6: 15.0, 7: 30.0, 8: 30.0, 9: 15.0, 10: 5.0},
     "aggro":            {3: 10.0, 4: 30.0, 5: 35.0, 6: 18.0, 7: 5.0, 8: 2.0},
     "combo":            {2: 5.0, 3: 25.0, 4: 35.0, 5: 25.0, 6: 10.0},
     "midrange":         {4: 10.0, 5: 25.0, 6: 35.0, 7: 20.0, 8: 8.0, 9: 2.0},
     "tempo":            {3: 8.0, 4: 28.0, 5: 35.0, 6: 20.0, 7: 7.0, 8: 2.0},
     "ramp":             {4: 5.0, 5: 20.0, 6: 35.0, 7: 25.0, 8: 10.0, 9: 5.0},
-    "unknown":          {4: 5.0, 5: 20.0, 6: 35.0, 7: 25.0, 8: 10.0, 9: 5.0},
+    # Measured from GenericAPL simulation of real playbook decklists
+    "5colorhumans":       {3: 23.8, 4: 49.6, 5: 17.2, 6: 6.0, 7: 1.6, 8: 0.8, 9: 0.8},
+    "amulettitan":        {5: 6.0, 6: 8.6, 7: 21.8, 8: 5.6, 9: 4.8, 10: 3.6, 11: 4.8, 12: 3.6, 13: 2.4, 14: 4.2, 15: 3.4},
+    "borosaggro":         {4: 4.8, 5: 26.4, 6: 23.8, 7: 16.4, 8: 11.4, 9: 9.0, 10: 3.6, 11: 2.2, 12: 1.4},
+    "borosenergy":        {4: 6.2, 5: 17.6, 6: 23.2, 7: 22.4, 8: 12.4, 9: 6.0, 10: 3.4, 11: 3.4, 12: 1.6},
+    "dimirmidrange":      {4: 10.4, 5: 21.6, 6: 21.6, 7: 15.4, 8: 10.8, 9: 6.6, 10: 6.0, 11: 3.0, 12: 0.8},
+    "dimiroculus":        {4: 3.0, 5: 13.6, 6: 16.6, 7: 10.2, 8: 11.4, 9: 9.0, 10: 11.2, 11: 5.8, 12: 5.8},
+    "domainzoo":          {5: 4.4, 6: 8.8, 7: 15.0, 8: 17.0, 9: 12.6, 10: 13.4, 11: 8.6, 12: 5.0, 13: 5.0},
+    "eldrazitron":        {4: 4.2, 5: 32.8, 6: 15.8, 7: 21.0, 8: 6.2, 9: 7.0, 10: 4.4, 11: 3.8, 12: 0.8},
+    "glockulous":         {5: 20.6, 6: 27.2, 7: 17.4, 8: 11.6, 9: 8.0, 10: 5.4, 11: 4.6, 12: 2.0},
+    "golgariyawgmoth":    {4: 2.4, 5: 19.0, 6: 19.8, 7: 20.6, 8: 11.2, 9: 8.6, 10: 5.6, 11: 4.8},
+    "goryosvengeance":    {5: 0.8, 6: 7.4, 7: 13.8, 8: 13.6, 9: 12.4, 10: 11.8, 11: 8.6, 12: 8.0},
+    "izzetaffinity":      {5: 5.2, 6: 9.0, 7: 12.6, 8: 11.4, 9: 9.4, 10: 7.6, 11: 7.8, 12: 5.6},
+    "izzetprowess":       {6: 1.0, 7: 6.2, 8: 10.4, 9: 12.8, 10: 9.2, 11: 11.0, 12: 11.8, 13: 6.0},
+    "jeskaiblink":        {4: 1.6, 5: 14.8, 6: 16.8, 7: 21.8, 8: 9.4, 9: 7.6, 10: 7.8, 11: 6.2},
+    "livingend":          {4: 3.4, 5: 37.4, 6: 24.0, 7: 11.0, 8: 9.8, 9: 4.4, 10: 3.0, 11: 2.0},
+    "monogreenlandfall":  {4: 2.2, 5: 10.4, 6: 12.2, 7: 15.2, 8: 8.6, 9: 11.0, 10: 7.6, 11: 6.6},
+    "simicneoform":       {5: 4.4, 6: 10.0, 7: 13.8, 8: 11.2, 9: 11.8, 10: 9.8, 11: 7.0, 12: 6.4},
+    "uwblink":            {4: 8.4, 5: 36.2, 6: 24.4, 7: 14.8, 8: 7.6, 9: 3.4, 10: 2.4, 11: 1.2},
+    # Hand-tuned for Modern archetypes not in playbooks
+    "grinding breach":    {3: 10.0, 4: 35.0, 5: 30.0, 6: 15.0, 7: 7.0, 8: 3.0},   # Grinding Station combo T4 avg
+    "grindingbreach":     {3: 10.0, 4: 35.0, 5: 30.0, 6: 15.0, 7: 7.0, 8: 3.0},
+    "temur breach":       {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},    # Underworld Breach cascade T4-5
+    "temurbreach":        {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},
+    "mono blue belcher":  {1: 15.0, 2: 40.0, 3: 30.0, 4: 10.0, 5: 5.0},            # Glass cannon T1-2
+    "monobluebelcher":    {1: 15.0, 2: 40.0, 3: 30.0, 4: 10.0, 5: 5.0},
+    "orzhov blink":       {4: 5.0, 5: 20.0, 6: 30.0, 7: 25.0, 8: 12.0, 9: 5.0, 10: 3.0},  # Midrange T6 avg
+    "orzhovblink":        {4: 5.0, 5: 20.0, 6: 30.0, 7: 25.0, 8: 12.0, 9: 5.0, 10: 3.0},
+    "esper blink":        {4: 3.0, 5: 15.0, 6: 28.0, 7: 28.0, 8: 15.0, 9: 7.0, 10: 4.0},
+    "esperblink":         {4: 3.0, 5: 15.0, 6: 28.0, 7: 28.0, 8: 15.0, 9: 7.0, 10: 4.0},
+    "dimir murktide":     {3: 8.0, 4: 28.0, 5: 32.0, 6: 20.0, 7: 8.0, 8: 4.0},    # Tempo T4-5
+    "dimirmurktide":      {3: 8.0, 4: 28.0, 5: 32.0, 6: 20.0, 7: 8.0, 8: 4.0},
+    "eldrazi ramp":       {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0},   # Tron variant T5-6
+    "eldraziramp":        {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0},
+    "unknown":            {4: 5.0, 5: 20.0, 6: 35.0, 7: 25.0, 8: 10.0, 9: 5.0},
 }
 
 APL_REGISTRY = {}
@@ -80,21 +115,28 @@ def _try_register_apls():
 _try_register_apls()
 
 def _infer_archetype_key(deck_name: str, explicit: str = "") -> str:
-    s = (explicit or deck_name).lower()
-    # Check explicit archetype first
-    explicit_clean = explicit.lower().strip()
-    if explicit_clean in ARCHETYPE_CLOCKS:
-        return explicit_clean
-    # Try full name match against all known clocks (longest key wins)
+    s       = (explicit or deck_name).lower()
+    s_clean = s.replace(" ", "").replace("-", "").replace("'", "")
+
+    # Exact explicit match
+    if explicit.lower().strip() in ARCHETYPE_CLOCKS:
+        return explicit.lower().strip()
+
+    # Try full name match — both spaced and cleaned versions (longest key wins)
     for key in sorted(ARCHETYPE_CLOCKS, key=len, reverse=True):
-        if key in s:
+        key_clean = key.replace(" ", "").replace("-", "").replace("'", "")
+        if key in s or key_clean in s_clean:
             return key
+
     # Strip format prefixes and retry
     for prefix in ["legacy ", "modern ", "pioneer ", "standard "]:
         s = s.replace(prefix, "")
+    s_clean = s.replace(" ", "").replace("-", "").replace("'", "")
     for key in sorted(ARCHETYPE_CLOCKS, key=len, reverse=True):
-        if key in s:
+        key_clean = key.replace(" ", "").replace("-", "").replace("'", "")
+        if key in s or key_clean in s_clean:
             return key
+
     # Fuzzy fallbacks
     if any(k in s for k in ["burn","goblin","zoo","hammer","scales"]): return "aggro"
     if any(k in s for k in ["control","azorius","jeskai","esper"]):    return "control"

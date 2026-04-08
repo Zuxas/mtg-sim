@@ -24,6 +24,9 @@ from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.base_apl import BaseAPL
+from engine.opponent_model import OpponentHandModel, ARCHETYPE_HAND_PRIORS
+from engine.decision import meddling_mage_name, should_play_through_interaction
+from engine.game_events import get_event_bus, reset_event_bus, GameEvent
 
 
 # Card name constants — avoids magic strings scattered through logic
@@ -52,6 +55,91 @@ class HumansAPL(BaseAPL):
     name = "Legacy Humans"
     win_condition_damage = 20
     max_turns = 12
+
+    # Opponent model — set before simulation via set_opponent()
+    opp_model: Optional[OpponentHandModel] = None
+
+    def set_opponent(self, archetype_key: str, on_play: bool = True):
+        """Configure opponent model for this sim run."""
+        self.opp_model = OpponentHandModel(archetype_key=archetype_key, on_play=on_play)
+        # Subscribe to game events so model updates in real time
+        bus = get_event_bus()
+        bus.subscribe("opponent_plays",  self._on_opponent_plays)
+        bus.subscribe("opponent_mana",   self._on_opponent_mana)
+        bus.subscribe("hand_revealed",   self._on_hand_revealed)
+
+    def _on_opponent_plays(self, event: GameEvent):
+        """Update model when opponent plays a card."""
+        if self.opp_model:
+            self.opp_model.observe_play(event.data.get("card", ""))
+
+    def _on_opponent_mana(self, event: GameEvent):
+        """Update mana model when opponent passes with mana up."""
+        if self.opp_model:
+            self.opp_model.observe_mana_up(event.data.get("mana_left", 0))
+
+    def _on_hand_revealed(self, event: GameEvent):
+        """Update when we see their hand (e.g. Thoughtseize)."""
+        if self.opp_model:
+            for card in event.data.get("cards", []):
+                self.opp_model.observe_confirmed(card)
+
+    def _advance_opp_model(self, gs: GameState):
+        """
+        Advance opponent model each turn.
+        Simulates what the opponent plays from their archetype curve
+        so our hand probability estimates stay calibrated.
+        """
+        if not self.opp_model:
+            return
+        self.opp_model.advance_turn()
+
+        # Simulate opponent playing their curve
+        from engine.combat import get_opp_profile
+        from engine.opponent import OPPONENT_PROFILES
+        from engine.game_events import get_event_bus
+        profile = get_opp_profile(self.opp_model.archetype_key)
+        curve   = profile.get("curve", {})
+        plays   = curve.get(gs.turn, [])
+        bus     = get_event_bus()
+
+        for p, t in plays:
+            # Figure out a card name that matches this curve slot
+            priors = ARCHETYPE_HAND_PRIORS.get(self.opp_model.archetype_key, {})
+            # Find a card that hasn't been played yet and matches cost
+            for card_name, (copies, _) in priors.items():
+                if self.opp_model.played.count(card_name) < copies:
+                    bus.publish_opponent_play(card_name, gs.turn)
+                    break
+
+        # Estimate mana held up (opponent's lands - spells played)
+        # Simplified: assume they tap most of their mana most turns
+        import random
+        mana_left = random.choices([0, 1, 2], weights=[0.60, 0.25, 0.15])[0]
+        bus.publish_mana_state(mana_left, gs.turn)
+
+    def _name_meddling_mage(self, gs: GameState) -> str:
+        """Use CFR decision engine to pick optimal Meddling Mage name."""
+        if self.opp_model:
+            name, ev, ranked = meddling_mage_name(self.opp_model, turn=gs.turn)
+            gs._log(f"  Meddling Mage names '{name}' (EV={ev:.2f})")
+            return name
+        # Fallback: name Force of Will vs unknown opponent
+        return "Force of Will"
+
+    def _should_play_through(self, gs: GameState, spell_value: float = 2.0) -> bool:
+        """Check if we should cast into open mana."""
+        if not self.opp_model:
+            return True
+        cavern_up = any(c.name == "Cavern of Souls" for c in gs.battlefield())
+        should, ev_delta, reason = should_play_through_interaction(
+            self.opp_model, spell_value=spell_value,
+            our_board_size=len(gs.battlefield()),
+            we_have_cavern=cavern_up,
+        )
+        if not should:
+            gs._log(f"  Holding spell: {reason}")
+        return should
 
     # -----------------------------------------------------------------------
     # Mulligan
@@ -144,6 +232,9 @@ class HumansAPL(BaseAPL):
           6. Phantasmal Image (only with a good copy target)
           7. Non-creature spells
         """
+        # Advance opponent model each turn (Bayesian hand update)
+        self._advance_opp_model(gs)
+
         # 1. Land drop
         self._play_land_if_able(gs)
 
@@ -178,8 +269,18 @@ class HumansAPL(BaseAPL):
                               COPPERCOAT, URDNAN, ADELINE, VOICE_OF_VICTORY):
             for card in list(gs.hand()):
                 if card.name == priority_name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    if not self._should_play_through(gs, spell_value=2.0):
+                        continue   # hold key threats if FoW risk is too high
                     gs.cast_spell(card)
                     break
+
+        # Meddling Mage — cast and name optimally
+        for card in list(gs.hand()):
+            if card.name == MEDDLING_MAGE and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                mage_name = self._name_meddling_mage(gs)
+                card.named_card = mage_name   # attach name to card object
+                gs.cast_spell(card)
+                break
 
         # 5. Fill curve — cheapest non-Image creature first
         while True:

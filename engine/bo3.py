@@ -114,6 +114,12 @@ def simulate_bo3_match(
         n_g2=n_games,
     )
 
+    # Configure opponent model on APL if it supports it
+    from sim_bridge import _infer_archetype_key
+    opp_key = _infer_archetype_key(opp_archetype)
+    if hasattr(our_apl, 'set_opponent'):
+        our_apl.set_opponent(opp_key, on_play=True)
+
     # ── G1: pre-board ────────────────────────────────────────────────────
     # Priority: pre-computed G1 in opp_clock_dist → real match data → goldfish race
     if isinstance(opp_clock_dist, dict) and "_g1" in opp_clock_dist:

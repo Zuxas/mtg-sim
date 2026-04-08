@@ -1,19 +1,19 @@
 {
   "Legacy Humans": {
-    "Dimir Reanimator": 0.3,
-    "Lotus Combo": 3.0,
-    "Cephalid Breakfast": 0.3,
-    "Sneak And Show": 3.0,
-    "Mono Red Painter": 3.7,
-    "Doomsday": 3.0,
-    "Bant Nadu": 3.7,
-    "Dimir Tempo": 87.0,
-    "Eldrazi Stompy": 33.0,
-    "Mono Red Aggro": 44.3,
-    "Death And Taxes": 75.0,
-    "Mono Red Prison": 81.3,
-    "Jeskai Control": 98.7,
-    "Izzet Delver": 90.3,
-    "Four-Color": 97.3
+    "Lotus Combo": 60.0,
+    "Dimir Reanimator": 20.5,
+    "Cephalid Breakfast": 15.8,
+    "Sneak And Show": 30.5,
+    "Mono Red Painter": 47.2,
+    "Doomsday": 55.0,
+    "Bant Nadu": 52.6,
+    "Dimir Tempo": 83.8,
+    "Death And Taxes": 72.3,
+    "Jeskai Control": 98.8,
+    "Mono Red Aggro": 42.7,
+    "Eldrazi Stompy": 31.7,
+    "Izzet Delver": 86.0,
+    "Four-Color": 96.7,
+    "Mono Red Prison": 79.0
   }
 }

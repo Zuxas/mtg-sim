@@ -1,0 +1,13 @@
+[CardDB] Loading 162MB oracle database...
+[CardDB] 37,112 cards indexed
+[CardDB] 75,499 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  ✓ Tac guide: Boros Energy Modern
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Izzet Prowess - Standard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Legacy Humans
+  [No playbook for Izzet Delver — trying stub deck]
+OK  Izzet Delver: G1=86.0%  Match=91.3%  (6.9s)

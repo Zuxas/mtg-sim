@@ -1,0 +1,32 @@
+// White Humans - Final List (Optimized SB)
+2 Adeline, Resplendent Cathar
+4 Cavern of Souls
+4 Champion of the Parish
+4 Coppercoat Vanguard
+1 Eiganjo, Seat of the Empire
+4 Esper Sentinel
+4 Guide of Souls
+2 Karakas
+2 Kytheon, Hero of Akros
+2 Mutavault
+6 Plains
+4 Swords to Plowshares
+4 Thalia, Guardian of Thraben
+4 Thalia's Lieutenant
+2 Urdnan, Dromoka Warrior
+4 Valley of Gorgoroth
+4 Voice of Victory
+1 Witch Enchanter
+2 Zack Fair
+
+Sideboard
+2 Containment Priest
+2 Deafening Silence
+2 Faerie Macabre
+2 Grafdigger's Cage
+1 Path to Exile
+2 Stony Silence
+1 Wrath of the Skies
+1 Sheltered by Ghosts
+1 Sanctifier en-Vec
+1 Clarion Conqueror

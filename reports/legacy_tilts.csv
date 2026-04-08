@@ -1,0 +1,43 @@
+Deck_A_ID,Deck_A_Name,Deck_B_ID,Deck_B_Name,G1_WinPct_A,Tilt,Avg_Kill_A,Avg_Kill_B
+A,Legacy Humans,B,Lands,19.6,-30.4,6.32,4.36
+A,Legacy Humans,C,UR Delver,28.4,-21.6,6.32,4.96
+A,Legacy Humans,D,Elves,8.5,-41.5,6.32,3.61
+A,Legacy Humans,E,Painter,14.2,-35.8,6.32,4.08
+A,Legacy Humans,F,Stoneforge Midrange,54.4,4.4,6.32,5.97
+A,Legacy Humans,G,Golgari Hogaak,10.5,-39.5,6.32,3.83
+B,Lands,A,Legacy Humans,91.5,41.5,4.36,6.32
+B,Lands,C,UR Delver,74.6,24.6,4.36,4.96
+B,Lands,D,Elves,44.6,-5.4,4.36,3.61
+B,Lands,E,Painter,56.0,6.0,4.36,4.08
+B,Lands,F,Stoneforge Midrange,87.4,37.4,4.36,5.97
+B,Lands,G,Golgari Hogaak,50.3,0.3,4.36,3.83
+C,UR Delver,A,Legacy Humans,89.3,39.3,4.96,6.32
+C,UR Delver,B,Lands,45.6,-4.4,4.96,4.36
+C,UR Delver,D,Elves,28.2,-21.8,4.96,3.61
+C,UR Delver,E,Painter,40.4,-9.6,4.96,4.08
+C,UR Delver,F,Stoneforge Midrange,83.0,33.0,4.96,5.97
+C,UR Delver,G,Golgari Hogaak,33.5,-16.5,4.96,3.83
+D,Elves,A,Legacy Humans,97.1,47.1,3.61,6.32
+D,Elves,B,Lands,76.6,26.6,3.61,4.36
+D,Elves,C,UR Delver,87.3,37.3,3.61,4.96
+D,Elves,E,Painter,72.8,22.8,3.61,4.08
+D,Elves,F,Stoneforge Midrange,94.9,44.9,3.61,5.97
+D,Elves,G,Golgari Hogaak,67.9,17.9,3.61,3.83
+E,Painter,A,Legacy Humans,95.4,45.4,4.08,6.32
+E,Painter,B,Lands,65.6,15.6,4.08,4.36
+E,Painter,C,UR Delver,79.4,29.4,4.08,4.96
+E,Painter,D,Elves,50.0,0.0,4.08,3.61
+E,Painter,F,Stoneforge Midrange,91.7,41.7,4.08,5.97
+E,Painter,G,Golgari Hogaak,55.8,5.8,4.08,3.83
+F,Stoneforge Midrange,A,Legacy Humans,70.5,20.5,5.97,6.32
+F,Stoneforge Midrange,B,Lands,25.7,-24.3,5.97,4.36
+F,Stoneforge Midrange,C,UR Delver,37.6,-12.4,5.97,4.96
+F,Stoneforge Midrange,D,Elves,12.9,-37.1,5.97,3.61
+F,Stoneforge Midrange,E,Painter,20.4,-29.6,5.97,4.08
+F,Stoneforge Midrange,G,Golgari Hogaak,15.7,-34.3,5.97,3.83
+G,Golgari Hogaak,A,Legacy Humans,96.6,46.6,3.83,6.32
+G,Golgari Hogaak,B,Lands,71.7,21.7,3.83,4.36
+G,Golgari Hogaak,C,UR Delver,84.4,34.4,3.83,4.96
+G,Golgari Hogaak,D,Elves,57.4,7.4,3.83,3.61
+G,Golgari Hogaak,E,Painter,67.6,17.6,3.83,4.08
+G,Golgari Hogaak,F,Stoneforge Midrange,94.0,44.0,3.83,5.97

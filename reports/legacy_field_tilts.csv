@@ -1,0 +1,43 @@
+Deck_A_ID,Deck_A_Name,Deck_B_ID,Deck_B_Name,G1_WinPct_A,Tilt,Avg_Kill_A,Avg_Kill_B
+A,Humans,B,Lands,19.0,-31.0,6.32,4.36
+A,Humans,C,Delver,29.3,-20.7,6.32,5.0
+A,Humans,D,Elves,8.7,-41.3,6.32,3.61
+A,Humans,E,Painter,14.0,-36.0,6.32,4.08
+A,Humans,F,Stoneforge,37.0,-13.0,6.32,5.3
+A,Humans,G,Golgari Hogaak,10.3,-39.7,6.32,3.83
+B,Lands,A,Humans,91.4,41.4,4.36,6.32
+B,Lands,C,Delver,74.3,24.3,4.36,5.0
+B,Lands,D,Elves,44.5,-5.5,4.36,3.61
+B,Lands,E,Painter,55.8,5.8,4.36,4.08
+B,Lands,F,Stoneforge,79.2,29.2,4.36,5.3
+B,Lands,G,Golgari Hogaak,50.6,0.6,4.36,3.83
+C,Delver,A,Humans,87.4,37.4,5.0,6.32
+C,Delver,B,Lands,45.7,-4.3,5.0,4.36
+C,Delver,D,Elves,28.3,-21.7,5.0,3.61
+C,Delver,E,Painter,40.0,-10.0,5.0,4.08
+C,Delver,F,Stoneforge,69.2,19.2,5.0,5.3
+C,Delver,G,Golgari Hogaak,33.7,-16.3,5.0,3.83
+D,Elves,A,Humans,97.0,47.0,3.61,6.32
+D,Elves,B,Lands,76.6,26.6,3.61,4.36
+D,Elves,C,Delver,87.6,37.6,3.61,5.0
+D,Elves,E,Painter,72.4,22.4,3.61,4.08
+D,Elves,F,Stoneforge,90.2,40.2,3.61,5.3
+D,Elves,G,Golgari Hogaak,68.5,18.5,3.61,3.83
+E,Painter,A,Humans,95.3,45.3,4.08,6.32
+E,Painter,B,Lands,66.2,16.2,4.08,4.36
+E,Painter,C,Delver,79.2,29.2,4.08,5.0
+E,Painter,D,Elves,50.5,0.5,4.08,3.61
+E,Painter,F,Stoneforge,84.0,34.0,4.08,5.3
+E,Painter,G,Golgari Hogaak,55.7,5.7,4.08,3.83
+F,Stoneforge,A,Humans,83.6,33.6,5.3,6.32
+F,Stoneforge,B,Lands,38.7,-11.3,5.3,4.36
+F,Stoneforge,C,Delver,54.0,4.0,5.3,5.0
+F,Stoneforge,D,Elves,22.7,-27.3,5.3,3.61
+F,Stoneforge,E,Painter,32.9,-17.1,5.3,4.08
+F,Stoneforge,G,Golgari Hogaak,26.8,-23.2,5.3,3.83
+G,Golgari Hogaak,A,Humans,96.5,46.5,3.83,6.32
+G,Golgari Hogaak,B,Lands,71.7,21.7,3.83,4.36
+G,Golgari Hogaak,C,Delver,84.6,34.6,3.83,5.0
+G,Golgari Hogaak,D,Elves,56.9,6.9,3.83,3.61
+G,Golgari Hogaak,E,Painter,67.9,17.9,3.83,4.08
+G,Golgari Hogaak,F,Stoneforge,88.0,38.0,3.83,5.3

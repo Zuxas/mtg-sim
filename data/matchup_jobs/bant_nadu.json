@@ -1,1 +1,1 @@
-{"opp": "Bant Nadu", "field_pct": 4.3, "type": "combo", "n": 5000, "error": null, "g1": 54.3, "g2": 69.6, "g3": 48.8, "match": 61.4, "avg_turns": 4.1, "hard_stop": 0.0, "elapsed": 2.8}
+{"opp": "Bant Nadu", "our_deck": "Legacy Humans", "field_pct": 4.3, "type": "combo", "n": 1000, "error": null, "g1": 52.6, "g2": 68.7, "g3": 50.1, "match": 60.4, "avg_turns": 4.1, "hard_stop": 0.0, "elapsed": 2.1}

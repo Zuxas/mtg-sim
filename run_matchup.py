@@ -97,25 +97,45 @@ def main():
 
 
 def _run_combo(result, opp_name, format_name, n, seed):
-    """Combo matchup: hand-aware kill-turn sampler."""
-    from format_config import get_combo_dist
+    """
+    Combo matchup: G1 from ComboKillSampler (mainboard race),
+    G2/G3 from our APL's sideboard_premium (SB hate changes the calculus).
+
+    G1: can we kill them before they go off? (goldfish kill vs combo kill turn)
+    G2/G3: with hate pieces, their effective kill turn shifts later — we apply
+           our deck's specific SB premium rather than the combo model's G2/G3
+           (which doesn't know our SB plan and produces unreliable G3 estimates).
+    """
     from engine.combo_model import run_combo_matchup
 
-    # Update combo_model's kill dist dynamically
-    import engine.combo_model as cm
-    dist = get_combo_dist(opp_name, format_name)
-    # Patch the sampler for this archetype
-    _orig = cm.ComboKillSampler if hasattr(cm, 'ComboKillSampler') else None
-    # (combo_model uses its own internal dists — we inject via opp name match)
+    our_deck = result.get("our_deck", "Legacy Humans")
 
-    g1 = run_combo_matchup(opp_name, n=n, game=1, seed=seed)
-    g2 = run_combo_matchup(opp_name, n=n, game=2, seed=seed+1)
-    g3 = run_combo_matchup(opp_name, n=n, game=3, seed=seed+2)
-    match = bo3_win(g1["win_pct"], g2["win_pct"], g3["win_pct"])
+    # G1 from the combo kill-turn sampler (mainboard race, no hate)
+    g1_data = run_combo_matchup(opp_name, n=n, game=1, seed=seed)
+    g1      = g1_data["win_pct"]
+
+    # G2/G3: deck-specific SB premium
+    sb_premium = 6.0
+    try:
+        from generate_matchup_data import load_deck_and_apl
+        _, _, our_apl = load_deck_and_apl(our_deck, format_name)
+        if our_apl and hasattr(our_apl, 'sideboard_premium'):
+            sb_premium = our_apl.sideboard_premium(opp_name, format_name)
+    except Exception:
+        pass
+
+    g2 = min(98.0, g1 + sb_premium)
+    g3 = min(98.0, g1 + sb_premium * 0.75)   # G3: slightly diluted (both sides adjusted)
+
+    match = bo3_win(g1, g2, g3)
     result.update({
-        "g1": g1["win_pct"], "g2": g2["win_pct"], "g3": g3["win_pct"],
-        "match": match, "avg_turns": g1["avg_turns"],
-        "hard_stop": g1["hard_stop_rate"],
+        "g1":        g1,
+        "g2":        round(g2, 1),
+        "g3":        round(g3, 1),
+        "match":     match,
+        "avg_turns": g1_data.get("avg_turns", 0),
+        "hard_stop": g1_data.get("hard_stop_rate", 0),
+        "g1_source": "com",
     })
 
 

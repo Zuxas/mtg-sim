@@ -1,1 +1,1 @@
-{"opp": "Dimir Tempo", "field_pct": 10.5, "type": "fair", "n": 5000, "error": null, "g1": 85.1, "g2": 93.1, "g3": 90.7, "match": 97.1, "avg_turns": 11.0, "hard_stop": 0.0, "elapsed": 7.7}
+{"opp": "Dimir Tempo", "our_deck": "Legacy Humans", "field_pct": 10.5, "type": "fair", "n": 1000, "error": "Could not load deck for Dimir Tempo", "elapsed": 5.9}

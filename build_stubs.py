@@ -227,6 +227,86 @@ EXTRA_STUBS = {
             "Forest": 6, "Plains": 4, "Razorverge Thicket": 3,
         }
     },
+    # ── Legacy fair decks ─────────────────────────────────────────────────
+    "dimir_tempo": {
+        "format": "legacy",
+        "mainboard": {
+            "Murktide Regent": 4, "Dragon's Rage Channeler": 4,
+            "Force of Will": 4, "Daze": 4, "Brainstorm": 4,
+            "Ponder": 4, "Consider": 2, "Preordain": 2,
+            "Fatal Push": 4, "Expressive Iteration": 2,
+            "Mishra's Bauble": 4,
+            "Polluted Delta": 4, "Flooded Strand": 2,
+            "Volcanic Island": 2, "Underground Sea": 2,
+            "Island": 4, "Swamp": 2,
+        }
+    },
+    "eldrazi_stompy": {
+        "format": "legacy",
+        "mainboard": {
+            "Thought-Knot Seer": 4, "Reality Smasher": 4,
+            "Eldrazi Mimic": 4, "Endless One": 4,
+            "Matter Reshaper": 4, "Endbringer": 2,
+            "Chalice of the Void": 4, "Trinisphere": 2,
+            "Umezawa's Jitte": 2, "Dismember": 3,
+            "Ancient Tomb": 4, "City of Traitors": 4,
+            "Eldrazi Temple": 4, "Eye of Ugin": 4,
+            "Cavern of Souls": 4, "Wastes": 4,
+        }
+    },
+    "izzet_delver": {
+        "format": "legacy",
+        "mainboard": {
+            "Delver of Secrets": 4, "Dragon's Rage Channeler": 4,
+            "Murktide Regent": 2, "Force of Will": 4,
+            "Daze": 4, "Brainstorm": 4, "Ponder": 4,
+            "Lightning Bolt": 4, "Chain Lightning": 2,
+            "Expressive Iteration": 2, "Mishra's Bauble": 4,
+            "Volcanic Island": 4, "Scalding Tarn": 4,
+            "Flooded Strand": 4, "Island": 4,
+        }
+    },
+    "death_and_taxes": {
+        "format": "legacy",
+        "mainboard": {
+            "Thalia, Guardian of Thraben": 4,
+            "Recruiter of the Guard": 3,
+            "Stoneforge Mystic": 4,
+            "Sanctum Prelate": 2, "Palace Jailer": 2,
+            "Mother of Runes": 4, "Phelia, Exuberant Shepherd": 4,
+            "Aether Vial": 4, "Batterskull": 1, "Umezawa's Jitte": 1,
+            "Swords to Plowshares": 4,
+            "Karakas": 4, "Rishadan Port": 4, "Wasteland": 4,
+            "Plains": 8,
+        }
+    },
+    "four_color": {
+        "format": "legacy",
+        "mainboard": {
+            "Orcish Bowmasters": 4, "Psychic Frog": 4,
+            "Murktide Regent": 2, "Bowmasters": 2,
+            "Force of Will": 4, "Brainstorm": 4, "Ponder": 4,
+            "Thoughtseize": 4, "Fatal Push": 4,
+            "Expressive Iteration": 2, "Mishra's Bauble": 2,
+            "Volcanic Island": 2, "Underground Sea": 2,
+            "Tropical Island": 1, "Bayou": 1,
+            "Polluted Delta": 4, "Scalding Tarn": 4,
+            "Flooded Strand": 4, "Island": 2,
+        }
+    },
+    "mono_red_prison": {
+        "format": "legacy",
+        "mainboard": {
+            "Goblin Rabblemaster": 4, "Magus of the Moon": 4,
+            "Eidolon of the Great Revel": 4, "Monastery Swiftspear": 4,
+            "Blood Moon": 4, "Chalice of the Void": 4,
+            "Trinisphere": 3, "Fiery Islet": 4,
+            "Simian Spirit Guide": 4, "Chrome Mox": 4,
+            "Recruiter of the Guard": 2,
+            "Ancient Tomb": 4, "City of Traitors": 4,
+            "Mountain": 7,
+        }
+    },
 }
 
 out_path = 'data/stub_decks.py'

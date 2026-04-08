@@ -63,5 +63,16 @@
     "Rakdos Demons": 75.5,
     "Rakdos Prowess": 99.0,
     "Mono Black Demons": 70.7
+  },
+  "Legacy Humans (legacy)": {
+    "Dimir Reanimator": 20.5,
+    "Lotus Combo": 60.0,
+    "Cephalid Breakfast": 15.8,
+    "Sneak And Show": 30.5,
+    "Mono Red Painter": 47.2,
+    "Doomsday": 55.0,
+    "Bant Nadu": 52.6,
+    "Jeskai Control": 65.0,
+    "Mono Red Aggro": 59.0
   }
 }

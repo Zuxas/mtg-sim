@@ -1,1 +1,1 @@
-{"opp": "Dimir Reanimator", "field_pct": 22.4, "type": "combo", "n": 5000, "error": null, "g1": 20.5, "g2": 55.9, "g3": 50.3, "match": 38.4, "avg_turns": 2.8, "hard_stop": 0.0, "elapsed": 2.6}
+{"opp": "Dimir Reanimator", "our_deck": "Legacy Humans", "field_pct": 22.4, "type": "combo", "n": 1000, "error": null, "g1": 20.5, "g2": 55.4, "g3": 50.0, "match": 37.9, "avg_turns": 2.8, "hard_stop": 0.0, "elapsed": 2.1}

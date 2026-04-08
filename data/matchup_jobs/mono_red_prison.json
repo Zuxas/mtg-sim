@@ -1,1 +1,1 @@
-{"opp": "Mono Red Prison", "field_pct": 3.2, "type": "fair", "n": 5000, "error": null, "g1": 80.0, "g2": 88.0, "g3": 85.6, "match": 93.7, "avg_turns": 11.5, "hard_stop": 0.0, "elapsed": 7.9}
+{"opp": "Mono Red Prison", "our_deck": "Legacy Humans", "field_pct": 3.2, "type": "fair", "n": 1000, "error": "Could not load deck for Mono Red Prison", "elapsed": 6.1}

@@ -285,6 +285,12 @@ class HumansAPL(BaseAPL):
             return 8.0    # Path to Exile + Sheltered by Ghosts
         if any(k in opp for k in ("mono red", "burn", "aggro")):
             return 8.0    # Wrath of Skies + Sheltered by Ghosts
+        if any(k in opp for k in ("prison",)):
+            return 6.0    # Limited SB options vs prison, Stony Silence helps
+        if any(k in opp for k in ("four-color", "four color", "grixis", "bant")):
+            return 5.0    # Clarion + hate bears
+        if any(k in opp for k in ("delver", "izzet delver")):
+            return 6.0    # Cavern + Clarion
         if any(k in opp for k in ("control", "jeskai")):
             return 5.0    # Clarion Conqueror to go wide
         if any(k in opp for k in ("tempo", "delver")):

@@ -1,4 +1,8 @@
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-OK  Mono Red Aggro: G1=18.7%  Match=14.8%  (4.9s)
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+OK  Mono Red Aggro: G1=59.0%  Match=70.0%  (6.5s)

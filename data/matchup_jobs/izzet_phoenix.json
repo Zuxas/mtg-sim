@@ -1,1 +1,1 @@
-{"opp": "Izzet Phoenix", "our_deck": "5C Humans", "field_pct": 17.3, "type": "combo", "n": 1000, "error": null, "g1": 61.7, "g2": 63.8, "g3": 31.4, "match": 54.1, "avg_turns": 4.3, "hard_stop": 0.0, "elapsed": 1.8}
+{"opp": "Izzet Phoenix", "our_deck": "5C Humans", "field_pct": 17.3, "type": "combo", "n": 1000, "error": null, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "g1": 61.7, "g2": 67.7, "g3": 66.2, "match": 72.1, "elapsed": 5.5}

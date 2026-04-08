@@ -50,6 +50,7 @@ def main():
             mainboard=main_deck,
             on_play=args.on_play,
             verbose=True,
+            opp_archetype=args.opponent,
         )
 
         print(f"\n{'─'*65}")

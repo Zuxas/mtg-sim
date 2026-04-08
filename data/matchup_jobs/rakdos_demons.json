@@ -1,1 +1,1 @@
-{"opp": "Rakdos Demons", "our_deck": "5C Humans", "field_pct": 5.3, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 75.5, "g2": 83.5, "g3": 81.1, "match": 89.7, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 6.4}
+{"opp": "Rakdos Demons", "our_deck": "5C Humans", "field_pct": 5.3, "type": "fair", "n": 1000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 71.0, "g3": 69.5, "match": 76.5, "elapsed": 6.6}

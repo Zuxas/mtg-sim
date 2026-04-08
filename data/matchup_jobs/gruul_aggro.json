@@ -1,1 +1,1 @@
-{"opp": "Gruul Aggro", "our_deck": "Izzet Prowess", "field_pct": 4.7, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 88.2, "g2": 94.2, "g3": 92.7, "match": 98.1, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 7.1}
+{"opp": "Gruul Aggro", "our_deck": "Izzet Prowess", "field_pct": 4.7, "type": "fair", "n": 1000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 71.0, "g3": 69.5, "match": 76.5, "elapsed": 7.6}

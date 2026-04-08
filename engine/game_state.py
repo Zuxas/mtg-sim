@@ -161,20 +161,22 @@ class GameState:
     # -----------------------------------------------------------------------
 
     def run_turn(self):
+        """Begin a new turn: untap, upkeep, draw. Main phases and combat
+        are driven by the APL runner (base_apl.run_game) so it can insert
+        decisions between phases."""
         self.turn += 1
         self._untap()
         self._upkeep()
         self._draw()
-        self._combat()
         # Track milestone damage and tempo features for ML
         self._update_ml_trackers()
-        # _end() is called by base_apl after main_phase2
 
     def _untap(self):
         self.phase = Phase.UNTAP
         self.land_played = False
         self.mana_pool.empty()
         for card in self.zones.battlefield:
+            card.tapped = False
             card.summoning_sickness = False
         self._log(f"T{self.turn} — untap ({len(self.zones.lands_on_battlefield())} lands)")
 
@@ -227,7 +229,16 @@ class GameState:
             self.zones.draw(1)
 
 
-    def _combat(self):
+    def run_combat(self):
+        """
+        Combat phase — called by APL runner between main phases.
+        
+        Correct turn order: untap → upkeep → draw → MAIN1 → COMBAT → MAIN2 → end
+        """
+        self.phase = Phase.COMBAT
+        self._do_combat()
+
+    def _do_combat(self):
         """
         Combat with accurate card-specific trigger modeling.
 
@@ -415,6 +426,7 @@ class GameState:
         )
         token.tags.add(Tag.CREATURE)
         token.summoning_sickness = True
+        token.turn_entered = self.turn
         self.zones.battlefield.append(token)
         self._fire_etb_triggers(token)
         return token
@@ -441,16 +453,181 @@ class GameState:
     # -----------------------------------------------------------------------
 
     def tap_lands(self):
+        """Tap all untapped lands for mana. Skips already-tapped lands."""
         for land in self.zones.lands_on_battlefield():
-            self.mana_pool.add_land(land.type_line, land.name)
+            if not land.tapped:
+                land.tapped = True
+                self.mana_pool.add_land(land.type_line, land.name)
+
+    # -------------------------------------------------------------------
+    # Land classification helpers (Phase 0B)
+    # -------------------------------------------------------------------
+
+    # Fetch lands: sacrifice → search library for a land → put into play
+    FETCH_LANDS = {
+        "flooded strand", "polluted delta", "bloodstained mire",
+        "windswept heath", "wooded foothills", "scalding tarn",
+        "misty rainforest", "verdant catacombs", "arid mesa",
+        "marsh flats", "prismatic vista", "fabled passage",
+    }
+
+    # Fetch land → which basic land types it can find
+    FETCH_TARGETS = {
+        "flooded strand":    {"plains", "island"},
+        "polluted delta":    {"island", "swamp"},
+        "bloodstained mire": {"swamp", "mountain"},
+        "windswept heath":   {"forest", "plains"},
+        "wooded foothills":  {"mountain", "forest"},
+        "scalding tarn":     {"island", "mountain"},
+        "misty rainforest":  {"forest", "island"},
+        "verdant catacombs": {"swamp", "forest"},
+        "arid mesa":         {"mountain", "plains"},
+        "marsh flats":       {"plains", "swamp"},
+        "prismatic vista":   None,   # any basic
+        "fabled passage":    None,   # any basic
+    }
+
+    # Shock lands: pay 2 life or enter tapped
+    SHOCK_LANDS = {
+        "hallowed fountain", "watery grave", "blood crypt",
+        "stomping ground", "temple garden", "steam vents",
+        "overgrown tomb", "sacred foundry", "breeding pool",
+        "godless shrine",
+    }
+
+    # Lands that always enter tapped
+    TAPLANDS = {
+        "temple of silence", "temple of deceit", "temple of malice",
+        "temple of abandon", "temple of plenty", "temple of mystery",
+        "temple of triumph", "temple of enlightenment", "temple of epiphany",
+        "temple of malady",
+        # Gain lands
+        "scoured barrens", "tranquil cove", "bloodfell caves",
+        "rugged highlands", "blossoming sands", "dismal backwater",
+        "swiftwater cliffs", "jungle hollow", "wind-scarred crag",
+        "thornwood falls",
+        # Bridges
+        "razortide bridge", "mistvault bridge", "drossforge bridge",
+        "slagwoods bridge", "thornglint bridge", "goldmire bridge",
+        "silverbluff bridge", "tanglepool bridge", "rustvale bridge",
+        "darkmoss bridge",
+    }
+
+    # Fast lands: enter untapped if you control ≤2 other lands
+    FAST_LANDS = {
+        "seachrome coast", "darkslick shores", "blackcleave cliffs",
+        "copperline gorge", "razorverge thicket", "spirebluff canal",
+        "blooming marsh", "concealed courtyard", "inspiring vantage",
+        "botanical sanctum",
+    }
+
+    def _is_fetch_land(self, card: Card) -> bool:
+        return card.name.lower() in self.FETCH_LANDS
+
+    def _enters_tapped(self, card: Card) -> bool:
+        """Determine if a land enters the battlefield tapped."""
+        name = card.name.lower()
+
+        # Always-tapped lands
+        if name in self.TAPLANDS:
+            return True
+
+        # Shock lands: in goldfish, always pay 2 life (perfect player wants speed)
+        if name in self.SHOCK_LANDS:
+            return False  # pay 2 life, enter untapped
+
+        # Fast lands: untapped if ≤2 other lands
+        if name in self.FAST_LANDS:
+            other_lands = self.zones.count_lands_in_play() - 1  # exclude self
+            return other_lands > 2
+
+        # Fabled Passage: tapped if <4 lands
+        if name == "fabled passage":
+            return self.zones.count_lands_in_play() < 4
+
+        return False  # default: untapped
+
+    def _resolve_fetch(self, card: Card) -> bool:
+        """
+        Resolve a fetch land: sacrifice it, search library for a matching
+        land, put that land onto the battlefield.
+        Returns True if a land was found and played.
+        """
+        name = card.name.lower()
+        targets = self.FETCH_TARGETS.get(name)
+
+        # Find best matching land in library
+        best = None
+        for lib_card in self.zones.library:
+            if not lib_card.is_land():
+                continue
+            t = lib_card.type_line.lower()
+            if targets is None:
+                # Prismatic Vista / Fabled Passage: any basic
+                if "basic" in t:
+                    best = lib_card
+                    break
+            else:
+                # Named fetch: find land with matching basic type
+                for basic_type in targets:
+                    if basic_type in t:
+                        best = lib_card
+                        break
+                if best:
+                    break
+
+        if not best:
+            return False
+
+        # Sacrifice the fetch (already on battlefield from play_land)
+        self.zones.battlefield.remove(card)
+        self.zones.graveyard.append(card)
+
+        # Put found land onto battlefield from library
+        self.zones.library.remove(best)
+        self.zones.battlefield.append(best)
+        best.turn_entered = self.turn
+
+        # Most fetched lands enter untapped (except Fabled Passage w/ <4 lands)
+        enters_tapped = self._enters_tapped(best)
+        if not enters_tapped:
+            best.tapped = True  # tap immediately for mana
+            self.mana_pool.add_land(best.type_line, best.name)
+        else:
+            best.tapped = True  # enters tapped, no mana this turn
+
+        self.zones.shuffle()
+        self._log(f"  Fetch: {card.name} → {best.name}"
+                  f"{' (tapped)' if enters_tapped else ''}")
+        return True
 
     def play_land(self, card: Card) -> bool:
         if self.land_played or card not in self.zones.hand or not card.is_land():
             return False
         self.zones.play_from_hand(card)
         self.land_played = True
-        self.mana_pool.add_land(card.type_line, card.name)
-        self._log(f"  Land: {card.name} ({self.zones.count_lands_in_play()} total)")
+        card.turn_entered = self.turn
+
+        # Fetch lands: sacrifice and search
+        if self._is_fetch_land(card):
+            self._resolve_fetch(card)
+            return True
+
+        # Shock lands: pay 2 life in goldfish (perfect player wants speed)
+        if card.name.lower() in self.SHOCK_LANDS:
+            self.life -= 2
+            self._log(f"  Shock: {card.name} (pay 2 life, life={self.life})")
+
+        # Check if land enters tapped
+        if self._enters_tapped(card):
+            card.tapped = True  # enters tapped, no mana this turn
+            self._log(f"  Land: {card.name} (enters tapped, "
+                      f"{self.zones.count_lands_in_play()} total)")
+        else:
+            card.tapped = True  # tap immediately for mana
+            self.mana_pool.add_land(card.type_line, card.name)
+            self._log(f"  Land: {card.name} "
+                      f"({self.zones.count_lands_in_play()} total)")
         return True
 
     def cast_spell(self, card: Card) -> bool:
@@ -464,6 +641,7 @@ class GameState:
             self.zones.cast_to_graveyard(card)
         else:
             self.zones.play_from_hand(card)
+            card.turn_entered = self.turn
             if card.has(Tag.CREATURE) and KWTag.HASTE not in card.tags:
                 card.summoning_sickness = True
             self._fire_etb_triggers(card)
@@ -479,6 +657,7 @@ class GameState:
         if int(vial.counters) != int(card.cmc):
             return False
         self.zones.play_from_hand(card)
+        card.turn_entered = self.turn
         if KWTag.HASTE not in card.tags:
             card.summoning_sickness = True
         self._fire_etb_triggers(card)

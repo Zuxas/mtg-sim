@@ -76,7 +76,8 @@ class ManaPool:
         t = type_line.lower()
         n = land_name.lower()
 
-        # Fetchlands — sac to find any land, model as 1 flex
+        # Fetchlands — should be handled by GameState._resolve_fetch() now.
+        # If we still see one here, give 1 flex as fallback.
         FETCH_NAMES = {
             "flooded strand", "polluted delta", "bloodstained mire",
             "windswept heath", "wooded foothills", "scalding tarn",

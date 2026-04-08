@@ -1,1 +1,1 @@
-{"opp": "Izzet Lessons", "our_deck": "Izzet Prowess", "field_pct": 6.3, "type": "combo", "n": 1000, "error": null, "g1": 61.0, "g2": 67.0, "g3": 65.5, "match": 71.2, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "elapsed": 6.5}
+{"opp": "Izzet Lessons", "our_deck": "Izzet Prowess", "field_pct": 6.3, "type": "combo", "n": 1000, "error": null, "g1_source": "db", "g1": 52.0, "g2": 58.0, "g3": 56.5, "match": 58.2, "elapsed": 6.8}

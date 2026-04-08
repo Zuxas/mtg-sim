@@ -345,16 +345,21 @@ class HumansAPL(BaseAPL):
 
     def main_phase(self, gs: GameState):
         """
-        Humans APL priority:
-          1. Play land
-          2. Cast Aether Vial (T1, if not in play)
-          3. Deploy via Vial (end of opponent's turn is ideal, but goldfish = main phase)
-          4. Lords first (Champion, Lieutenant, Thalia)
-          5. Fill curve — cheapest non-Image creature first
-          6. Phantasmal Image (only with a good copy target)
-          7. Non-creature spells
+        Main Phase 1 (PRE-COMBAT) — Perfect player logic:
+        Only cast spells that increase THIS turn's combat damage.
+
+        Pre-combat priorities:
+          1. Play land (always)
+          2. Cast Aether Vial (T1)
+          3. Deploy via Vial (free creature, might pump Champion)
+          4. Thalia's Lieutenant IF Humans will attack (ETB pumps them)
+          5. Any Human IF Champion of the Parish will attack (grows Champion)
+          6. Coppercoat Vanguard (combat-only +1/+0 to attacking Humans)
+          7. Save everything else for main_phase2 (post-combat)
         """
-        # Advance opponent model each turn (Bayesian hand update)
+        from engine.keywords import KWTag
+
+        # Advance opponent model each turn
         self._advance_opp_model(gs)
 
         # 1. Land drop
@@ -368,28 +373,82 @@ class HumansAPL(BaseAPL):
                     gs.cast_spell(card)
                     break
 
-        # 3. Deploy via Vial (treat as main phase deploy for goldfish purposes)
+        # 3. Deploy via Vial (free — doesn't cost mana, so always do it pre-combat)
         vial = gs.vial_in_play()
         if vial and vial.counters > 0:
             viallable = gs.castable_via_vial()
             if viallable:
-                # Prioritize: lords first, then by CMC
                 def vial_priority(c):
-                    if c.name == CHAMPION:           return 0
-                    if c.name == LIEUTENANT:         return 1
-                    if c.name == THALIA:             return 2
-                    if c.name == KITESAIL_FREEBOOTER: return 3
-                    if c.name == MEDDLING_MAGE:      return 4
+                    if c.name == LIEUTENANT:          return 0  # pumps board
+                    if c.name == CHAMPION:            return 1
+                    if c.name == COPPERCOAT:          return 2
+                    if c.name == THALIA:              return 3
                     return 5
                 target = min(viallable, key=vial_priority)
                 gs.put_via_vial(target, vial)
 
-        # 4. Lords + key threats — ML evaluator picks optimal order if available
+        # --- Determine which creatures will attack this combat ---
+        attackers = [
+            c for c in gs.zones.creatures_on_battlefield()
+            if not c.summoning_sickness or KWTag.HASTE in c.tags
+        ]
+        has_attacking_champion = any(c.name == CHAMPION for c in attackers)
+        has_attacking_humans = any("human" in c.type_line.lower() for c in attackers)
+        num_attacking_humans = sum(1 for c in attackers if "human" in c.type_line.lower())
+
+        # 4. Thalia's Lieutenant — cast pre-combat ONLY if Humans will attack
+        #    ETB gives +1/+1 to each Human on board → direct damage increase
+        if has_attacking_humans:
+            for card in list(gs.hand()):
+                if card.name == LIEUTENANT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs._log(f"  [PRE-COMBAT] Lieutenant pumps {num_attacking_humans} attacking Humans")
+                    gs.cast_spell(card)
+                    break
+
+        # 5. If Champion is attacking, cast other Humans pre-combat to grow him
+        if has_attacking_champion:
+            for priority_name in (COPPERCOAT, THALIA, KYTHEON, URDNAN,
+                                  ESPER_SENTINEL, GUIDE_OF_SOULS, VOICE_OF_VICTORY):
+                for card in list(gs.hand()):
+                    if (card.name == priority_name
+                        and "human" in card.type_line.lower()
+                        and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                        gs._log(f"  [PRE-COMBAT] {card.name} grows attacking Champion")
+                        gs.cast_spell(card)
+                        break
+
+        # 6. Coppercoat Vanguard — gives +1/+0 to other attacking Humans during combat
+        #    Cast pre-combat if there are attacking Humans (even if Champion isn't attacking)
+        if has_attacking_humans and num_attacking_humans >= 2:
+            for card in list(gs.hand()):
+                if (card.name == COPPERCOAT
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)
+                    and card in gs.hand()):  # might have been cast above
+                    gs._log(f"  [PRE-COMBAT] Coppercoat buffs {num_attacking_humans} Humans in combat")
+                    gs.cast_spell(card)
+                    break
+
+        # Everything else waits for main_phase2 (post-combat)
+
+    def main_phase2(self, gs: GameState):
+        """
+        Main Phase 2 (POST-COMBAT) — Cast everything that didn't need
+        to be pre-combat. These creatures will be summoning sick anyway.
+
+        Priority order:
+          1. Lords (Champion, Lieutenant, Thalia, Coppercoat)
+          2. Key threats (Adeline, Kytheon, Urdnan, Voice)
+          3. Fill curve — cheapest creature first
+          4. Phantasmal Image (with copy target)
+          5. Meddling Mage (with naming logic)
+          6. Non-creature spells
+        """
+        # Lords + key threats
         priority_names = (CHAMPION, LIEUTENANT, KYTHEON, THALIA,
-                          COPPERCOAT, URDNAN, ADELINE, VOICE_OF_VICTORY)
+                          COPPERCOAT, URDNAN, ADELINE, VOICE_OF_VICTORY,
+                          ESPER_SENTINEL, GUIDE_OF_SOULS)
 
         if self._evaluator is not None:
-            # ML model picks optimal casting order each iteration
             while True:
                 castable_now = [
                     card for card in gs.hand()
@@ -402,24 +461,21 @@ class HumansAPL(BaseAPL):
                 if best is None or not gs.cast_spell(best):
                     break
         else:
-            # Fallback: static priority order
             for priority_name in priority_names:
                 for card in list(gs.hand()):
                     if card.name == priority_name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                        if not self._should_play_through(gs, spell_value=2.0):
-                            continue
                         gs.cast_spell(card)
                         break
 
-        # Meddling Mage — cast and name optimally
+        # Meddling Mage
         for card in list(gs.hand()):
             if card.name == MEDDLING_MAGE and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 mage_name = self._name_meddling_mage(gs)
-                card.named_card = mage_name   # attach name to card object
+                card.named_card = mage_name
                 gs.cast_spell(card)
                 break
 
-        # 5. Fill curve — cheapest non-Image creature first
+        # Fill curve — cheapest non-Image creature
         while True:
             creatures = [
                 c for c in gs.hand()
@@ -433,7 +489,7 @@ class HumansAPL(BaseAPL):
             if not gs.cast_spell(card):
                 break
 
-        # 6. Phantasmal Image — only with a worthwhile copy target
+        # Phantasmal Image — only with a worthwhile copy target
         best_target = max(
             [c for c in gs.battlefield() if c.has(Tag.CREATURE)],
             key=lambda c: c.effective_power(),
@@ -445,22 +501,7 @@ class HumansAPL(BaseAPL):
                     gs.cast_spell(card)
                     break
 
-        # 7. Non-creature spells
-        while True:
-            others = [
-                c for c in gs.hand()
-                if not c.is_land()
-                and not c.has(Tag.CREATURE)
-                and c.name != AETHER_VIAL
-                and gs.mana_pool.can_cast(c.mana_cost, c.cmc)
-            ]
-            if not others:
-                break
-            card = min(others, key=lambda c: c.cmc)
-            if not gs.cast_spell(card):
-                break
-
-        # 5. Non-creature spells (discard, disruption) if mana left
+        # Non-creature spells
         while True:
             others = [
                 c for c in gs.hand()

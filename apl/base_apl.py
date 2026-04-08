@@ -103,19 +103,23 @@ class BaseAPL(ABC):
 
         # --- Turn loop ---
         for _ in range(self.max_turns):
+            # Untap, upkeep, draw
             gs.run_turn()
-            gs.tap_lands()
 
+            # ── Main Phase 1: play land, cast pre-combat spells ──
+            gs.phase = Phase.MAIN1
+            gs.tap_lands()
             self.main_phase(gs)
 
-            # Combat is handled by run_turn() internally.
-            # main_phase2 handles post-combat plays (haste creatures held back,
-            # remaining mana after combat, instants at end of turn).
-            gs.phase = "main2"
-            gs.mana_pool.empty()
-            gs.tap_lands()
+            # ── Combat ──
+            gs.run_combat()
+
+            # ── Main Phase 2: cast post-combat spells with leftover mana ──
+            gs.phase = Phase.MAIN2
             self.main_phase2(gs)
-            gs._end()  # EOT cleanup: sacrifice Mobilize tokens, revert Mutavault
+
+            # ── End step ──
+            gs._end()
 
             lands_this_turn  = gs.zones.count_lands_in_play()
             spells_this_turn = len(gs.zones.battlefield) - lands_this_turn

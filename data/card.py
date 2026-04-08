@@ -67,8 +67,13 @@ class Card:
     # For clone effects — name of the card being copied
     copying: Optional[str] = None
 
-    # Summoning sickness — True until owner's untap step
+    # --- Permanent state tracking (Phase 0A) ---
+    # Summoning sickness — True until controller's next untap step
     summoning_sickness: bool = False
+    # Tapped state — lands tap for mana, creatures tap to attack
+    tapped: bool = False
+    # Which turn this permanent entered the battlefield (0 = not on battlefield)
+    turn_entered: int = 0
 
     def __post_init__(self):
         self._auto_tag()

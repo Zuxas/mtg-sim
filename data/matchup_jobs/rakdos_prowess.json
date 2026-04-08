@@ -1,1 +1,1 @@
-{"opp": "Rakdos Prowess", "our_deck": "5C Humans", "field_pct": 5.0, "type": "fair", "n": 1000, "error": "Could not load deck for Rakdos Prowess", "elapsed": 5.9}
+{"opp": "Rakdos Prowess", "our_deck": "5C Humans", "field_pct": 5.0, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 99.0, "g2": 98.0, "g3": 98.0, "match": 99.9, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 6.4}

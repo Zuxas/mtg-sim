@@ -29,7 +29,8 @@
     "Esper Blink": 53.0,
     "Izzet Affinity": 43.3,
     "Domain Zoo": 85.2,
-    "Mono Red Aggro": 38.5
+    "Mono Red Aggro": 38.5,
+    "Dimir Murktide": 92.9
   },
   "Izzet Prowess (standard)": {
     "Dimir Midrange": 61.0,
@@ -43,7 +44,9 @@
     "Sultai Reanimator": 61.2,
     "Mono Red Aggro": 18.7,
     "Azorius Control": 83.5,
-    "Boros Aggro": 8.0
+    "Gruul Aggro": 88.2,
+    "Simic Ouroboroid": 13.4,
+    "Boros Aggro": 70.1
   },
   "5C Humans (pioneer)": {
     "Izzet Phoenix": 61.7,
@@ -52,6 +55,13 @@
     "Abzan Greasefang": 61.4,
     "Mono Green Devotion": 62.4,
     "Azorius Control": 100.0,
-    "Rakdos Midrange": 53.5
+    "Rakdos Aggro": 96.3,
+    "Jund Sacrifice": 69.9,
+    "Selesnya Company": 53.8,
+    "Rakdos Midrange": 53.5,
+    "Rakdos Transmogrify": 98.5,
+    "Rakdos Demons": 75.5,
+    "Rakdos Prowess": 99.0,
+    "Mono Black Demons": 70.7
   }
 }

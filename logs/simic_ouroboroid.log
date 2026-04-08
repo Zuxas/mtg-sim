@@ -1,18 +1,4 @@
-Traceback (most recent call last):
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 43, in main
-    _run_fair(result, our_deck, opp_name, format_name, n, seed)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 106, in _run_fair
-    raise ValueError(f"Could not load deck for {opp_name}")
-ValueError: Could not load deck for Simic Ouroboroid
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-  ✓ Tac guide: Boros Energy Modern
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Izzet Prowess - Standard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Legacy Humans
-  [No deck found for Simic Ouroboroid]
-ERR Simic Ouroboroid: Could not load deck for Simic Ouroboroid
+OK  Simic Ouroboroid: G1=13.4%  Match=7.0%  (5.0s)

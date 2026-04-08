@@ -1,1 +1,1 @@
-{"opp": "Selesnya Company", "our_deck": "5C Humans", "field_pct": 6.2, "type": "fair", "n": 1000, "error": "Could not load deck for Selesnya Company", "elapsed": 5.8}
+{"opp": "Selesnya Company", "our_deck": "5C Humans", "field_pct": 6.2, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 53.8, "g2": 58.8, "g3": 57.3, "match": 59.9, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 6.4}

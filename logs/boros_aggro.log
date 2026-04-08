@@ -1,12 +1,4 @@
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-  ✓ Tac guide: Boros Energy Modern
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Izzet Prowess - Standard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Legacy Humans
-  [21 cards loaded from local DB — no network calls]
-  Loaded: 75 main | 0 sideboard
-OK  Boros Aggro: G1=8.0%  Match=3.2%  (5.6s)
+OK  Boros Aggro: G1=70.1%  Match=82.0%  (5.1s)

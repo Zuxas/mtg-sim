@@ -17,6 +17,35 @@ DB_PATH = os.path.join(
     "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
 )
 
+# Canonical DB names → names we use in format_config/parallel_launcher
+# Keys are what we call them, values are what the DB calls them
+NAME_MAP = {
+    # Modern
+    "Domain Zoo":         "Domain Aggro",
+    "Dimir Murktide":     "Dimir Frog",
+    "Izzet Affinity":     "Affinity",
+    "Grinding Breach":    "Grinding Breach",
+    "Goryo's Vengeance":  "Esper Reanimator",
+    "Temur Breach":       "Simic Ritual",
+    "Esper Blink":        "Esper Blink",
+    "Jeskai Blink":       "Jeskai Blink",
+    "Orzhov Blink":       "Orzhov Blink",
+    # Standard
+    "Izzet Cauldron":     "Izzet Cauldron",
+    "Gruul Aggro":        "Gruul Aggro",
+    "Boros Aggro":        "Boros Aggro",
+    "Simic Ouroboroid":   "Simic Ouroboroid",
+    "Sultai Reanimator":  "Sultai Reanimator",
+    # Pioneer
+    "Rakdos Aggro":       "Rakdos Aggro",
+    "Jund Sacrifice":     "Rakdos Sacrifice",
+    "Selesnya Company":   "Selesnya Company",
+}
+
+def _normalize(name: str) -> str:
+    """Translate our deck name to the DB's archetype name."""
+    return NAME_MAP.get(name, name)
+
 
 def _conn():
     if not os.path.exists(DB_PATH):
@@ -57,38 +86,33 @@ def get_real_field(format_name: str, top_n: int = 15) -> dict:
 
 @lru_cache(maxsize=64)
 def get_real_matchup(our_deck: str, opp_deck: str,
-                     format_name: str, min_matches: int = 30) -> float | None:
-    """
-    Real G1 win rate from tournament matchup_matrix.
-    Returns None if insufficient data.
-    """
+                     format_name: str, min_matches: int = 20) -> float | None:
+    """Real G1 win rate from tournament matchup_matrix. Returns None if insufficient data."""
     conn = _conn()
     if not conn:
         return None
 
+    our_db  = _normalize(our_deck)
+    opp_db  = _normalize(opp_deck)
+
     cur = conn.cursor()
+    # Try direct lookup
     cur.execute("""
         SELECT winrate, matches FROM matchup_matrix
-        WHERE format=? AND archetype_a=? AND archetype_b=?
-        AND matches >= ?
-    """, (format_name, our_deck, opp_deck, min_matches))
+        WHERE format=? AND archetype_a=? AND archetype_b=? AND matches >= ?
+    """, (format_name, our_db, opp_db, min_matches))
     row = cur.fetchone()
-    conn.close()
-
     if row:
+        conn.close()
         return round(row[0] * 100, 1)
 
-    # Try reversed (we may be listed as archetype_b)
-    conn = _conn()
-    cur = conn.cursor()
+    # Try reversed
     cur.execute("""
         SELECT (1.0 - winrate) * 100, matches FROM matchup_matrix
-        WHERE format=? AND archetype_a=? AND archetype_b=?
-        AND matches >= ?
-    """, (format_name, opp_deck, our_deck, min_matches))
+        WHERE format=? AND archetype_a=? AND archetype_b=? AND matches >= ?
+    """, (format_name, opp_db, our_db, min_matches))
     row = cur.fetchone()
     conn.close()
-
     return round(row[0], 1) if row else None
 
 

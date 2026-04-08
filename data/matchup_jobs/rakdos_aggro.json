@@ -1,1 +1,1 @@
-{"opp": "Rakdos Aggro", "our_deck": "5C Humans", "field_pct": 9.4, "type": "fair", "n": 1000, "error": "Could not load deck for Rakdos Aggro", "elapsed": 5.7}
+{"opp": "Rakdos Aggro", "our_deck": "5C Humans", "field_pct": 9.4, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 96.3, "g2": 98.0, "g3": 98.0, "match": 99.8, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 6.3}

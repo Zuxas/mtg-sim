@@ -212,10 +212,23 @@ def adjusted_kill_dist(base_dist: dict, delay: float) -> dict:
 def run_combo_matchup(
     archetype:   str,
     n:           int   = 10000,
-    game:        int   = 1,       # 1=G1 (no SB), 2=G2 (we SB'd), 3=G3 (both SB'd, opp on play)
+    game:        int   = 1,
     on_play:     bool  = True,
     seed:        int   = 42,
+    format_name: str   = "legacy",
 ) -> dict:
+    """
+    Simulate N games of our deck vs a combo archetype.
+    Pulls kill distributions from format_config (not hardcoded).
+    """
+    from engine.match_runner import ComboKillSampler
+    try:
+        from format_config import get_combo_dist
+        custom_dist = get_combo_dist(archetype, format_name)
+        if custom_dist:
+            ComboKillSampler.KILL_DISTS[archetype.lower()] = custom_dist
+    except Exception:
+        pass
     """
     Simulate N games of Humans vs a combo archetype.
     Returns win%, avg game length, and breakdown by outcome type.

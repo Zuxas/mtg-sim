@@ -1,14 +1,14 @@
 """
 parallel_launcher.py — Launch all matchups as independent subprocesses
 
-No Pool, no spawn bootstrapping issues.
-Each matchup is a fully isolated python process.
-All processes start simultaneously, results collected when they finish.
+Format-agnostic. Works for Legacy, Modern, Pioneer, Standard.
 
 Usage:
-    python parallel_launcher.py               # full Legacy field, 1000 games
-    python parallel_launcher.py --n 2000      # higher sample
-    python parallel_launcher.py --cores 12    # limit concurrency
+    python parallel_launcher.py --deck "Legacy Humans"   --format legacy
+    python parallel_launcher.py --deck "Boros Energy"    --format modern
+    python parallel_launcher.py --deck "Boros Heroic"    --format pioneer
+    python parallel_launcher.py --deck "Mono Red Aggro"  --format standard
+    python parallel_launcher.py --deck "Boros Energy"    --format modern --n 5000
 """
 import sys, os, json, time, subprocess, argparse
 from datetime import datetime
@@ -16,76 +16,73 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.makedirs("data/matchup_jobs", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
 
-COMBO = {
-    "dimir reanimator", "lotus combo", "cephalid breakfast",
-    "sneak and show", "mono red painter", "doomsday", "bant nadu",
-}
 
-LEGACY_FIELD = {
-    "Dimir Reanimator": 22.4, "Lotus Combo": 10.5, "Dimir Tempo": 10.5,
-    "Cephalid Breakfast": 7.5, "Eldrazi Stompy": 6.4, "Sneak And Show": 5.4,
-    "Mono Red Painter": 5.0, "Doomsday": 4.9, "Izzet Delver": 4.7,
-    "Death And Taxes": 4.6, "Bant Nadu": 4.3, "Four-Color": 3.7,
-    "Jeskai Control": 3.6, "Mono Red Aggro": 3.4, "Mono Red Prison": 3.2,
-}
+def launch_all(our_deck, format_name, field, n, cores, seed):
+    from format_config import is_combo
 
-
-def launch_all(field, n, cores, seed, format_name, our_deck):
     tasks = []
     for i, (opp, pct) in enumerate(field.items()):
-        mtype = "combo" if opp.lower() in COMBO else "fair"
+        if opp.lower() == our_deck.lower():
+            continue
         tasks.append({
-            "opp": opp, "pct": pct, "seed": seed + i * 1000,
-            "type": mtype, "idx": i,
+            "opp": opp, "pct": pct,
+            "seed": seed + i * 1000,
+            "combo": is_combo(opp, format_name),
+            "idx": i,
         })
 
     total   = len(tasks)
     n_cores = min(cores, total)
 
-    print(f"\nParallel launcher: {total} matchups × {n:,} games")
-    print(f"Concurrency: {n_cores} processes")
-    print(f"Each process is independent — no Pool issues")
-    print(f"{'─'*60}")
+    print(f"\nParallel launcher: {our_deck} vs {format_name.upper()} field")
+    print(f"Matchups: {total}  |  Games each: {n:,}  |  Cores: {n_cores}")
+    print(f"{'─'*65}")
 
-    t0       = time.time()
-    running  = {}   # {opp: proc}
-    pending  = list(tasks)
-    done     = []
+    t0      = time.time()
+    running = {}
+    pending = list(tasks)
+    done    = []
 
     while pending or running:
-        # Start new processes up to concurrency limit
         while pending and len(running) < n_cores:
             task = pending.pop(0)
             opp  = task["opp"]
-            safe = opp.lower().replace(" ","_").replace("'","")
+            safe = opp.lower().replace(" ", "_").replace("'", "")
             log_path = f"logs/{safe}.log"
             cmd = [
                 sys.executable, "run_matchup.py",
-                opp, str(task["pct"]), str(n),
-                str(task["seed"]), format_name, task["type"],
+                our_deck,
+                opp,
+                str(task["pct"]),
+                str(n),
+                str(task["seed"]),
+                format_name,
+                "combo" if task["combo"] else "fair",
             ]
-            log_f = open(log_path, "w")
-            proc  = subprocess.Popen(cmd, stdout=log_f, stderr=log_f,
-                                      cwd=os.path.dirname(os.path.abspath(__file__)),
-                                      env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+            log_f = open(log_path, "w", encoding="utf-8")
+            proc  = subprocess.Popen(
+                cmd, stdout=log_f, stderr=log_f,
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+            )
             running[opp] = (proc, log_f, task)
-            print(f"  >> Started: {opp} ({task['type']})")
+            print(f"  >> [{len(done)+len(running)}/{total}] {opp} ({'combo' if task['combo'] else 'fair'})")
 
-        # Poll running processes
-        finished_this_round = []
+        finished = []
         for opp, (proc, log_f, task) in running.items():
             if proc.poll() is not None:
                 log_f.close()
-                finished_this_round.append(opp)
-                safe = opp.lower().replace(" ","_").replace("'","")
-                result_path = f"data/matchup_jobs/{safe}.json"
-                if os.path.exists(result_path):
-                    with open(result_path) as f:
+                finished.append(opp)
+                safe     = opp.lower().replace(" ", "_").replace("'", "")
+                out_path = f"data/matchup_jobs/{safe}.json"
+                if os.path.exists(out_path):
+                    with open(out_path) as f:
                         r = json.load(f)
                     done.append(r)
-                    status = "ERR" if r.get("error") else "OK "
-                    g1 = r.get("g1", 0); match = r.get("match", 0)
+                    status  = "ERR" if r.get("error") else "OK "
                     elapsed = r.get("elapsed", 0)
+                    g1      = r.get("g1", 0)
+                    match   = r.get("match", 0)
                     print(f"  {status} [{len(done)}/{total}] {opp}: "
                           f"G1={g1:.1f}%  Match={match:.1f}%  ({elapsed}s)")
                 else:
@@ -93,7 +90,7 @@ def launch_all(field, n, cores, seed, format_name, our_deck):
                     done.append({"opp": opp, "field_pct": task["pct"],
                                  "error": "no output", "g1": 0, "match": 0})
 
-        for opp in finished_this_round:
+        for opp in finished:
             del running[opp]
 
         if running:
@@ -101,45 +98,51 @@ def launch_all(field, n, cores, seed, format_name, our_deck):
 
     elapsed = time.time() - t0
 
-    # Summary
-    print(f"\n{'─'*60}")
+    # Summary table
+    print(f"\n{'─'*70}")
     print(f"{'Opponent':<28} {'Field%':>6}  {'G1':>6}  {'G2':>6}  {'Match':>7}  Type")
-    print(f"{'─'*60}")
+    print(f"{'─'*70}")
 
     total_w = weighted = 0
     for r in sorted(done, key=lambda x: -x.get("field_pct", 0)):
         if r.get("error"):
-            print(f"  {'ERROR':<26} {r['field_pct']:>5.1f}%  — {r['error'][:30]}")
+            print(f"  {'ERROR':<26} {r['field_pct']:>5.1f}%  — {r['error'][:35]}")
             continue
-        fp = r["field_pct"]
-        print(f"  {r['opp']:<26} {fp:>5.1f}%  "
-              f"{r.get('g1',0):>5.1f}%  {r.get('g2',0):>5.1f}%  "
-              f"{r.get('match',0):>6.1f}%  {r.get('type','?')}")
-        weighted += r.get("match", 0) * fp
+        fp    = r["field_pct"]
+        g1    = r.get("g1", 0)
+        g2    = r.get("g2", 0)
+        match = r.get("match", 0)
+        mtype = r.get("type", "?")
+        print(f"  {r['opp']:<26} {fp:>5.1f}%  {g1:>5.1f}%  {g2:>5.1f}%  "
+              f"{match:>6.1f}%  {mtype}")
+        weighted += match * fp
         total_w  += fp
 
-    print(f"{'─'*60}")
-    if total_w:
-        fw = weighted / total_w
-        print(f"  Field-weighted match win%: {fw:.1f}%")
-    print(f"  Total time: {elapsed:.0f}s  ({n * total:,} games across {n_cores} cores)")
+    print(f"{'─'*70}")
+    fw = weighted / total_w if total_w else 0
+    print(f"  Field-weighted match win%: {fw:.1f}%")
+    print(f"  Total: {elapsed:.0f}s  |  {n * total:,} games  |  {n_cores} cores")
 
-    # Save results
+    # Save
     ts  = datetime.now().strftime("%Y%m%d_%H%M%S")
     out = f"data/parallel_results_{ts}.json"
     with open(out, "w") as f:
-        json.dump({"field_weighted_match": round(weighted/total_w, 1) if total_w else 0,
-                   "elapsed_s": round(elapsed, 1), "n_per_matchup": n,
-                   "results": done}, f, indent=2)
+        json.dump({
+            "our_deck": our_deck, "format": format_name,
+            "field_weighted_match": round(fw, 1),
+            "elapsed_s": round(elapsed, 1),
+            "n_per_matchup": n, "results": done,
+        }, f, indent=2)
     print(f"  Saved: {out}")
 
-    # Update sim matrix
+    # Update matchup matrix
     matrix_path = "data/sim_matchup_matrix.json"
     matrix = {}
     if os.path.exists(matrix_path):
         with open(matrix_path) as f:
             matrix = json.load(f)
-    matrix[our_deck] = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")}
+    key = f"{our_deck} ({format_name})"
+    matrix[key] = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")}
     with open(matrix_path, "w") as f:
         json.dump(matrix, f, indent=2)
 
@@ -152,11 +155,10 @@ if __name__ == "__main__":
     ap.add_argument("--format", default="legacy")
     ap.add_argument("--n",      type=int, default=1000)
     ap.add_argument("--cores",  type=int, default=20)
+    ap.add_argument("--top-n",  type=int, default=15)
     ap.add_argument("--seed",   type=int, default=42)
     args = ap.parse_args()
 
-    launch_all(
-        field=LEGACY_FIELD, n=args.n,
-        cores=args.cores, seed=args.seed,
-        format_name=args.format, our_deck=args.deck,
-    )
+    from format_config import get_field
+    field = get_field(args.format, args.top_n)
+    launch_all(args.deck, args.format, field, args.n, args.cores, args.seed)

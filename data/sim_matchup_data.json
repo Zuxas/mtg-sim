@@ -1,6 +1,267 @@
 [
   {
     "deck_a": "Legacy Humans",
+    "deck_b": "Dimir Reanimator",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 99.7,
+    "b_win_pct": 0.3,
+    "avg_turns": 8.52,
+    "kill_dist": {
+      "6": 0.33,
+      "7": 21.33,
+      "8": 34.67,
+      "9": 26.33,
+      "10": 9.67,
+      "11": 4.67,
+      "12": 1.33,
+      "13": 1.0,
+      "14": 0.33,
+      "15": 0.33
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Lotus Combo",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 98.7,
+    "b_win_pct": 1.3,
+    "avg_turns": 10.35,
+    "kill_dist": {
+      "6": 0.67,
+      "7": 7.33,
+      "8": 25.0,
+      "9": 17.33,
+      "10": 11.0,
+      "11": 8.33,
+      "12": 6.67,
+      "13": 4.67,
+      "14": 3.67,
+      "15": 15.33
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Dimir Tempo",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 87.0,
+    "b_win_pct": 13.0,
+    "avg_turns": 10.86,
+    "kill_dist": {
+      "6": 1.33,
+      "7": 7.67,
+      "8": 19.67,
+      "9": 14.67,
+      "10": 11.33,
+      "11": 9.0,
+      "12": 5.0,
+      "13": 2.0,
+      "14": 3.67,
+      "15": 25.67
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Cephalid Breakfast",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 100.0,
+    "b_win_pct": 0.0,
+    "avg_turns": 9.57,
+    "kill_dist": {
+      "7": 8.67,
+      "8": 23.67,
+      "9": 24.0,
+      "10": 17.67,
+      "11": 12.33,
+      "12": 6.0,
+      "13": 3.0,
+      "14": 2.33,
+      "15": 2.33
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Eldrazi Stompy",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 33.0,
+    "b_win_pct": 67.0,
+    "avg_turns": 10.64,
+    "kill_dist": {
+      "6": 1.0,
+      "7": 7.0,
+      "8": 11.33,
+      "9": 15.33,
+      "10": 16.0,
+      "11": 15.33,
+      "12": 12.67,
+      "13": 7.33,
+      "14": 6.0,
+      "15": 8.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Sneak And Show",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 99.0,
+    "b_win_pct": 1.0,
+    "avg_turns": 8.45,
+    "kill_dist": {
+      "6": 4.0,
+      "7": 22.67,
+      "8": 34.67,
+      "9": 21.33,
+      "10": 10.33,
+      "11": 2.33,
+      "12": 1.0,
+      "13": 1.0,
+      "14": 1.0,
+      "15": 1.67
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Mono Red Painter",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 86.7,
+    "b_win_pct": 13.3,
+    "avg_turns": 11.59,
+    "kill_dist": {
+      "6": 0.33,
+      "7": 6.67,
+      "8": 13.0,
+      "9": 13.67,
+      "10": 9.0,
+      "11": 9.0,
+      "12": 5.0,
+      "13": 6.0,
+      "14": 3.33,
+      "15": 34.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Doomsday",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 95.7,
+    "b_win_pct": 4.3,
+    "avg_turns": 11.0,
+    "kill_dist": {
+      "7": 4.67,
+      "8": 18.0,
+      "9": 17.67,
+      "10": 11.33,
+      "11": 10.33,
+      "12": 8.33,
+      "13": 2.0,
+      "14": 4.0,
+      "15": 23.67
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Izzet Delver",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 90.3,
+    "b_win_pct": 9.7,
+    "avg_turns": 10.96,
+    "kill_dist": {
+      "6": 0.33,
+      "7": 9.33,
+      "8": 15.0,
+      "9": 18.33,
+      "10": 11.0,
+      "11": 7.67,
+      "12": 4.0,
+      "13": 5.0,
+      "14": 3.67,
+      "15": 25.67
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Death And Taxes",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 75.0,
+    "b_win_pct": 25.0,
+    "avg_turns": 12.81,
+    "kill_dist": {
+      "7": 2.0,
+      "8": 5.0,
+      "9": 7.67,
+      "10": 9.0,
+      "11": 8.0,
+      "12": 8.0,
+      "13": 7.67,
+      "14": 5.67,
+      "15": 47.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Bant Nadu",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 100.0,
+    "b_win_pct": 0.0,
+    "avg_turns": 9.63,
+    "kill_dist": {
+      "6": 0.33,
+      "7": 8.67,
+      "8": 22.33,
+      "9": 24.33,
+      "10": 20.33,
+      "11": 8.33,
+      "12": 5.67,
+      "13": 3.33,
+      "14": 3.67,
+      "15": 3.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Four-Color",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 97.3,
+    "b_win_pct": 2.7,
+    "avg_turns": 9.4,
+    "kill_dist": {
+      "6": 2.67,
+      "7": 15.33,
+      "8": 29.67,
+      "9": 18.0,
+      "10": 11.0,
+      "11": 7.33,
+      "12": 2.67,
+      "13": 1.67,
+      "14": 1.67,
+      "15": 10.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
     "deck_b": "Jeskai Control",
     "format": "legacy",
     "n_games": 300,
@@ -18,6 +279,49 @@
       "13": 0.67,
       "14": 1.0,
       "15": 3.33
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Mono Red Aggro",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 44.3,
+    "b_win_pct": 55.7,
+    "avg_turns": 13.0,
+    "kill_dist": {
+      "7": 5.33,
+      "8": 4.67,
+      "9": 7.0,
+      "10": 6.33,
+      "11": 5.67,
+      "12": 4.67,
+      "13": 5.33,
+      "14": 4.0,
+      "15": 57.0
+    },
+    "source": "sim_v1"
+  },
+  {
+    "deck_a": "Legacy Humans",
+    "deck_b": "Mono Red Prison",
+    "format": "legacy",
+    "n_games": 300,
+    "a_win_pct": 81.3,
+    "b_win_pct": 18.7,
+    "avg_turns": 11.36,
+    "kill_dist": {
+      "6": 1.67,
+      "7": 10.33,
+      "8": 14.33,
+      "9": 11.67,
+      "10": 8.67,
+      "11": 6.33,
+      "12": 6.0,
+      "13": 2.67,
+      "14": 3.67,
+      "15": 34.67
     },
     "source": "sim_v1"
   }

@@ -84,7 +84,7 @@ STUB_DECKS = {
         (4, "Cabal Therapy"), (4, "Force of Will"), (4, "Brainstorm"),
         (4, "Ponder"), (4, "Lotus Petal"), (4, "Hapless Researcher"),
         (4, "Dread Return"),
-    ], [(11, "Island"), (7, "Swamp"), (4, "Nomads en-Kor")[:1]]),
+    ], [(11, "Island"), (7, "Swamp"), (4, "Plains")]),
 
     "eldrazi stompy": lambda: _make_deck([
         (4, "Chalice of the Void"), (4, "Thought-Knot Seer"),

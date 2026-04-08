@@ -4,6 +4,7 @@ Kill clock: T5-7 via planeswalker ultimates or Teferi beats.
 Models holding up counter mana and sweeping on T4.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 TEFERI   = "Teferi, Time Raveler"
@@ -17,7 +18,7 @@ PRISMATIC= "Prismatic Ending"
 ISOCHRON = "Isochron Scepter"
 SPELL_SNARE = "Spell Snare"
 
-class JeskaiControlAPL(BaseAPL):
+class JeskaiControlAPL(SBPlanMixin, BaseAPL):
     name = "Jeskai Control"
     win_condition_damage = 20
     max_turns = 16

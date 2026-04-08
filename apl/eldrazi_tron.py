@@ -3,6 +3,7 @@ Assemble Tron by T3 → cast Karn/TKS/Reality Smasher for free.
 Expedition Map finds missing Tron pieces.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 MINE    = "Urza's Mine"
@@ -20,7 +21,7 @@ FLESHRAKER = "Glaring Fleshraker"
 
 TRON_LANDS = {MINE, TOWER, PLANT}
 
-class EldraziTronAPL(BaseAPL):
+class EldraziTronAPL(SBPlanMixin, BaseAPL):
     name = "Eldrazi Tron"
     win_condition_damage = 20
     max_turns = 12

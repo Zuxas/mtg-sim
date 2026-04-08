@@ -8,6 +8,7 @@ Priority: buff creatures with spells, attack every turn for lethal.
 """
 
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 SWIFTSPEAR = "Monastery Swiftspear"
@@ -22,7 +23,7 @@ BAUBLE     = "Mishra's Bauble"
 MUTAGENIC  = "Mutagenic Growth"
 
 
-class IzzetProwessAPL(BaseAPL):
+class IzzetProwessAPL(SBPlanMixin, BaseAPL):
     name = "Izzet Prowess"
     win_condition_damage = 20
     max_turns = 10

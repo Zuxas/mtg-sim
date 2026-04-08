@@ -3,6 +3,7 @@ Arclight Phoenix self-mill + cheap spells to bring back from GY.
 Kill clock: T3-4 via Phoenix recursion + Sprite Dragon.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 PHOENIX   = "Arclight Phoenix"
@@ -18,7 +19,7 @@ LEDGER    = "Ledger Shredder"
 
 SPELLS_0_1 = {CONSIDER, PREORDAIN, FIERY, BOLT, IMPULSE}
 
-class IzzetPhoenixAPL(BaseAPL):
+class IzzetPhoenixAPL(SBPlanMixin, BaseAPL):
     name = "Izzet Phoenix"
     win_condition_damage = 20
     max_turns = 10

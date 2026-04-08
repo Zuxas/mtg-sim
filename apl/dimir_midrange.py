@@ -3,6 +3,7 @@ Thoughtseize effects + Fatal Push + value creatures.
 Kill clock: T4-5 grindy beatdown.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 # Standard Dimir threats/disruption
@@ -17,7 +18,7 @@ SHEOLDRED= "Sheoldred, the Apocalypse"
 PREORDAIN= "Preordain"
 CONSIDER = "Consider"
 
-class DimirMidrangeAPL(BaseAPL):
+class DimirMidrangeAPL(SBPlanMixin, BaseAPL):
     name = "Dimir Midrange"
     win_condition_damage = 20
     max_turns = 14

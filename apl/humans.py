@@ -258,6 +258,82 @@ class HumansAPL(BaseAPL):
         return to_bottom[:n]
 
     # -----------------------------------------------------------------------
+    # Sideboard plan — Legacy Humans
+    # -----------------------------------------------------------------------
+    # SB: 2x Containment Priest, 2x Deafening Silence, 2x Faerie Macabre,
+    #     2x Grafdigger's Cage, 1x Path to Exile, 2x Stony Silence,
+    #     1x Wrath of the Skies, 1x Sheltered by Ghosts,
+    #     1x Sanctifier en-Vec, 1x Clarion Conqueror
+
+    def sideboard_premium(self, opp_name: str, format_name: str) -> float:
+        opp = opp_name.lower()
+        # GY combo — 6 dedicated hate pieces (Priest x2, Cage x2, Macabre x2)
+        if any(k in opp for k in ("reanimator",)):
+            return 22.0   # near-transformative — hate locks their whole plan
+        if any(k in opp for k in ("breakfast", "cephalid")):
+            return 20.0   # Cage + Priest stop the entire combo
+        # Deafening Silence hard-stops storm/solitaire combo
+        if any(k in opp for k in ("doomsday", "lotus combo")):
+            return 18.0   # Silence = they can only cast 1 spell/turn
+        if any(k in opp for k in ("bant", "nadu")):
+            return 14.0   # Silence + Cage
+        if any(k in opp for k in ("sneak", "show")):
+            return 10.0   # Karakas already main; Cage + Priest supplement
+        if any(k in opp for k in ("painter", "mono red painter")):
+            return 10.0   # Sanctifier en-Vec + Stony Silence
+        if any(k in opp for k in ("eldrazi",)):
+            return 8.0    # Path to Exile + Sheltered by Ghosts
+        if any(k in opp for k in ("mono red", "burn", "aggro")):
+            return 8.0    # Wrath of Skies + Sheltered by Ghosts
+        if any(k in opp for k in ("control", "jeskai")):
+            return 5.0    # Clarion Conqueror to go wide
+        if any(k in opp for k in ("tempo", "delver")):
+            return 4.0    # Minimal delta — fair matchup, Clarion only
+        if any(k in opp for k in ("taxes", "death")):
+            return 3.0    # White mirror, very low SB delta
+        return 6.0
+
+    def keep_vs(self, hand, mulligans, on_play, opp_archetype):
+        opp = opp_archetype.lower()
+        lands = [c for c in hand if c.is_land()]
+        gy_hate = [c for c in hand if c.name in {
+            "Grafdigger's Cage", "Faerie Macabre",
+            "Containment Priest", "Deafening Silence",
+        }]
+        has_thalia  = any(c.name == THALIA for c in hand)
+        has_silence = any(c.name == "Deafening Silence" for c in hand)
+        has_cavern  = any(c.name == CAVERN for c in hand)
+        has_clock   = any(c.name in {CHAMPION, COPPERCOAT, ESPER_SENTINEL} for c in hand)
+
+        if len(hand) <= 4: return True
+        if not lands:      return False
+
+        # vs GY combo: NEED hate OR a very fast clock to race T2 Griselbrand
+        if any(k in opp for k in ("reanimator",)):
+            if gy_hate and lands:            return True
+            if has_clock and len(lands) >= 1: return True
+            return mulligans >= 2
+
+        # vs Breakfast: need Cage/Priest, or Thalia to tax them a turn
+        if any(k in opp for k in ("breakfast", "cephalid")):
+            if gy_hate and lands:            return True
+            if has_thalia and len(lands) >= 2: return True
+            return mulligans >= 2
+
+        # vs Storm/Doomsday: need Silence or Thalia
+        if any(k in opp for k in ("doomsday", "lotus combo")):
+            if has_silence and lands:         return True
+            if has_thalia and len(lands) >= 2: return True
+            return mulligans >= 2
+
+        # vs Tempo: prefer Cavern to dodge Daze/Force
+        if any(k in opp for k in ("tempo", "delver")):
+            if has_cavern and has_clock and lands: return True
+            return self.keep(hand, mulligans, on_play)
+
+        return self.keep(hand, mulligans, on_play)
+
+    # -----------------------------------------------------------------------
     # Main phase APL
     # -----------------------------------------------------------------------
 

@@ -3,6 +3,7 @@ Thoughtseize + Fable + Sheoldred + Graveyard Trespasser.
 Kill clock: T4-5 via grinding value + efficient threats.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 THOUGHTSEIZE = "Thoughtseize"
@@ -16,7 +17,7 @@ INVOKE_DESP  = "Invoke Despair"
 PREORDAIN    = "Preordain"
 RECKONER     = "Reckoner Bankbuster"
 
-class RakdosMidrangeAPL(BaseAPL):
+class RakdosMidrangeAPL(SBPlanMixin, BaseAPL):
     name = "Rakdos Midrange"
     win_condition_damage = 20
     max_turns = 13

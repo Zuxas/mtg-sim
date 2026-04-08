@@ -63,24 +63,28 @@ class BaseAPL(ABC):
         on_play: bool = True,
         seed: Optional[int] = None,
         verbose: bool = False,
+        opp_archetype: str = "",
     ) -> GameResult:
         """
         Run one complete goldfish game.
+
+        opp_archetype: opponent deck name passed to keep_vs() and sideboard logic.
         Returns a GameResult with kill turn and stats.
         """
         import copy
         result = GameResult()
 
-        # Fresh Card objects each game so counters don't bleed between games
         fresh_deck = copy.deepcopy(mainboard)
 
-        # --- Opening hand ---
+        # --- Opening hand with opponent-aware mulligan ---
+        keep_fn = self.keep_vs if hasattr(self, 'keep_vs') else self.keep
         hand, library, mulligans = take_opening_hand(
             deck=fresh_deck,
-            keep_fn=self.keep,
+            keep_fn=keep_fn,
             bottom_fn=self.bottom,
             on_play=on_play,
             verbose=verbose,
+            opp_archetype=opp_archetype,
         )
 
         result.mulligans    = mulligans
@@ -146,6 +150,49 @@ class BaseAPL(ABC):
         (e.g. haste creatures, flash spells, end-of-turn value plays).
         """
         self._cast_all_castable(gs)
+
+    # -----------------------------------------------------------------------
+    # Sideboard interface — override per deck with real SB plans
+    # -----------------------------------------------------------------------
+
+    def sideboard_premium(self, opp_name: str, format_name: str) -> float:
+        """
+        Estimated win% improvement from sideboarding against this opponent.
+        This is the DELTA added to G1 win rate to get the G2/G3 win rate.
+
+        Override in each deck APL with matchup-specific logic based on:
+          - Which SB cards are live (hate pieces, answers, threats)
+          - How many SB slots we're dedicating to this matchup
+          - Whether the cards fundamentally change the game plan
+
+        Default fallback: generic formula by opponent type.
+        Returns a float in percent (e.g. 10.0 = +10%)
+        """
+        opp = opp_name.lower()
+        # Guess from opponent archetype keyword
+        if any(k in opp for k in ("reanimator", "breakfast", "combo", "doomsday", "sneak")):
+            return 12.0   # dedicated hate pieces
+        if any(k in opp for k in ("tron", "titan", "breach", "neoform", "lotus")):
+            return 10.0   # hate + disruption
+        if any(k in opp for k in ("tempo", "control", "delver", "murktide")):
+            return 4.0    # swap interaction, low delta
+        if any(k in opp for k in ("aggro", "burn", "mono red", "prowess")):
+            return 8.0    # stabilization cards
+        return 6.0        # generic
+
+    def keep_vs(self, hand: list, mulligans: int, on_play: bool,
+                opp_archetype: str) -> bool:
+        """
+        Opponent-aware mulligan decision.
+        Calls keep() by default. Override for decks where the keep criteria
+        change significantly depending on what you're facing.
+
+        Examples:
+          - vs combo: keep ANY hand with a clock + 2 lands (speed beats quality)
+          - vs Reanimator: keep if you have GY hate OR a T1-T2 kill clock
+          - vs Control: keep any fair 2-lander, don't fish for perfect hands
+        """
+        return self.keep(hand, mulligans, on_play)
 
     # -----------------------------------------------------------------------
     # Draw spell helpers

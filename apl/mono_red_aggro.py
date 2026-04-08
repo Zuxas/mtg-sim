@@ -3,6 +3,7 @@ Goblin Guide + Eidolon + Chain Lightning + Price of Progress.
 Kill clock: T3-4 via pure damage.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 GOBLIN_GUIDE  = "Goblin Guide"
@@ -25,7 +26,7 @@ CACOPHONY     = "Cacophony Scamp"
 ONE_DROPS  = {GOBLIN_GUIDE, SWIFTSPEAR, DRC, CACOPHONY}
 BURN_SPELLS= {CHAIN, BOLT, RIFT_BOLT, SEARING_BLAZE, GALVANIC, PRICE, FIREBLAST}
 
-class MonoRedAggroAPL(BaseAPL):
+class MonoRedAggroAPL(SBPlanMixin, BaseAPL):
     name = "Mono Red Aggro"
     win_condition_damage = 20
     max_turns = 8

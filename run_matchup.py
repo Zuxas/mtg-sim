@@ -144,29 +144,21 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
         if not our_main or not opp_main:
             raise ValueError(f"Could not load deck for {opp_name}")
 
+        # G1: opponent-aware mulligan via keep_vs
+        if hasattr(our_apl, 'keep_vs'):
+            our_apl._opp_for_mull = opp_name   # picked up by mulligan.py
         r = run_match_set(our_apl, our_main, opp_apl, opp_main,
                           n=n, seed=seed, mix_play_draw=True)
         real_g1 = r.win_pct()
 
-        # Credibility cap: fair matchups vs known interactive decks
-        # If sim shows >75% it likely means the stub deck has no interaction
-        # Apply an interaction penalty based on archetype class
-        INTERACTIVE_ARCHETYPES = {
-            # These decks have Thoughtseize/Push/FoW in real life
-            "thoughtseize", "midrange", "control", "murktide", "frog",
-            "rakdos", "jund", "esper", "dimir", "grixis",
-        }
-        opp_lower = opp_name.lower()
-        is_interactive = any(k in opp_lower for k in INTERACTIVE_ARCHETYPES)
-        if real_g1 > 75 and is_interactive:
-            # Cap at 65% — even favorable matchups vs interactive decks are never 85%+
+        # Credibility cap for interactive decks the stub can't model properly
+        INTERACTIVE = {"thoughtseize","midrange","control","murktide","frog",
+                       "rakdos","jund","esper","dimir","grixis"}
+        if real_g1 > 75 and any(k in opp_name.lower() for k in INTERACTIVE):
             real_g1 = min(real_g1, 65.0)
             result["g1_capped"] = True
-
-        # Floor cap: aggro vs aggro/fair should never be <25%
-        AGGRO_ARCHETYPES = {"aggro", "prowess", "burn", "swiftspear", "mono red", "gruul"}
-        our_lower = our_deck.lower()
-        if real_g1 < 25 and any(k in our_lower for k in AGGRO_ARCHETYPES):
+        AGGRO_OUR = {"aggro","prowess","burn","swiftspear","mono red","gruul"}
+        if real_g1 < 25 and any(k in our_deck.lower() for k in AGGRO_OUR):
             real_g1 = max(real_g1, 25.0)
             result["g1_floored"] = True
 
@@ -174,13 +166,20 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
     else:
         result["g1_source"] = "db"
 
-    # G2/G3 — SB premium on top of real G1
-    opp_dist = ARCHETYPE_CLOCKS.get(
-        _infer_archetype_key(opp_name), ARCHETYPE_CLOCKS["unknown"])
-    opp_avg = avg_kill_turn(opp_dist)
-    sb  = 5 if opp_avg >= 6 else (8 if opp_avg >= 5 else 10)
-    g2_wp = min(98.0, real_g1 + sb)
-    g3_wp = min(98.0, real_g1 + sb * 0.7)
+    # ── G2/G3: deck-specific SB premium ──────────────────────────────────
+    # Load our APL to ask it for the matchup-specific SB premium.
+    # This replaces the crude kill-speed formula.
+    sb_premium = 6.0   # default fallback
+    try:
+        from generate_matchup_data import load_deck_and_apl
+        _, _, our_apl_for_sb = load_deck_and_apl(our_deck, format_name)
+        if our_apl_for_sb and hasattr(our_apl_for_sb, 'sideboard_premium'):
+            sb_premium = our_apl_for_sb.sideboard_premium(opp_name, format_name)
+    except Exception:
+        pass
+
+    g2_wp = min(98.0, real_g1 + sb_premium)
+    g3_wp = min(98.0, real_g1 + sb_premium * 0.75)   # G3: SB value slightly diluted
 
     match = bo3_win(real_g1, g2_wp, g3_wp)
     result.update({

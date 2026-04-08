@@ -3,6 +3,7 @@ Phelia + Ephemerate + Guide of Souls engine. ETB value, blink to reset.
 Kill clock: T4-5 via creature beats + Guide of Souls energy pump.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 PHELIA    = "Phelia, Exuberant Shepherd"
@@ -17,7 +18,7 @@ EPHEMERATE= "Ephemerate"
 PRISMATIC = "Prismatic Ending"
 CONSIGN   = "Consign to Memory"
 
-class UWBlinkAPL(BaseAPL):
+class UWBlinkAPL(SBPlanMixin, BaseAPL):
     name = "UW Blink"
     win_condition_damage = 20
     max_turns = 12

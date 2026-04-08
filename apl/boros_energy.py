@@ -42,6 +42,70 @@ class BorosEnergyAPL(BaseAPL):
     win_condition_damage = 20
     max_turns = 12
 
+    # ── Sideboard plan ────────────────────────────────────────────────────
+    # Real SB: 3x Obsidian Charmaw, 2x Surgical Extraction, 2x Vexing Bauble,
+    #          2x Wear//Tear, 2x Wrath of the Skies, 1x Blood Moon,
+    #          1x Celestial Purge, 1x Clarion Conqueror, 1x Orim's Chant
+
+    def sideboard_premium(self, opp_name: str, format_name: str) -> float:
+        opp = opp_name.lower()
+        # Blood Moon + Obsidian Charmaw crush multiland combo/ramp
+        if any(k in opp for k in ("titan", "amulet")):
+            return 14.0   # Blood Moon + Charmaw + Bauble — near-lock
+        if any(k in opp for k in ("breach", "grinding")):
+            return 13.0   # Blood Moon + Charmaw + Surgical + Bauble
+        if any(k in opp for k in ("neoform", "simic ritual")):
+            return 12.0   # Surgical + Vexing Bauble
+        if any(k in opp for k in ("goryo", "reanimator", "esper reanimator")):
+            return 11.0   # Surgical + Cage + Celestial Purge
+        if any(k in opp for k in ("tron", "eldrazi ramp")):
+            return 10.0   # Blood Moon is game-ending vs Tron
+        if any(k in opp for k in ("mono red", "aggro", "burn")):
+            return 8.0    # Wrath of Skies + Clarion + Purge
+        if any(k in opp for k in ("prowess",)):
+            return 7.0    # Wrath of Skies + Clarion
+        if any(k in opp for k in ("domain", "zoo")):
+            return 7.0    # Wrath + Clarion + Wear/Tear
+        if any(k in opp for k in ("blink", "orzhov", "jeskai", "esper")):
+            return 4.0    # Charmaw + Moon, but they also SB well vs us
+        if any(k in opp for k in ("dimir", "murktide", "frog")):
+            return 5.0    # Clarion + Orim's Chant
+        if any(k in opp for k in ("affinity",)):
+            return 8.0    # Wear/Tear + Meltdown + Wrath
+        return 6.0
+
+    # ── Opponent-aware mulligan ───────────────────────────────────────────
+
+    def keep_vs(self, hand, mulligans, on_play, opp_archetype):
+        opp = opp_archetype.lower()
+        lands    = sum(1 for c in hand if c.is_land())
+        threats  = sum(1 for c in hand if c.name in {RAGAVAN, GUIDE, OCELOT, AJANI})
+        one_drops= sum(1 for c in hand if c.name in {RAGAVAN, GUIDE})
+
+        # vs fast combo: need a clock, not fair quality
+        if any(k in opp for k in ("goryo", "neoform", "breach", "doomsday")):
+            if len(hand) <= 4: return True
+            if lands == 0: return False
+            # Need threat + land to race — keep any 1+ land with threat
+            return (lands >= 1 and threats >= 1) or mulligans >= 2
+
+        # vs Tron/ramp: need aggression, Blood Moon in SB
+        if any(k in opp for k in ("tron", "titan", "ramp")):
+            if len(hand) <= 4: return True
+            if lands == 0: return False
+            # Aggressive keep — we just need to curve out before they ramp
+            return (lands >= 1 and one_drops >= 1) or (lands >= 2 and threats >= 1) or mulligans >= 2
+
+        # vs aggro mirror: keep hands with interaction + threat
+        if any(k in opp for k in ("mono red", "prowess", "domain", "zoo")):
+            if len(hand) <= 4: return True
+            if lands == 0: return False
+            has_removal = any(c.name in {GALVANIC, THRABEN} for c in hand)
+            return (lands >= 2 and (threats >= 1 or has_removal)) or mulligans >= 2
+
+        # default
+        return self.keep(hand, mulligans, on_play)
+
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
         lands    = sum(1 for c in hand if c.is_land())

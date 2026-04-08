@@ -4,6 +4,7 @@ Leyline of the Guildpact enables full domain on T1.
 Kill clock: T3-4 aggressive beatdown.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 RAGAVAN  = "Ragavan, Nimble Pilferer"
@@ -18,7 +19,7 @@ DENIAL   = "Stubborn Denial"
 PRISMATIC= "Prismatic Ending"
 CONSIGN  = "Consign to Memory"
 
-class DomainZooAPL(BaseAPL):
+class DomainZooAPL(SBPlanMixin, BaseAPL):
     name = "Domain Zoo"
     win_condition_damage = 20
     max_turns = 10

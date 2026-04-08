@@ -3,6 +3,7 @@ Psychic Frog + Phelia + Force of Negation counter engine.
 Kill clock: T4-5. Resilient through disruption.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 PSYCHIC_FROG = "Psychic Frog"
@@ -18,7 +19,7 @@ CONSIGN      = "Consign to Memory"
 FATAL_PUSH   = "Fatal Push"
 FON          = "Force of Negation"
 
-class EsperBlinkAPL(BaseAPL):
+class EsperBlinkAPL(SBPlanMixin, BaseAPL):
     name = "Esper Blink"
     win_condition_damage = 20
     max_turns = 13

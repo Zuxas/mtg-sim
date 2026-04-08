@@ -4,6 +4,7 @@ Combo deck: modeled via kill-turn distribution in format_config.
 This APL handles the fair backup plan (Psychic Frog beatdown).
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 GORYO      = "Goryo's Vengeance"
@@ -21,7 +22,7 @@ TAINTED    = "Tainted Indulgence"
 
 FATTIES = {ATRAXA, GRISELBRAND}
 
-class GoryoVengeanceAPL(BaseAPL):
+class GoryoVengeanceAPL(SBPlanMixin, BaseAPL):
     name = "Goryo's Vengeance"
     win_condition_damage = 20
     max_turns = 10

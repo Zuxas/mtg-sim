@@ -3,6 +3,7 @@ Amulet of Vigor + bounce lands → accelerate to 6 mana → Primeval Titan T3.
 Combo: Amulet in play + Simic Growth Chamber = 2 mana from one land drop.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 TITAN       = "Primeval Titan"
@@ -16,7 +17,7 @@ PACT        = "Summoner's Pact"
 SCAPESHIFT  = "Scapeshift"
 LOTUS_FIELD = "Lotus Field"
 
-class AmuletTitanAPL(BaseAPL):
+class AmuletTitanAPL(SBPlanMixin, BaseAPL):
     name = "Amulet Titan"
     win_condition_damage = 20
     max_turns = 10

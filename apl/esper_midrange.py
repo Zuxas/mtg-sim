@@ -3,6 +3,7 @@ Phelia + Thoughtseize + Fatal Push + Solitude. Grindy value/disruption.
 Kill clock: T4-6 via creature beats.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 PHELIA      = "Phelia, Exuberant Shepherd"
@@ -17,7 +18,7 @@ EMPEROR     = "Emperor of Bones"
 EPHEMERATE  = "Ephemerate"
 TEFERI      = "Teferi, Time Raveler"
 
-class EsperMidrangeAPL(BaseAPL):
+class EsperMidrangeAPL(SBPlanMixin, BaseAPL):
     name = "Esper Midrange"
     win_condition_damage = 20
     max_turns = 14

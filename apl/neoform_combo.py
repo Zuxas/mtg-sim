@@ -4,6 +4,7 @@ T1-2 combo: Allosaurus Rider (0 mana via green cards) + Neoform/Eldritch Evoluti
 Modeled as fast combo — GenericAPL won't capture this.
 """
 from apl.base_apl import BaseAPL
+from apl.sb_mixin import SBPlanMixin
 from engine.game_state import GameState
 
 RIDER    = "Allosaurus Rider"
@@ -20,7 +21,7 @@ CONSIGN  = "Consign to Memory"
 
 COMBO_PIECES = {RIDER, NEOFORM, EVOLVE, GENESIS}
 
-class NeoformComboAPL(BaseAPL):
+class NeoformComboAPL(SBPlanMixin, BaseAPL):
     name = "Neoform"
     win_condition_damage = 20
     max_turns = 8

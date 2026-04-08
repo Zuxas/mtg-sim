@@ -68,13 +68,20 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
 
     print(f"  [No playbook for {deck_name} — trying stub deck]")
     from data.stub_decks import get_stub_deck
+    from engine.match_runner import ComboKillSampler
+    from apl.generic_apl import GenericAPL
+
+    # Check if this is a known combo archetype — use named APL for sampler detection
+    combo_keys = set(ComboKillSampler.KILL_DISTS.keys())
+    d_key = deck_name.lower().replace(" ","").replace("-","")
+    is_combo = any(k.replace(" ","") == d_key for k in combo_keys)
+
     stub = get_stub_deck(deck_name)
     if stub and len(stub) >= 40:
-        from apl.generic_apl import GenericAPL
-        apl = GenericAPL(deck_name)
+        apl = GenericAPL(deck_name)   # name matters — sampler matches on it
         return stub, [], apl
 
-    print(f"  [No deck found for {deck_name} — using placeholder]")
+    print(f"  [No deck found for {deck_name} — skipping]")
     return None, None, None
 
 

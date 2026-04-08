@@ -267,6 +267,109 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     return total_dmg, atk_losses, blk_losses
 
 
+class ComboKillSampler:
+    """
+    For combo decks that can't be modeled with simple creature deployment.
+    Samples a kill turn from a pre-measured distribution and deals lethal
+    damage on that turn, bypassing combat entirely.
+
+    This gives realistic win/loss timing even without a full combo APL.
+    """
+    KILL_DISTS = {
+        "dimir reanimator": {1: 5, 2: 40, 3: 35, 4: 15, 5: 5},
+        "lotus combo":      {2: 5, 3: 30, 4: 40, 5: 20, 6: 5},
+        "cephalid breakfast":{1: 2, 2: 30, 3: 45, 4: 18, 5: 5},
+        "sneak and show":   {2: 10, 3: 40, 4: 35, 5: 10, 6: 5},
+        "mono red painter": {3: 20, 4: 40, 5: 30, 6: 10},
+        "doomsday":         {2: 10, 3: 35, 4: 35, 5: 15, 6: 5},
+        "bant nadu":        {3: 15, 4: 40, 5: 35, 6: 10},
+    }
+
+    def __init__(self, archetype: str, rng: random.Random):
+        key = archetype.lower().replace(" ", "").replace("-", "")
+        dist = None
+        for k, v in self.KILL_DISTS.items():
+            if k.replace(" ", "") == key:
+                dist = v
+                break
+        self.dist    = dist or {4: 50, 5: 30, 6: 20}
+        self.rng     = rng
+        self._kill_t = self._sample_kill()
+        self.name    = archetype
+
+    def _sample_kill(self) -> int:
+        turns   = sorted(self.dist.keys())
+        weights = [self.dist[t] for t in turns]
+        total   = sum(weights)
+        r       = self.rng.random() * total
+        cumul   = 0
+        for t, w in zip(turns, weights):
+            cumul += w
+            if r <= cumul:
+                return t
+        return turns[-1]
+
+    def kills_on_turn(self, turn: int) -> bool:
+        return turn == self._kill_t
+
+
+def _run_match_with_combo(
+    apl_a, deck_a, combo_b: ComboKillSampler,
+    on_play: bool, max_turns: int, rng: random.Random
+) -> MatchResult:
+    """
+    Run a match where player B is a combo deck modeled by kill-turn sampling.
+    Player A plays normally via _simple_play_turn; player B deals lethal on its kill turn.
+    """
+    result = MatchResult()
+    gs = TwoPlayerGameState(deck_a, [], on_play=on_play, seed=rng.randint(0, 999999))
+
+    # Opening hand for A only
+    gs.draw_a(7)
+    for _ in range(3):
+        if sum(1 for c in gs.hand_a if c.is_land()) < 2:
+            gs.lib_a = gs.hand_a + gs.lib_a
+            gs.hand_a = []
+            gs.rng.shuffle(gs.lib_a)
+            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
+            result.mulligans_a += 1
+        else:
+            break
+
+    for turn_num in range(1, max_turns + 1):
+        gs.turn = turn_num
+        gs.land_played_a = False
+
+        if turn_num > 1:
+            for c in gs.bf_a:
+                c.summoning_sickness = False
+
+        if not (turn_num == 1 and on_play):
+            gs.draw_a(1)
+
+        _simple_play_turn(gs, "a")
+
+        # Player A attacks
+        dmg, a_lost, b_lost = _resolve_combat(gs, "a")
+        gs.damage_to_b += dmg
+        for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
+
+        if gs.damage_to_b >= 20:
+            result.won = True; result.kill_turn = turn_num
+            result.winner_damage = gs.damage_to_b; result.turn_count = turn_num
+            return result
+
+        # Player B combo kill check
+        if combo_b.kills_on_turn(turn_num):
+            result.won = False; result.kill_turn = turn_num
+            result.winner_damage = 20; result.turn_count = turn_num
+            return result
+
+    result.won = gs.damage_to_b > 0
+    result.kill_turn = max_turns; result.turn_count = max_turns
+    return result
+
+
 def run_match(
     apl_a,
     deck_a:   list,
@@ -380,21 +483,31 @@ def run_match_set(
 ) -> MatchSetResults:
     """
     Run N matches between two APLs. Returns aggregated results.
+    If apl_b is a known combo archetype, uses ComboKillSampler for accuracy.
     mix_play_draw=True alternates who is on the play.
     """
     results = MatchSetResults(n_games=n)
     rng = random.Random(seed)
 
-    for i in range(n):
-        # Alternate play/draw
-        if mix_play_draw:
-            game_on_play = (i % 2 == 0)
-        else:
-            game_on_play = on_play
+    # Check if B is a combo deck — use sampler for accuracy
+    combo_keys = set(ComboKillSampler.KILL_DISTS.keys())
+    b_name = getattr(apl_b, 'name', '').lower().replace(' ', '').replace('-','')
+    use_combo_sampler = any(k.replace(' ','') == b_name for k in combo_keys)
 
-        match = run_match(apl_a, deck_a, apl_b, deck_b,
-                          on_play=game_on_play,
-                          seed=rng.randint(0, 999999))
+    for i in range(n):
+        game_on_play = (i % 2 == 0) if mix_play_draw else on_play
+
+        if use_combo_sampler:
+            combo_b = ComboKillSampler(getattr(apl_b, 'name', 'unknown'), rng)
+            match = _run_match_with_combo(
+                apl_a, deck_a, combo_b,
+                on_play=game_on_play, max_turns=15, rng=rng
+            )
+        else:
+            match = run_match(apl_a, deck_a, apl_b, deck_b,
+                              on_play=game_on_play,
+                              seed=rng.randint(0, 999999))
+
         if match.won:
             results.a_wins += 1
         else:

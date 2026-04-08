@@ -112,6 +112,7 @@ class GameState:
             total_pwr  = min(sum(power_of(c) for c in bf), 40)
 
             snap = {
+                # Core features
                 "turn":              self.turn,
                 "damage_dealt":      self.damage_dealt,
                 "creatures_in_play": len(bf),
@@ -123,13 +124,26 @@ class GameState:
                 "mulligans":         getattr(self, '_mulligans', 0),
                 "hand_creatures":    sum(1 for c in hand if not is_land(c)),
                 "hand_lands":        sum(1 for c in hand if is_land(c)),
+                # Richer features — milestone damage thresholds
+                "dmg_by_t2":         getattr(self, '_dmg_by_t2', 0),
+                "dmg_by_t3":         getattr(self, '_dmg_by_t3', 0),
+                "dmg_by_t4":         getattr(self, '_dmg_by_t4', 0),
+                # Creatures lost (removed by opponent effects)
+                "creatures_lost":    getattr(self, '_creatures_lost', 0),
+                # Whether we have a T1 play / T2 play (sequencing quality)
+                "had_t1_creature":   getattr(self, '_had_t1_creature', 0),
+                "had_t2_creature":   getattr(self, '_had_t2_creature', 0),
+                # Tempo: average creatures per turn so far
+                "avg_creatures_per_turn": round(
+                    getattr(self, '_total_creature_turns', 0) / max(1, self.turn), 2),
             }
             for name in KEY_CARDS:
                 key = f"has_{name.split(',')[0].lower().replace(' ','_')}"
                 snap[key] = int(any(c.name == name for c in bf))
             return snap
         except Exception:
-            return {"turn": getattr(self, 'turn', 0), "damage_dealt": getattr(self, 'damage_dealt', 0)}
+            return {"turn": getattr(self, 'turn', 0),
+                    "damage_dealt": getattr(self, 'damage_dealt', 0)}
 
     # Convenience accessors used by APLs
     def hand(self) -> list:
@@ -152,6 +166,8 @@ class GameState:
         self._upkeep()
         self._draw()
         self._combat()
+        # Track milestone damage and tempo features for ML
+        self._update_ml_trackers()
         # _end() is called by base_apl after main_phase2
 
     def _untap(self):
@@ -362,6 +378,32 @@ class GameState:
                 card._revert_at_eot = False
                 self._log("  EOT: Mutavault reverts to land")
 
+
+    def _update_ml_trackers(self):
+        """Track milestone features for richer ML training data."""
+        bf = self.zones.battlefield
+
+        # Milestone damage snapshots
+        if self.turn == 2:
+            self._dmg_by_t2 = self.damage_dealt
+        elif self.turn == 3:
+            self._dmg_by_t3 = self.damage_dealt
+        elif self.turn == 4:
+            self._dmg_by_t4 = self.damage_dealt
+
+        # Did we have a creature by T1/T2?
+        creatures_now = sum(1 for c in bf
+                            if hasattr(c, 'has') and not
+                            (hasattr(c, 'is_land') and c.is_land()))
+        if self.turn == 1 and creatures_now >= 1:
+            self._had_t1_creature = 1
+        if self.turn == 2 and creatures_now >= 1:
+            self._had_t2_creature = 1
+
+        # Cumulative creature-turns (for avg_creatures_per_turn)
+        if not hasattr(self, '_total_creature_turns'):
+            self._total_creature_turns = 0
+        self._total_creature_turns += creatures_now
 
     def _make_token(self, name: str, power: str, toughness: str,
                     type_line: str) -> Card:

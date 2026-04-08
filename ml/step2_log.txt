@@ -1,0 +1,160 @@
+Loaded 87,749 existing samples
+
+============================================================
+RL Iteration 1/3  epsilon=25%
+============================================================
+[CardDB] Oracle cards not found at E:\vscode ai project\mtg-sim\ml\mtg-meta-analyzer\data\rules_reference\scryfall_oracle_cards.json
+  [29 cards not in local DB, fetching from Scryfall: ['Guide of Souls', 'Kytheon, Hero of Akros', 'Mutavault']...]
+  Loaded: 60 main | 15 sideboard
+RL exploration: 3000 games, epsilon=25%, 15 archetypes
+  dimir reanimator               200g  win%=26.0%  samples=852
+  lotus combo                    200g  win%=16.5%  samples=1,711
+  dimir tempo                    200g  win%=81.0%  samples=2,574
+  cephalid breakfast             200g  win%=35.5%  samples=3,438
+  eldrazi stompy                 200g  win%=63.5%  samples=4,312
+  sneak and show                 200g  win%=66.0%  samples=5,171
+  mono red painter               200g  win%=57.0%  samples=6,034
+  doomsday                       200g  win%=38.0%  samples=6,877
+  izzet delver                   200g  win%=79.0%  samples=7,736
+  death and taxes                200g  win%=87.0%  samples=8,601
+  bant nadu                      200g  win%=70.5%  samples=9,454
+  four-color                     200g  win%=87.5%  samples=10,306
+  jeskai control                 200g  win%=99.0%  samples=11,151
+  mono red aggro                 200g  win%=48.5%  samples=12,014
+  mono red prison                200g  win%=83.5%  samples=12,865
+
+Total RL samples: 12,865  (win rate: 59.8%)
+
+Training on 51,460 samples (12,865 new + 38,595 existing)...
+
+Training gbm on 41,168 samples...
+  Accuracy:  0.7792
+  ROC-AUC:   0.8568  (1.0 = perfect, 0.5 = random)
+  Brier:     0.1509  (0.0 = perfect calibration)
+  Train/Test: 41,168 / 10,292
+
+  Top 15 features:
+    opp_avg_kill                                  0.5638  ████████████████████████████████████████████████████████████████████████████████████████████████████████████████
+    turn                                          0.1105  ██████████████████████
+    total_power                                   0.0830  ████████████████
+    hand_creatures                                0.0726  ██████████████
+    dmg_by_t4                                     0.0295  █████
+    dmg_by_t3                                     0.0282  █████
+    damage_dealt                                  0.0186  ███
+    dmg_by_t2                                     0.0121  ██
+    vs_jeskai_control                             0.0094  █
+    avg_creatures_per_turn                        0.0093  █
+    creatures_in_play                             0.0092  █
+    hand_size                                     0.0066  █
+    lands_in_play                                 0.0058  █
+    has_guide_of_souls                            0.0054  █
+    has_champion_of_the_parish                    0.0047  
+
+Saved to data/win_prob_model_v3.pkl
+Dataset grown to 100,614 total samples
+
+============================================================
+RL Iteration 2/3  epsilon=18%
+============================================================
+  [29 cards not in local DB, fetching from Scryfall: ['Guide of Souls', 'Kytheon, Hero of Akros', 'Mutavault']...]
+  Loaded: 60 main | 15 sideboard
+RL exploration: 3000 games, epsilon=18%, 15 archetypes
+  dimir reanimator               200g  win%=26.5%  samples=842
+  lotus combo                    200g  win%=26.5%  samples=1,717
+  dimir tempo                    200g  win%=86.0%  samples=2,572
+  cephalid breakfast             200g  win%=31.5%  samples=3,441
+  eldrazi stompy                 200g  win%=60.0%  samples=4,320
+  sneak and show                 200g  win%=61.0%  samples=5,163
+  mono red painter               200g  win%=51.0%  samples=6,029
+  doomsday                       200g  win%=38.5%  samples=6,888
+  izzet delver                   200g  win%=84.5%  samples=7,750
+  death and taxes                200g  win%=87.5%  samples=8,605
+  bant nadu                      200g  win%=66.5%  samples=9,465
+  four-color                     200g  win%=85.5%  samples=10,320
+  jeskai control                 200g  win%=99.0%  samples=11,167
+  mono red aggro                 200g  win%=54.5%  samples=12,011
+  mono red prison                200g  win%=84.5%  samples=12,867
+
+Total RL samples: 12,867  (win rate: 60.1%)
+
+Training on 51,468 samples (12,867 new + 38,601 existing)...
+
+Training gbm on 41,174 samples...
+  Accuracy:  0.7762
+  ROC-AUC:   0.8523  (1.0 = perfect, 0.5 = random)
+  Brier:     0.1538  (0.0 = perfect calibration)
+  Train/Test: 41,174 / 10,294
+
+  Top 15 features:
+    opp_avg_kill                                  0.5664  █████████████████████████████████████████████████████████████████████████████████████████████████████████████████
+    turn                                          0.1084  █████████████████████
+    total_power                                   0.0839  ████████████████
+    hand_creatures                                0.0707  ██████████████
+    dmg_by_t4                                     0.0283  █████
+    dmg_by_t3                                     0.0274  █████
+    damage_dealt                                  0.0194  ███
+    dmg_by_t2                                     0.0110  ██
+    vs_jeskai_control                             0.0098  █
+    creatures_in_play                             0.0092  █
+    has_guide_of_souls                            0.0087  █
+    avg_creatures_per_turn                        0.0083  █
+    hand_size                                     0.0071  █
+    life                                          0.0052  █
+    has_champion_of_the_parish                    0.0049  
+
+Saved to data/win_prob_model_v3.pkl
+Dataset grown to 113,481 total samples
+
+============================================================
+RL Iteration 3/3  epsilon=10%
+============================================================
+  [29 cards not in local DB, fetching from Scryfall: ['Guide of Souls', 'Kytheon, Hero of Akros', 'Mutavault']...]
+  Loaded: 60 main | 15 sideboard
+RL exploration: 3000 games, epsilon=10%, 15 archetypes
+  dimir reanimator               200g  win%=24.5%  samples=861
+  lotus combo                    200g  win%=18.5%  samples=1,724
+  dimir tempo                    200g  win%=84.5%  samples=2,581
+  cephalid breakfast             200g  win%=35.0%  samples=3,429
+  eldrazi stompy                 200g  win%=68.5%  samples=4,290
+  sneak and show                 200g  win%=65.0%  samples=5,138
+  mono red painter               200g  win%=55.5%  samples=5,984
+  doomsday                       200g  win%=35.0%  samples=6,855
+  izzet delver                   200g  win%=82.0%  samples=7,722
+  death and taxes                200g  win%=87.5%  samples=8,587
+  bant nadu                      200g  win%=67.0%  samples=9,441
+  four-color                     200g  win%=87.5%  samples=10,306
+  jeskai control                 200g  win%=100.0%  samples=11,164
+  mono red aggro                 200g  win%=55.0%  samples=12,024
+  mono red prison                200g  win%=81.5%  samples=12,891
+
+Total RL samples: 12,891  (win rate: 60.8%)
+
+Training on 51,564 samples (12,891 new + 38,673 existing)...
+
+Training gbm on 41,251 samples...
+  Accuracy:  0.7743
+  ROC-AUC:   0.8544  (1.0 = perfect, 0.5 = random)
+  Brier:     0.1525  (0.0 = perfect calibration)
+  Train/Test: 41,251 / 10,313
+
+  Top 15 features:
+    opp_avg_kill                                  0.5944  ██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████
+    turn                                          0.0973  ███████████████████
+    total_power                                   0.0845  ████████████████
+    hand_creatures                                0.0542  ██████████
+    dmg_by_t3                                     0.0275  █████
+    dmg_by_t4                                     0.0263  █████
+    damage_dealt                                  0.0223  ████
+    dmg_by_t2                                     0.0123  ██
+    vs_jeskai_control                             0.0121  ██
+    avg_creatures_per_turn                        0.0091  █
+    hand_size                                     0.0082  █
+    creatures_in_play                             0.0075  █
+    has_guide_of_souls                            0.0060  █
+    lands_in_play                                 0.0051  █
+    hand_lands                                    0.0035  
+
+Saved to data/win_prob_model_v3.pkl
+Dataset grown to 126,372 total samples
+
+RL training complete. Model saved to data/win_prob_model_v3.pkl

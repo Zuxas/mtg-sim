@@ -1,0 +1,47 @@
+[CardDB] Oracle cards not found at E:\vscode ai project\mtg-sim\ml\mtg-meta-analyzer\data\rules_reference\scryfall_oracle_cards.json
+  [22 cards not in local DB, fetching from Scryfall: ['Ocelot Pride', 'Marsh Flats', 'Arena of Glory']...]
+  Loaded: 60 main | 0 sideboard
+Deck: BorosEnergy (60 cards)  APL: BorosEnergy
+Field: top 12 MODERN archetypes
+
+Collecting 10000 games (833/archetype)...
+  Boros Energy                        win%=83.0%  opp_T=6.5
+  Amulet Titan                        win%=91.4%  opp_T=8.7
+  Izzet Prowess                       win%=98.7%  opp_T=9.9
+  Eldrazi Ramp                        win%=67.6%  opp_T=5.3
+  Izzet Affinity                      win%=93.4%  opp_T=8.4
+  Grinding Breach                     win%=54.9%  opp_T=4.8
+  Jeskai Blink                        win%=87.6%  opp_T=7.3
+  Orzhov Blink                        win%=83.7%  opp_T=6.5
+  Goryo's Vengeance                   win%=94.6%  opp_T=8.8
+  Domain Zoo                          win%=94.6%  opp_T=8.7
+  Eldrazi Tron                        win%=81.4%  opp_T=6.6
+  Mono Red Aggro                      win%=33.6%  opp_T=3.9
+
+BorosEnergy model: 52,176 samples  win%=74.7%
+Data saved: data/ml_borosenergy_modern.json
+
+Training gbm on 41,740 samples...
+  Accuracy:  0.8608
+  ROC-AUC:   0.9213  (1.0 = perfect, 0.5 = random)
+  Brier:     0.0962  (0.0 = perfect calibration)
+  Train/Test: 41,740 / 10,436
+
+  Top 15 features:
+    opp_avg_kill                                  0.4063  █████████████████████████████████████████████████████████████████████████████████
+    turn                                          0.2168  ███████████████████████████████████████████
+    total_power                                   0.1503  ██████████████████████████████
+    dmg_by_t3                                     0.0436  ████████
+    hand_creatures                                0.0308  ██████
+    dmg_by_t4                                     0.0299  █████
+    has_guide_of_souls                            0.0198  ███
+    damage_dealt                                  0.0163  ███
+    vs_lotus_combo                                0.0143  ██
+    life                                          0.0110  ██
+    avg_creatures_per_turn                        0.0079  █
+    hand_size                                     0.0071  █
+    energy                                        0.0063  █
+    dmg_by_t2                                     0.0055  █
+    vs_mono_red_painter                           0.0052  █
+Model saved: data/ml_borosenergy_modern.pkl
+Modern model saved: data/ml_borosenergy_modern.pkl

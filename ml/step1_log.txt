@@ -1,0 +1,56 @@
+=== Collecting v3 training data (20k games, richer features) ===
+[CardDB] Loading 162MB oracle database...
+[CardDB] 37,112 cards indexed
+[CardDB] 75,499 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+Collecting 20000 games (1333/archetype), per-turn snapshots...
+
+  dimir reanimator               1333g  win%=20.9%  snapshots=5,835
+  lotus combo                    1333g  win%=16.0%  snapshots=11,662
+  dimir tempo                    1333g  win%=81.4%  snapshots=17,521
+  cephalid breakfast             1333g  win%=31.7%  snapshots=23,356
+  eldrazi stompy                 1333g  win%=64.5%  snapshots=29,213
+  sneak and show                 1333g  win%=62.8%  snapshots=35,069
+  mono red painter               1333g  win%=55.7%  snapshots=40,918
+  doomsday                       1333g  win%=34.7%  snapshots=46,754
+  izzet delver                   1333g  win%=81.5%  snapshots=52,612
+  death and taxes                1333g  win%=85.1%  snapshots=58,471
+  bant nadu                      1333g  win%=65.6%  snapshots=64,327
+  four-color                     1333g  win%=85.7%  snapshots=70,186
+  jeskai control                 1333g  win%=98.2%  snapshots=76,040
+  mono red aggro                 1333g  win%=51.3%  snapshots=81,893
+  mono red prison                1333g  win%=81.0%  snapshots=87,749
+
+Total: 87,749 samples from 20000 games
+Feature dimension: 43
+Win rate: 57.9%
+Saved to data/win_prob_training_v3.json
+
+=== Training GBM on v3 data ===
+
+Training gbm on 70,199 samples...
+  Accuracy:  0.7791
+  ROC-AUC:   0.8566  (1.0 = perfect, 0.5 = random)
+  Brier:     0.1519  (0.0 = perfect calibration)
+  Train/Test: 70,199 / 17,550
+
+  Top 15 features:
+    opp_avg_kill                                  0.5746  ██████████████████████████████████████████████████████████████████████████████████████████████████████████████████
+    turn                                          0.1176  ███████████████████████
+    total_power                                   0.0851  █████████████████
+    hand_creatures                                0.0706  ██████████████
+    dmg_by_t4                                     0.0291  █████
+    dmg_by_t3                                     0.0255  █████
+    damage_dealt                                  0.0186  ███
+    vs_jeskai_control                             0.0117  ██
+    dmg_by_t2                                     0.0088  █
+    creatures_in_play                             0.0072  █
+    hand_size                                     0.0069  █
+    avg_creatures_per_turn                        0.0062  █
+    has_guide_of_souls                            0.0055  █
+    vs_mono_red_aggro                             0.0043  
+    has_champion_of_the_parish                    0.0038  
+
+Saved to data/win_prob_model_v3.pkl
+DONE: data/win_prob_model_v3.pkl

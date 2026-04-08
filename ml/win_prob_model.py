@@ -40,6 +40,10 @@ SNAPSHOT_KEYS = [
     "has_guide_of_souls", "has_cavern_of_souls",
     "has_esper_sentinel", "has_kytheon,_hero_of_akros",
     "hand_creatures", "hand_lands",
+    # Richer features
+    "dmg_by_t2", "dmg_by_t3", "dmg_by_t4",
+    "creatures_lost", "had_t1_creature", "had_t2_creature",
+    "avg_creatures_per_turn",
 ]
 
 

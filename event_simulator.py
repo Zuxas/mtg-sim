@@ -60,26 +60,28 @@ def build_matchup_table(our_deck, our_dist, sideboard, field, opp_clocks,
                     real_g1 = 100 - wp
                     break
 
-        # 2. Simulated G1 if no real data
+        # 2. Interaction-adjusted race (no real data available)
         if real_g1 is None:
-            real_g1 = race_win_pct(our_dist, opp_dist, n=30000)
+            try:
+                from engine.interaction import apply_interaction_to_dist
+                adjusted = apply_interaction_to_dist(
+                    our_dist, opp_key, n_sim=3000, on_play=True)
+                real_g1 = race_win_pct(adjusted, opp_dist, n=20000)
+            except Exception:
+                real_g1 = race_win_pct(our_dist, opp_dist, n=30000)
 
-        # 3. Estimate sb premium: how much does post-board help?
-        # Calibrated against known outcomes:
-        # - vs combo (T1-2 kill): sb barely helps (+2-5% match vs G1)
-        # - vs fair (T3-5 kill): sb helps meaningfully (+8-12% match vs G1)
-        # - vs control (T6+): sb helps a lot (+15-20%)
+        # 3. Sb premium by opponent speed
         opp_avg_kill = avg_kill_turn(opp_dist)
         if opp_avg_kill <= 2.5:
-            sb_premium = 2.0    # T1-2 combo: sb barely helps
+            sb_premium = 2.0
         elif opp_avg_kill <= 3.5:
-            sb_premium = 3.0    # T3 combo
+            sb_premium = 3.0
         elif opp_avg_kill <= 4.5:
-            sb_premium = 5.0    # T4 aggro
+            sb_premium = 5.0
         elif opp_avg_kill <= 5.5:
-            sb_premium = 7.0    # T5 midrange
+            sb_premium = 7.0
         else:
-            sb_premium = 9.0    # T6+ control
+            sb_premium = 9.0
 
         # Match win% = G1 + sb_premium (capped at 99%)
         match_win = min(99.0, real_g1 + sb_premium)

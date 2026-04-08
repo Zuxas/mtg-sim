@@ -1,0 +1,31 @@
+Traceback (most recent call last):
+  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 219, in <module>
+    main()
+    ~~~~^^
+  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 211, in main
+    results = run_our_matchups(
+        args.our_deck, args.format, args.top_n, args.n, args.output
+    )
+  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 151, in run_our_matchups
+    r = run_matchup(our_deck, opp_name, format_name, n)
+  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 92, in run_matchup
+    deck_b, side_b, apl_b = load_deck_and_apl(deck_b_name, format_name)
+                            ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 71, in load_deck_and_apl
+    stub = get_stub_deck(deck_name)
+  File "E:\vscode ai project\mtg-sim\data\stub_decks.py", line 178, in get_stub_deck
+    return builder()
+  File "E:\vscode ai project\mtg-sim\data\stub_decks.py", line 82, in <lambda>
+    "cephalid breakfast": lambda: _make_deck([
+                                  ~~~~~~~~~~^^
+        (4, "Cephalid Illusionist"), (4, "Narcomoeba"),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        (4, "Dread Return"),
+        ^^^^^^^^^^^^^^^^^^^^
+    ], [(11, "Island"), (7, "Swamp"), (4, "Nomads en-Kor")[:1]]),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\vscode ai project\mtg-sim\data\stub_decks.py", line 49, in _make_deck
+    for qty, name in lands:
+        ^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 1)

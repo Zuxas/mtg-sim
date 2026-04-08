@@ -24,6 +24,109 @@ from sim_bridge import _infer_archetype_key, avg_kill_turn
 
 def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
     """
+    Load a deck and APL by name.
+    Priority: hand-tuned APL → real stub from DB → legacy stub → GenericAPL
+    """
+    from apl.generic_apl import GenericAPL
+    from data.card import Card
+    from engine.card_db import CardDB
+
+    _db = CardDB()
+
+    def build_deck_from_dict(card_dict):
+        """Convert {card_name: qty} dict to list of Card objects."""
+        deck = []
+        for card_name, qty in card_dict.items():
+            for _ in range(qty):
+                data = _db.get(card_name)
+                if data:
+                    deck.append(Card(
+                        name=data.get("name", card_name),
+                        mana_cost=data.get("mana_cost", ""),
+                        cmc=float(data.get("cmc", 2)),
+                        type_line=data.get("type_line", ""),
+                        oracle_text=data.get("oracle_text", ""),
+                        power=data.get("power"),
+                        toughness=data.get("toughness"),
+                        colors=data.get("colors", []),
+                    ))
+                else:
+                    # Minimal placeholder card
+                    deck.append(Card(
+                        name=card_name, mana_cost="{1}", cmc=1,
+                        type_line="Creature", oracle_text="",
+                        power="1", toughness="1", colors=[],
+                    ))
+        return deck
+
+    # 1. Hand-tuned APLs
+    deck_key = deck_name.lower().replace(" ", "").replace("-", "").replace("'", "")
+    if deck_key in ("legacyhumans", "humans"):
+        from apl.humans import HumansAPL
+        from data.deck import load_deck_from_file
+        main, side = load_deck_from_file("decks/humans_legacy.txt")
+        return main, side, HumansAPL()
+
+    if deck_key == "borosenergy":
+        from apl.boros_energy import BorosEnergyAPL
+        try:
+            from data.stub_decks import get_stub_deck_list
+            mb = get_stub_deck_list("boros_energy")
+            if mb:
+                main = build_deck_from_dict(mb)
+                return main, [], BorosEnergyAPL()
+        except Exception:
+            pass
+
+    if deck_key in ("izzetprowess", "prowess"):
+        from apl.izzet_prowess import IzzetProwessAPL
+        try:
+            from data.stub_decks import get_stub_deck_list
+            mb = get_stub_deck_list("izzet_prowess")
+            if mb:
+                main = build_deck_from_dict(mb)
+                return main, [], IzzetProwessAPL()
+        except Exception:
+            pass
+
+    # 2. Real stub from DB
+    try:
+        from data.stub_decks import get_stub_deck_list
+        mb = get_stub_deck_list(deck_name)
+        if mb and sum(mb.values()) >= 40:
+            main = build_deck_from_dict(mb)
+            apl  = GenericAPL(deck_name)
+            return main, [], apl
+    except Exception:
+        pass
+
+    # 3. Legacy hardcoded stubs
+    try:
+        from data.stub_decks import get_stub_deck
+        stub = get_stub_deck(deck_name)
+        if stub and len(stub) >= 40:
+            return stub, [], GenericAPL(deck_name)
+    except Exception:
+        pass
+
+    # 4. Playbook
+    try:
+        from apl.playbook_parser import load_all_playbooks, load_all_tac_guides, find_playbook
+        pbs = {**load_all_playbooks(), **load_all_tac_guides()}
+        pb  = find_playbook(deck_name, pbs)
+        if pb and pb.mainboard and sum(pb.mainboard.values()) >= 40:
+            lines = [f"{q} {n}" for n, q in pb.mainboard.items()]
+            from data.deck import load_deck_from_text
+            main, side = load_deck_from_text("\n".join(lines))
+            if len(main) >= 40:
+                from apl.generic_apl import generic_from_playbook
+                return main, side, generic_from_playbook(pb)
+    except Exception:
+        pass
+
+    print(f"  [No deck found for {deck_name}]")
+    return None, None, None
+    """
     Load a deck and its APL by name.
     Priority: hand-tuned APL → AutoAPL → GenericAPL
     """

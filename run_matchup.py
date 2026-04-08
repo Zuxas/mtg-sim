@@ -81,33 +81,49 @@ def _run_combo(result, opp_name, format_name, n, seed):
 
 
 def _run_fair(result, our_deck, opp_name, format_name, n, seed):
-    """Fair matchup: both-sides combat simulation."""
-    from engine.match_runner import run_match_set
-    from generate_matchup_data import load_deck_and_apl
+    """
+    Fair matchup: use real tournament G1 data if available,
+    fall back to both-sides combat sim.
+    """
     from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key, avg_kill_turn
 
-    our_main, _, our_apl = load_deck_and_apl(our_deck, format_name)
-    opp_main, _, opp_apl = load_deck_and_apl(opp_name, format_name)
+    # Try real DB data first
+    try:
+        from meta_bridge import get_real_matchup
+        real_g1 = get_real_matchup(our_deck, opp_name, format_name, min_matches=30)
+    except Exception:
+        real_g1 = None
 
-    if not our_main or not opp_main:
-        raise ValueError(f"Could not load deck for {opp_name}")
+    if real_g1 is None:
+        # Fall back to both-sides combat sim
+        from engine.match_runner import run_match_set
+        from generate_matchup_data import load_deck_and_apl
 
-    # G1 — maindecks, 50/50 play/draw
-    r_g1 = run_match_set(our_apl, our_main, opp_apl, opp_main,
+        our_main, _, our_apl = load_deck_and_apl(our_deck, format_name)
+        opp_main, _, opp_apl = load_deck_and_apl(opp_name, format_name)
+
+        if not our_main or not opp_main:
+            raise ValueError(f"Could not load deck for {opp_name}")
+
+        r = run_match_set(our_apl, our_main, opp_apl, opp_main,
                           n=n, seed=seed, mix_play_draw=True)
+        real_g1 = r.win_pct()
+        result["g1_source"] = "sim"
+    else:
+        result["g1_source"] = "db"
 
-    # G2/G3 — sb premium (deck-agnostic approximation)
+    # G2/G3 — SB premium on top of real G1
     opp_dist = ARCHETYPE_CLOCKS.get(
         _infer_archetype_key(opp_name), ARCHETYPE_CLOCKS["unknown"])
     opp_avg = avg_kill_turn(opp_dist)
     sb  = 5 if opp_avg >= 6 else (8 if opp_avg >= 5 else 10)
-    g2_wp = min(98.0, r_g1.win_pct() + sb)
-    g3_wp = min(98.0, r_g1.win_pct() + sb * 0.7)
+    g2_wp = min(98.0, real_g1 + sb)
+    g3_wp = min(98.0, real_g1 + sb * 0.7)
 
-    match = bo3_win(r_g1.win_pct(), g2_wp, g3_wp)
+    match = bo3_win(real_g1, g2_wp, g3_wp)
     result.update({
-        "g1": r_g1.win_pct(), "g2": round(g2_wp, 1), "g3": round(g3_wp, 1),
-        "match": match, "avg_turns": round(r_g1.avg_turns, 1), "hard_stop": 0.0,
+        "g1": real_g1, "g2": round(g2_wp, 1), "g3": round(g3_wp, 1),
+        "match": match, "avg_turns": 0.0, "hard_stop": 0.0,
     })
 
 

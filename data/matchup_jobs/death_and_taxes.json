@@ -1,1 +1,1 @@
-{"opp": "Death And Taxes", "our_deck": "Legacy Humans", "field_pct": 4.6, "type": "fair", "n": 1000, "error": "Could not load deck for Death And Taxes", "elapsed": 6.1}
+{"opp": "Death And Taxes", "our_deck": "Legacy Humans", "field_pct": 4.6, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 84.1, "g2": 87.1, "g3": 86.3, "match": 94.6, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 8.7}

@@ -1,1 +1,1 @@
-{"opp": "Doomsday", "our_deck": "Legacy Humans", "field_pct": 4.9, "type": "combo", "n": 1000, "error": null, "g1": 55.0, "g2": 66.1, "g3": 53.9, "match": 62.3, "avg_turns": 3.9, "hard_stop": 33.5, "elapsed": 2.2}
+{"opp": "Doomsday", "our_deck": "Legacy Humans", "field_pct": 4.9, "type": "combo", "n": 1000, "error": null, "g1": 55.0, "g2": 73.0, "g3": 68.5, "match": 72.8, "avg_turns": 3.9, "hard_stop": 33.5, "g1_source": "com", "elapsed": 8.1}

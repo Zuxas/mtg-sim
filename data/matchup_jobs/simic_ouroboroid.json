@@ -1,1 +1,1 @@
-{"opp": "Simic Ouroboroid", "our_deck": "Izzet Prowess", "field_pct": 3.4, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 13.4, "g2": 18.4, "g3": 16.9, "match": 7.0, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 5.0}
+{"opp": "Simic Ouroboroid", "our_deck": "Izzet Prowess", "field_pct": 3.4, "type": "fair", "n": 1000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 31.0, "g3": 29.5, "match": 19.7, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 7.2}

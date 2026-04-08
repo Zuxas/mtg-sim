@@ -1,1 +1,1 @@
-{"opp": "Azorius Omniscience", "our_deck": "Izzet Prowess", "field_pct": 3.7, "type": "combo", "n": 1000, "error": null, "g1": 61.6, "g2": 64.7, "g3": 31.6, "match": 54.6, "avg_turns": 4.3, "hard_stop": 0.0, "elapsed": 1.9}
+{"opp": "Azorius Omniscience", "our_deck": "Izzet Prowess", "field_pct": 3.7, "type": "combo", "n": 1000, "error": null, "g1": 61.6, "g2": 67.6, "g3": 66.1, "match": 72.0, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "elapsed": 6.6}

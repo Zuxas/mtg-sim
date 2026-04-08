@@ -1,20 +1,8 @@
-Traceback (most recent call last):
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 82, in main
-    _run_fair(result, our_deck, opp_name, format_name, n, seed)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 145, in _run_fair
-    raise ValueError(f"Could not load deck for {opp_name}")
-ValueError: Could not load deck for Dimir Tempo
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
   [29 cards loaded from local DB — no network calls]
   Loaded: 60 main | 15 sideboard
-  ✓ Tac guide: Boros Energy Modern
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Izzet Prowess - Standard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Legacy Humans
-  [No deck found for Dimir Tempo]
-ERR Dimir Tempo: Could not load deck for Dimir Tempo
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+OK  Dimir Tempo: G1=65.0%  Match=75.0%  (8.4s)

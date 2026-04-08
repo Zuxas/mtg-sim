@@ -1,1 +1,1 @@
-{"opp": "Lotus Combo", "our_deck": "Legacy Humans", "field_pct": 10.5, "type": "combo", "n": 1000, "error": null, "g1": 60.0, "g2": 66.3, "g3": 54.3, "match": 65.0, "avg_turns": 4.1, "hard_stop": 33.1, "elapsed": 2.1}
+{"opp": "Lotus Combo", "our_deck": "Legacy Humans", "field_pct": 10.5, "type": "combo", "n": 1000, "error": null, "g1": 60.0, "g2": 78.0, "g3": 73.5, "match": 79.4, "avg_turns": 4.1, "hard_stop": 33.1, "g1_source": "com", "elapsed": 7.0}

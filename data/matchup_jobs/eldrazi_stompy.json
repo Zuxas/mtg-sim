@@ -1,1 +1,1 @@
-{"opp": "Eldrazi Stompy", "our_deck": "Legacy Humans", "field_pct": 6.4, "type": "fair", "n": 1000, "error": "Could not load deck for Eldrazi Stompy", "elapsed": 6.1}
+{"opp": "Eldrazi Stompy", "our_deck": "Legacy Humans", "field_pct": 6.4, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 20.2, "g2": 28.2, "g3": 26.2, "match": 15.3, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 8.5}

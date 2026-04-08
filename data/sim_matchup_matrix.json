@@ -20,33 +20,33 @@
     "Amulet Titan": 64.4,
     "Eldrazi Ramp": 49.0,
     "Izzet Prowess": 56.0,
+    "Izzet Affinity": 54.0,
     "Grinding Breach": 61.0,
+    "Goryo's Vengeance": 63.0,
+    "Temur Breach": 61.4,
     "Jeskai Blink": 52.0,
     "Orzhov Blink": 60.0,
-    "Goryo's Vengeance": 63.0,
+    "Domain Zoo": 55.0,
     "Eldrazi Tron": 55.0,
-    "Temur Breach": 61.4,
-    "Esper Blink": 53.0,
-    "Izzet Affinity": 43.3,
-    "Domain Zoo": 85.2,
     "Mono Red Aggro": 38.5,
-    "Dimir Murktide": 92.9
+    "Dimir Murktide": 56.0,
+    "Esper Blink": 53.0
   },
   "Izzet Prowess (standard)": {
     "Dimir Midrange": 61.0,
     "Izzet Cauldron": 61.7,
     "Jeskai Control": 61.0,
     "Izzet Lessons": 61.0,
+    "Mono Red Aggro": 25.0,
+    "Azorius Control": 65.0,
     "Esper Pixie": 44.0,
+    "Gruul Aggro": 88.2,
     "Mono Green Landfall": 54.0,
     "Jeskai Oculus": 60.5,
     "Azorius Omniscience": 61.6,
-    "Sultai Reanimator": 61.2,
-    "Mono Red Aggro": 18.7,
-    "Azorius Control": 83.5,
-    "Gruul Aggro": 88.2,
-    "Simic Ouroboroid": 13.4,
-    "Boros Aggro": 70.1
+    "Simic Ouroboroid": 25.0,
+    "Boros Aggro": 70.1,
+    "Sultai Reanimator": 61.2
   },
   "5C Humans (pioneer)": {
     "Izzet Phoenix": 61.7,
@@ -67,12 +67,18 @@
   "Legacy Humans (legacy)": {
     "Dimir Reanimator": 20.5,
     "Lotus Combo": 60.0,
+    "Dimir Tempo": 65.0,
     "Cephalid Breakfast": 15.8,
+    "Eldrazi Stompy": 20.2,
     "Sneak And Show": 30.5,
     "Mono Red Painter": 47.2,
     "Doomsday": 55.0,
+    "Izzet Delver": 93.9,
+    "Death And Taxes": 84.1,
     "Bant Nadu": 52.6,
+    "Four-Color": 70.3,
     "Jeskai Control": 65.0,
-    "Mono Red Aggro": 59.0
+    "Mono Red Aggro": 59.0,
+    "Mono Red Prison": 34.0
   }
 }

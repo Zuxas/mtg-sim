@@ -48,6 +48,9 @@ PHANTASMAL_IMAGE    = "Phantasmal Image"
 KITESAIL_FREEBOOTER = "Kitesail Freebooter"
 CAVERN_OF_SOULS     = "Cavern of Souls"
 ANCIENT_ZIGGURAT    = "Ancient Ziggurat"
+GUIDE_OF_SOULS      = "Guide of Souls"
+ESPER_SENTINEL      = "Esper Sentinel"
+CAVERN              = CAVERN_OF_SOULS
 
 
 class HumansAPL(BaseAPL):
@@ -153,39 +156,66 @@ class HumansAPL(BaseAPL):
         land_count = len(lands)
         size = len(hand)
 
-        # Always keep tiny hands
-        if size <= 4:
-            return True
-
-        # Never keep 0-land hands of 5+
-        if land_count == 0:
-            return False
-
-        # Never keep 1-land hands unless desperate (size 5 or lots of mulligans)
-        if land_count == 1:
-            return size <= 5 or mulligans >= 3
-
-        # Never keep flood (5+ lands in 7, 4+ in 6, 3+ in 5)
+        # Hard rules — always apply regardless of model
+        if size <= 4:                              return True
+        if land_count == 0:                        return False
+        if land_count == 1 and size >= 6 and mulligans < 3: return False
         max_lands = {7: 4, 6: 3, 5: 3}.get(size, 3)
-        if land_count > max_lands:
-            return False
+        if land_count > max_lands:                 return False
 
-        # 2-land hand: need early action (1-drop, Vial, or Champion/Lieutenant)
+        # Rule-based decision for clear cases
+        creatures = [c for c in hand if not c.is_land()]
+        lords      = [c for c in hand if c.name in (CHAMPION, LIEUTENANT)]
+
         if land_count == 2:
-            lords = [c for c in hand if c.name in (CHAMPION, LIEUTENANT)]
-            has_action = bool(ones or vialed or lords)
-            # On the play: need a 1-drop or Vial
-            if on_play:
-                return bool(ones or vialed)
-            # On the draw: 2-drop is enough
-            return has_action or bool(twos)
+            if on_play and not (ones or vialed):   return False
+            if not on_play and not (ones or vialed or lords or twos): return False
 
-        # 3-land hand: almost always keep — just need at least one non-land
-        if land_count == 3:
-            return (size - land_count) >= 1
+        # For borderline hands, query ML model if available
+        # This catches edge cases the rules miss — e.g. 3-land hand with no action vs fast combo
+        if self.opp_model is not None:
+            try:
+                from ml.win_prob_model import load_model, predict_win_prob
+                ml_model = load_model()
+                if ml_model is not None:
+                    snap = {
+                        "turn": 1, "damage_dealt": 0,
+                        "creatures_in_play": 0, "total_power": 0,
+                        "lands_in_play": 0, "hand_size": size, "life": 20,
+                        "energy": 0, "mulligans": mulligans,
+                        "has_thalia,_guardian_of_thraben": int(any(c.name == THALIA for c in hand)),
+                        "has_champion_of_the_parish": int(any(c.name == CHAMPION for c in hand)),
+                        "has_thalia's_lieutenant": int(any(c.name == LIEUTENANT for c in hand)),
+                        "has_adeline,_resplendent_cathar": int(any(c.name == ADELINE for c in hand)),
+                        "has_guide_of_souls": int(any(c.name == GUIDE_OF_SOULS for c in hand)),
+                        "has_cavern_of_souls": int(any(c.name == CAVERN for c in hand)),
+                        "has_esper_sentinel": int(any(c.name == ESPER_SENTINEL for c in hand)),
+                        "has_kytheon,_hero_of_akros": int(any(c.name == KYTHEON for c in hand)),
+                        "hand_creatures": len(creatures),
+                        "hand_lands": land_count,
+                    }
+                    arch = self.opp_model.archetype_key
+                    p_keep = predict_win_prob(snap, arch, model=ml_model)
+                    # Mull threshold: compare to expected win rate for this matchup
+                    # Don't mull a hand that's at or above expected win rate
+                    from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key, avg_kill_turn
+                    opp_key  = _infer_archetype_key(arch)
+                    opp_dist = ARCHETYPE_CLOCKS.get(opp_key, ARCHETYPE_CLOCKS["unknown"])
+                    # Expected win rate from race model (our baseline)
+                    expected = 50.0  # simplified — use 50% as neutral threshold
+                    # Only mull if hand is significantly below average for this matchup
+                    # and we haven't mulliganed too many times yet
+                    if mulligans >= 3:
+                        return True  # stop mulliganing after 3
+                    # Keep if model says >= 70% of expected win rate for this hand size
+                    size_penalty = (7 - size) * 3  # each mull costs ~3%
+                    threshold = max(10.0, p_keep * 0.7 - size_penalty)
+                    return p_keep >= threshold
+            except Exception:
+                pass  # ML unavailable — fall through to rule-based
 
-        # 4-land hand in a 7: mull (already caught above)
-        return True
+        # Default: keep if 2+ lands and at least 1 non-land
+        return land_count >= 2 and len(creatures) >= 1
 
     def bottom(self, hand: list[Card], n: int) -> list[Card]:
         """

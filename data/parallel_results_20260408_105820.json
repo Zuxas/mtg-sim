@@ -1,0 +1,169 @@
+{
+  "field_weighted_match": 39.7,
+  "elapsed_s": 8.5,
+  "n_per_matchup": 1000,
+  "results": [
+    {
+      "opp": "Dimir Reanimator",
+      "field_pct": 22.4,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 20.5,
+      "g2": 49.1,
+      "g3": 50.0,
+      "match": 34.8,
+      "avg_turns": 2.8,
+      "hard_stop": 0.0,
+      "elapsed": 2.0
+    },
+    {
+      "opp": "Lotus Combo",
+      "field_pct": 10.5,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 60.0,
+      "g2": 52.0,
+      "g3": 54.3,
+      "match": 58.1,
+      "avg_turns": 4.1,
+      "hard_stop": 33.1,
+      "elapsed": 2.0
+    },
+    {
+      "opp": "Cephalid Breakfast",
+      "field_pct": 7.5,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 15.8,
+      "g2": 45.4,
+      "g3": 45.9,
+      "match": 28.7,
+      "avg_turns": 2.9,
+      "hard_stop": 0.0,
+      "elapsed": 2.1
+    },
+    {
+      "opp": "Sneak And Show",
+      "field_pct": 5.4,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 30.5,
+      "g2": 26.2,
+      "g3": 27.5,
+      "match": 19.2,
+      "avg_turns": 3.5,
+      "hard_stop": 0.0,
+      "elapsed": 2.1
+    },
+    {
+      "opp": "Mono Red Painter",
+      "field_pct": 5.0,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 47.2,
+      "g2": 36.0,
+      "g3": 36.1,
+      "match": 34.8,
+      "avg_turns": 4.0,
+      "hard_stop": 0.0,
+      "elapsed": 2.1
+    },
+    {
+      "opp": "Doomsday",
+      "field_pct": 4.9,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 55.0,
+      "g2": 53.9,
+      "g3": 53.9,
+      "match": 56.4,
+      "avg_turns": 3.9,
+      "hard_stop": 33.5,
+      "elapsed": 2.1
+    },
+    {
+      "opp": "Bant Nadu",
+      "field_pct": 4.3,
+      "type": "combo",
+      "n": 1000,
+      "error": null,
+      "g1": 52.6,
+      "g2": 51.0,
+      "g3": 50.1,
+      "match": 51.8,
+      "avg_turns": 4.1,
+      "hard_stop": 0.0,
+      "elapsed": 2.1
+    },
+    {
+      "opp": "Dimir Tempo",
+      "field_pct": 10.5,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.2
+    },
+    {
+      "opp": "Eldrazi Stompy",
+      "field_pct": 6.4,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.5
+    },
+    {
+      "opp": "Izzet Delver",
+      "field_pct": 4.7,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.5
+    },
+    {
+      "opp": "Death And Taxes",
+      "field_pct": 4.6,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.7
+    },
+    {
+      "opp": "Four-Color",
+      "field_pct": 3.7,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.6
+    },
+    {
+      "opp": "Jeskai Control",
+      "field_pct": 3.6,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.5
+    },
+    {
+      "opp": "Mono Red Aggro",
+      "field_pct": 3.4,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.6
+    },
+    {
+      "opp": "Mono Red Prison",
+      "field_pct": 3.2,
+      "type": "fair",
+      "n": 1000,
+      "error": "'str' object has no attribute 'is_land'",
+      "elapsed": 6.6
+    }
+  ]
+}

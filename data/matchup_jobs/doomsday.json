@@ -1,1 +1,1 @@
-{"opp": "Doomsday", "field_pct": 4.9, "type": "combo", "n": 5000, "error": null, "g1": 56.3, "g2": 65.4, "match": 62.4, "avg_turns": 4.0, "hard_stop": 34.5, "elapsed": 2.6}
+{"opp": "Doomsday", "field_pct": 4.9, "type": "combo", "n": 1000, "error": null, "g1": 55.0, "g2": 53.9, "g3": 53.9, "match": 56.4, "avg_turns": 3.9, "hard_stop": 33.5, "elapsed": 2.1}

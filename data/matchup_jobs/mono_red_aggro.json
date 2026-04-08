@@ -1,1 +1,1 @@
-{"opp": "Mono Red Aggro", "field_pct": 3.4, "type": "fair", "n": 5000, "error": null, "g1": 43.8, "g2": 49.8, "match": 47.8, "avg_turns": 12.9, "hard_stop": 0.0, "elapsed": 9.0}
+{"opp": "Mono Red Aggro", "field_pct": 3.4, "type": "fair", "n": 1000, "error": "'str' object has no attribute 'is_land'", "elapsed": 6.6}

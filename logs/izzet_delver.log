@@ -10,4 +10,4 @@
   ✓ Tac guide: Dashboard
   ✓ Tac guide: Legacy Humans
   [No playbook for Izzet Delver — trying stub deck]
-OK  Izzet Delver: G1=86.4%  Match=91.7%  (8.4s)
+ERR Izzet Delver: 'str' object has no attribute 'is_land'

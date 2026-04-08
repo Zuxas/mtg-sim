@@ -62,26 +62,27 @@ def main():
             if not our_main or not opp_main:
                 raise ValueError(f"Deck load failed for {opp_name}")
 
-            # G1 — both maindecks, mix play/draw
+            # G1 — both maindecks, 50/50 play/draw
             r_g1 = run_match_set(our_apl, our_main, opp_apl, opp_main,
                                   n=n, seed=seed, mix_play_draw=True)
 
-            # G2 — we sideboard; opponent on play (they won G1 ~half the time)
-            try:
-                our_g2 = build_library_g2(opp_name.lower())
-            except Exception:
-                our_g2 = our_main
-            r_g2 = run_match_set(our_apl, our_g2, opp_apl, opp_main,
-                                  n=n, seed=seed+1, mix_play_draw=False,
-                                  on_play=False)
+            # G2 — we sideboard (approximated: +6-11% based on opp speed)
+            # Opponent on play G2 (loser of G1 picks — on avg they're slightly
+            # more likely to have won G1 vs fair decks we're favored against)
+            from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key, avg_kill_turn
+            opp_dist = ARCHETYPE_CLOCKS.get(
+                _infer_archetype_key(opp_name), ARCHETYPE_CLOCKS["unknown"])
+            opp_avg = avg_kill_turn(opp_dist)
+            # SB premium: faster opp = more targeted hate = bigger swing
+            sb = 5 if opp_avg >= 6 else (8 if opp_avg >= 5 else 10)
+            g2_wp = min(98.0, r_g1.win_pct() + sb)
 
-            # G3 — both boarded, 50/50 play/draw
-            r_g3 = run_match_set(our_apl, our_g2, opp_apl, opp_main,
-                                  n=n, seed=seed+2, mix_play_draw=True)
+            # G3 — 50/50, both boarded, slightly less swing than G2
+            g3_wp = min(98.0, r_g1.win_pct() + sb * 0.7)
 
-            match = bo3_win(r_g1.win_pct(), r_g2.win_pct(), r_g3.win_pct())
-            result.update({"g1": r_g1.win_pct(), "g2": r_g2.win_pct(),
-                           "g3": r_g3.win_pct(), "match": match,
+            match = bo3_win(r_g1.win_pct(), g2_wp, g3_wp)
+            result.update({"g1": r_g1.win_pct(), "g2": round(g2_wp, 1),
+                           "g3": round(g3_wp, 1), "match": match,
                            "avg_turns": round(r_g1.avg_turns, 1),
                            "hard_stop": 0.0})
 

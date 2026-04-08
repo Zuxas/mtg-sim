@@ -51,8 +51,12 @@ class BorosEnergyAPL(BaseAPL):
     _treasures = 0
     _ocelot_triggered_this_turn = False
 
-    # Cards that are dead in goldfish (creature/PW removal only)
-    DEAD_IN_GOLDFISH = {GALVANIC, STATIC_PRISON, THRABEN_CHARM, "Exorcise"}
+    # Cards with reduced value in goldfish but NOT dead:
+    # - Galvanic Discharge: target own creature for 0 energy, feeds Guide/Wrath energy
+    # - Thraben Charm: +1/+2 pump mode is live in combat
+    # - Static Prison: 2 energy on ETB feeds Guide of Souls
+    # Only truly dead: Exorcise (opponent permanent only, no energy)
+    DEAD_IN_GOLDFISH = {"Exorcise"}
 
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
         lands = [c for c in hand if c.is_land()]
@@ -254,6 +258,30 @@ class BorosEnergyAPL(BaseAPL):
                     gs.cast_spell(card)
                     break
 
+        # 5. Thraben Charm — +1/+2 pump on best attacker pre-combat
+        attackers = [
+            c for c in gs.zones.creatures_on_battlefield()
+            if not c.summoning_sickness or hasattr(c, 'tags') and 'haste' in c.tags
+        ]
+        if attackers:
+            for card in list(gs.hand()):
+                if card.name == THRABEN_CHARM and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    best = max(attackers, key=lambda c: c.effective_power())
+                    # +1/+2 until EOT — model as temporary counter
+                    best.counters += 1  # +1 power for this combat
+                    best._thraben_boost = True
+                    gs.cast_spell(card)
+                    gs._log(f"  [PRE-COMBAT] Thraben Charm: +1/+2 on {best.name}")
+                    break
+
+        # 6. Static Prison — cast for 2 energy (no target needed in goldfish)
+        for card in list(gs.hand()):
+            if card.name == STATIC_PRISON and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                gs.energy += 2
+                gs._log(f"  Static Prison: +2 energy ({gs.energy} total)")
+                break
+
     def main_phase2(self, gs: GameState):
         """
         Post-combat:
@@ -329,6 +357,44 @@ class BorosEnergyAPL(BaseAPL):
                 gs.cast_spell(card)
                 gs.damage_dealt += 3
                 gs._log(f"  Lightning Bolt to face (3 dmg, {gs.damage_dealt} total)")
+                break
+
+        # Galvanic Discharge — cast for energy generation
+        # Get 2 energy, pay 0, target own creature with toughness > 2 (survives)
+        # Or target own token (it dies but you got the energy)
+        for card in list(gs.hand()):
+            if card.name == GALVANIC and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.energy += 2
+                # Find a target that survives (toughness > 2) or a token we don't mind losing
+                target = None
+                # Prefer targeting creature with toughness > 2 (survives)
+                survivors = [c for c in gs.zones.creatures_on_battlefield()
+                             if c.effective_toughness() > 2]
+                tokens = [c for c in gs.zones.creatures_on_battlefield()
+                          if "Token" in c.name]
+                if survivors:
+                    target = survivors[0]
+                    gs.cast_spell(card)
+                    gs._log(f"  Galvanic Discharge: +2 energy ({gs.energy}), "
+                            f"2 dmg to own {target.name} (survives)")
+                elif tokens:
+                    target = tokens[0]
+                    gs.zones.battlefield.remove(target)
+                    gs.zones.graveyard.append(target)
+                    gs.cast_spell(card)
+                    gs._log(f"  Galvanic Discharge: +2 energy ({gs.energy}), "
+                            f"sacrificed {target.name}")
+                elif gs.zones.creatures_on_battlefield():
+                    # Last resort: don't cast if it kills our only threats
+                    # Only cast if we have 3+ creatures (can afford to lose one)
+                    if len(gs.zones.creatures_on_battlefield()) >= 3:
+                        target = min(gs.zones.creatures_on_battlefield(),
+                                     key=lambda c: c.effective_power())
+                        gs.zones.battlefield.remove(target)
+                        gs.zones.graveyard.append(target)
+                        gs.cast_spell(card)
+                        gs._log(f"  Galvanic Discharge: +2 energy ({gs.energy}), "
+                                f"killed own {target.name}")
                 break
 
         # Bombardment finish — sacrifice tokens/creatures for lethal

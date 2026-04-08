@@ -51,9 +51,13 @@ class BorosEnergyAPL(BaseAPL):
     _treasures = 0
     _ocelot_triggered_this_turn = False
 
+    # Cards that are dead in goldfish (creature/PW removal only)
+    DEAD_IN_GOLDFISH = {GALVANIC, STATIC_PRISON, THRABEN_CHARM, "Exorcise"}
+
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
         lands = [c for c in hand if c.is_land()]
         creatures = [c for c in hand if c.has(Tag.CREATURE)]
+        dead = [c for c in hand if c.name in self.DEAD_IN_GOLDFISH]
         ones = [c for c in hand if c.has(Tag.ONE_DROP) and not c.is_land()]
         size = len(hand)
 
@@ -63,6 +67,8 @@ class BorosEnergyAPL(BaseAPL):
         if len(lands) > 4: return False
         # MUST have at least 1 creature
         if not creatures and mulligans < 2: return False
+        # Too many dead cards = mull
+        if len(dead) >= 3 and mulligans < 2: return False
 
         # Ragavan + land = always keep
         if any(c.name == RAGAVAN for c in hand) and len(lands) >= 1:
@@ -78,10 +84,16 @@ class BorosEnergyAPL(BaseAPL):
 
     def bottom(self, hand: list[Card], n: int) -> list[Card]:
         lands = sorted([c for c in hand if c.is_land()], key=lambda c: c.name)
-        spells = sorted([c for c in hand if not c.is_land()], key=lambda c: -c.cmc)
+        dead = [c for c in hand if c.name in self.DEAD_IN_GOLDFISH]
+        spells = sorted([c for c in hand if not c.is_land() and c.name not in self.DEAD_IN_GOLDFISH],
+                        key=lambda c: -c.cmc)
         to_bottom = []
+        # Dead goldfish cards first
+        to_bottom.extend(dead)
+        # Excess lands
         if len(lands) > 3:
             to_bottom.extend(lands[3:])
+        # High CMC spells
         for card in spells:
             if len(to_bottom) >= n: break
             if card.cmc >= 3 and card not in to_bottom:
@@ -276,6 +288,15 @@ class BorosEnergyAPL(BaseAPL):
         for card in list(gs.hand()):
             if card.name == VOICE_OF_VICTORY and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
+                break
+
+        # Phlage — 3 damage ETB (always bolt face in goldfish)
+        for card in list(gs.hand()):
+            if card.name == PHLAGE and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                gs.damage_dealt += 3
+                gs.life += 3
+                gs._log(f"  Phlage ETB: 3 dmg to face ({gs.damage_dealt} total), gain 3 life")
                 break
 
         # Seasoned Pyromancer (draw engine + tokens)

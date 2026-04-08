@@ -11,14 +11,53 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.makedirs("data/matchup_jobs", exist_ok=True)
 
 
-def bo3_win(g1: float, g2: float, g3: float = None) -> float:
-    """Correct Bo3 match win probability.
-    P = P(win G1,G2) + P(win G1,lose G2,win G3) + P(lose G1,win G2,win G3)
-    All inputs as percentages (0-100).
+def bo3_win(g1: float, g2: float, g3: float = None,
+            play_advantage: float = 3.0) -> float:
     """
-    g1 /= 100; g2 /= 100
-    g3 = ((g1 + g2) / 2) if g3 is None else g3 / 100
-    return round((g1*g2 + g1*(1-g2)*g3 + (1-g1)*g2*g3) * 100, 1)
+    Bo3 match win% with correct play/draw state tracking.
+
+    MTG rules modeled:
+      G1  : 2d6 roll, highest wins, ties reroll → exactly 50/50 play/draw
+      Win game N  → opponent LOST → opponent CHOOSES next game → picks play
+                    → YOU are on DRAW for game N+1
+      Lose game N → YOU LOST    → YOU CHOOSE next game          → you pick play
+                    → YOU are on PLAY for game N+1
+      Each match: fresh 60-card main + 15-card SB, no carry-over between rounds.
+
+    Parameters (all as percentages, 0-100):
+      g1             : our avg G1 win rate (50/50 play/draw embedded — dice roll)
+      g2             : our avg G2 win rate WITH SB (50/50 play/draw embedded)
+      g3             : our avg G3 win rate WITH SB (default = g2)
+      play_advantage : play vs draw edge in % (default 3%). Derives:
+                         on_play  = avg + PADV/2
+                         on_draw  = avg - PADV/2
+
+    Returns: match win % (0-100)
+    """
+    PADV = play_advantage / 2   # half applied each side of the split
+
+    def split(avg):
+        return (min(99.0, avg + PADV) / 100,   # on play
+                max( 1.0, avg - PADV) / 100)   # on draw
+
+    g1p, g1d = split(g1)
+    g2p, g2d = split(g2)
+    g3_val   = g3 if g3 is not None else g2
+    g3p, g3d = split(g3_val)
+
+    match = 0.0
+    for g1_wr, weight in [(g1p, 0.5), (g1d, 0.5)]:
+        # WIN G1 → they lost → they choose G2 → they pick play → WE ON DRAW G2
+        win_g2  = g1_wr * g2d                        # 2-0
+        win_g2_lose_g3  = g1_wr * (1-g2d) * g3p     # we lost G2 → we choose G3 → ON PLAY
+
+        # LOSE G1 → we lost → we choose G2 → we pick play → WE ON PLAY G2
+        lose_win_g2 = (1-g1_wr) * g2p
+        lose_win_g2_win_g3 = lose_win_g2 * g3d      # they lost G2 → they choose G3 → WE ON DRAW
+
+        match += weight * (win_g2 + win_g2_lose_g3 + lose_win_g2_win_g3)
+
+    return round(match * 100, 1)
 
 
 def main():

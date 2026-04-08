@@ -21,7 +21,7 @@ def main():
     ap.add_argument("--top-n",   type=int, default=8)
     ap.add_argument("--field",   default="")
     ap.add_argument("--n-games", type=int, default=1000)
-    ap.add_argument("--deck-file", default="")
+    ap.add_argument("--deck-file", default="decks/humans_legacy.txt")
     args = ap.parse_args()
 
     # ── Load our deck ─────────────────────────────────────────────────────
@@ -88,10 +88,50 @@ def main():
 
     # ── Run Bo3 gauntlet ──────────────────────────────────────────────────
     from engine.bo3 import simulate_bo3_gauntlet
+    from sim_bridge import race_win_pct, avg_kill_turn
+    from engine.runner import run_simulation as _rs
+    from data.deck import load_deck_from_file as _ldf
 
     print(f"\n{'='*60}")
     print(f"Bo3 Gauntlet: {args.deck} vs {len(field)}-deck field")
     print(f"{'='*60}\n")
+
+    # Simulate our kill distribution
+    _main, _side = _ldf(args.deck_file)
+    _sim = _rs(our_apl, _main, n=3000, on_play=True, seed=42)
+    our_dist = _sim.kill_turn_distribution()
+    print(f"Our kill dist: T{avg_kill_turn(our_dist):.2f} avg\n")
+
+    # Build G1 win rates: real data > goldfish race
+    print("G1 win rates:")
+    for opp_arch in field:
+        opp_key  = _infer_archetype_key(opp_arch)
+        opp_dist = opp_clocks.get(opp_arch, ARCHETYPE_CLOCKS.get(opp_key, ARCHETYPE_CLOCKS["unknown"]))
+
+        # Check real match data
+        real_g1 = None
+        if real_matrix:
+            our_clean = args.deck.lower().replace(" ","").replace("-","")
+            opp_clean = opp_arch.lower().replace(" ","").replace("-","")
+            for (a, b), wp in real_matrix.items():
+                a_c = a.lower().replace(" ","").replace("-","")
+                b_c = b.lower().replace(" ","").replace("-","")
+                if our_clean in a_c and opp_clean in b_c:
+                    real_g1 = wp
+                    break
+                elif opp_clean in a_c and our_clean in b_c:
+                    real_g1 = 100 - wp
+                    break
+
+        if real_g1 is not None:
+            g1 = real_g1
+            src = "real"
+        else:
+            g1 = race_win_pct(our_dist, opp_dist, n=30000)
+            src = "sim"
+
+        opp_clocks[opp_arch] = {"_g1": g1, "_dist": opp_dist}
+        print(f"  {opp_arch:<35} G1: {g1:.1f}% ({src})")
 
     gauntlet = simulate_bo3_gauntlet(
         our_deck_name=args.deck,

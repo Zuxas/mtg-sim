@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from engine.runner import run_simulation
+from sim_bridge import ARCHETYPE_CLOCKS, race_win_pct, avg_kill_turn
 
 
 @dataclass
@@ -114,16 +115,19 @@ def simulate_bo3_match(
     )
 
     # ── G1: pre-board ────────────────────────────────────────────────────
-    # Try real matchup data first
-    if real_matchup_matrix:
-        key = (result.deck_name, opp_archetype)
+    # Priority: pre-computed G1 in opp_clock_dist → real match data → goldfish race
+    if isinstance(opp_clock_dist, dict) and "_g1" in opp_clock_dist:
+        result.g1_win_pct = opp_clock_dist["_g1"]
+        # Extract actual dist for G2 computations
+        opp_clock_dist = opp_clock_dist.get("_dist", ARCHETYPE_CLOCKS.get("unknown"))
+    elif real_matchup_matrix:
         for (a, b), wp in real_matchup_matrix.items():
             if opp_archetype.lower() in b.lower() and result.deck_name.lower() in a.lower():
                 result.g1_win_pct = wp
                 break
 
     if not result.g1_win_pct:
-        # Simulate goldfish race
+        # Goldfish race fallback
         sim = run_simulation(our_apl, our_mainboard, n=n_games, on_play=True, seed=42)
         our_dist = sim.kill_turn_distribution()
         result.g1_win_pct = race_win_pct(our_dist, opp_clock_dist, n=50000)
@@ -141,31 +145,32 @@ def simulate_bo3_match(
     else:
         post_board_deck = our_mainboard  # no sb plan found — use pre-board
 
-    # ── G2: post-board on the draw ────────────────────────────────────────
-    sim2 = run_simulation(our_apl, post_board_deck, n=n_games, on_play=False, seed=43)
-    our_dist2 = sim2.kill_turn_distribution()
+    # ── G2: post-board ────────────────────────────────────────────────────
+    # Determine opponent avg kill turn for sb premium calculation
+    if isinstance(opp_clock_dist, dict):
+        # Check if it's our wrapper dict or a real kill distribution
+        has_meta_keys = any(isinstance(k, str) and k.startswith("_") for k in opp_clock_dist)
+        _dist = ARCHETYPE_CLOCKS.get("unknown") if has_meta_keys else opp_clock_dist
+    else:
+        _dist = ARCHETYPE_CLOCKS.get("unknown")
+    opp_avg = avg_kill_turn(_dist) if _dist else 4.0
 
-    # Opponent also sideboards — assume their clock improves by ~5% (hate cards cost tempo)
-    opp_dist2 = _adjust_opp_clock(opp_clock_dist, hate_factor=0.05)
+    if opp_avg <= 2.5:   sb_premium = 2.0
+    elif opp_avg <= 3.5: sb_premium = 3.5
+    elif opp_avg <= 4.5: sb_premium = 6.0
+    elif opp_avg <= 5.5: sb_premium = 8.0
+    else:                sb_premium = 10.0
 
-    result.g2_win_pct  = race_win_pct(our_dist2, opp_dist2, n=50000)
-    result.g2_avg_kill = avg_kill_turn(our_dist2)
+    result.g2_win_pct  = min(99.0, result.g1_win_pct + sb_premium)
+    result.g2_avg_kill = result.g1_avg_kill
 
-    # G2 on the play (for L-W-W scenario)
-    sim2p = run_simulation(our_apl, post_board_deck, n=n_games, on_play=True, seed=44)
-    our_dist2p = sim2p.kill_turn_distribution()
-    g2_on_play = race_win_pct(our_dist2p, opp_dist2, n=50000)
+    g2_on_play = min(99.0, result.g1_win_pct + sb_premium + 3.0)  # on play bonus
+    g2_on_draw = max(0.0,  result.g2_win_pct - 3.0)               # on draw penalty
 
-    # G3: 50/50 play/draw post-board
-    g3 = (result.g2_win_pct + g2_on_play) / 2
-
+    g3 = (g2_on_draw + g2_on_play) / 2
     result.g3_win_pct = g3
     result.match_win_pct = compute_match_win_pct(
-        result.g1_win_pct,
-        result.g2_win_pct,  # on draw
-        g2_on_play,          # on play
-        g3,
-    )
+        result.g1_win_pct, g2_on_draw, g2_on_play, g3)
 
     return result
 

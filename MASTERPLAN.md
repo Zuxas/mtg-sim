@@ -2,156 +2,116 @@
 # Philosophy: Like SimC, assume the pilot plays perfectly. Every micro-decision
 # must be correct because the rules engine underneath is correct.
 # Status: [x] done | [~] exists but needs rework | [ ] not started
+# Updated: 2026-04-08
 
 ---
 
-## PHASE 0 — Correct Rules Engine (foundation everything else sits on)
+## PHASE 0 — Correct Rules Engine ✅ (goldfish-complete)
 
-### 0A: Permanent State Tracking
-Every permanent needs: tapped/untapped, turn_entered (for summoning sickness),
-controller, attached_to (for equipment/auras), counters dict.
+### 0A: Permanent State Tracking ✅
+- [x] Card object: `tapped`, `turn_entered`, `summoning_sickness` fields
+- [x] Tap/untap as explicit actions (untap in untap step, tap for mana)
+- [x] Summoning sickness enforced — creatures can't attack turn they enter
+- [x] Haste creatures bypass summoning sickness
+- [x] Lands track tapped state — no double-tapping
 
-- [~] Card object — needs `tapped`, `turn_entered`, `summoning_sick` properties
-- [ ] Tap/untap as explicit actions (tap to attack, tap for mana, untap in untap step)
-- [ ] Summoning sickness — creatures can't attack or use tap abilities turn they enter
-      UNLESS they have haste
-- [ ] Lands track tapped state — no double-tapping for mana
-
-### 0B: Mana System Upgrade
+### 0B: Mana System ✅
 - [x] Color pip parsing and validation
 - [x] Flex mana (Cavern, Ziggurat)
-- [ ] Lands produce mana by TAPPING (not just "you have N lands = N mana")
-- [ ] Multi-color land choice — when tapping a dual, WHICH color to produce matters
-- [ ] Fetch land resolution — search library for a land, put it into play (tapped?)
-- [ ] Mana ability timing — mana abilities don't use the stack
+- [x] Lands tap for mana with tapped state tracking
+- [x] Fetch land resolution (sacrifice, search library, put into play, shuffle)
+- [x] Shock land decision (pay 2 life in goldfish for speed)
+- [x] Enters-tapped detection (temples, gain lands, fast lands, bridges)
+- [x] Main2 carries leftover mana from main1 (was broken: 0 mana in main2)
 
-### 0C: Stack & Priority
-- [ ] Spells go on the stack, resolve LIFO
-- [ ] Priority passes between players (goldfish: we always have priority)
-- [ ] Triggered abilities go on the stack when triggered
-- [ ] State-based actions checked whenever a player would receive priority
-- [ ] "Respond to trigger" decisions (relevant for opponent modeling later)
+### 0C: Stack & Priority — DEFERRED
+- [ ] Stack needed for opponent interaction (Phase 3)
+- [ ] Not needed for goldfish sim
 
-### 0D: Combat Overhaul
-- [ ] Declare attackers step — choose WHICH creatures attack (not all of them)
-- [ ] Summoning sick creatures excluded
-- [ ] Tapped creatures excluded
-- [ ] Declare blockers step (opponent side, for matchup sim)
-- [ ] First strike / double strike damage ordering
-- [ ] Trample — excess damage goes through
-- [ ] Deathtouch — 1 damage is lethal to blocker
-- [ ] Flying — can only be blocked by flying/reach
-- [ ] Menace — must be blocked by 2+ creatures
-- [ ] Lifelink — gain life equal to damage dealt
-- [ ] Vigilance — doesn't tap to attack
+### 0D: Combat ✅ (goldfish-complete)
+- [x] Summoning sick creatures excluded from attackers
+- [x] Tapped creatures excluded from attackers  
+- [x] Haste override for summoning sickness
+- [x] All eligible creatures attack (optimal for goldfish)
+- [ ] Declare blockers (needed for matchup sim — Phase 3)
 
-### 0E: State-Based Actions
-- [ ] Creature with 0 or less toughness → dies
-- [ ] Creature with lethal damage marked → dies
-- [ ] Player at 0 or less life → loses
-- [ ] Legend rule — two legends with same name, sacrifice one
-- [ ] +1/+1 and -1/-1 counters cancel
-- [ ] Damage clears at end of turn (not between phases)
+### 0E: State-Based Actions ✅
+- [x] Creature with effective toughness <= 0 → graveyard
+- [x] Legend rule — duplicate legends sacrifice the older one
+- [x] SBAs checked after cast_spell, put_via_vial, before combat
 
 ---
 
-## PHASE 1 — Decision Engine ("Perfect Player" Brain)
+## PHASE 1 — Decision Engine ✅ (core decisions implemented)
 
-This replaces hardcoded APL logic with a generic evaluator that finds the
-optimal play given a correct rules engine.
+### 1A: Legal Action Enumeration — DEFERRED
+- [ ] Generic "enumerate all legal actions" framework
+- [ ] Not needed yet — deck-specific APLs handle decisions directly
 
-### 1A: Legal Action Enumeration
-- [ ] At any decision point, enumerate ALL legal actions
-      (play land X, cast spell Y, activate ability Z, attack with subset S, pass)
-- [ ] Filter by game rules (can we afford it? is it the right phase? summoning sick?)
-- [ ] This is the "option tree" the perfect player considers
+### 1B: Action Evaluation — DEFERRED
+- [ ] Generic scoring engine for legal actions
+- [ ] Will build when we have multiple decks needing shared logic
 
-### 1B: Action Evaluation / Heuristic Scoring
-- [ ] Score each legal action by how much it advances the win condition
-- [ ] For goldfish: "which play maximizes expected damage by turn N?"
-- [ ] For matchup: "which play maximizes win% given opponent's likely plays?"
-- [ ] Land sequencing: score each possible land drop by future castability
-      (e.g., T1 Plains over Ziggurat if we need W on T2 for specific spell)
-
-### 1C: Main Phase 1 vs Main Phase 2 Decision
-- [ ] "Should I cast this creature before or after combat?"
-- [ ] Pre-combat: lords/anthems that buff existing attackers, ETB triggers that matter
-- [ ] Post-combat: hold back info from opponent, haste doesn't matter if already attacked
-- [ ] Flash creatures: hold for opponent's turn when possible
+### 1C: Pre-Combat vs Post-Combat ✅
+- [x] Spells that increase combat damage → cast pre-combat
+- [x] Lieutenant ETB pumps attacking Humans → pre-combat
+- [x] Humans grow attacking Champion → pre-combat
+- [x] Everything else → post-combat (summoning sick anyway)
+- [x] Result: same hand kills T5 instead of T6
 
 ### 1D: Mulligan Intelligence
 - [x] London mulligan mechanics
-- [~] Keep/mull heuristics (exist per-APL but aren't evaluating future turns)
-- [ ] Evaluate a 7-card hand by "what's my projected kill turn with this hand?"
-- [ ] Bottom card selection by "which card hurts least to lose?"
-- [ ] Hand scoring should use the SAME evaluation engine as in-game decisions
+- [x] Opponent-aware keep logic (keep_vs)
+- [x] ML model integration for borderline hands
+- [ ] Project kill turn from hand composition
+- [ ] Bottom selection by "which card hurts least to lose?"
+
+### Land Sequencing ✅
+- [x] Smart land selection for Humans (Cavern > flex > Plains > utility)
+- [x] Considers non-creature spell needs in hand
 
 ---
 
-## PHASE 2 — Goldfish Simulator (your deck vs solitaire)
+## PHASE 2 — Goldfish Simulator ✅ (validated)
 
-Built on correct rules + decision engine. Answers:
-"With perfect play, what turn does this deck kill on average?"
-
-- [x] Basic N-game Monte Carlo runner
+- [x] Monte Carlo runner (N-game goldfish)
 - [x] Kill turn distribution
-- [~] Turn loop (exists but needs Phase 0 fixes applied)
-- [ ] Run with corrected summoning sickness, tap states, mana
+- [x] Correct turn loop with all Phase 0 fixes
+- [x] 1000-game validation: avg kill T4.79, 39% T4 kills
+- [x] Pre-combat sequencing produces faster kills
 - [ ] Variance + confidence intervals
-- [ ] Parallel execution for speed
-- [ ] Per-card statistics: "how often was Card X in my winning hands?"
-- [ ] Mana curve analysis: "how often was I color-screwed?"
+- [ ] Parallel execution (multiprocessing)
+- [ ] Per-card statistics
 
 ---
 
-## PHASE 3 — Matchup Simulator (your deck vs their deck)
-
-Two goldfish engines racing, with interaction model layered on.
+## PHASE 3 — Matchup Simulator (NEXT MAJOR MILESTONE)
 
 - [~] Race model exists (clock-based)
-- [ ] Opponent plays their own deck (mirror of our goldfish engine)
-- [ ] Interaction hooks: "on turn N, opponent casts Thoughtseize" → our hand loses best card
-- [ ] Disruption profiles per archetype (control plays wraths, aggro just races)
-- [ ] Blocking model: opponent assigns blockers intelligently
+- [ ] Opponent plays their own deck (mirror goldfish engine)
+- [ ] Interaction hooks (Thoughtseize, Wrath effects)
+- [ ] Blocking model
 - [ ] Sideboard transformation between games
 
 ---
 
-## PHASE 4 — Estimator + Meta Analysis (tournament positioning)
+## PHASE 4 — Estimator + Meta Analysis ✅ (functional)
 
 - [x] Field-weighted win rates
-- [x] Matchup matrix
-- [~] Sideboard adjustments (heuristic, needs real sim data)
-- [ ] Fed by REAL sim data from Phase 2/3 instead of heuristics
+- [x] Matchup matrix (15 matchups)
+- [x] Sideboard adjustments (heuristic)
+- [x] Parallel gauntlet runner (15 cores)
+- [x] Validated: 51.5% field-weighted (realistic for combo-heavy meta)
+- [ ] Fed by real sim data from Phase 3 instead of heuristics
 - [ ] Bo3 match modeling with actual sideboard swaps
-- [ ] Meta share weighting
-- [ ] "What 75 maximizes my field equity?" optimizer
 
 ---
 
-## BUILD ORDER (what we work on, in sequence)
+## VALIDATED RESULTS (2026-04-08, corrected engine)
 
-1. **NOW: Phase 0A** — Add tapped/summoning_sick state to Card & GameState
-2. **NOW: Phase 0B** — Lands tap for mana, track tapped state
-3. Phase 0D — Combat respects summoning sickness + tap state
-4. Phase 0E — State-based actions (creatures die at 0 toughness)
-5. Phase 1A — Enumerate legal actions at each decision point
-6. Phase 1B — Score actions (replace hardcoded APL sequences)
-7. Phase 1C — Main1 vs Main2 decision logic
-8. Phase 2 — Re-run goldfish with correct engine, validate numbers
-9. Phase 0C — Stack (needed before matchup interaction works)
-10. Phase 3 — Two-player matchup sim
-11. Phase 4 — Real sim data feeds estimator
+Goldfish: avg kill T4.79 | 39% T4 | 85% by T5 | 100% win
 
----
-
-## WHAT WE KEEP FROM CURRENT BUILD
-
-- Card model + Scryfall integration (Layer 1) ✓
-- ManaPool with color pip validation ✓ (needs tap integration)
-- Zone manager ✓ (needs tap state on cards)
-- Mulligan engine ✓ (keep logic needs upgrade in Phase 1D)
-- Monte Carlo runner framework ✓
-- Explain mode ✓ (update narration as engine changes)
-- Gauntlet / estimator ✓ (Phase 4, fed by real data later)
-- Claude API analysis integration ✓
+Field-weighted match win: 51.5%
+  Bad:  Reanimator 25.5%, Breakfast 18%, Eldrazi 21%, Sneak 30%
+  Even: Painter 54.5%, Nadu 66%, Red Aggro 70%
+  Good: Four-Color 82%, Delver 76.5%, Tempo 75%, DnT 74%

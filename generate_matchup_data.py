@@ -32,6 +32,7 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
     from engine.card_db import CardDB
 
     _db = CardDB()
+    deck_key = deck_name.lower().replace(" ", "").replace("-", "").replace("'", "")
 
     def build_deck_from_dict(card_dict):
         """Convert {card_name: qty} dict to list of Card objects."""
@@ -59,35 +60,59 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                     ))
         return deck
 
-    # 1. Hand-tuned APLs
-    deck_key = deck_name.lower().replace(" ", "").replace("-", "").replace("'", "")
-    if deck_key in ("legacyhumans", "humans"):
-        from apl.humans import HumansAPL
-        from data.deck import load_deck_from_file
-        main, side = load_deck_from_file("decks/humans_legacy.txt")
-        return main, side, HumansAPL()
+    # Hand-tuned APL registry — add new decks here
+    APL_REGISTRY = {
+        "legacyhumans":    ("apl.humans",          "HumansAPL",         "decks/humans_legacy.txt"),
+        "humans":          ("apl.humans",           "HumansAPL",         "decks/humans_legacy.txt"),
+        "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "boros_energy"),
+        "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
+        "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
+        "uwblink":         ("apl.uw_blink",         "UWBlinkAPL",        "uw_blink"),
+        "espermidrange":   ("apl.esper_midrange",   "EsperMidrangeAPL",  "esper_mid"),
+        "esperblink":      ("apl.esper_blink",      "EsperBlinkAPL",     "esper_blink"),
+        "goryosvengeance": ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
+        "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
+        "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
+        "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
+        "amulet":          ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
+        "amulettitan":     ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
+        "titan":           ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
+        "eldrazitron":     ("apl.eldrazi_tron",     "EldraziTronAPL",    "etron"),
+        "etron":           ("apl.eldrazi_tron",     "EldraziTronAPL",    "etron"),
+        "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
+        "domain":          ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
+        "neoform":         ("apl.neoform_combo",    "NeoformComboAPL",   "neoform"),
+        "jeskaicontrol":   ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
+        "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
+        "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
+        "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
+        "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   None),
+        "monoredaggro":    ("apl.mono_red_aggro",   "MonoRedAggroAPL",   None),
+        "izzetphoenix":    ("apl.izzet_phoenix",    "IzzetPhoenixAPL",   None),
+        "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
+    }
 
-    if deck_key == "borosenergy":
-        from apl.boros_energy import BorosEnergyAPL
+    if deck_key in APL_REGISTRY:
+        mod_path, cls_name, stub_key = APL_REGISTRY[deck_key]
         try:
-            from data.stub_decks import get_stub_deck_list
-            mb = get_stub_deck_list("boros_energy")
-            if mb:
-                main = build_deck_from_dict(mb)
-                return main, [], BorosEnergyAPL()
-        except Exception:
-            pass
+            import importlib
+            mod  = importlib.import_module(mod_path)
+            APLClass = getattr(mod, cls_name)
+            apl  = APLClass()
 
-    if deck_key in ("izzetprowess", "prowess"):
-        from apl.izzet_prowess import IzzetProwessAPL
-        try:
-            from data.stub_decks import get_stub_deck_list
-            mb = get_stub_deck_list("izzet_prowess")
-            if mb:
-                main = build_deck_from_dict(mb)
-                return main, [], IzzetProwessAPL()
-        except Exception:
-            pass
+            # Load deck from file or stub
+            if stub_key and stub_key.endswith(".txt"):
+                from data.deck import load_deck_from_file
+                main, side = load_deck_from_file(stub_key)
+                return main, side, apl
+            elif stub_key:
+                from data.stub_decks import get_stub_deck_list
+                mb = get_stub_deck_list(stub_key)
+                if mb:
+                    main = build_deck_from_dict(mb)
+                    return main, [], apl
+        except Exception as e:
+            print(f"  [APL load failed for {deck_name}: {e}]")
 
     # 2. Real stub from DB
     try:

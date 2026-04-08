@@ -1,1 +1,1 @@
-{"opp": "Mono Red Aggro", "field_pct": 3.4, "type": "fair", "n": 5000, "error": null, "g1": 43.8, "g2": 53.8, "g3": 50.8, "match": 49.2, "avg_turns": 12.9, "hard_stop": 0.0, "elapsed": 8.5}
+{"opp": "Mono Red Aggro", "our_deck": "Boros Energy", "field_pct": 4.1, "type": "fair", "n": 1000, "error": "cannot access local variable 'deck_key' where it is not associated with a value", "elapsed": 4.5}

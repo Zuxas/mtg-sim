@@ -12,4 +12,4 @@ UnboundLocalError: cannot access local variable 'deck_key' where it is not assoc
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-ERR Mono Red Aggro: cannot access local variable 'deck_key' where it is not associated with a value
+ERR Dimir Murktide: cannot access local variable 'deck_key' where it is not associated with a value

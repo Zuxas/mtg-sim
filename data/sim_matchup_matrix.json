@@ -15,5 +15,17 @@
     "Death And Taxes": 72.8,
     "Mono Red Aggro": 43.8,
     "Mono Red Prison": 80.0
+  },
+  "Boros Energy (modern)": {
+    "Amulet Titan": 64.4,
+    "Eldrazi Ramp": 49.0,
+    "Izzet Prowess": 56.0,
+    "Grinding Breach": 61.0,
+    "Jeskai Blink": 52.0,
+    "Orzhov Blink": 60.0,
+    "Goryo's Vengeance": 63.0,
+    "Eldrazi Tron": 55.0,
+    "Temur Breach": 61.4,
+    "Esper Blink": 53.0
   }
 }

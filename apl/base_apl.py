@@ -119,6 +119,9 @@ class BaseAPL(ABC):
             result.lands_played.append(lands_this_turn)
             result.spells_cast.append(spells_this_turn)
 
+            # Capture turn snapshot for ML training
+            result.turn_snapshots.append(gs.snapshot())
+
             if verbose:
                 bf = [c.name for c in gs.zones.battlefield
                       if not c.is_land()]

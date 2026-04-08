@@ -125,9 +125,10 @@ def run_simulation(
     mainboard: list[Card],
     n: int = 10_000,
     on_play: bool = True,
-    mixed_play_draw: bool = False,   # if True, alternate play/draw 50/50
+    mixed_play_draw: bool = False,
     store_logs: bool = False,
-    verbose_first: int = 0,          # print full log for first N games
+    save_logs:  bool = False,   # alias for store_logs (ML data collection)
+    verbose_first: int = 0,
     seed: Optional[int] = None,
 ) -> SimulationResults:
     """
@@ -181,7 +182,7 @@ def run_simulation(
             results.won_games += 1
             results.kill_turns.append(game_result.kill_turn)
 
-        if store_logs:
+        if store_logs or save_logs:
             results.game_logs.append(game_result)
 
         # Progress indicator — only show if verbose or n >= 10000

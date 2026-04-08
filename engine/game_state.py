@@ -84,6 +84,53 @@ class GameState:
     def has_won(self, win_damage: int = 20) -> bool:
         return self.damage_dealt >= win_damage
 
+    def snapshot(self) -> dict:
+        """Capture board state as ML feature dict. Called at end of each turn."""
+        try:
+            bf   = self.zones.battlefield
+            hand = self.zones.hand
+
+            def is_land(c):
+                return hasattr(c, 'is_land') and callable(c.is_land) and c.is_land()
+
+            def power_of(c):
+                try:
+                    ep = getattr(c, 'effective_power', None)
+                    if callable(ep): return ep()
+                    return int(c.power or 0)
+                except Exception:
+                    return 0
+
+            KEY_CARDS = [
+                "Thalia, Guardian of Thraben", "Champion of the Parish",
+                "Thalia's Lieutenant",         "Adeline, Resplendent Cathar",
+                "Guide of Souls",              "Cavern of Souls",
+                "Esper Sentinel",              "Kytheon, Hero of Akros",
+            ]
+
+            lands_bf   = [c for c in bf if is_land(c)]
+            total_pwr  = min(sum(power_of(c) for c in bf), 40)
+
+            snap = {
+                "turn":              self.turn,
+                "damage_dealt":      self.damage_dealt,
+                "creatures_in_play": len(bf),
+                "total_power":       total_pwr,
+                "lands_in_play":     len(lands_bf),
+                "hand_size":         len(hand),
+                "life":              self.life,
+                "energy":            getattr(self, 'energy', 0),
+                "mulligans":         getattr(self, '_mulligans', 0),
+                "hand_creatures":    sum(1 for c in hand if not is_land(c)),
+                "hand_lands":        sum(1 for c in hand if is_land(c)),
+            }
+            for name in KEY_CARDS:
+                key = f"has_{name.split(',')[0].lower().replace(' ','_')}"
+                snap[key] = int(any(c.name == name for c in bf))
+            return snap
+        except Exception:
+            return {"turn": getattr(self, 'turn', 0), "damage_dealt": getattr(self, 'damage_dealt', 0)}
+
     # Convenience accessors used by APLs
     def hand(self) -> list:
         return self.zones.hand
@@ -505,3 +552,4 @@ class GameResult:
     opening_hand: list       = dc_field(default_factory=list)
     lands_played: list       = dc_field(default_factory=list)
     spells_cast:  list       = dc_field(default_factory=list)
+    turn_snapshots: list     = dc_field(default_factory=list)  # per-turn board state dicts

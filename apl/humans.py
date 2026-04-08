@@ -343,6 +343,55 @@ class HumansAPL(BaseAPL):
     # Main phase APL
     # -----------------------------------------------------------------------
 
+    def _best_land(self, gs: GameState) -> Optional[Card]:
+        """
+        Smart land sequencing for Humans.
+
+        Priority logic (goldfish, perfect player):
+        - Cavern of Souls first: flex mana covers any creature color pip
+        - Valley of Gorgoroth: similar flex utility
+        - Plains / Eiganjo: W mana, needed for non-creature spells (STP)
+        - Mutavault: C only but can animate as 2/2 attacker later
+        - Karakas: C only, legendary bounce (goldfish: worst mana source)
+
+        Exception: if hand has non-creature spells needing W (Swords to
+        Plowshares), prioritize Plains/Eiganjo over flex lands IF we
+        don't already have a W source in play.
+        """
+        lands = [c for c in gs.hand() if c.is_land()]
+        if not lands:
+            return None
+        if len(lands) == 1:
+            return lands[0]
+
+        # Check if we need W for non-creature spells in hand
+        non_creature_needs_w = any(
+            "W" in (c.mana_cost or "") and not c.has(Tag.CREATURE) and not c.is_land()
+            for c in gs.hand()
+        )
+        has_w_source = gs.mana_pool.W > 0 or gs.mana_pool.flex > 0 or any(
+            "plains" in c.type_line.lower() for c in gs.zones.lands_on_battlefield()
+        )
+
+        def land_score(card):
+            n = card.name.lower()
+            # Flex mana lands — best for creature-heavy deck
+            if n in ("cavern of souls", "ancient ziggurat", "unclaimed territory"):
+                return 0 if not (non_creature_needs_w and not has_w_source) else 2
+            if "valley of gorgoroth" in n:
+                return 1
+            # W-producing lands
+            if n == "plains" or "eiganjo" in n:
+                return 2
+            # Utility lands
+            if n == "mutavault":
+                return 3
+            if n == "karakas":
+                return 4
+            return 5  # unknown lands
+
+        return min(lands, key=land_score)
+
     def main_phase(self, gs: GameState):
         """
         Main Phase 1 (PRE-COMBAT) — Perfect player logic:

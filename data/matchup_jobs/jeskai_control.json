@@ -1,1 +1,1 @@
-{"opp": "Jeskai Control", "our_deck": "Izzet Prowess", "field_pct": 6.3, "type": "fair", "n": 1000, "error": null, "g1_source": "db", "g1": 61.0, "g2": 67.0, "g3": 65.5, "match": 71.2, "elapsed": 7.6}
+{"opp": "Jeskai Control", "our_deck": "Legacy Humans", "field_pct": 3.6, "type": "fair", "n": 1000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 70.0, "g3": 68.8, "match": 75.7, "elapsed": 10.0}

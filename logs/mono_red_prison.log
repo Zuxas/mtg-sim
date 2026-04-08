@@ -10,4 +10,4 @@
   ✓ Tac guide: Dashboard
   ✓ Tac guide: Legacy Humans
   [No playbook for Mono Red Prison — trying stub deck]
-ERR Mono Red Prison: 'str' object has no attribute 'is_land'
+OK  Mono Red Prison: G1=80.0%  Match=93.7%  (7.9s)

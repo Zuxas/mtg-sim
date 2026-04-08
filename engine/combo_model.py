@@ -234,14 +234,13 @@ def run_combo_matchup(
     # Our library
     if game == 1:
         lib_template = build_library()
-        opp_on_play  = False   # G1: we're on play (default for sims)
+        opp_on_play  = False   # G1: we're on play
     elif game == 2:
         lib_template = build_library_g2(arch)
-        opp_on_play  = True    # G2: model worst case — they're on play
+        opp_on_play  = False   # G2: we're on play (we lost G1 ~60-80% vs combo, loser picks)
     else:
-        # G3: both fully boarded, opponent on play
         lib_template = build_library_g2(arch)
-        opp_on_play  = True
+        opp_on_play  = True    # G3: worst case, opp on play
 
     # Our kill distribution (goldfish, from sim data)
     OUR_KILL_DIST = {3: 5, 4: 38, 5: 32, 6: 15, 7: 7, 8: 3}

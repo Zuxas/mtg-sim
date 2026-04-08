@@ -1,1 +1,1 @@
-{"opp": "Eldrazi Stompy", "field_pct": 6.4, "type": "fair", "n": 1000, "error": "'str' object has no attribute 'is_land'", "elapsed": 6.5}
+{"opp": "Eldrazi Stompy", "field_pct": 6.4, "type": "fair", "n": 5000, "error": null, "g1": 32.0, "g2": 42.0, "g3": 39.0, "match": 31.8, "avg_turns": 10.6, "hard_stop": 0.0, "elapsed": 7.6}

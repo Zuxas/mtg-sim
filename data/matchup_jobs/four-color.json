@@ -1,1 +1,1 @@
-{"opp": "Four-Color", "field_pct": 3.7, "type": "fair", "n": 1000, "error": "'str' object has no attribute 'is_land'", "elapsed": 6.6}
+{"opp": "Four-Color", "field_pct": 3.7, "type": "fair", "n": 5000, "error": null, "g1": 96.7, "g2": 98.0, "g3": 98.0, "match": 99.8, "avg_turns": 9.6, "hard_stop": 0.0, "elapsed": 7.5}

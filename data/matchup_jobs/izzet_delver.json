@@ -1,1 +1,1 @@
-{"opp": "Izzet Delver", "field_pct": 4.7, "type": "fair", "n": 1000, "error": "'str' object has no attribute 'is_land'", "elapsed": 6.5}
+{"opp": "Izzet Delver", "field_pct": 4.7, "type": "fair", "n": 5000, "error": null, "g1": 86.4, "g2": 94.4, "g3": 92.0, "match": 97.8, "avg_turns": 11.0, "hard_stop": 0.0, "elapsed": 7.8}

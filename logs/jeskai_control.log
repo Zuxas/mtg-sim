@@ -11,4 +11,4 @@
   ✓ Tac guide: Legacy Humans
   [27 cards loaded from local DB — no network calls]
   Loaded: 74 main | 0 sideboard
-ERR Jeskai Control: 'str' object has no attribute 'is_land'
+OK  Jeskai Control: G1=98.7%  Match=99.9%  (7.6s)

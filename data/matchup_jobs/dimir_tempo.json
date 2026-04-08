@@ -1,1 +1,1 @@
-{"opp": "Dimir Tempo", "field_pct": 10.5, "type": "fair", "n": 1000, "error": "'str' object has no attribute 'is_land'", "elapsed": 6.2}
+{"opp": "Dimir Tempo", "field_pct": 10.5, "type": "fair", "n": 5000, "error": null, "g1": 85.1, "g2": 93.1, "g3": 90.7, "match": 97.1, "avg_turns": 11.0, "hard_stop": 0.0, "elapsed": 7.7}

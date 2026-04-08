@@ -104,6 +104,129 @@ EXTRA_STUBS = {
             "Temple Garden": 2, "Plains": 3, "Forest": 2,
         }
     },
+    "dimir_murktide": {
+        "format": "modern",
+        "mainboard": {
+            "Murktide Regent": 4, "Psychic Frog": 4, "Snapcaster Mage": 2,
+            "Fatal Push": 4, "Force of Negation": 4, "Thoughtseize": 4,
+            "Counterspell": 4, "Consider": 4, "Preordain": 4,
+            "Expressive Iteration": 2, "Flooded Strand": 4,
+            "Polluted Delta": 4, "Watery Grave": 2, "Underground River": 2,
+            "Island": 3, "Swamp": 2, "Otawara, Soaring City": 1,
+        }
+    },
+    "gruul_aggro": {
+        "format": "standard",
+        "mainboard": {
+            "Monastery Swiftspear": 4, "Questing Druid": 4,
+            "Emberheart Challenger": 4, "Monstrous Rage": 4,
+            "Lightning Strike": 4, "Might of the Meek": 4,
+            "Shock": 4, "Cacophony Scamp": 4, "Pawpatch Formation": 2,
+            "Brushland": 4, "Karplusan Forest": 4,
+            "Forest": 5, "Mountain": 5, "Copperline Gorge": 4,
+        }
+    },
+    "boros_aggro": {
+        "format": "standard",
+        "mainboard": {
+            "Emberheart Challenger": 4, "Monastery Swiftspear": 4,
+            "Ocelot Pride": 4, "Ajani, Nacatl Pariah": 4,
+            "Guide of Souls": 4, "Monstrous Rage": 4,
+            "Shock": 4, "Lightning Strike": 4,
+            "Sacred Foundry": 4, "Inspiring Vantage": 4,
+            "Plains": 5, "Mountain": 5, "Sundown Pass": 4,
+        }
+    },
+    "simic_ouroboroid": {
+        "format": "standard",
+        "mainboard": {
+            "Aether Channeler": 4, "Preordain": 4, "Consider": 4,
+            "Expressive Iteration": 4, "Questing Druid": 4,
+            "Growth Spiral": 4, "Hullbreacher": 3, "Deeproot Elite": 3,
+            "Merfolk Mistbinder": 4, "Svyelun of Sea and Sky": 3,
+            "Breeding Pool": 4, "Misty Rainforest": 4,
+            "Forest": 4, "Island": 4, "Botanical Sanctum": 4,
+        }
+    },
+    "rakdos_aggro": {
+        "format": "pioneer",
+        "mainboard": {
+            "Monastery Swiftspear": 4, "Thoughtseize": 4,
+            "Bloodtithe Harvester": 4, "Fable of the Mirror-Breaker": 4,
+            "Lightning Strike": 4, "Fatal Push": 4,
+            "Obliterating Bolt": 4, "Cacophony Scamp": 4,
+            "Emberheart Challenger": 4, "Preordain": 2,
+            "Blood Crypt": 4, "Blightstep Pathway": 4,
+            "Mountain": 4, "Swamp": 2, "Sulfurous Springs": 4,
+        }
+    },
+    "rakdos_transmogrify": {
+        "format": "pioneer",
+        "mainboard": {
+            "Transmogrify": 4, "Fable of the Mirror-Breaker": 4,
+            "Thoughtseize": 4, "Fatal Push": 4, "Invoke Despair": 3,
+            "Atraxa, Grand Unifier": 2, "Ulamog, the Ceaseless Hunger": 2,
+            "Bloodtithe Harvester": 4, "Preordain": 3,
+            "Blood Crypt": 4, "Blightstep Pathway": 4,
+            "Haunted Ridge": 3, "Swamp": 3, "Mountain": 3,
+            "Sulfurous Springs": 3, "Shivan Reef": 3,
+        }
+    },
+    "rakdos_demons": {
+        "format": "pioneer",
+        "mainboard": {
+            "Archfiend of the Dross": 4, "Bloodtithe Harvester": 4,
+            "Overlord of the Balemurk": 4, "Thoughtseize": 4,
+            "Fatal Push": 4, "Fable of the Mirror-Breaker": 4,
+            "Invoke Despair": 3, "Dreadbore": 2,
+            "Blood Crypt": 4, "Blightstep Pathway": 4,
+            "Haunted Ridge": 3, "Swamp": 4, "Mountain": 3,
+            "Sulfurous Springs": 3, "Blackcleave Cliffs": 2,
+        }
+    },
+    "rakdos_prowess": {
+        "format": "pioneer",
+        "mainboard": {
+            "Monastery Swiftspear": 4, "Dragon's Rage Channeler": 4,
+            "Thoughtseize": 4, "Lightning Bolt": 4, "Fatal Push": 4,
+            "Mutagenic Growth": 4, "Lava Dart": 4, "Mishra's Bauble": 4,
+            "Reckless Lackey": 4,
+            "Blood Crypt": 4, "Blightstep Pathway": 4,
+            "Mountain": 4, "Swamp": 2, "Sulfurous Springs": 4,
+        }
+    },
+    "mono_black_demons": {
+        "format": "pioneer",
+        "mainboard": {
+            "Archfiend of the Dross": 4, "Overlord of the Balemurk": 4,
+            "Sire of Seven Deaths": 4, "Thoughtseize": 4,
+            "Fatal Push": 4, "Invoke Despair": 4,
+            "Sheoldred, the Apocalypse": 3, "Reckoner Bankbuster": 3,
+            "Swamp": 16, "Field of Ruin": 4, "Castle Locthwain": 4,
+        }
+    },
+    "jund_sacrifice": {
+        "format": "pioneer",
+        "mainboard": {
+            "Cauldron Familiar": 4, "Witch's Oven": 4, "Mayhem Devil": 4,
+            "Korvold, Fae-Cursed King": 3, "Fatal Push": 4,
+            "Thoughtseize": 4, "Fiend Artisan": 4, "Prosperous Innkeeper": 3,
+            "Collected Company": 2, "Overgrown Tomb": 4,
+            "Blood Crypt": 3, "Stomping Ground": 2,
+            "Swamp": 3, "Forest": 3, "Mountain": 2, "Blightstep Pathway": 3,
+        }
+    },
+    "selesnya_company": {
+        "format": "pioneer",
+        "mainboard": {
+            "Collected Company": 4, "Llanowar Elves": 4, "Elvish Mystic": 4,
+            "Knight of Autumn": 4, "Voice of Resurgence": 4,
+            "Werewolf Pack Leader": 4, "Loran of the Third Path": 3,
+            "Questing Beast": 2, "Blade Splicer": 3,
+            "Temple Garden": 4, "Sunpetal Grove": 4,
+            "Forest": 6, "Plains": 4, "Razorverge Thicket": 3,
+        }
+    },
 }
 
 out_path = 'data/stub_decks.py'

@@ -2,14 +2,17 @@ Traceback (most recent call last):
   File "E:\vscode ai project\mtg-sim\run_matchup.py", line 43, in main
     _run_fair(result, our_deck, opp_name, format_name, n, seed)
     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 102, in _run_fair
-    our_main, _, our_apl = load_deck_and_apl(our_deck, format_name)
-                           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
-  File "E:\vscode ai project\mtg-sim\generate_matchup_data.py", line 92, in load_deck_and_apl
-    if deck_key in APL_REGISTRY:
-       ^^^^^^^^
-UnboundLocalError: cannot access local variable 'deck_key' where it is not associated with a value
+  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 106, in _run_fair
+    raise ValueError(f"Could not load deck for {opp_name}")
+ValueError: Could not load deck for Dimir Murktide
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-ERR Dimir Murktide: cannot access local variable 'deck_key' where it is not associated with a value
+  ✓ Tac guide: Boros Energy Modern
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Izzet Prowess - Standard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Legacy Humans
+  [No deck found for Dimir Murktide]
+ERR Dimir Murktide: Could not load deck for Dimir Murktide

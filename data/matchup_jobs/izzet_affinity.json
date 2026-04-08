@@ -1,1 +1,1 @@
-{"opp": "Izzet Affinity", "our_deck": "Boros Energy", "field_pct": 6.8, "type": "fair", "n": 1000, "error": "cannot access local variable 'deck_key' where it is not associated with a value", "elapsed": 4.3}
+{"opp": "Izzet Affinity", "our_deck": "Boros Energy", "field_pct": 6.8, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 43.3, "g2": 48.3, "g3": 46.8, "match": 44.2, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 4.8}

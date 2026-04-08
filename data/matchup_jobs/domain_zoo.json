@@ -1,1 +1,1 @@
-{"opp": "Domain Zoo", "our_deck": "Boros Energy", "field_pct": 5.0, "type": "fair", "n": 1000, "error": "cannot access local variable 'deck_key' where it is not associated with a value", "elapsed": 4.4}
+{"opp": "Domain Zoo", "our_deck": "Boros Energy", "field_pct": 5.0, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 85.2, "g2": 90.2, "g3": 88.7, "match": 96.1, "avg_turns": 0.0, "hard_stop": 0.0, "elapsed": 4.7}

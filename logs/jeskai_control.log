@@ -1,14 +1,1 @@
-[CardDB] Loading 162MB oracle database...
-[CardDB] 37,112 cards indexed
-[CardDB] 75,499 rulings loaded
-  [29 cards loaded from local DB — no network calls]
-  Loaded: 60 main | 15 sideboard
-  ✓ Tac guide: Boros Energy Modern
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Izzet Prowess - Standard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Legacy Humans
-  [27 cards loaded from local DB — no network calls]
-  Loaded: 74 main | 0 sideboard
-OK  Jeskai Control: G1=98.7%  Match=99.9%  (7.6s)
+OK  Jeskai Control: G1=61.0%  Match=70.2%  (1.9s)

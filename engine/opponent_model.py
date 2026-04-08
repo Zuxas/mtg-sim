@@ -57,14 +57,16 @@ ARCHETYPE_HAND_PRIORS = {
         "Unmask":                   (4, 1.0),
     },
     "lotus combo": {
-        "Lotus Field":              (4, 1.3),
-        "Thespian's Stage":         (4, 1.2),
-        "Pore Over the Pages":      (4, 1.0),
-        "Vizier of Tumbling Sands": (4, 1.0),
-        "Bala Ged Recovery":        (4, 1.0),
-        "Hidden Strings":           (4, 1.0),
+        # Lands — tracked for probability but NOT nameable by Meddling Mage
+        # "Lotus Field":              (4, 1.3),  # land, not a spell
+        # "Thespian's Stage":         (4, 1.2),  # land, not a spell
+        # Spells — these ARE nameable
+        "Hidden Strings":           (4, 1.3),   # key untap spell, always keep
+        "Pore Over the Pages":      (4, 1.2),   # draw + untap engine
+        "Vizier of Tumbling Sands": (4, 1.1),   # creature untap
+        "Bala Ged Recovery":        (4, 1.0),   # utility / recursion
         "Explore":                  (4, 0.9),
-        "Crop Rotation":            (4, 1.1),
+        "Crop Rotation":            (4, 1.1),   # land fetch
         "Cultivate":                (4, 0.9),
     },
     "dimir tempo": {

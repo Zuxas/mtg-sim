@@ -53,11 +53,14 @@ MEDDLING_EV_TABLE = {
     "Dark Ritual":          1.5,   # buying a turn vs fast kills
     "Force of Will":        1.2,   # prevents them protecting their combo
 
-    # Lotus Combo
-    "Lotus Field":          3.0,   # naming the engine itself — game over for them
-    "Hidden Strings":       2.5,
-    "Pore Over the Pages":  2.0,
-    "Crop Rotation":        1.5,
+    # Lotus Combo — name spells only (Lotus Field is a land, unnameable)
+    "Lotus Field":          (0, 0.0),   # LAND — cannot be named by Meddling Mage
+    "Thespian's Stage":     (0, 0.0),   # LAND — cannot be named
+    "Hidden Strings":       2.5,        # key untap spell — naming this wins
+    "Pore Over the Pages":  2.0,        # draw + untap engine
+    "Vizier of Tumbling Sands": 2.0,    # creature that untaps Lotus Field
+    "Crop Rotation":        1.8,        # fetches Lotus Field — stop setup
+    "Bala Ged Recovery":    1.5,        # recursion / utility
 
     # Dimir Tempo
     "Force of Will":        1.5,
@@ -98,39 +101,50 @@ MEDDLING_EV_TABLE = {
 
 def meddling_mage_name(
     model:     OpponentHandModel,
-    board:     list = None,    # our current board state (optional)
+    board:     list = None,
     turn:      int  = None,
 ) -> tuple[str, float, list]:
     """
     Compute the optimal Meddling Mage naming decision.
 
-    Returns:
-        (best_name, ev_score, ranked_options)
+    Returns: (best_name, ev_score, ranked_options)
 
-    EV formula:
-        EV(name X) = P(X in hand) × turns_gained(X) × P(we_win_given_turns)
-
-    P(we_win_given_turns) is simplified here — higher turns_gained = higher win%
+    Rules enforced:
+    - Only names SPELLS (cards that are cast) — not lands
+    - EV = P(in hand) × turns_gained(card) × win_weight
     """
     if turn is not None:
         model.turn = turn
+
+    # Build a set of lands from CardDB so we never name them
+    land_names: set = set()
+    try:
+        from engine.card_db import CardDB
+        db = CardDB()
+    except Exception:
+        db = None
 
     priors = ARCHETYPE_HAND_PRIORS.get(model.archetype_key, {})
     scored = []
 
     for card_name in priors:
+        # Skip lands — they can't be named by Meddling Mage
+        if db:
+            if db.is_land(card_name):
+                continue
+        else:
+            # Fallback: skip known land patterns
+            if any(w in card_name.lower() for w in ["field", "stage", "tomb",
+                   "plains", "island", "swamp", "mountain", "forest",
+                   "wastes", "cavern", "karakas", "horizon", "grove"]):
+                continue
+
         p_in_hand = model.p_in_hand(card_name)
         if p_in_hand < 0.05:
-            continue   # not worth naming something they probably don't have
+            continue
 
-        # Get EV of naming this card
-        # Try exact match first, then look for partial matches
         ev_if_named = MEDDLING_EV_TABLE.get(card_name, 0.5)
-
-        # Future: check if they've already drawn/played it
-        # Also check if they'd have an alternate line around the name
-
-        total_ev = p_in_hand * ev_if_named
+        total_ev    = p_in_hand * ev_if_named
         scored.append((card_name, total_ev, p_in_hand, ev_if_named))
 
     scored.sort(key=lambda x: -x[1])
@@ -138,7 +152,7 @@ def meddling_mage_name(
     if not scored:
         return ("Force of Will", 0.5, [])
 
-    best = scored[0]
+    best   = scored[0]
     ranked = [(name, round(ev, 3)) for name, ev, _, _ in scored[:8]]
     return (best[0], round(best[1], 3), ranked)
 

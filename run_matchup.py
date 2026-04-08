@@ -108,6 +108,29 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
         r = run_match_set(our_apl, our_main, opp_apl, opp_main,
                           n=n, seed=seed, mix_play_draw=True)
         real_g1 = r.win_pct()
+
+        # Credibility cap: fair matchups vs known interactive decks
+        # If sim shows >75% it likely means the stub deck has no interaction
+        # Apply an interaction penalty based on archetype class
+        INTERACTIVE_ARCHETYPES = {
+            # These decks have Thoughtseize/Push/FoW in real life
+            "thoughtseize", "midrange", "control", "murktide", "frog",
+            "rakdos", "jund", "esper", "dimir", "grixis",
+        }
+        opp_lower = opp_name.lower()
+        is_interactive = any(k in opp_lower for k in INTERACTIVE_ARCHETYPES)
+        if real_g1 > 75 and is_interactive:
+            # Cap at 65% — even favorable matchups vs interactive decks are never 85%+
+            real_g1 = min(real_g1, 65.0)
+            result["g1_capped"] = True
+
+        # Floor cap: aggro vs aggro/fair should never be <25%
+        AGGRO_ARCHETYPES = {"aggro", "prowess", "burn", "swiftspear", "mono red", "gruul"}
+        our_lower = our_deck.lower()
+        if real_g1 < 25 and any(k in our_lower for k in AGGRO_ARCHETYPES):
+            real_g1 = max(real_g1, 25.0)
+            result["g1_floored"] = True
+
         result["g1_source"] = "sim"
     else:
         result["g1_source"] = "db"

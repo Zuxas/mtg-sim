@@ -77,7 +77,7 @@ class BaseAPL(ABC):
         fresh_deck = copy.deepcopy(mainboard)
 
         # --- Opening hand with opponent-aware mulligan ---
-        keep_fn = self.keep_vs if hasattr(self, 'keep_vs') else self.keep
+        keep_fn = self.keep_vs if (opp_archetype and hasattr(self, 'keep_vs')) else self.keep
         hand, library, mulligans = take_opening_hand(
             deck=fresh_deck,
             keep_fn=keep_fn,

@@ -220,3 +220,47 @@ for alias, target in [
 ]:
     if alias not in OPPONENT_PROFILES and target in OPPONENT_PROFILES:
         OPPONENT_PROFILES[alias] = OPPONENT_PROFILES[target]
+
+
+
+# ---------------------------------------------------------------------------
+# OpponentClock — kill turn distribution for race analysis
+# ---------------------------------------------------------------------------
+
+class OpponentClock:
+    """Models an opponent's goldfish kill turn distribution for race sims."""
+
+    def __init__(self, name: str, kill_distribution: dict[int, float]):
+        self.name = name
+        self.kill_distribution = kill_distribution
+        # Pre-compute CDF for sampling
+        self._turns = sorted(kill_distribution)
+        self._cumulative = []
+        running = 0.0
+        for t in self._turns:
+            running += kill_distribution[t]
+            self._cumulative.append((t, running))
+
+    def sample_kill_turn(self) -> int:
+        roll = random.random() * 100
+        for t, cum in self._cumulative:
+            if roll <= cum:
+                return t
+        return 99  # didn't kill
+
+    def avg_kill_turn(self) -> float:
+        total = sum(t * p for t, p in self.kill_distribution.items())
+        return total / sum(self.kill_distribution.values())
+
+
+# Legacy field — opponent clocks for race analysis
+LEGACY_FIELD = {
+    "Lands":           OpponentClock("Lands",           {2: 5.0, 3: 25.0, 4: 30.0, 5: 20.0, 6: 12.0, 7: 5.0, 8: 3.0}),
+    "Delver":          OpponentClock("Delver",          {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0}),
+    "Elves":           OpponentClock("Elves",           {2: 15.0, 3: 40.0, 4: 25.0, 5: 12.0, 6: 5.0, 7: 3.0}),
+    "Painter":         OpponentClock("Painter",         {2: 8.0, 3: 28.0, 4: 30.0, 5: 20.0, 6: 10.0, 7: 4.0}),
+    "Stoneforge":      OpponentClock("Stoneforge",      {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0}),
+    "Hogaak":          OpponentClock("Hogaak",          {2: 10.0, 3: 35.0, 4: 30.0, 5: 15.0, 6: 7.0, 7: 3.0}),
+    "Reanimator":      OpponentClock("Reanimator",      {1: 5.0, 2: 35.0, 3: 35.0, 4: 15.0, 5: 7.0, 6: 3.0}),
+    "Dimir Tempo":     OpponentClock("Dimir Tempo",     {3: 6.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 9.0, 8: 5.0}),
+}

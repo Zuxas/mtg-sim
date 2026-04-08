@@ -236,6 +236,7 @@ class GameState:
         Correct turn order: untap → upkeep → draw → MAIN1 → COMBAT → MAIN2 → end
         """
         self.phase = Phase.COMBAT
+        self.check_state_based_actions()
         self._do_combat()
 
     def _do_combat(self):
@@ -448,6 +449,46 @@ class GameState:
                 card.power     = str(max(1, creature_count))
                 card.toughness = "4"   # fixed toughness
 
+    def check_state_based_actions(self):
+        """
+        State-based actions (Phase 0E) — checked whenever a player would
+        receive priority. In practice, after each spell resolves and at
+        the start of each phase.
+
+        SBAs implemented:
+          1. Creature with effective toughness <= 0 → graveyard
+          2. Legend rule: if 2+ legendary permanents share a name, keep newest
+          3. Player at 0 or less life → loses (tracked externally)
+        """
+        changed = True
+        while changed:
+            changed = False
+
+            # 1. Zero toughness
+            for card in list(self.zones.battlefield):
+                if card.has(Tag.CREATURE) and card.effective_toughness() <= 0:
+                    self.zones.battlefield.remove(card)
+                    self.zones.graveyard.append(card)
+                    self._log(f"  SBA: {card.name} dies (0 toughness)")
+                    changed = True
+
+            # 2. Legend rule
+            seen_legends = {}
+            for card in list(self.zones.battlefield):
+                if "legendary" in card.type_line.lower():
+                    if card.name in seen_legends:
+                        # Keep the newer one (higher turn_entered, or later in list)
+                        old = seen_legends[card.name]
+                        victim = old if old.turn_entered <= card.turn_entered else card
+                        if victim in self.zones.battlefield:
+                            self.zones.battlefield.remove(victim)
+                            self.zones.graveyard.append(victim)
+                            self._log(f"  SBA: Legend rule — sacrificed {victim.name}")
+                            changed = True
+                        seen_legends[card.name] = card
+                    else:
+                        seen_legends[card.name] = card
+
     # -----------------------------------------------------------------------
     # APL-facing actions
     # -----------------------------------------------------------------------
@@ -646,6 +687,7 @@ class GameState:
                 card.summoning_sickness = True
             self._fire_etb_triggers(card)
         self._log(f"  Cast: {card.name} (CMC {card.cmc:.0f}, pool left: {self.mana_pool.total()})")
+        self.check_state_based_actions()
         return True
 
     def put_via_vial(self, card: Card, vial: Card) -> bool:
@@ -662,6 +704,7 @@ class GameState:
             card.summoning_sickness = True
         self._fire_etb_triggers(card)
         self._log(f"  Vial ({vial.counters}): {card.name}")
+        self.check_state_based_actions()
         return True
 
     def vial_in_play(self):

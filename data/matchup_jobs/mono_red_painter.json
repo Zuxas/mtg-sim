@@ -1,1 +1,1 @@
-{"opp": "Mono Red Painter", "field_pct": 5.0, "type": "combo", "n": 1000, "error": null, "g1": 47.2, "g2": 57.3, "match": 53.9, "avg_turns": 4.0, "hard_stop": 0.0, "elapsed": 2.6}
+{"opp": "Mono Red Painter", "field_pct": 5.0, "type": "combo", "n": 5000, "error": null, "g1": 49.6, "g2": 58.8, "match": 55.7, "avg_turns": 4.0, "hard_stop": 0.0, "elapsed": 2.5}

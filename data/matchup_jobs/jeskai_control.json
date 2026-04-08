@@ -1,1 +1,1 @@
-{"opp": "Jeskai Control", "field_pct": 3.6, "type": "fair", "n": 1000, "error": null, "g1": 98.8, "g2": 99.0, "match": 98.9, "avg_turns": 8.7, "hard_stop": 0.0, "elapsed": 6.7}
+{"opp": "Jeskai Control", "field_pct": 3.6, "type": "fair", "n": 5000, "error": null, "g1": 98.7, "g2": 99.0, "match": 98.9, "avg_turns": 8.7, "hard_stop": 0.0, "elapsed": 8.1}

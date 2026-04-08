@@ -1,1 +1,1 @@
-{"opp": "Eldrazi Stompy", "field_pct": 6.4, "type": "fair", "n": 1000, "error": null, "g1": 31.7, "g2": 39.7, "match": 37.0, "avg_turns": 10.6, "hard_stop": 0.0, "elapsed": 7.0}
+{"opp": "Eldrazi Stompy", "field_pct": 6.4, "type": "fair", "n": 5000, "error": null, "g1": 32.0, "g2": 40.0, "match": 37.3, "avg_turns": 10.6, "hard_stop": 0.0, "elapsed": 8.2}

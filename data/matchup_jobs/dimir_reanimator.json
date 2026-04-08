@@ -1,1 +1,1 @@
-{"opp": "Dimir Reanimator", "field_pct": 22.4, "type": "combo", "n": 1000, "error": null, "g1": 20.5, "g2": 55.4, "match": 43.8, "avg_turns": 2.8, "hard_stop": 0.0, "elapsed": 2.5}
+{"opp": "Dimir Reanimator", "field_pct": 22.4, "type": "combo", "n": 5000, "error": null, "g1": 20.5, "g2": 55.9, "match": 44.1, "avg_turns": 2.8, "hard_stop": 0.0, "elapsed": 2.5}

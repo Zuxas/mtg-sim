@@ -212,7 +212,7 @@ def adjusted_kill_dist(base_dist: dict, delay: float) -> dict:
 def run_combo_matchup(
     archetype:   str,
     n:           int   = 10000,
-    game:        int   = 1,       # 1 = G1, 2 = G2, 3 = G3
+    game:        int   = 1,       # 1=G1 (no SB), 2=G2 (we SB'd), 3=G3 (both SB'd, opp on play)
     on_play:     bool  = True,
     seed:        int   = 42,
 ) -> dict:
@@ -234,8 +234,14 @@ def run_combo_matchup(
     # Our library
     if game == 1:
         lib_template = build_library()
-    else:
+        opp_on_play  = not on_play   # we chose to play/draw
+    elif game == 2:
         lib_template = build_library_g2(arch)
+        opp_on_play  = on_play       # loser of G1 picks; model: they're on play G2
+    else:
+        # G3: both fully boarded, opponent on play (they won G2)
+        lib_template = build_library_g2(arch)
+        opp_on_play  = True          # G3 worst case: opponent on play
 
     # Our kill distribution (goldfish, from sim data)
     OUR_KILL_DIST = {3: 5, 4: 38, 5: 32, 6: 15, 7: 7, 8: 3}
@@ -298,9 +304,9 @@ def run_combo_matchup(
                 our_kill = t
                 break
 
-        # Adjust our kill for on_play/on_draw
-        if not on_play:
-            our_kill += 1
+        # Adjust our kill for on_play/on_draw (opponent on play = we're on draw)
+        if opp_on_play:
+            our_kill += 1   # one extra turn before we can kill
 
         # Determine winner
         if our_kill <= their_effective_kill:

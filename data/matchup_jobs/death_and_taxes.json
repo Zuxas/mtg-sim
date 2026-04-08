@@ -1,1 +1,1 @@
-{"opp": "Death And Taxes", "field_pct": 4.6, "type": "fair", "n": 1000, "error": null, "g1": 72.3, "g2": 80.3, "match": 77.6, "avg_turns": 12.9, "hard_stop": 0.0, "elapsed": 6.2}
+{"opp": "Death And Taxes", "field_pct": 4.6, "type": "fair", "n": 5000, "error": null, "g1": 72.8, "g2": 80.8, "match": 78.1, "avg_turns": 12.9, "hard_stop": 0.0, "elapsed": 8.6}

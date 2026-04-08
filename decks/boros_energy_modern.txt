@@ -1,12 +1,14 @@
-// Boros Energy (modern)
+// Boros Energy/Ocelot — Current 75
 4 Ajani, Nacatl Pariah
 3 Arena of Glory
 4 Arid Mesa
+1 Dalkovan Encampment
 2 Elegant Parlor
 4 Flooded Strand
 4 Galvanic Discharge
 3 Goblin Bombardment
 4 Guide of Souls
+1 Lightning Bolt
 2 Marsh Flats
 1 Mountain
 4 Ocelot Pride
@@ -14,11 +16,11 @@
 2 Plains
 4 Ragavan, Nimble Pilferer
 3 Sacred Foundry
-3 Seasoned Pyromancer
-3 Static Prison
+1 Screaming Nemesis
+2 Seasoned Pyromancer
+2 Static Prison
 2 Thraben Charm
 3 Voice of Victory
-1 Windswept Heath
 
 Sideboard
 2 Blood Moon

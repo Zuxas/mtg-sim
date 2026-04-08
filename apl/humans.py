@@ -60,12 +60,22 @@ class HumansAPL(BaseAPL):
     max_turns = 12
 
     # Opponent model — set before simulation via set_opponent()
-    opp_model: Optional[OpponentHandModel] = None
+    opp_model:  Optional[OpponentHandModel] = None
+    _evaluator  = None   # ActionEvaluator — loaded lazily
 
     def set_opponent(self, archetype_key: str, on_play: bool = True):
-        """Configure opponent model for this sim run."""
+        """Configure opponent model and action evaluator for this sim run."""
         self.opp_model = OpponentHandModel(archetype_key=archetype_key, on_play=on_play)
-        # Subscribe to game events so model updates in real time
+        # Load action evaluator with ML model
+        try:
+            from ml.win_prob_model import load_model
+            from engine.action_evaluator import ActionEvaluator
+            ml_model = load_model()
+            if ml_model is not None:
+                self._evaluator = ActionEvaluator(ml_model, archetype_key)
+        except Exception:
+            self._evaluator = None
+        # Subscribe to game events
         bus = get_event_bus()
         bus.subscribe("opponent_plays",  self._on_opponent_plays)
         bus.subscribe("opponent_mana",   self._on_opponent_mana)
@@ -292,17 +302,32 @@ class HumansAPL(BaseAPL):
                 target = min(viallable, key=vial_priority)
                 gs.put_via_vial(target, vial)
 
-        # 4. Lords + key threats in priority order:
-        # Kytheon (1-drop that flips to 4/4) → Champion → Lieutenant → Thalia
-        # Coppercoat Vanguard (anthem for all Humans) → Urdnan (ETB pump) → Adeline
-        for priority_name in (CHAMPION, LIEUTENANT, KYTHEON, THALIA,
-                              COPPERCOAT, URDNAN, ADELINE, VOICE_OF_VICTORY):
-            for card in list(gs.hand()):
-                if card.name == priority_name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    if not self._should_play_through(gs, spell_value=2.0):
-                        continue   # hold key threats if FoW risk is too high
-                    gs.cast_spell(card)
+        # 4. Lords + key threats — ML evaluator picks optimal order if available
+        priority_names = (CHAMPION, LIEUTENANT, KYTHEON, THALIA,
+                          COPPERCOAT, URDNAN, ADELINE, VOICE_OF_VICTORY)
+
+        if self._evaluator is not None:
+            # ML model picks optimal casting order each iteration
+            while True:
+                castable_now = [
+                    card for card in gs.hand()
+                    if card.name in priority_names
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)
+                ]
+                if not castable_now:
                     break
+                best = self._evaluator.pick_best(gs, castable_now)
+                if best is None or not gs.cast_spell(best):
+                    break
+        else:
+            # Fallback: static priority order
+            for priority_name in priority_names:
+                for card in list(gs.hand()):
+                    if card.name == priority_name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        if not self._should_play_through(gs, spell_value=2.0):
+                            continue
+                        gs.cast_spell(card)
+                        break
 
         # Meddling Mage — cast and name optimally
         for card in list(gs.hand()):

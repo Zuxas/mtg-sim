@@ -1,1 +1,1 @@
-{"opp": "Esper Pixie", "our_deck": "Izzet Prowess", "field_pct": 5.2, "type": "fair", "n": 1000, "error": null, "g1_source": "db", "g1": 44.0, "g2": 50.0, "g3": 48.5, "match": 46.2, "elapsed": 8.1}
+{"opp": "Esper Pixie", "our_deck": "Boros Aggro", "field_pct": 5.2, "type": "fair", "n": 10000, "error": "Could not load deck for Esper Pixie", "elapsed": 6.4}

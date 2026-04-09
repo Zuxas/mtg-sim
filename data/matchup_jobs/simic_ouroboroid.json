@@ -1,1 +1,1 @@
-{"opp": "Simic Ouroboroid", "our_deck": "Izzet Prowess", "field_pct": 3.4, "type": "fair", "n": 1000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 31.0, "g3": 29.5, "match": 19.7, "elapsed": 7.6}
+{"opp": "Simic Ouroboroid", "our_deck": "Boros Aggro", "field_pct": 3.4, "type": "fair", "n": 10000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 31.0, "g3": 29.5, "match": 19.7, "elapsed": 10.7}

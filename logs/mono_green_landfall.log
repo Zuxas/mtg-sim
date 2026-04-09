@@ -1,4 +1,12 @@
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
-OK  [DB] Mono Green Landfall: G1=54.0%  Match=61.2%  (7.8s)
+  ✓ Tac guide: Boros Energy Modern
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Izzet Prowess - Standard
+  ✓ Tac guide: Dashboard
+  ✓ Tac guide: Legacy Humans
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 75 main | 0 sideboard
+OK  [SIM] Mono Green Landfall: G1=42.6%  Match=44.1%  (11.3s)

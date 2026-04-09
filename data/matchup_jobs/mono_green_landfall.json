@@ -1,1 +1,1 @@
-{"opp": "Mono Green Landfall", "our_deck": "Izzet Prowess", "field_pct": 4.2, "type": "fair", "n": 1000, "error": null, "g1_source": "db", "g1": 54.0, "g2": 60.0, "g3": 58.5, "match": 61.2, "elapsed": 7.8}
+{"opp": "Mono Green Landfall", "our_deck": "Boros Aggro", "field_pct": 4.2, "type": "fair", "n": 10000, "error": null, "g1_source": "sim", "g1": 42.6, "g2": 48.6, "g3": 47.1, "match": 44.1, "elapsed": 11.3}

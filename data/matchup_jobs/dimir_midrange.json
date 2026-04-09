@@ -1,1 +1,1 @@
-{"opp": "Dimir Midrange", "our_deck": "Izzet Prowess", "field_pct": 12.8, "type": "fair", "n": 1000, "error": null, "g1_source": "db", "g1": 61.0, "g2": 67.0, "g3": 65.5, "match": 71.2, "elapsed": 6.9}
+{"opp": "Dimir Midrange", "our_deck": "Boros Aggro", "field_pct": 12.8, "type": "fair", "n": 10000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 31.0, "g3": 29.5, "match": 19.7, "elapsed": 10.9}

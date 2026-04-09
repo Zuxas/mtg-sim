@@ -1,1 +1,1 @@
-{"opp": "Izzet Prowess", "our_deck": "Boros Energy", "field_pct": 7.2, "type": "fair", "n": 100000, "error": null, "g1_source": "db", "g1": 56.0, "g2": 64.0, "g3": 62.0, "match": 65.8, "elapsed": 6.0}
+{"opp": "Izzet Prowess", "our_deck": "Boros Aggro", "field_pct": 19.6, "type": "fair", "n": 10000, "error": null, "g1_source": "sim", "g1": 25.9, "g2": 33.9, "g3": 31.9, "match": 22.2, "elapsed": 11.3}

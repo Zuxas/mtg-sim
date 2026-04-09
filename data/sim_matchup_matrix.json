@@ -80,5 +80,20 @@
     "Jeskai Control": 65.0,
     "Mono Red Aggro": 59.0,
     "Mono Red Prison": 34.0
+  },
+  "Boros Aggro (standard)": {
+    "Izzet Cauldron": 62.7,
+    "Izzet Lessons": 62.1,
+    "Jeskai Oculus": 62.1,
+    "Azorius Omniscience": 61.8,
+    "Sultai Reanimator": 61.2,
+    "Mono Red Aggro": 25.0,
+    "Dimir Midrange": 25.0,
+    "Jeskai Control": 68.8,
+    "Simic Ouroboroid": 25.0,
+    "Izzet Prowess": 25.9,
+    "Azorius Control": 65.0,
+    "Gruul Aggro": 65.0,
+    "Mono Green Landfall": 42.6
   }
 }

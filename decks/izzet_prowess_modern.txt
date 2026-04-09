@@ -1,0 +1,30 @@
+// Izzet Prowess - Adam Betts (28/03/26)
+// Event: IMD Events: Nats Qualifier, Place: 2
+4 Arid Mesa
+4 Bloodstained Mire
+4 Cori-Steel Cutter
+4 Dragon's Rage Channeler
+4 Expressive Iteration
+2 Fiery Islet
+4 Lava Dart
+4 Lightning Bolt
+4 Mishra's Bauble
+4 Monastery Swiftspear
+3 Mountain
+3 Mutagenic Growth
+4 Preordain
+1 Scalding Tarn
+4 Slickshot Show-Off
+3 Steam Vents
+1 Thundering Falls
+1 Unholy Heat
+2 Violent Urge
+
+Sideboard
+4 Consign to Memory
+2 Meltdown
+1 Murktide Regent
+2 Spell Pierce
+1 Spell Snare
+2 Surgical Extraction
+3 Unholy Heat

@@ -1,0 +1,39 @@
+// Esper Reanimator - BaronOfBacon (21/03/26)
+// Event: MTGO Challenge 32, Place: 9
+4 Atraxa, Grand Unifier
+2 Emperor of Bones
+4 Ephemerate
+2 Faithful Mending
+2 Flooded Strand
+2 Force of Negation
+1 Godless Shrine
+4 Goryo's Vengeance
+4 Gran-Gran
+1 Griselbrand
+1 Hallowed Fountain
+1 Island
+4 Marsh Flats
+1 Meticulous Archive
+1 Overgrown Tomb
+1 Plains
+4 Polluted Delta
+2 Prismatic Ending
+4 Psychic Frog
+2 Quantum Riddler
+1 Shadowy Backstreet
+4 Solitude
+1 Swamp
+1 Tainted Indulgence
+3 Thoughtseize
+1 Ulamog, the Defiler
+1 Undercity Sewers
+1 Watery Grave
+
+Sideboard
+4 Consign to Memory
+2 Mystical Dispute
+2 Quantum Riddler
+2 Spell Snare
+1 Surgical Extraction
+1 Teferi, Time Raveler
+3 Wrath of the Skies

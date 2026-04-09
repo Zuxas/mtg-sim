@@ -1,0 +1,26 @@
+// Mono Green Landfall - MKC (31/03/26)
+// Event: MTGO League, Place: 8
+3 Ba Sing Se
+4 Badgermole Cub
+4 Earthbender Ascension
+3 Escape Tunnel
+3 Esper Origins
+4 Fabled Passage
+13 Forest
+4 Icetill Explorer
+4 Llanowar Elves
+4 Meltstrider's Resolve
+4 Mightform Harmonizer
+3 Promising Vein
+3 Sapling Nursery
+4 Sazh's Chocobo
+
+Sideboard
+1 Archdruid's Charm
+2 Eumidian Terrabotanist
+4 Mossborn Hydra
+2 Pawpatch Formation
+1 Sapling Nursery
+1 Scrapshooter
+2 Soul-Guide Lantern
+2 Torpor Orb

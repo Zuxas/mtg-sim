@@ -1,0 +1,28 @@
+// Gruul Aggro - MJ_23 (31/10/24)
+// Event: MTGO Challenge 32, Place: 1
+4 Copperline Gorge
+4 Emberheart Challenger
+4 Heartfire Hero
+3 Innkeeper's Talent
+4 Karplusan Forest
+4 Manifold Mouse
+4 Monastery Swiftspear
+4 Monstrous Rage
+6 Mountain
+2 Questing Druid
+1 Restless Ridgeline
+1 Rockface Village
+3 Shock
+4 Slickshot Show-Off
+3 Snakeskin Veil
+4 Thornspire Verge
+3 Torch the Tower
+2 Turn Inside Out
+
+Sideboard
+2 Ghost Vacuum
+3 Obliterating Bolt
+4 Pick Your Poison
+1 Scorching Shot
+2 Sunspine Lynx
+3 Urabrask's Forge

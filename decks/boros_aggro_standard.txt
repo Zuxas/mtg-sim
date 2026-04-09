@@ -1,0 +1,25 @@
+// Boros Aggro - Inferis1 (31/10/23)
+// Event: Construído do TorTo (269), Place: 3
+3 Bloodthirsty Adversary
+4 Charming Scoundrel
+1 Feldon, Ronom Excavator
+3 Goddric, Cloaked Reveler
+4 Kumano Faces Kakkazan
+4 Lightning Strike
+3 Mishra's Foundry
+4 Monastery Swiftspear
+2 Monstrous Rage
+18 Mountain
+2 Phoenix Chick
+3 Play with Fire
+2 Sokenzan, Crucible of Defiance
+3 Squee, Dubious Monarch
+2 Voldaren Epicure
+2 Witchstalker Frenzy
+
+Sideboard
+4 Lithomantic Barrage
+3 Torch the Tower
+2 Twisted Fealty
+4 Urabrask's Forge
+2 Vampires' Vengeance

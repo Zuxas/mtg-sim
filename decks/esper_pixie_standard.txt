@@ -1,0 +1,34 @@
+// Esper Pixie - Alex Sanchez (31/08/25)
+// Event: Sunday ReCQ 12:00 pm, Place: 2
+1 Bleachbone Verge
+3 Cecil, Dark Knight
+3 Concealed Courtyard
+4 Cosmogrand Zenith
+2 Cryogen Relic
+1 Fear of Isolation
+2 Floodfarm Verge
+3 Gloomlake Verge
+4 Godless Shrine
+1 Island
+3 Kaito, Bane of Nightmares
+3 Momentum Breaker
+3 Nowhere to Run
+4 Nurturing Pixie
+3 Spyglass Siren
+3 Starting Town
+3 Stormchaser's Talent
+4 Sunpearl Kirin
+1 Swamp
+2 Tinybones Joins Up
+3 Tragic Trajectory
+4 Watery Grave
+
+Sideboard
+2 Annul
+2 Duress
+2 Exorcise
+2 Ghost Vacuum
+2 No More Lies
+2 Seam Rip
+2 Stock Up
+1 Surgical Suite / Hospital Room

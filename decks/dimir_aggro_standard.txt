@@ -1,0 +1,40 @@
+// Dimir Aggro - Marjo Gabilo (31/10/24)
+// Event: HMSC Store Championship, Place: 3
+2 Anoint with Affliction
+3 Blooming Marsh
+2 Calix, Guided by Fate
+4 Caves of Koilos
+4 Concealed Courtyard
+4 Deep-Cavern Bat
+2 Enduring Innocence
+2 Exorcise
+2 Final Vengeance
+1 Get Lost
+2 Glissa Sunslayer
+2 Hopeless Nightmare
+3 Llanowar Wastes
+3 Nowhere to Run
+4 Optimistic Scavenger
+1 Plains
+2 Preacher of the Schism
+4 Razorverge Thicket
+2 Restless Cottage
+1 Restless Fortress
+1 Shadowy Backstreet
+3 Sheltered by Ghosts
+2 Spellbook Vendor
+1 Swamp
+1 Underground Mortuary
+2 Unholy Annex / Ritual Chamber
+2 Zoraline, Cosmos Caller
+
+Sideboard
+1 Anoint with Affliction
+1 Bandit's Talent
+3 Duress
+2 Elspeth's Smite
+2 Exorcise
+2 Hostile Investigator
+1 Kutzil's Flanker
+1 Liliana of the Veil
+2 The Witch's Vanity

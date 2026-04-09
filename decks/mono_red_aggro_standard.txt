@@ -1,0 +1,23 @@
+// Mono Red Aggro - tchuco (31/10/25)
+// Event: MTGO Challenge 32, Place: 7
+4 Burnout Bashtronaut
+4 Burst Lightning
+4 Emberheart Challenger
+4 Hired Claw
+4 Lightning Strike
+18 Mountain
+4 Nova Hellkite
+4 Razorkin Needlehead
+4 Rockface Village
+4 Screaming Nemesis
+1 Shock
+2 Soulstone Sanctuary
+3 Witchstalker Frenzy
+
+Sideboard
+3 Obliterating Bolt
+1 Shock
+2 Soul-Guide Lantern
+3 Stingerback Terror
+4 Sunspine Lynx
+2 Vengeful Possession

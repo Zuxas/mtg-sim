@@ -1,0 +1,35 @@
+// Izzet Prowess - Morioka Ryota (31/05/25)
+// Event: Tarkir dragonstorm Store Championship, Place: 3
+1 Abrade
+1 Burst Lightning
+4 Cori-Steel Cutter
+2 Drake Hatcher
+4 Into the Flood Maw
+5 Island
+3 Monstrous Rage
+4 Mountain
+4 Opt
+4 Riverpyre Verge
+4 Shivan Reef
+4 Sleight of Hand
+4 Slickshot Show-Off
+1 Spell Pierce
+4 Spirebluff Canal
+4 Stock Up
+4 Stormchaser's Talent
+3 Torch the Tower
+
+Sideboard
+1 Abrade
+1 Disdainful Stroke
+1 Drake Hatcher
+1 Enduring Curiosity
+1 Fiery Annihilation
+1 Ghost Vacuum
+2 Lithomantic Barrage
+1 Negate
+1 Obliterating Bolt
+2 Ral, Crackling Wit
+1 Spell Pierce
+1 This Town Ain't Big Enough
+1 Unable to Scream

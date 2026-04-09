@@ -1,0 +1,33 @@
+// Izzet Cauldron - Arnold Pergugachi (31/08/25)
+// Event: RCQ, Place: 2
+2 Abrade
+4 Agatha's Soul Cauldron
+4 Fear of Missing Out
+2 Fire Magic
+2 Into the Flood Maw
+4 Island
+4 Marauding Mako
+4 Mountain
+4 Proft's Eidetic Memory
+1 Quantum Riddler
+4 Riverpyre Verge
+2 Soulstone Sanctuary
+4 Spirebluff Canal
+2 Starting Town
+4 Steamcore Scholar
+1 Tersa Lightshatter
+2 Thundering Falls
+1 Torch the Tower
+4 Vivi Ornitier
+1 Wild Ride
+4 Winternight Stories
+
+Sideboard
+1 Annul
+1 Broadside Barrage
+3 Disdainful Stroke
+2 Obliterating Bolt
+3 Quantum Riddler
+2 Spell Pierce
+2 Tishana's Tidebinder
+1 Torch the Tower

@@ -1,0 +1,37 @@
+// Domain Ramp - Tortofelipe (31/10/23)
+// Event: Construído do TorTo (269), Place: 5
+4 Archangel of Wrath
+3 Atraxa, Grand Unifier
+1 Boseiju, Who Endures
+3 Courier's Briefcase
+1 Depopulate
+1 Eiganjo, Seat of the Empire
+4 Forest
+2 Go for the Throat
+3 Herd Migration
+3 Invasion of Zendikar
+1 Island
+3 Jetmir's Garden
+4 Leyline Binding
+2 Mirrex
+2 Plains
+1 Raffine's Tower
+1 Shadow Prophecy
+4 Spara's Headquarters
+4 Sunfall
+3 Swamp
+4 Topiary Stomper
+2 Virtue of Persistence
+4 Ziatora's Proving Ground
+
+Sideboard
+1 Destroy Evil
+3 Disdainful Stroke
+2 Duress
+1 Farewell
+2 Knockout Blow
+1 Obstinate Baloth
+1 Path of Peril
+1 Shadow Prophecy
+1 Temporary Lockdown
+2 The Cruelty of Gix

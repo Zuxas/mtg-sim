@@ -1,0 +1,29 @@
+// Grixis Discard - LucasG1ggs (31/10/25)
+// Event: MTGO Challenge 32, Place: 10
+1 Abrade
+4 Agatha's Soul Cauldron
+4 Fear of Missing Out
+4 Into the Flood Maw
+7 Island
+4 Marauding Mako
+3 Mountain
+4 Multiversal Passage
+4 Proft's Eidetic Memory
+3 Quantum Riddler
+4 Riverpyre Verge
+4 Spirebluff Canal
+3 Steamcore Scholar
+3 Torch the Tower
+4 Vivi Ornitier
+4 Winternight Stories
+
+Sideboard
+1 Abrade
+2 Annul
+2 Disdainful Stroke
+1 Fresh Start
+2 Obliterating Bolt
+2 Pyroclasm
+1 Quantum Riddler
+2 Spell Pierce
+2 Unable to Scream

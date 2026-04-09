@@ -10,7 +10,7 @@ from db_bridge import load_tournament_deck
 MODERN_FIELD = [
     ("Boros Energy",      22.1, "apl.boros_energy",      "BorosEnergyAPL",     "decks/boros_energy_modern.txt"),
     ("Amulet Titan",       8.5, "apl.amulet_titan",      "AmuletTitanAPL",     "Amulet Titan"),
-    ("Eldrazi Ramp",       7.4, "apl.eldrazi_tron",      "EldraziTronAPL",     "Gruul Eldrazi Ramp"),
+    ("Eldrazi Ramp",       7.4, "apl.eldrazi_ramp",      "EldraziRampAPL",     "Gruul Eldrazi Ramp"),
     ("Izzet Prowess",      7.2, "apl.izzet_prowess",     "IzzetProwessAPL",    "Izzet Prowess"),
     ("Izzet Affinity",     6.8, "apl.izzet_affinity",    "IzzetAffinityAPL",   "Izzet Affinity"),
     ("Grinding Breach",    6.4, "apl.ruby_storm",        "RubyStormAPL",      "Teg"),

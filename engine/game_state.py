@@ -573,6 +573,10 @@ class GameState:
         if name in self.TAPLANDS:
             return True
 
+        # Elegant Parlor — always enters tapped (surveil land)
+        if name == "elegant parlor":
+            return True
+
         # Shock lands: in goldfish, always pay 2 life (perfect player wants speed)
         if name in self.SHOCK_LANDS:
             return False  # pay 2 life, enter untapped
@@ -581,6 +585,19 @@ class GameState:
         if name in self.FAST_LANDS:
             other_lands = self.zones.count_lands_in_play() - 1  # exclude self
             return other_lands > 2
+
+        # Arena of Glory: enters tapped unless you control a Mountain
+        if name == "arena of glory":
+            has_mountain = any("mountain" in c.type_line.lower()
+                              for c in self.zones.lands_on_battlefield())
+            return not has_mountain
+
+        # Dalkovan Encampment: enters tapped unless you control a Swamp or Mountain
+        if name == "dalkovan encampment":
+            has_swamp_or_mountain = any(
+                "swamp" in c.type_line.lower() or "mountain" in c.type_line.lower()
+                for c in self.zones.lands_on_battlefield())
+            return not has_swamp_or_mountain
 
         # Fabled Passage: tapped if <4 lands
         if name == "fabled passage":

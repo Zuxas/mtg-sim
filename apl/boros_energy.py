@@ -12,7 +12,10 @@ VERIFIED card interactions (from oracle text):
   - Goblin Bombardment: sac creature → 1 damage to any target.
   - Voice of Victory: Mobilize 2 (2x 1/1 tapped attacking Warriors, sac EOT).
   - Seasoned Pyromancer: ETB discard 2, draw 2. Per nonland discarded → 1/1 Elemental.
-  - Phlage: ETB/attack → 3 damage any target + gain 3 life. Escape {R}{R}{W}{W} + exile 5.
+  - Phlage: {1}{R}{W}. ETB/attack → 3 damage any target + gain 3 life.
+    Sacrifice on ETB unless escaped. Escape {R}{R}{W}{W} + exile 5 from GY.
+    Hard cast = 3-mana Lightning Helix that goes to GY for later escape.
+    Escape = 4-mana 6/6 that deals 3 + stays on board.
   - Galvanic Discharge: get {E}{E}{E}, then pay any amount of {E} → that much damage
     to target creature/PW. Goldfish: target own creature, pay 0 → +3 energy net.
   - Thraben Charm: 2x creature count damage to target CREATURE / destroy enchantment /
@@ -331,15 +334,45 @@ class BorosEnergyAPL(BaseAPL):
                 gs._log(f"  Pyromancer: discard 2, draw 2, {discarded_nonlands} Elemental(s)")
                 break
 
-        # Phlage — 3 damage ETB + 3 life (if we can cast it)
+        # Phlage — hardcast {1}{R}{W}: 3 damage + 3 life, then SACRIFICE (didn't escape)
+        # Scryfall data is bugged (CMC 0) so we check mana manually
         for card in list(gs.hand()):
-            if card.name == PHLAGE and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
+            if card.name == PHLAGE and gs.mana_pool.can_pay("{1}{R}{W}", 3):
+                gs.mana_pool.pay("{1}{R}{W}", 3)
+                gs.zones.remove_from_hand(card)
+                gs.zones.battlefield.append(card)
+                card.turn_entered = gs.turn
                 gs.damage_dealt += 3
                 gs.life += 3
                 self._gained_life_this_turn = True
-                gs._log(f"  Phlage ETB: 3 dmg ({gs.damage_dealt} total), +3 life")
+                # Sacrifice — didn't escape from hand
+                if card in gs.zones.battlefield:
+                    gs.zones.battlefield.remove(card)
+                    gs.zones.graveyard.append(card)
+                gs._log(f"  Phlage hardcast: 3 dmg ({gs.damage_dealt}), +3 life, sacrificed (to GY for escape)")
                 break
+
+        # Phlage Escape — check graveyard for Phlage + 5 other cards + {R}{R}{W}{W}
+        phlage_in_gy = next((c for c in gs.zones.graveyard if c.name == PHLAGE), None)
+        other_gy_cards = [c for c in gs.zones.graveyard if c.name != PHLAGE]
+        if (phlage_in_gy and len(other_gy_cards) >= 5
+            and gs.mana_pool.can_pay("{R}{R}{W}{W}", 4)):
+            gs.mana_pool.pay("{R}{R}{W}{W}", 4)
+            # Exile 5 cards from GY
+            for c in other_gy_cards[:5]:
+                gs.zones.graveyard.remove(c)
+                gs.zones.exile.append(c)
+            # Move Phlage to battlefield (escaped — stays)
+            gs.zones.graveyard.remove(phlage_in_gy)
+            gs.zones.battlefield.append(phlage_in_gy)
+            phlage_in_gy.turn_entered = gs.turn
+            phlage_in_gy.summoning_sickness = True
+            phlage_in_gy.power = "6"
+            phlage_in_gy.toughness = "6"
+            gs.damage_dealt += 3
+            gs.life += 3
+            self._gained_life_this_turn = True
+            gs._log(f"  Phlage ESCAPED: 3 dmg ({gs.damage_dealt}), +3 life, 6/6 stays")
 
         # Fill curve
         while True:

@@ -1,0 +1,30 @@
+// Orzhov Midrange - arkany1 (2026-04-04)
+// Event: MTGO Pioneer Challenge 32 #12838133, Place: 16
+3 Anoint with Affliction
+4 Bleachbone Verge
+3 Brightclimb Pathway
+1 Castle Locthwain
+4 Concealed Courtyard
+4 Fatal Push
+4 Gifted Aetherborn
+4 Godless Shrine
+2 Graveyard Trespasser
+4 Mutavault
+3 Pest Control
+4 Preacher of the Schism
+3 Sheoldred, the Apocalypse
+3 Swamp
+1 Takenuma, Abandoned Mire
+4 Thoughtseize
+4 Unholy Annex // Ritual Chamber
+1 Urborg, Tomb of Yawgmoth
+4 Vanishing Verse
+
+Sideboard
+2 Beza, the Bounding Spring
+2 Clarion Conqueror
+3 Duress
+1 Languish
+1 Loran of the Third Path
+3 Ray of Enfeeblement
+3 Rest in Peace

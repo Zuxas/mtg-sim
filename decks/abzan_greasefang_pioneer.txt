@@ -1,0 +1,29 @@
+// Abzan Greasefang - rarakkyo (26/03/26)
+// Event: MTGO Challenge 32, Place: 16
+3 Bleachbone Verge
+4 Brightclimb Pathway
+4 Concealed Courtyard
+4 Fatal Push
+3 Fleeting Spirit
+4 Godless Shrine
+4 Greasefang, Okiba Boss
+4 Guardian of New Benalia
+2 Iron-Shield Elf
+1 Lively Dirge
+4 Monument to Endurance
+4 Parhelion II
+2 Plains
+2 Seasoned Hallowblade
+4 Sheltered by Ghosts
+1 Swamp
+1 Takenuma, Abandoned Mire
+4 The Mycosynth Gardens
+4 Thoughtseize
+1 Urborg, Tomb of Yawgmoth
+
+Sideboard
+4 Doorkeeper Thrull
+1 Duress
+4 Leyline of the Void
+2 Loran of the Third Path
+4 Vanishing Verse

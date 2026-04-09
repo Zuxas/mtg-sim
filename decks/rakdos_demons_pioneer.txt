@@ -1,0 +1,31 @@
+// Rakdos Demons - pepeteam (2026-03-14)
+// Event: MTGO Pioneer Challenge 32 #12835319, Place: 16
+2 Abrade
+4 Blackcleave Cliffs
+3 Blazemire Verge
+4 Blightstep Pathway
+4 Blood Crypt
+4 Bloodtithe Harvester
+2 Duress
+4 Fable of the Mirror-Breaker
+4 Fatal Push
+2 Fear of Missing Out
+2 Go for the Throat
+4 Mutavault
+4 Preacher of the Schism
+3 Sheoldred, the Apocalypse
+1 Sokenzan, Crucible of Defiance
+1 Sulfurous Springs
+3 Swamp
+4 Thoughtseize
+4 Unholy Annex // Ritual Chamber
+1 Urborg, Tomb of Yawgmoth
+
+Sideboard
+2 Abrade
+2 Duress
+2 Go Blank
+3 Hidetsugu Consumes All
+2 Invoke Despair
+1 Shadows' Verdict
+3 Unlicensed Hearse

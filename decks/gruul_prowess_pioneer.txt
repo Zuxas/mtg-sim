@@ -1,0 +1,31 @@
+// Gruul Prowess - deleon91 (2026-04-06)
+// Event: MTGO Pioneer Challenge 32 #12838160, Place: 16
+4 Academic Dispute
+4 Burst Lightning
+4 Copperline Gorge
+4 Cori-Steel Cutter
+1 Den of the Bugbear
+4 Emberheart Challenger
+4 Kumano Faces Kakkazan
+4 Monastery Swiftspear
+6 Mountain
+4 Questing Druid
+2 Ramunap Ruins
+4 Reckless Rage
+2 Screaming Nemesis
+1 Sokenzan, Crucible of Defiance
+4 Soul-Scar Mage
+4 Stomping Ground
+4 Thornspire Verge
+
+Sideboard
+1 Abandon Attachments
+1 Firebending Lesson
+1 Iroh's Demonstration
+2 Origin of Metalbending
+2 Pyroclasm
+2 Redcap Melee
+1 Rending Volley
+2 Scorching Shot
+1 Seismic Sense
+2 Soul-Guide Lantern

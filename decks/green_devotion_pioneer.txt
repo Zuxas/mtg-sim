@@ -1,0 +1,30 @@
+// Green Devotion - Vladimir Shrebakov (28/03/26)
+// Event: Yaroslavl Event, Place: 3
+2 Boseiju, Who Endures
+1 Castle Garenbrig
+4 Cavalier of Thorns
+4 Elvish Mystic
+9 Forest
+1 Invasion of Ixalan
+4 Kiora, Behemoth Beckoner
+2 Lair of the Hydra
+4 Leyline of the Guildpact
+4 Llanowar Elves
+4 Nykthos, Shrine to Nyx
+3 Oath of Nissa
+4 Old-Growth Troll
+4 Outcaster Trailblazer
+4 Storm the Festival
+3 Sunken Citadel
+1 Turntimber Symbiosis
+2 Ulvenwald Oddity
+
+Sideboard
+1 Cityscape Leveler
+3 Monstrous Emergence
+2 Nylea's Disciple
+2 Obstinate Baloth
+2 Pick Your Poison
+2 The Stone Brain
+1 Tranquil Frillback
+2 Unlicensed Hearse

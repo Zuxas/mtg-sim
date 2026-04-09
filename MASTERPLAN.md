@@ -1,117 +1,82 @@
 # MTG-Sim Master Plan — "Perfect Play" Ground-Up Build
-# Philosophy: Like SimC, assume the pilot plays perfectly. Every micro-decision
-# must be correct because the rules engine underneath is correct.
-# Status: [x] done | [~] exists but needs rework | [ ] not started
-# Updated: 2026-04-08
+# Updated: 2026-04-09
 
 ---
 
-## PHASE 0 — Correct Rules Engine ✅ (goldfish-complete)
+## ENGINE — Rules Foundation ✅
 
-### 0A: Permanent State Tracking ✅
-- [x] Card object: `tapped`, `turn_entered`, `summoning_sickness` fields
-- [x] Tap/untap as explicit actions (untap in untap step, tap for mana)
-- [x] Summoning sickness enforced — creatures can't attack turn they enter
-- [x] Haste creatures bypass summoning sickness
-- [x] Lands track tapped state — no double-tapping
+- [x] Summoning sickness, tapped state, turn_entered on all permanents
+- [x] Turn order: main1 → combat → main2 (was broken: combat first)
+- [x] Fetch land resolution (sacrifice → search → smart target → shuffle)
+- [x] Smart fetch: basic > shock > tapped dual when need mana; reverse when don't
+- [x] Fetch life cost (1 life per fetch from oracle)
+- [x] Shock land life payment (2 life for untapped)
+- [x] Enters-tapped: temples, gain lands, Elegant Parlor, fast lands, Arena of Glory
+- [x] Arena of Glory conditional (untapped with Mountain in play)
+- [x] Exerted permanents skip next untap
+- [x] State-based actions (0 toughness death, legend rule)
+- [x] Pre-combat vs post-combat spell sequencing
+- [x] Main2 carries leftover mana from main1
+- [x] CardDB: prefer game cards over art series/memorabilia prints
 
-### 0B: Mana System ✅
-- [x] Color pip parsing and validation
-- [x] Flex mana (Cavern, Ziggurat)
-- [x] Lands tap for mana with tapped state tracking
-- [x] Fetch land resolution (sacrifice, search library, put into play, shuffle)
-- [x] Shock land decision (pay 2 life in goldfish for speed)
-- [x] Enters-tapped detection (temples, gain lands, fast lands, bridges)
-- [x] Main2 carries leftover mana from main1 (was broken: 0 mana in main2)
+## MODERN — 15 Decks ✅
 
-### 0C: Stack & Priority — DEFERRED
-- [ ] Stack needed for opponent interaction (Phase 3)
-- [ ] Not needed for goldfish sim
+| Deck | Meta% | APL | Goldfish |
+|------|-------|-----|----------|
+| Boros Energy | 22.1% | boros_energy.py (verified oracle) | 100% T5.0 |
+| Amulet Titan | 8.5% | amulet_titan.py | 75% T6.1 |
+| Eldrazi Ramp | 7.4% | eldrazi_ramp.py (NEW) | 100% T8.2 |
+| Izzet Prowess | 7.2% | izzet_prowess.py | 100% T5.8 |
+| Izzet Affinity | 6.8% | izzet_affinity.py (NEW) | 85% T6.1 |
+| Grinding Breach | 6.4% | ruby_storm.py (NEW) | 25% T10.6 |
+| Jeskai Blink | 6.4% | generic | 100% T7.7 |
+| Orzhov Blink | 6.1% | generic | 100% T8.2 |
+| Goryo's Vengeance | 5.6% | goryo_vengeance.py | 100% T5.8 |
+| Domain Zoo | 5.0% | modern_domain_zoo.py (NEW) | 95% T6.4 |
+| Eldrazi Tron | 4.3% | eldrazi_tron.py | 85% T7.9 |
+| Mono Red/Burn | 4.1% | burn.py (NEW) | 100% T5.5 |
+| Temur Breach | 3.8% | ruby_storm.py | 25% T10.6 |
+| Dimir Murktide | 3.5% | dimir_murktide.py (NEW) | 100% T6.5 |
+| Esper Blink | 2.8% | esper_blink.py | 100% T8.9 |
 
-### 0D: Combat ✅ (goldfish-complete)
-- [x] Summoning sick creatures excluded from attackers
-- [x] Tapped creatures excluded from attackers  
-- [x] Haste override for summoning sickness
-- [x] All eligible creatures attack (optimal for goldfish)
-- [ ] Declare blockers (needed for matchup sim — Phase 3)
+**Modern Gauntlet: Boros Energy 65.3% field-weighted (1.4M games, 45s)**
 
-### 0E: State-Based Actions ✅
-- [x] Creature with effective toughness <= 0 → graveyard
-- [x] Legend rule — duplicate legends sacrifice the older one
-- [x] SBAs checked after cast_spell, put_via_vial, before combat
+## STANDARD — 14 Decks ✅
 
----
+| Deck | Meta% | Goldfish |
+|------|-------|----------|
+| Dimir Midrange | 11.3% | 100% T7.3 |
+| Mono Red Aggro | 10.6% | 95% T5.9 |
+| Esper Raffine | 7.9% | 85% T9.5 |
+| Dimir Aggro | 7.7% | 95% T7.8 |
+| Izzet Prowess | 5.8% | 60% T8.8 |
+| Gruul Aggro | 5.0% | 95% T5.9 |
+| Domain Ramp | 4.6% | 90% T10.0 |
+| Mono Green Landfall | 4.5% | 100% T9.0 |
+| Boros Aggro | 4.3% | 100% T6.1 |
+| Grixis Discard | 3.9% | 95% T9.8 |
+| Izzet Lessons | 3.8% | 0% (combo) |
+| Esper Pixie | 3.6% | 100% T7.3 |
+| Four-Color Overlords | 3.4% | 95% T10.2 |
+| Izzet Cauldron | 3.2% | 95% T8.2 |
 
-## PHASE 1 — Decision Engine ✅ (core decisions implemented)
+## LEGACY — 15 Decks ✅
 
-### 1A: Legal Action Enumeration — DEFERRED
-- [ ] Generic "enumerate all legal actions" framework
-- [ ] Not needed yet — deck-specific APLs handle decisions directly
+**Legacy Gauntlet: Humans 51.5% field-weighted (15k games)**
 
-### 1B: Action Evaluation — DEFERRED
-- [ ] Generic scoring engine for legal actions
-- [ ] Will build when we have multiple decks needing shared logic
+## INFRASTRUCTURE ✅
 
-### 1C: Pre-Combat vs Post-Combat ✅
-- [x] Spells that increase combat damage → cast pre-combat
-- [x] Lieutenant ETB pumps attacking Humans → pre-combat
-- [x] Humans grow attacking Champion → pre-combat
-- [x] Everything else → post-combat (summoning sick anyway)
-- [x] Result: same hand kills T5 instead of T6
+- [x] db_bridge.py: pull decks + meta from mtg-meta-analyzer (35K+ decks)
+- [x] Consensus 75 analysis from tournament data
+- [x] CardDB: art series deprioritization fix
+- [x] All deck files auto-pulled from DB
+- [x] test_all_modern_apls.py / test_standard_apls.py validation
+- [x] MASTERPLAN.md tracking
 
-### 1D: Mulligan Intelligence
-- [x] London mulligan mechanics
-- [x] Opponent-aware keep logic (keep_vs)
-- [x] ML model integration for borderline hands
-- [ ] Project kill turn from hand composition
-- [ ] Bottom selection by "which card hurts least to lose?"
+## NEXT PRIORITIES
 
-### Land Sequencing ✅
-- [x] Smart land selection for Humans (Cavern > flex > Plains > utility)
-- [x] Considers non-creature spell needs in hand
-
----
-
-## PHASE 2 — Goldfish Simulator ✅ (validated)
-
-- [x] Monte Carlo runner (N-game goldfish)
-- [x] Kill turn distribution
-- [x] Correct turn loop with all Phase 0 fixes
-- [x] 1000-game validation: avg kill T4.79, 39% T4 kills
-- [x] Pre-combat sequencing produces faster kills
-- [ ] Variance + confidence intervals
-- [ ] Parallel execution (multiprocessing)
-- [ ] Per-card statistics
-
----
-
-## PHASE 3 — Matchup Simulator (NEXT MAJOR MILESTONE)
-
-- [~] Race model exists (clock-based)
-- [ ] Opponent plays their own deck (mirror goldfish engine)
-- [ ] Interaction hooks (Thoughtseize, Wrath effects)
-- [ ] Blocking model
-- [ ] Sideboard transformation between games
-
----
-
-## PHASE 4 — Estimator + Meta Analysis ✅ (functional)
-
-- [x] Field-weighted win rates
-- [x] Matchup matrix (15 matchups)
-- [x] Sideboard adjustments (heuristic)
-- [x] Parallel gauntlet runner (15 cores)
-- [x] Validated: 51.5% field-weighted (realistic for combo-heavy meta)
-- [ ] Fed by real sim data from Phase 3 instead of heuristics
-- [ ] Bo3 match modeling with actual sideboard swaps
-
----
-
-## VALIDATED RESULTS (2026-04-08, corrected engine)
-
-Goldfish: avg kill T4.79 | 39% T4 | 85% by T5 | 100% win
-
-Field-weighted match win: 51.5%
-  Bad:  Reanimator 25.5%, Breakfast 18%, Eldrazi 21%, Sneak 30%
-  Even: Painter 54.5%, Nadu 66%, Red Aggro 70%
-  Good: Four-Color 82%, Delver 76.5%, Tempo 75%, DnT 74%
+1. **Phase 3: Matchup Simulator** — two decks playing against each other
+2. **Prowess mechanic** — spell-cast triggers pump for Swiftspear/Channeler
+3. **Standard Izzet Lessons APL** — combo deck needs specific logic
+4. **Pioneer format** — data exists, need APLs
+5. **Variant testing** — swap cards, re-sim, compare (deck diff)

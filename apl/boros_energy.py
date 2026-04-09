@@ -128,7 +128,7 @@ class BorosEnergyAPL(BaseAPL):
     # ------------------------------------------------------------------
 
     def _simulate_combat_triggers(self, gs: GameState, num_attackers: int):
-        """After combat: Ragavan treasure, Guide life gain triggers Ocelot."""
+        """After combat: Ragavan treasure, Phlage bolt, Ocelot lifelink."""
         from engine.keywords import KWTag
 
         # Ragavan: each one that attacked creates a Treasure
@@ -138,6 +138,17 @@ class BorosEnergyAPL(BaseAPL):
         if ragavans > 0:
             self._treasures += ragavans
             gs._log(f"  Ragavan: +{ragavans} Treasure(s) ({self._treasures} total)")
+
+        # Phlage attack trigger: escaped Phlage deals 3 damage + 3 life on attack
+        phlages_attacking = sum(1 for c in gs.zones.creatures_on_battlefield()
+                                if c.name == PHLAGE
+                                and (not c.summoning_sickness or KWTag.HASTE in c.tags))
+        if phlages_attacking > 0:
+            dmg = 3 * phlages_attacking
+            gs.damage_dealt += dmg
+            gs.life += dmg
+            self._gained_life_this_turn = True
+            gs._log(f"  Phlage attack trigger: {dmg} dmg ({gs.damage_dealt} total), +{dmg} life")
 
         # Ocelot Pride has lifelink — any Ocelot that attacked gained us life
         ocelots_attacked = sum(1 for c in gs.zones.creatures_on_battlefield()
@@ -193,15 +204,17 @@ class BorosEnergyAPL(BaseAPL):
         gs._log(f"  Ajani ETB: 2/1 Cat Warrior token")
 
     def _bombardment_finish(self, gs: GameState):
-        """Sacrifice creatures to Goblin Bombardment for lethal."""
+        """Sacrifice creatures to Goblin Bombardment ONLY if lethal."""
         if not any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield):
             return
         remaining = 20 - gs.damage_dealt
         if remaining <= 0: return
-        sacrificeable = sorted(
-            [c for c in gs.zones.creatures_on_battlefield()],
-            key=lambda c: (0 if "Token" in c.name else 1, c.effective_power())
-        )
+        sacrificeable = [c for c in gs.zones.creatures_on_battlefield()]
+        # Only sac if we have enough creatures to deal lethal
+        if len(sacrificeable) < remaining:
+            return
+        # Sort: tokens first, lowest power first
+        sacrificeable.sort(key=lambda c: (0 if "Token" in c.name else 1, c.effective_power()))
         sacrificed = 0
         for creature in list(sacrificeable):
             if gs.damage_dealt >= 20: break
@@ -219,7 +232,7 @@ class BorosEnergyAPL(BaseAPL):
     # ------------------------------------------------------------------
 
     def main_phase(self, gs: GameState):
-        """Pre-combat: land, haste creatures, Guide energy pump."""
+        """Pre-combat: land, haste creatures, Arena of Glory haste, Guide pump."""
         from engine.keywords import KWTag
 
         # Reset per-turn tracking
@@ -244,27 +257,68 @@ class BorosEnergyAPL(BaseAPL):
                     gs.cast_spell(card)
                     break
 
-        # 3. Goblin Bombardment (set up sac outlet early)
+        # 3. Arena of Glory — exert to give haste to a creature cast this turn
+        #    Pay {R}, tap, exert: add {R}{R}. If spent on creature → haste.
+        #    Perfect player: use Arena mana to cast a non-haste creature pre-combat.
+        arena = next((c for c in gs.zones.lands_on_battlefield()
+                      if c.name == "Arena of Glory" and not c.tapped), None)
+        if arena:
+            # Find a non-haste creature we could cast with the extra R
+            # Arena gives RR when exerted (net +1R since it costs R to activate)
+            castable_with_haste = []
+            for card in gs.hand():
+                if (card.has(Tag.CREATURE)
+                    and KWTag.HASTE not in card.tags
+                    and card.name not in (RAGAVAN, SCREAMING_NEMESIS)
+                    and card.summoning_sickness != False):  # not already on BF
+                    # Can we cast it with current pool + the extra R from Arena?
+                    # Arena exert: pay R, get RR (net +1R). But arena is untapped so
+                    # its base tap wasn't used yet. Exert = tap for RR instead of R.
+                    test_total = gs.mana_pool.total() + 1  # +1 net from exert
+                    if card.cmc <= test_total:
+                        castable_with_haste.append(card)
+
+            if castable_with_haste:
+                # Pick best creature to give haste (highest power)
+                best = max(castable_with_haste, key=lambda c: (
+                    int(c.power or 0), -c.cmc))
+                # Exert Arena: tap it, add RR to pool
+                arena.tapped = True
+                arena._exerted = True  # won't untap next turn
+                gs.mana_pool.add("R", 2)
+                # Cast the creature
+                if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
+                    gs.cast_spell(best)
+                    best.summoning_sickness = False  # HASTE from Arena
+                    gs._log(f"  [PRE-COMBAT] Arena of Glory exert → {best.name} has HASTE")
+                    # Guide triggers on creature entering
+                    guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
+                    if guides:
+                        gs.life += guides
+                        gs.energy += guides
+                        self._gained_life_this_turn = True
+
+        # 4. Goblin Bombardment (set up sac outlet early)
         for card in list(gs.hand()):
             if card.name == GOBLIN_BOMBARD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
                 break
 
-        # 4. Ajani pre-combat if we want the 2/1 token to trigger Guide
+        # 5. Ajani pre-combat — 2/1 token triggers Guide
         for card in list(gs.hand()):
             if card.name == AJANI and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
                 self._simulate_ajani_etb(gs)
                 break
 
-        # 5. Guide of Souls attack trigger — pay 3E for +2/+2 flying
+        # 6. Guide of Souls attack trigger — pay 3E for +2/+2 flying
         self._simulate_guide_attack_trigger(gs)
 
-        # 6. Galvanic Discharge — cast for +3 energy (target own creature, pay 0)
+        # 7. Galvanic Discharge — cast for +3 energy
         for card in list(gs.hand()):
             if card.name == GALVANIC and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 creatures = gs.zones.creatures_on_battlefield()
-                if creatures:  # need a target
+                if creatures:
                     gs.energy += 3
                     gs.cast_spell(card)
                     gs._log(f"  Galvanic: +3 energy ({gs.energy}), 0 dmg to own creature")

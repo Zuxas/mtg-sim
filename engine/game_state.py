@@ -176,6 +176,10 @@ class GameState:
         self.land_played = False
         self.mana_pool.empty()
         for card in self.zones.battlefield:
+            # Exerted permanents skip one untap
+            if getattr(card, '_exerted', False):
+                card._exerted = False
+                continue
             card.tapped = False
             card.summoning_sickness = False
         self._log(f"T{self.turn} — untap ({len(self.zones.lands_on_battlefield())} lands)")

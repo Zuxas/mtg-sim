@@ -605,58 +605,96 @@ class GameState:
 
         return False  # default: untapped
 
-    def _resolve_fetch(self, card: Card) -> bool:
+    def _resolve_fetch(self, card: Card, need_mana_now: bool = True) -> bool:
         """
         Resolve a fetch land: sacrifice it, search library for a matching
         land, put that land onto the battlefield.
-        Returns True if a land was found and played.
+
+        Smart target selection (perfect player):
+        - If need_mana_now: prefer untapped lands (basic > shock > skip tapped)
+        - If !need_mana_now: prefer free tapped lands (surveil > basic > shock)
+        - Always prefer basic over shock (save life)
+        - Fetch pays 1 life (from oracle text)
         """
         name = card.name.lower()
         targets = self.FETCH_TARGETS.get(name)
 
-        # Find best matching land in library
-        best = None
+        # Find ALL matching lands in library
+        candidates = []
         for lib_card in self.zones.library:
             if not lib_card.is_land():
                 continue
             t = lib_card.type_line.lower()
             if targets is None:
-                # Prismatic Vista / Fabled Passage: any basic
                 if "basic" in t:
-                    best = lib_card
-                    break
+                    candidates.append(lib_card)
             else:
-                # Named fetch: find land with matching basic type
                 for basic_type in targets:
                     if basic_type in t:
-                        best = lib_card
+                        candidates.append(lib_card)
                         break
-                if best:
-                    break
 
-        if not best:
+        if not candidates:
             return False
+
+        # Rank candidates by preference
+        def fetch_priority(c):
+            n = c.name.lower()
+            enters_tapped = self._enters_tapped(c)
+            is_basic = "basic" in c.type_line.lower()
+            is_shock = n in self.SHOCK_LANDS
+
+            if need_mana_now:
+                # Want untapped: basic (0 life) > shock (2 life) > tapped (no mana)
+                if is_basic:       return (0, 0)   # free, untapped
+                if is_shock:       return (0, 2)   # untapped but costs life
+                if not enters_tapped: return (0, 1) # other untapped
+                return (1, 0)                       # tapped = last resort
+            else:
+                # Don't need mana: tapped dual (free) > basic > shock
+                if enters_tapped and not is_basic:
+                    return (0, 0)  # Elegant Parlor etc — free dual, enters tapped (fine)
+                if is_basic:       return (1, 0)
+                if is_shock:       return (2, 2)   # avoid paying life when we don't need mana
+                return (1, 1)
+
+        best = min(candidates, key=fetch_priority)
 
         # Sacrifice the fetch (already on battlefield from play_land)
         self.zones.battlefield.remove(card)
         self.zones.graveyard.append(card)
+
+        # Fetch costs 1 life (oracle: "pay 1 life, sacrifice")
+        self.life -= 1
 
         # Put found land onto battlefield from library
         self.zones.library.remove(best)
         self.zones.battlefield.append(best)
         best.turn_entered = self.turn
 
-        # Most fetched lands enter untapped (except Fabled Passage w/ <4 lands)
+        # Shock land: pay 2 life for untapped
+        if best.name.lower() in self.SHOCK_LANDS:
+            if need_mana_now:
+                self.life -= 2
+                self._log(f"  Shock: {best.name} (pay 2 life, life={self.life})")
+            else:
+                # Don't need mana — let it enter tapped, save 2 life
+                best.tapped = True
+                self._log(f"  Fetch → {best.name} (tapped, saved 2 life)")
+                self.zones.shuffle()
+                return True
+
         enters_tapped = self._enters_tapped(best)
         if not enters_tapped:
-            best.tapped = True  # tap immediately for mana
+            best.tapped = True
             self.mana_pool.add_land(best.type_line, best.name)
         else:
-            best.tapped = True  # enters tapped, no mana this turn
+            best.tapped = True
 
         self.zones.shuffle()
         self._log(f"  Fetch: {card.name} → {best.name}"
-                  f"{' (tapped)' if enters_tapped else ''}")
+                  f"{' (tapped)' if enters_tapped else ''}"
+                  f" (life={self.life})")
         return True
 
     def play_land(self, card: Card) -> bool:
@@ -668,7 +706,12 @@ class GameState:
 
         # Fetch lands: sacrifice and search
         if self._is_fetch_land(card):
-            self._resolve_fetch(card)
+            # Do we need mana from this fetch? Check if we have castable spells
+            castable_after = any(
+                not c.is_land() and c.cmc <= self.mana_pool.total() + 1
+                for c in self.zones.hand
+            )
+            self._resolve_fetch(card, need_mana_now=castable_after)
             return True
 
         # Shock lands: pay 2 life in goldfish (perfect player wants speed)

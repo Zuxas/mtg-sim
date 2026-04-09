@@ -1,10 +1,3 @@
-Traceback (most recent call last):
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 189, in main
-    _run_fair(result, our_deck, opp_name, format_name, n, seed)
-    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "E:\vscode ai project\mtg-sim\run_matchup.py", line 142, in _run_fair
-    raise ValueError(f"Could not load deck for {opp_name}")
-ValueError: Could not load deck for Azorius Control
 [CardDB] Loading 162MB oracle database...
 [CardDB] 37,112 cards indexed
 [CardDB] 75,499 rulings loaded
@@ -14,13 +7,6 @@ ValueError: Could not load deck for Azorius Control
   ✓ Tac guide: Izzet Prowess - Standard
   ✓ Tac guide: Dashboard
   ✓ Tac guide: Legacy Humans
-  [No deck found for Gruul Prowess]
-  ✓ Tac guide: Boros Energy Modern
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Izzet Prowess - Standard
-  ✓ Tac guide: Dashboard
-  ✓ Tac guide: Legacy Humans
   [35 cards loaded from local DB — no network calls]
   Loaded: 60 main | 0 sideboard
-ERR Azorius Control: Could not load deck for Azorius Control
+OK  [SIM] Azorius Control: G1=53.3%  Match=58.4%  (11.6s)

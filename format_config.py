@@ -72,25 +72,24 @@ FORMATS = {
 },
 
 "pioneer": {
-    # Real field shares from 13,298 tournament matches in DB
+    # Real field shares from Pioneer tournament data in DB
     "field": {
-        "Izzet Phoenix": 17.3, "Azorius Control": 12.7, "Rakdos Aggro": 9.4,
-        "Jund Sacrifice": 7.5, "Enigmatic Incarnation": 6.4, "Lotus Combo": 6.3,
-        "Selesnya Company": 6.2, "Rakdos Midrange": 5.7,
-        "Rakdos Transmogrify": 5.6, "Rakdos Demons": 5.3,
-        "Rakdos Prowess": 5.0, "Mono Black Demons": 3.3,
-        "Abzan Greasefang": 3.2, "Mono Green Devotion": 3.1, "5C Humans": 3.0,
+        "Izzet Prowess": 19.2, "Abzan Greasefang": 15.2, "Mono Red Aggro": 10.0,
+        "Selesnya Company": 9.3, "Azorius Control": 8.3, "Izzet Phoenix": 6.3,
+        "Rakdos Demons": 5.3, "Gruul Prowess": 4.4, "Golgari Midrange": 4.3,
+        "Lotus Combo": 3.8, "Orzhov Midrange": 2.7, "Green Devotion": 1.8,
+        "Izzet Lessons": 1.7, "Boros Convoke": 1.6, "5 Color Niv-Mizzet": 1.4,
     },
     "combo": {
-        "lotus combo", "enigmatic incarnation", "abzan greasefang",
-        "mono green devotion", "izzet phoenix",
+        "lotus combo", "abzan greasefang",
+        "green devotion", "izzet phoenix", "izzet lessons",
     },
     "combo_kill_dists": {
         "lotus combo":           {3: 10, 4: 35, 5: 35, 6: 15, 7: 5},
-        "enigmatic incarnation": {4: 20, 5: 40, 6: 30, 7: 10},
         "abzan greasefang":      {2: 10, 3: 40, 4: 35, 5: 15},
-        "mono green devotion":   {3: 20, 4: 45, 5: 25, 6: 10},
+        "green devotion":        {3: 20, 4: 45, 5: 25, 6: 10},
         "izzet phoenix":         {3: 25, 4: 40, 5: 25, 6: 10},
+        "izzet lessons":         {4: 20, 5: 40, 6: 30, 7: 10},
     },
 },
 

@@ -1,1 +1,1 @@
-{"opp": "Lotus Combo", "our_deck": "Gruul Prowess", "field_pct": 6.3, "type": "combo", "n": 10000, "error": null, "avg_turns": 4.1, "hard_stop": 33.1, "g1_source": "com", "g1": 59.4, "g2": 65.4, "g3": 63.9, "match": 68.9, "elapsed": 8.1}
+{"opp": "Lotus Combo", "our_deck": "Izzet Prowess", "field_pct": 3.8, "type": "combo", "n": 10000, "error": null, "avg_turns": 4.1, "hard_stop": 33.4, "g1_source": "com", "g1": 59.1, "g2": 71.1, "g3": 68.1, "match": 73.4, "elapsed": 6.8}

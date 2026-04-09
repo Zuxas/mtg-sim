@@ -1,1 +1,1 @@
-{"opp": "Selesnya Company", "our_deck": "Gruul Prowess", "field_pct": 6.2, "type": "fair", "n": 10000, "error": "Could not load deck for Selesnya Company", "elapsed": 8.0}
+{"opp": "Selesnya Company", "our_deck": "Izzet Prowess", "field_pct": 9.3, "type": "fair", "n": 10000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 31.0, "g3": 29.5, "match": 19.7, "elapsed": 9.0}

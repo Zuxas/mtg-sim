@@ -1,1 +1,1 @@
-{"opp": "Grinding Breach", "our_deck": "Boros Energy", "field_pct": 6.4, "type": "combo", "n": 1000, "error": null, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "g1": 61.0, "g2": 71.0, "g3": 68.5, "match": 74.4, "elapsed": 8.4}
+{"opp": "Grinding Breach", "our_deck": "Boros Energy", "field_pct": 6.4, "type": "combo", "n": 100000, "error": null, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "g1": 62.2, "g2": 72.2, "g3": 69.7, "match": 76.0, "elapsed": 9.8}

@@ -23,6 +23,12 @@ class RubyStormAPL(BaseAPL):
     win_condition_damage = 20
     max_turns = 12
 
+    def __init__(self):
+        self._spells = 0
+        self._ral_out = False
+        self._ral_flipped = False
+        self._medallions = 0
+
     def _reset_turn(self):
         """Reset per-turn state only. Ral state persists across turns."""
         self._spells = 0

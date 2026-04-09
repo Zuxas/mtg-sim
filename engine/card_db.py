@@ -71,14 +71,40 @@ class CardDB:
             self._cards = json.load(f)
 
         # Index by normalized name
+        # Non-game set types to deprioritize (art series, tokens, promos, etc.)
+        _SKIP_SET_TYPES = {"memorabilia", "token", "art_series", "minigame"}
+
         for card in self._cards:
             name = card.get("name", "")
-            self._by_name[self._norm(name)] = card
+            norm = self._norm(name)
+            set_type = card.get("set_type", "")
+            has_data = bool(card.get("mana_cost") or card.get("type_line", "") != "Card")
+
+            # Only overwrite if new card has better data or existing has none
+            existing = self._by_name.get(norm)
+            if existing is None:
+                self._by_name[norm] = card
+            elif has_data and (not existing.get("mana_cost") and existing.get("type_line", "") == "Card"):
+                # New card has real data, old one was an art series/blank — replace
+                self._by_name[norm] = card
+            elif has_data and set_type not in _SKIP_SET_TYPES:
+                # Prefer game cards over memorabilia
+                old_set_type = existing.get("set_type", "")
+                if old_set_type in _SKIP_SET_TYPES:
+                    self._by_name[norm] = card
+
             # Also index card faces for DFCs
             for face in card.get("card_faces", []):
                 face_name = face.get("name", "")
                 if face_name:
-                    self._by_name[self._norm(face_name)] = {**card, **face}
+                    face_norm = self._norm(face_name)
+                    merged = {**card, **face}
+                    face_has_data = bool(face.get("mana_cost") or face.get("type_line", "") not in ("Card", ""))
+                    existing_face = self._by_name.get(face_norm)
+                    if existing_face is None:
+                        self._by_name[face_norm] = merged
+                    elif face_has_data and (not existing_face.get("mana_cost") and existing_face.get("type_line", "") in ("Card", "")):
+                        self._by_name[face_norm] = merged
 
         print(f"[CardDB] {len(self._cards):,} cards indexed")
 

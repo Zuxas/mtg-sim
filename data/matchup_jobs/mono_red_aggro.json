@@ -1,1 +1,1 @@
-{"opp": "Mono Red Aggro", "our_deck": "Boros Aggro", "field_pct": 12.2, "type": "fair", "n": 10000, "error": null, "g1_floored": true, "g1_source": "sim", "g1": 25.0, "g2": 33.0, "g3": 31.0, "match": 21.1, "elapsed": 10.3}
+{"opp": "Mono Red Aggro", "our_deck": "Boros Energy", "field_pct": 4.1, "type": "fair", "n": 100000, "error": null, "g1_source": "sim", "g1": 89.4, "g2": 97.4, "g3": 95.4, "match": 99.1, "elapsed": 43.5}

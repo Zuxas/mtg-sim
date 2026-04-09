@@ -18,19 +18,19 @@
   },
   "Boros Energy (modern)": {
     "Amulet Titan": 52.0,
-    "Eldrazi Ramp": 49.0,
     "Izzet Prowess": 56.0,
     "Izzet Affinity": 54.0,
-    "Jeskai Blink": 52.0,
-    "Orzhov Blink": 60.0,
     "Goryo's Vengeance": 53.0,
+    "Temur Breach": 58.0,
+    "Eldrazi Ramp": 49.0,
+    "Jeskai Blink": 52.0,
     "Domain Zoo": 55.0,
     "Eldrazi Tron": 55.0,
-    "Temur Breach": 58.0,
     "Dimir Murktide": 56.0,
+    "Orzhov Blink": 60.0,
     "Esper Blink": 53.0,
     "Grinding Breach": 62.2,
-    "Mono Red Aggro": 37.5
+    "Mono Red Aggro": 89.4
   },
   "Izzet Prowess (standard)": {
     "Dimir Midrange": 61.0,

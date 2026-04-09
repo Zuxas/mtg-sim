@@ -63,6 +63,7 @@ class GameState:
         self.zones        = Zones()
         self.energy       = 0
         self.life         = 20
+        self.noncreature_spells_this_turn = 0  # for prowess
         self._log_lines   = []
         self._verbose     = False
 
@@ -73,6 +74,7 @@ class GameState:
         self.land_played  = False
         self.energy       = 0
         self.life         = 20
+        self.noncreature_spells_this_turn = 0
         self.mana_pool.empty()
         self._log_lines   = []
 
@@ -165,6 +167,7 @@ class GameState:
         are driven by the APL runner (base_apl.run_game) so it can insert
         decisions between phases."""
         self.turn += 1
+        self.noncreature_spells_this_turn = 0
         self._untap()
         self._upkeep()
         self._draw()
@@ -352,12 +355,29 @@ class GameState:
             attackers.append(mutavault)
             self._log("  Mutavault: activated → 2/2, attacks (reverts to land at EOT)")
 
+        # ── Prowess: +1/+0 per noncreature spell cast this turn ──────
+        prowess_boosted = []
+        if self.noncreature_spells_this_turn > 0:
+            for c in attackers:
+                if KWTag.PROWESS in c.tags:
+                    bonus = self.noncreature_spells_this_turn
+                    c.counters += bonus
+                    prowess_boosted.append((c, bonus))
+            if prowess_boosted:
+                self._log(f"  Prowess: +{self.noncreature_spells_this_turn}/+0 to "
+                          f"{len(prowess_boosted)} creature(s)")
+
         # ── 5. Combat damage ───────────────────────────────────────────────
         damage = sum(c.effective_power() for c in attackers)
         if damage:
             self.damage_dealt += damage
             self._log(f"  Attack: {damage} dmg ({self.damage_dealt} total) "
                       f"[{len(attackers)} attackers]")
+
+        # ── Post-damage cleanup ────────────────────────────────────────────
+        # Remove prowess bonus (temporary until EOT, but counters is permanent in our model)
+        for card, bonus in prowess_boosted:
+            card.counters -= bonus
 
         # ── Post-damage cleanup ────────────────────────────────────────────
         # Remove temporary Coppercoat Vanguard bonus
@@ -744,11 +764,16 @@ class GameState:
         self.mana_pool.pay(card.mana_cost, card.cmc)
         if card.has(Tag.INSTANT) or card.has(Tag.SORCERY):
             self.zones.cast_to_graveyard(card)
+            self.noncreature_spells_this_turn += 1
         else:
             self.zones.play_from_hand(card)
             card.turn_entered = self.turn
             if card.has(Tag.CREATURE) and KWTag.HASTE not in card.tags:
                 card.summoning_sickness = True
+            else:
+                # Noncreature permanent (enchantment, artifact, planeswalker)
+                if not card.has(Tag.CREATURE):
+                    self.noncreature_spells_this_turn += 1
             self._fire_etb_triggers(card)
         self._log(f"  Cast: {card.name} (CMC {card.cmc:.0f}, pool left: {self.mana_pool.total()})")
         self.check_state_based_actions()

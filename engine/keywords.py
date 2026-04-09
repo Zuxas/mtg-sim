@@ -40,6 +40,7 @@ class KWTag:
     HASTE           = "haste"
     DEFENDER        = "defender"
     INDESTRUCTIBLE  = "indestructible"
+    PROWESS         = "prowess"
 
     # Protection / Hexproof
     HEXPROOF        = "hexproof"
@@ -105,6 +106,9 @@ _KEYWORD_RULES: list[tuple[str, list[str]]] = [
 
     # Timing
     (KWTag.FLASH,         [r"\bflash\b"]),
+
+    # Prowess
+    (KWTag.PROWESS,       [r"\bprowess\b"]),
 
     # Graveyard
     (KWTag.UNDYING,       [r"\bundying\b"]),

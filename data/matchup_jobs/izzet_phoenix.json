@@ -1,1 +1,1 @@
-{"opp": "Izzet Phoenix", "our_deck": "5C Humans", "field_pct": 17.3, "type": "combo", "n": 1000, "error": null, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "g1": 61.7, "g2": 67.7, "g3": 66.2, "match": 72.1, "elapsed": 5.5}
+{"opp": "Izzet Phoenix", "our_deck": "Gruul Prowess", "field_pct": 17.3, "type": "combo", "n": 10000, "error": null, "avg_turns": 4.3, "hard_stop": 0.0, "g1_source": "com", "g1": 61.4, "g2": 67.4, "g3": 65.9, "match": 71.7, "elapsed": 8.0}

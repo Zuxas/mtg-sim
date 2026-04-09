@@ -1,1 +1,1 @@
-{"opp": "Azorius Control", "our_deck": "Boros Aggro", "field_pct": 5.7, "type": "fair", "n": 10000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 69.0, "g3": 68.0, "match": 75.0, "elapsed": 11.0}
+{"opp": "Azorius Control", "our_deck": "Gruul Prowess", "field_pct": 12.7, "type": "fair", "n": 10000, "error": "Could not load deck for Azorius Control", "elapsed": 7.5}

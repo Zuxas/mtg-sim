@@ -1,1 +1,1 @@
-{"opp": "Rakdos Demons", "our_deck": "5C Humans", "field_pct": 5.3, "type": "fair", "n": 1000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 71.0, "g3": 69.5, "match": 76.5, "elapsed": 6.6}
+{"opp": "Rakdos Demons", "our_deck": "Gruul Prowess", "field_pct": 5.3, "type": "fair", "n": 10000, "error": "Could not load deck for Rakdos Demons", "elapsed": 8.1}

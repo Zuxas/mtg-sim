@@ -1,1 +1,1 @@
-{"opp": "Jund Sacrifice", "our_deck": "5C Humans", "field_pct": 7.5, "type": "fair", "n": 1000, "error": null, "g1_source": "sim", "g1": 69.9, "g2": 75.9, "g3": 74.4, "match": 82.6, "elapsed": 6.3}
+{"opp": "Jund Sacrifice", "our_deck": "Gruul Prowess", "field_pct": 7.5, "type": "fair", "n": 10000, "error": "Could not load deck for Jund Sacrifice", "elapsed": 7.8}

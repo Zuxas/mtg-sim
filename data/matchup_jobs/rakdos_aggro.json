@@ -1,1 +1,1 @@
-{"opp": "Rakdos Aggro", "our_deck": "5C Humans", "field_pct": 9.4, "type": "fair", "n": 1000, "error": null, "g1_capped": true, "g1_source": "sim", "g1": 65.0, "g2": 73.0, "g3": 71.0, "match": 78.0, "elapsed": 6.1}
+{"opp": "Rakdos Aggro", "our_deck": "Gruul Prowess", "field_pct": 9.4, "type": "fair", "n": 10000, "error": "Could not load deck for Rakdos Aggro", "elapsed": 7.8}

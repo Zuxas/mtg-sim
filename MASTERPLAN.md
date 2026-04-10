@@ -53,7 +53,7 @@
 
 ## NEXT PRIORITIES
 ### P0 — Graphify setup (run /graphify . in Claude Code for all 3 projects)
-### P1 — Bo3 match support (sideboarding between games 1-2-3)
+### P1 — Bo3 match support ✅ (2026-04-10)
 ### P2 — Match-aware APLs for Modern decks (Boros Energy, Izzet Prowess)
 ### P3 — Eval weight calibration against tournament data
 ### BACKLOG (non-Modern = low priority)
@@ -97,3 +97,12 @@
 - Field-weighted win rate = expected performance at a tournament
 - Validated: 4-deck Modern field, 3000 games in 3.7s (16 workers)
 - Output: ranked deck list + matchup matrix + recommendation
+
+## P1 BO3 MATCH ENGINE ✅ (2026-04-10)
+- engine/bo3_match.py: real 3-game matches using Phase 3A match engine
+- Game 1 pre-board, Games 2-3 post-board with actual card swaps
+- Loser of previous game goes first (play/draw alternation)
+- Per-game win rates tracked (G1, G2, G3 independently)
+- Game 3 rate tracked (how often matches go the distance)
+- Integrates with existing engine/sideboard.py for SB plan parsing
+- Validated: 200 Bo3 matches in 1.3s (155 matches/sec)

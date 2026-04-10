@@ -71,19 +71,21 @@
 - Website integration (inject sim data into playbooks)
 - Web dashboard / Discord bot
 
-## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 52,500 games, 16.8s
+## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 52,500 games, 17.3s
+5 custom APLs: Boros Energy, Izzet Prowess, Domain Zoo, Mono Red, Dimir Murktide
 Rank  Deck              Field WR  Worst MU
-1     Boros Energy      80.9%     Jeskai Blink 51%
-2     Jeskai Blink      73.7%     Boros Energy 49%
-3     Esper Blink       65.8%     Boros Energy 34%
-4     Orzhov Blink      64.9%     Boros Energy 30%
-5     Goryo's Vengeance 57.0%     Esper Blink 27%
-6     Eldrazi Tron      53.1%     Jeskai Blink 23%
-7     Eldrazi Ramp      52.5%     Orzhov Blink 20%
-8     Izzet Prowess     51.6%     Boros Energy 28%
-NOTE: 3 custom APLs (Boros/Prowess/Zoo) + upgraded GenericMatchAPL.
-Combo decks (Breach) still 0-6% — need graveyard combo model.
-Performance: 3,125 games/sec on 16 cores.
+1     Boros Energy      80.4%     Jeskai Blink 50%
+2     Jeskai Blink      72.1%     Boros Energy 50%
+3     Esper Blink       65.0%     Boros Energy 32%
+4     Orzhov Blink      64.4%     Boros Energy 31%
+5     Goryo's Vengeance 54.2%     Jeskai Blink 27%
+6     Izzet Prowess     52.0%     Boros Energy 29%
+7     Eldrazi Tron      50.8%     Orzhov Blink 22%
+8     Eldrazi Ramp      48.8%     Boros Energy 18%
+9     Dimir Murktide    47.2%     Boros Energy 20%
+NOTE: Combo decks (Breach) still 0-6% — need graveyard combo model.
+Mono Red at 19.9% — burn deck struggles vs interactive field.
+Performance: 3,035 games/sec on 16 cores.
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances

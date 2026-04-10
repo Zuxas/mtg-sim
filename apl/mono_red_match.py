@@ -61,6 +61,7 @@ class MonoRedMatchAPL(MatchAPL):
     def main_phase_match(self, gs: GameState, opponent: GameState):
         """Burn deck: deploy cheap threats, bolt lifegain creatures, burn face."""
         self._play_land_if_able(gs)
+        gs.tap_lands()  # CRITICAL: must tap lands to generate mana
 
         # 1. Kill lifegain creatures ON SIGHT — they compound every turn
         if opponent:
@@ -73,14 +74,11 @@ class MonoRedMatchAPL(MatchAPL):
                     gs.cast_spell(c)
                     break
 
-        # 3. Eidolon — deploy when we're ahead on life or racing
-        if opponent:
-            life_diff = gs.life - opponent.life
-            if life_diff >= 0 or gs.life >= 14:
-                for c in list(gs.zones.hand):
-                    if c.name == EIDOLON and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                        gs.cast_spell(c)
-                        break
+        # 3. Eidolon — ALWAYS deploy (punishes opponent too)
+        for c in list(gs.zones.hand):
+            if c.name == EIDOLON and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                break
 
         # 4. Searing Blaze — live in match (landfall + creature target)
         if opponent and gs.land_played:

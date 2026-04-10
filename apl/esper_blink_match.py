@@ -60,6 +60,7 @@ class EsperBlinkMatchAPL(MatchAPL):
 
     def main_phase_match(self, gs, opponent):
         self._play_land_if_able(gs)
+        gs.tap_lands()  # generate mana
 
         # 1. Thoughtseize T1 — rip their best card
         if opponent and gs.turn <= 2:

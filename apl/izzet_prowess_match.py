@@ -286,6 +286,15 @@ class IzzetProwessMatchAPL(MatchAPL):
         self._play_land_if_able(gs)
 
         opp_life = opponent.life if opponent else 20
+        
+        # Against lifegain decks, pad the burst threshold
+        # Every Guide/Ocelot on board = ~3 life gained per turn cycle
+        if opponent:
+            lifegain_sources = sum(1 for c in opponent.zones.battlefield
+                                   if c.name in ("Guide of Souls", "Ocelot Pride",
+                                                  "Phlage, Titan of Fire's Fury"))
+            opp_life += lifegain_sources * 3  # pad for expected lifegain
+        
         burst = self._calc_burst_damage(gs)
         is_burst_turn = burst >= opp_life
 
@@ -303,12 +312,23 @@ class IzzetProwessMatchAPL(MatchAPL):
         2. Plot Slickshot for future burst turn
         3. Cast Cori-Steel (equipment, stays on board)
         4. Hold free spells (Bauble, Mutagenic) for burst turn
-        5. Use removal on opponent's key threats
+        5. Use removal on opponent's key threats ONLY if they threaten lethal
+        
+        PLAY AROUND REMOVAL:
+        - Don't deploy a 2nd creature if opponent has 1+ mana open and
+          removal in their colors (we already have a threat)
+        - Better to hold creatures and deploy on burst turn when we
+          can protect with combat tricks
         """
         has_threat = any(c.name in PROWESS_CREATURES or c.name == DRC
                          for c in gs.zones.battlefield if not c.is_land())
 
-        # 1. Deploy a threat if we have none
+        # Check if opponent has removal mana open
+        opp_mana_open = 0
+        if opponent:
+            opp_mana_open = opponent.mana_pool.total() if hasattr(opponent.mana_pool, 'total') else 0
+
+        # 1. Deploy a threat if we have NONE (must develop)
         if not has_threat:
             for name in (SWIFTSPEAR, DRC):
                 for c in list(gs.zones.hand):
@@ -322,65 +342,96 @@ class IzzetProwessMatchAPL(MatchAPL):
                     break
 
         # 2. Plot Slickshot (invest 2 mana now for free haste creature later)
+        #    SAFE: plotting doesn't put creature on battlefield, can't be removed
         if any(c.name == SLICKSHOT for c in gs.zones.hand):
             self._try_plot_slickshot(gs)
 
-        # 3. Cast Cori-Steel Cutter (equipment, stays on board for flurry)
+        # 3. Cast Cori-Steel Cutter (equipment — safe, can't be Bolted)
         if not self._cori_on_battlefield:
             self._cast_cori_steel(gs)
 
-        # 4. Use removal on opponent's biggest threat (if worth it)
+        # 4. DON'T deploy additional creatures if opponent has removal mana
+        #    Play around Bolt/Galvanic — save creatures for burst turn
+        if has_threat and opp_mana_open >= 1:
+            pass  # hold creatures, don't walk into removal
+        else:
+            # Safe to deploy more threats (opponent tapped out)
+            for name in (SWIFTSPEAR, DRC):
+                for c in list(gs.zones.hand):
+                    if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.cast_spell(c)
+                        self._spells_this_turn += 1
+                        self._check_flurry(gs)
+                        break
+
+        # 5. Use removal ONLY on high-value targets (don't waste Bolt)
+        #    Save burn for burst turn face damage unless they have a must-kill
         if opponent:
-            self._use_removal(gs, opponent)
+            self._use_removal_sparingly(gs, opponent)
 
-        # 5. Attack with whatever we have (chip damage)
-        # (handled by declare_attackers)
-
-    def _use_removal(self, gs: GameState, opponent: GameState):
-        """Use Bolt/Dart/Unholy Heat on opponent's best creature if worth it."""
+    def _use_removal_sparingly(self, gs: GameState, opponent: GameState):
+        """Only remove truly dangerous threats. Save burn for burst turn face damage.
+        
+        Must-kill targets:
+        - Phlage (gains 3 life per attack, compounds the lifegain problem)
+        - Any creature with 4+ power (threatens to race us)
+        - Screaming Nemesis (3/3 haste, punishes our burn)
+        
+        DON'T kill:
+        - Guide of Souls (1/1, low power — we outrace it)
+        - Ocelot Pride (1/1 first strike — annoying but not lethal)
+        - Small tokens
+        """
         opp_creatures = [c for c in opponent.zones.battlefield
                          if not c.is_land() and c.has(Tag.CREATURE)]
         if not opp_creatures:
             return
 
-        best_target = max(opp_creatures, key=lambda c: safe_power(c))
-        target_power = safe_power(best_target)
-
-        # Only remove if the creature is a real threat
-        if target_power < 2:
+        # Only target must-kill creatures
+        must_kill = [c for c in opp_creatures
+                     if safe_power(c) >= 4
+                     or c.name == "Phlage, Titan of Fire's Fury"
+                     or c.name == "Screaming Nemesis"]
+        if not must_kill:
             return
 
-        # Check removal spells in hand
+        target = max(must_kill, key=lambda c: safe_power(c))
+        target_t = safe_toughness(target)
+
+        # Use Unholy Heat first (preserves Bolt for face on burst turn)
         for c in list(gs.zones.hand):
             if c.name == UNHOLY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.mana_pool.pay(c.mana_cost, c.cmc)
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
-                if best_target in opponent.zones.battlefield:
-                    opponent.zones.battlefield.remove(best_target)
-                    opponent.zones.graveyard.append(best_target)
+                if target in opponent.zones.battlefield:
+                    opponent.zones.battlefield.remove(target)
+                    opponent.zones.graveyard.append(target)
                 self._trigger_prowess(gs, UNHOLY)
                 self._spells_this_turn += 1
                 self._check_flurry(gs)
-                gs._log(f"  Unholy Heat → kill {best_target.name}")
+                gs._log(f"  Unholy Heat → kill {target.name} (must-kill)")
                 return
 
-            if c.name == BOLT and target_power <= 3:
-                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+        # Only use Bolt on 4+ power threats — save it for face otherwise
+        if safe_power(target) >= 4 and target_t <= 3:
+            for c in list(gs.zones.hand):
+                if c.name == BOLT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.mana_pool.pay(c.mana_cost, c.cmc)
                     gs.zones.hand.remove(c)
                     gs.zones.graveyard.append(c)
-                    if safe_toughness(best_target) <= 3:
-                        if best_target in opponent.zones.battlefield:
-                            opponent.zones.battlefield.remove(best_target)
-                            opponent.zones.graveyard.append(best_target)
-                        gs._log(f"  Bolt → kill {best_target.name}")
-                    else:
-                        gs._log(f"  Bolt → {best_target.name} (survives)")
+                    if target in opponent.zones.battlefield:
+                        opponent.zones.battlefield.remove(target)
+                        opponent.zones.graveyard.append(target)
                     self._trigger_prowess(gs, BOLT)
                     self._spells_this_turn += 1
                     self._check_flurry(gs)
+                    gs._log(f"  Bolt → kill {target.name} (must-kill, 4+ power)")
                     return
+
+    def _use_removal(self, gs: GameState, opponent: GameState):
+        """Legacy method — redirects to sparingly."""
+        self._use_removal_sparingly(gs, opponent)
 
     def _execute_burst_turn(self, gs: GameState, opponent: GameState):
         """
@@ -410,7 +461,7 @@ class IzzetProwessMatchAPL(MatchAPL):
         self._cast_from_plot(gs)
 
         # 4. Chain free noncreature spells — each triggers prowess on ALL creatures
-        # Baubles first (free, draw cards)
+        # Baubles first (free, draw cards) — cast ALL of them
         for c in list(gs.zones.hand):
             if c.name == BAUBLE:
                 gs.zones.hand.remove(c)
@@ -422,7 +473,7 @@ class IzzetProwessMatchAPL(MatchAPL):
                 self._check_flurry(gs)
                 gs._log(f"  Bauble: draw 1 + prowess")
 
-        # Lava Dart from hand
+        # Lava Dart from hand — cast ALL
         for c in list(gs.zones.hand):
             if c.name == LAVA_DART:
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
@@ -453,7 +504,7 @@ class IzzetProwessMatchAPL(MatchAPL):
                 self._check_flurry(gs)
                 gs._log(f"  Lava Dart flashback: 1 dmg ({gs.damage_dealt} total) + prowess")
 
-        # Lightning Bolt face — big prowess trigger + 3 damage
+        # Lightning Bolt face — ALL of them, big prowess triggers + damage
         for c in list(gs.zones.hand):
             if c.name == BOLT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.mana_pool.pay(c.mana_cost, c.cmc)

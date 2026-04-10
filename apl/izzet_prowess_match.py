@@ -287,16 +287,23 @@ class IzzetProwessMatchAPL(MatchAPL):
 
         opp_life = opponent.life if opponent else 20
         
-        # Against lifegain decks, pad the burst threshold
-        # Every Guide/Ocelot on board = ~3 life gained per turn cycle
+        # Against lifegain decks, pad SLIGHTLY for expected lifegain
+        # Don't over-pad — better to burst for near-lethal than wait forever
         if opponent:
             lifegain_sources = sum(1 for c in opponent.zones.battlefield
                                    if c.name in ("Guide of Souls", "Ocelot Pride",
                                                   "Phlage, Titan of Fire's Fury"))
-            opp_life += lifegain_sources * 3  # pad for expected lifegain
+            opp_life += min(lifegain_sources * 2, 4)  # cap at +4 padding
         
         burst = self._calc_burst_damage(gs)
         is_burst_turn = burst >= opp_life
+        
+        # DESPERATION: if T5+ and we haven't burst, go all-in
+        # Waiting only helps lifegain compound — commit everything
+        if not is_burst_turn and gs.turn >= 5:
+            burst_pct = burst / max(1, opp_life)
+            if burst_pct >= 0.7:  # can deal 70%+ of their life
+                is_burst_turn = True  # go for it, hope they don't have the answer
 
         if is_burst_turn:
             self._execute_burst_turn(gs, opponent)
@@ -350,24 +357,44 @@ class IzzetProwessMatchAPL(MatchAPL):
         if not self._cori_on_battlefield:
             self._cast_cori_steel(gs)
 
-        # 4. DON'T deploy additional creatures if opponent has removal mana
-        #    Play around Bolt/Galvanic — save creatures for burst turn
-        if has_threat and opp_mana_open >= 1:
-            pass  # hold creatures, don't walk into removal
-        else:
-            # Safe to deploy more threats (opponent tapped out)
-            for name in (SWIFTSPEAR, DRC):
-                for c in list(gs.zones.hand):
-                    if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                        gs.cast_spell(c)
-                        self._spells_this_turn += 1
-                        self._check_flurry(gs)
-                        break
+        # 4. Deploy additional creatures — Prowess WANTS threats on board
+        #    Even if they might get Bolted, you need creatures to carry prowess triggers
+        #    The key is holding SPELLS for burst, not holding CREATURES
+        for name in (SWIFTSPEAR, DRC):
+            for c in list(gs.zones.hand):
+                if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    self._spells_this_turn += 1
+                    self._check_flurry(gs)
+                    break
 
-        # 5. Use removal ONLY on high-value targets (don't waste Bolt)
-        #    Save burn for burst turn face damage unless they have a must-kill
+        # 5. Use removal ONLY on high-value targets
         if opponent:
             self._use_removal_sparingly(gs, opponent)
+
+        # 6. Cast ONE Bauble per setup turn for chip prowess + draw
+        #    Don't hold ALL fuel — use free spells to pump chip damage
+        for c in list(gs.zones.hand):
+            if c.name == BAUBLE:
+                gs.zones.hand.remove(c)
+                gs.zones.graveyard.append(c)
+                gs.zones.draw(1)
+                self._trigger_prowess(gs, BAUBLE)
+                self._spells_this_turn += 1
+                gs.noncreature_spells_this_turn += 1
+                self._check_flurry(gs)
+                break  # only one per setup turn
+
+        # 7. Cast one cantrip for prowess + dig toward burst pieces
+        for c in list(gs.zones.hand):
+            if c.name in (PREORDAIN, ITERATION):
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    gs.zones.draw(1)
+                    self._trigger_prowess(gs, c.name)
+                    self._spells_this_turn += 1
+                    self._check_flurry(gs)
+                    break
 
     def _use_removal_sparingly(self, gs: GameState, opponent: GameState):
         """Only remove truly dangerous threats. Save burn for burst turn face damage.

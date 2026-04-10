@@ -54,7 +54,7 @@
 ## NEXT PRIORITIES
 ### P0 — Graphify setup ✅ (2026-04-10)
 ### P1 — Bo3 match support ✅ (2026-04-10)
-### P2 — Match-aware APLs ✅ (2026-04-10)
+### P2 — Match-aware APLs ✅ (2026-04-10) — 13 of 15 decks
 - apl/izzet_prowess_match.py: plot mechanic, Cori-Steel Flurry, burst-turn calc, combat tricks
 - apl/boros_energy_match.py: removal targeting, lifegain priority, token blocking, Static Prison live
 - apl/domain_zoo_match.py: Leyline Binding, Stubborn Denial, Prismatic Ending
@@ -62,9 +62,13 @@
 - apl/murktide_match.py: counterspells live, Murktide delve, hold up counter mana
 - apl/jeskai_blink_match.py: Solitude pitch, Consign counter, Ephemerate blink, Teferi bounce
 - apl/affinity_match.py: Cranial Plating equip, metalcraft Blast, free creatures, Overseer pump
+- apl/esper_blink_match.py: Solitude pitch, Fatal Push, Thoughtseize disruption, Ephemerate
+- apl/eldrazi_tron_match.py: Tron assembly, TKS hand exile, Karn tutor, Chalice lock, All Is Dust
+- apl/eldrazi_ramp_match.py: Eldrazi Temple, ramp spells, Emrakul cost reduction, Kozilek's Return
+- apl/goryos_match.py: Goryo's Vengeance reanimate, Faithless discard, Force of Negation counter
+- apl/amulet_titan_match.py: Amulet of Vigor, bounce lands, Primeval Titan, Spelunking haste
 - GenericMatchAPL upgraded: removal targeting, burn face, cast all spell types
-- Slickshot Show-Off corrected: 1/2 flying haste +2/+0 per noncreature (not standard prowess)
-- Cori-Steel Cutter corrected: Artifact — Equipment with Flurry (not a creature)
+- Only Grinding Breach + Temur Breach use GenericMatchAPL (dead decks per user)
 ### P3 — Eval weight calibration ✅ (2026-04-10)
 - Grid search across 10 weight combinations, 600 samples from 3 matchups
 - Default weights validated at 99.5% accuracy: material 1.0, tempo 0.5, clock 2.0, threats 1.5, resources 0.3
@@ -76,22 +80,23 @@
 - Website integration (inject sim data into playbooks)
 - Web dashboard / Discord bot
 
-## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 52,500 games, 17.0s
-7 custom APLs: Boros, Prowess, Zoo, Mono Red, Murktide, Jeskai Blink, Affinity
+## DEFINITIVE Bo3 META SOLVE (2026-04-10)
+13 APLs + 66 SB plans, 21,000 Bo3 matches, 14.4s on 16 cores
+Rank  Deck              Bo3 WR   Worst MU
+1     Boros Energy      89.4%    Prowess 50% (coin flip)
+2     Izzet Prowess     77.1%    Boros 50%
+3     Eldrazi Ramp      57.9%    Prowess 24%
+4     Jeskai Blink      54.6%    Prowess 15%
+5     Orzhov Blink      49.0%    Boros 7%
+ANSWER: Play Boros or Prowess — nothing else close in Bo3.
+
+## FULL MODERN G1 META SOLVE (2026-04-10) — 15 decks, 52,500 games, 15.2s
+13 custom APLs covering all non-Breach decks
 Rank  Deck              Field WR  Worst MU
-1     Boros Energy      80.0%     Esper Blink 68%
-2     Esper Blink       62.9%     Boros Energy 32%
-3     Orzhov Blink      62.8%     Boros Energy 31%
-4     Jeskai Blink      55.0%     Boros Energy 29%
-5     Goryo's Vengeance 52.6%     Esper Blink 29%
-6     Izzet Prowess     52.5%     Boros Energy 30%
-7     Eldrazi Tron      48.2%     Esper Blink 26%
-8     Eldrazi Ramp      46.7%     Esper Blink 21%
-9     Izzet Affinity    44.7%     Boros Energy 22%
-10    Dimir Murktide    44.4%     Boros Energy 17%
-NOTE: Combo decks (Breach) still 0-6% — need graveyard combo model.
-7 of 15 decks have custom APLs + upgraded GenericMatchAPL for rest.
-Performance: 3,088 g/s on 16 cores. Total: 52,500 games in 17s.
+1     Boros Energy      80.9%     Prowess 51%
+2     Izzet Prowess     70.6%     Boros 49%
+3     Eldrazi Ramp      58.6%     Prowess 36%
+Performance: 3,454 g/s on 16 cores.
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances

@@ -202,6 +202,10 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 blocker_assignments = opp_apl.declare_blockers(
                     opp_gs, gs, attackers)
 
+                # Attacker gets priority for combat tricks (after blockers)
+                if hasattr(apl, 'combat_trick'):
+                    apl.combat_trick(gs, opp_gs, attackers, blocker_assignments)
+
                 # Resolve combat with keywords
                 combat_result = resolve_combat(
                     attackers, blocker_assignments, active, mgs)

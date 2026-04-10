@@ -69,10 +69,34 @@ class MatchAPL(BaseAPL):
     def respond_to_spell(self, gs: GameState, opponent: GameState,
                           spell: Card) -> Optional[Card]:
         """
-        Respond to opponent casting a spell.
-        Return a card from hand to cast in response, or None.
-        Default: no response (goldfish behavior).
+        Respond to opponent's board state with an instant.
+        Returns a card from hand to cast, or None.
+        Default: use removal on biggest threat if available.
         """
+        from engine.stack import classify_card, InteractionType
+        
+        # Find instants we could cast
+        for c in gs.zones.hand:
+            if not (c.has(Tag.INSTANT) or c.has(Tag.SORCERY)):
+                continue
+            if not hasattr(c, 'cmc') or c.cmc > gs.mana_pool.total():
+                continue
+            itype = classify_card(c)
+            
+            # Use removal if opponent has a creature worth killing
+            if itype in (InteractionType.REMOVAL, InteractionType.BURN):
+                opp_creatures = [x for x in opponent.zones.battlefield
+                                 if not x.is_land()]
+                if opp_creatures:
+                    from engine.match_state import safe_power
+                    best = max(opp_creatures, key=lambda x: safe_power(x))
+                    if safe_power(best) >= 2:  # worth removing
+                        return c
+            
+            # Use discard early game
+            if itype == InteractionType.DISCARD and gs.turn <= 2:
+                return c
+        
         return None
 
     def end_step_actions(self, gs: GameState, opponent: GameState):

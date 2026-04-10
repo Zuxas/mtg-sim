@@ -23,9 +23,13 @@ from engine.match_state import (
     resolve_combat, safe_power, safe_toughness, has_keyword,
 )
 from engine.game_state import GameState, Phase
+from engine.stack import (
+    Stack, InteractionType, classify_card, get_burn_damage,
+    resolve_interaction,
+)
 from apl.match_apl import MatchAPL, GoldfishAdapter
 from apl.mulligan import take_opening_hand
-from data.card import Card
+from data.card import Card, Tag
 
 
 def _do_mulligan(apl: MatchAPL, gs: GameState, rng: random.Random) -> int:
@@ -58,6 +62,71 @@ def _do_mulligan(apl: MatchAPL, gs: GameState, rng: random.Random) -> int:
                     gs.zones.hand.append(gs.zones.library.pop(0))
 
     return mulligans
+
+
+def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
+                              active_gs: GameState, mgs: MatchGameState,
+                              reactive_player: str):
+    """
+    Give the reactive player a chance to use instant-speed interaction.
+    Checks hand for removal/burn/counter and uses the APL to decide.
+    """
+    hand = reactive_gs.zones.hand
+    
+    # Find instants and flash creatures in hand
+    interaction_cards = []
+    for c in hand:
+        itype = classify_card(c)
+        if itype != InteractionType.NONE and (c.has(Tag.INSTANT) or c.has(Tag.SORCERY)):
+            # Check if we have mana to cast it
+            if hasattr(c, 'cmc') and c.cmc <= reactive_gs.mana_pool.total():
+                interaction_cards.append((c, itype))
+    
+    if not interaction_cards:
+        return
+    
+    # Ask the APL which interaction to use
+    response = reactive_apl.respond_to_spell(reactive_gs, active_gs, None)
+    if response and response in reactive_gs.zones.hand:
+        itype = classify_card(response)
+        
+        # Pick target
+        target = None
+        if itype == InteractionType.REMOVAL:
+            creatures = [c for c in active_gs.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
+            if creatures:
+                target = max(creatures, key=lambda c: safe_power(c))
+        
+        if itype == InteractionType.BURN:
+            damage = get_burn_damage(response)
+            creatures = [c for c in active_gs.zones.battlefield
+                         if not c.is_land() and safe_toughness(c) <= damage]
+            if creatures:
+                target = max(creatures, key=lambda c: safe_power(c))
+            # If no creature to kill, burn the player
+        
+        # Cast the spell
+        if reactive_gs.mana_pool.can_cast(response.mana_cost, response.cmc):
+            reactive_gs.mana_pool.pay(response.mana_cost, response.cmc)
+            reactive_gs.zones.hand.remove(response)
+            reactive_gs.zones.graveyard.append(response)
+            reactive_gs.noncreature_spells_this_turn += 1
+            
+            # Apply effect
+            from engine.stack import Resolution, StackItem
+            item = StackItem(card=response, caster=reactive_player,
+                             targets=[target] if target else [],
+                             interaction_type=itype,
+                             damage=get_burn_damage(response) if itype == InteractionType.BURN else 0)
+            resolution = Resolution(item, 'resolved')
+            resolve_interaction(resolution, reactive_gs, active_gs)
+            
+            # Check if opponent died from burn
+            if active_gs.life <= 0:
+                mgs.game_over = True
+                mgs.winner = reactive_player
+                mgs.win_method = 'combat'
 
 
 def run_match(apl_a: MatchAPL, deck_a: list,
@@ -115,6 +184,16 @@ def run_match(apl_a: MatchAPL, deck_a: list,
 
             # --- MAIN PHASE 1 ---
             apl.main_phase_match(gs, opp_gs)
+
+            # --- INTERACTION: Reactive player responds after main phase ---
+            opp_player = 'b' if active == 'a' else 'a'
+            _try_reactive_interaction(opp_apl, opp_gs, gs, mgs, opp_player)
+            if mgs.game_over:
+                result = mgs.to_match_result()
+                result.mulligans_a = mull_a
+                result.mulligans_b = mull_b
+                result._on_play = on_play
+                return result
 
             # --- COMBAT ---
             attackers = apl.declare_attackers(gs, opp_gs)

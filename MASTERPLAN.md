@@ -52,7 +52,7 @@
 - test_all_modern_apls.py / test_standard_apls.py / test_pioneer_apls.py
 
 ## NEXT PRIORITIES
-### P0 — Graphify setup (run /graphify . in Claude Code for all 3 projects)
+### P0 — Graphify setup ✅ (2026-04-10)
 ### P1 — Bo3 match support ✅ (2026-04-10)
 ### P2 — Match-aware APLs for Modern decks (Boros Energy, Izzet Prowess)
 ### P3 — Eval weight calibration against tournament data

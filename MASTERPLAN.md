@@ -57,9 +57,13 @@
 ### P2 — Match-aware APLs ✅ (2026-04-10)
 - apl/izzet_prowess_match.py: plot mechanic, Cori-Steel Flurry, burst-turn calc, combat tricks
 - apl/boros_energy_match.py: removal targeting, lifegain priority, token blocking, Static Prison live
+- apl/domain_zoo_match.py: Leyline Binding, Stubborn Denial, Prismatic Ending
+- apl/mono_red_match.py: kill lifegain creatures, Searing Blaze live, Fireblast sac Mountains
+- apl/murktide_match.py: counterspells live, Murktide delve, hold up counter mana
+- apl/jeskai_blink_match.py: Solitude pitch, Consign counter, Ephemerate blink, Teferi bounce
+- GenericMatchAPL upgraded: removal targeting, burn face, cast all spell types
 - Slickshot Show-Off corrected: 1/2 flying haste +2/+0 per noncreature (not standard prowess)
 - Cori-Steel Cutter corrected: Artifact — Equipment with Flurry (not a creature)
-- Matchup progression: 98.2% Boros (broken) → 67.7% Boros (match-aware APLs)
 ### P3 — Eval weight calibration ✅ (2026-04-10)
 - Grid search across 10 weight combinations, 600 samples from 3 matchups
 - Default weights validated at 99.5% accuracy: material 1.0, tempo 0.5, clock 2.0, threats 1.5, resources 0.3
@@ -71,21 +75,21 @@
 - Website integration (inject sim data into playbooks)
 - Web dashboard / Discord bot
 
-## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 52,500 games, 17.3s
-5 custom APLs: Boros Energy, Izzet Prowess, Domain Zoo, Mono Red, Dimir Murktide
+## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 52,500 games, 16.0s
+6 custom APLs: Boros, Prowess, Zoo, Mono Red, Murktide, Jeskai Blink
 Rank  Deck              Field WR  Worst MU
-1     Boros Energy      80.4%     Jeskai Blink 50%
-2     Jeskai Blink      72.1%     Boros Energy 50%
-3     Esper Blink       65.0%     Boros Energy 32%
-4     Orzhov Blink      64.4%     Boros Energy 31%
-5     Goryo's Vengeance 54.2%     Jeskai Blink 27%
-6     Izzet Prowess     52.0%     Boros Energy 29%
-7     Eldrazi Tron      50.8%     Orzhov Blink 22%
-8     Eldrazi Ramp      48.8%     Boros Energy 18%
-9     Dimir Murktide    47.2%     Boros Energy 20%
-NOTE: Combo decks (Breach) still 0-6% — need graveyard combo model.
-Mono Red at 19.9% — burn deck struggles vs interactive field.
-Performance: 3,035 games/sec on 16 cores.
+1     Boros Energy      82.8%     Esper Blink 68%
+2     Esper Blink       65.9%     Boros Energy 32%
+3     Orzhov Blink      65.6%     Boros Energy 31%
+4     Jeskai Blink      58.1%     Boros Energy 29%
+5     Goryo's Vengeance 55.5%     Esper Blink 26%
+6     Izzet Prowess     53.5%     Boros Energy 30%
+7     Eldrazi Tron      52.3%     Orzhov Blink 23%
+8     Eldrazi Ramp      50.9%     Esper Blink 19%
+9     Dimir Murktide    48.8%     Boros Energy 21%
+NOTE: Jeskai dropped 72%->58% with match APL — Solitude pitch has real costs
+(pitch card + give opp life). More realistic than generic 72%.
+Combo decks (Breach) still 0-6%. Performance: 3,281 g/s on 16 cores.
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances

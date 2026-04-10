@@ -54,7 +54,12 @@
 ## NEXT PRIORITIES
 ### P0 — Graphify setup ✅ (2026-04-10)
 ### P1 — Bo3 match support ✅ (2026-04-10)
-### P2 — Match-aware APLs for Modern decks (Boros Energy, Izzet Prowess)
+### P2 — Match-aware APLs ✅ (2026-04-10)
+- apl/izzet_prowess_match.py: plot mechanic, Cori-Steel Flurry, burst-turn calc, combat tricks
+- apl/boros_energy_match.py: removal targeting, lifegain priority, token blocking, Static Prison live
+- Slickshot Show-Off corrected: 1/2 flying haste +2/+0 per noncreature (not standard prowess)
+- Cori-Steel Cutter corrected: Artifact — Equipment with Flurry (not a creature)
+- Matchup progression: 98.2% Boros (broken) → 67.7% Boros (match-aware APLs)
 ### P3 — Eval weight calibration against tournament data
 ### BACKLOG (non-Modern = low priority)
 - Pioneer deck file naming fix

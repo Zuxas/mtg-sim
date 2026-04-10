@@ -134,11 +134,9 @@ class MTGSim:
         solution = solve_meta(self._decks, DEFAULT_FIELD, n_per_pair=n_per,
                               workers=self.workers, seed=seed, apls=APL_REGISTRY)
         rankings = []
-        for i, (name, fwr) in enumerate(sorted(
-                ((n, solution.field_weighted_wr.get(n, 50)) for n in self._decks),
-                key=lambda x: -x[1])):
-            rankings.append({"rank": i+1, "deck": name, "field_wr": round(fwr, 1)})
-        return {"rankings": rankings, "matrix": solution.matrix,
+        for i, ds in enumerate(solution.deck_scores):
+            rankings.append({"rank": i+1, "deck": ds.name, "field_wr": round(ds.field_wr, 1)})
+        return {"rankings": rankings, "matrix": solution.matchup_matrix,
                 "total_games": solution.total_games, "elapsed": solution.elapsed}
     
     def simulate_rc(self, matrix: dict = None, n_events: int = 1000,

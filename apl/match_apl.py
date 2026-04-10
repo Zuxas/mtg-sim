@@ -151,53 +151,102 @@ class GoldfishAdapter(MatchAPL):
 
 class GenericMatchAPL(MatchAPL):
     """
-    Generic match APL for decks without a hand-tuned APL.
-    Plays creatures by CMC, attacks with everything, blocks optimally.
+    Generic match APL — uses removal, burns face, casts all spells.
+    Used by decks without a hand-tuned APL (12 of 15 Modern decks).
     """
     name = "Generic"
 
     def keep(self, hand, mulligans, on_play) -> bool:
         lands = sum(1 for c in hand if c.is_land())
-        if mulligans >= 2:
-            return lands >= 1
-        return 2 <= lands <= 5
+        creatures = sum(1 for c in hand if c.has(Tag.CREATURE))
+        if mulligans >= 2: return lands >= 1
+        if lands == 0: return False
+        if lands > 5: return False
+        if creatures == 0 and mulligans < 2: return False
+        return 2 <= lands <= 4
 
     def bottom(self, hand, n) -> list:
-        # Bottom excess lands first, then highest CMC
-        lands = sorted([c for c in hand if c.is_land()],
-                       key=lambda c: 0)
+        lands = sorted([c for c in hand if c.is_land()], key=lambda c: 0)
         nonlands = sorted([c for c in hand if not c.is_land()],
                           key=lambda c: -getattr(c, 'cmc', 0))
-        pool = lands[3:] + nonlands  # keep up to 3 lands
+        pool = lands[3:] + nonlands
         return pool[:n]
 
     def main_phase(self, gs: GameState):
-        """Simple: play a land, then curve out creatures by CMC."""
-        hand = gs.zones.hand
-        bf = gs.zones.battlefield
+        self.main_phase_match(gs, None)
 
-        # Play a land
+    def main_phase_match(self, gs: GameState, opponent: GameState):
+        """Opponent-aware: removal on creatures, burn face, cast all spells."""
+        hand = gs.zones.hand
         if not gs.land_played:
             lands = [c for c in hand if c.is_land()]
             if lands:
                 gs.play_land(lands[0])
-
-        # Tap lands for mana
         gs.tap_lands()
 
-        # Cast creatures by CMC
+        # 1. Removal on opponent's best creature
+        if opponent:
+            self._try_removal(gs, opponent)
+
+        # 2. Cast all spells by CMC (creatures first)
         changed = True
-        while changed:
+        attempts = 0
+        while changed and attempts < 20:
             changed = False
+            attempts += 1
             castable = [c for c in gs.zones.hand
                         if not c.is_land()
                         and hasattr(c, 'cmc')
                         and c.cmc <= gs.mana_pool.total()
                         and c.cmc > 0]
             if castable:
-                spell = min(castable, key=lambda c: c.cmc)
+                creatures = [c for c in castable if c.has(Tag.CREATURE)]
+                spell = min(creatures if creatures else castable, key=lambda c: c.cmc)
                 if gs.cast_spell(spell):
                     changed = True
                 else:
-                    # Cast failed (wrong colors etc) — skip this spell
                     break
+
+        # 3. Burn face
+        for c in list(gs.zones.hand):
+            oracle = (getattr(c, 'oracle_text', '') or '').lower()
+            if c.name.lower() == 'lightning bolt' and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.mana_pool.pay(c.mana_cost, c.cmc)
+                gs.zones.hand.remove(c)
+                gs.zones.graveyard.append(c)
+                gs.damage_dealt += 3
+                gs.noncreature_spells_this_turn += 1
+                break
+            elif 'damage' in oracle and 'any target' in oracle and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                from engine.stack import get_burn_damage
+                dmg = get_burn_damage(c)
+                gs.mana_pool.pay(c.mana_cost, c.cmc)
+                gs.zones.hand.remove(c)
+                gs.zones.graveyard.append(c)
+                gs.damage_dealt += dmg
+                gs.noncreature_spells_this_turn += 1
+                break
+
+    def _try_removal(self, gs: GameState, opponent: GameState):
+        """Use removal on opponent's biggest creature."""
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
+        if not opp_creatures: return
+        from engine.match_state import safe_power, safe_toughness
+        from engine.stack import classify_card, InteractionType, get_burn_damage
+        target = max(opp_creatures, key=lambda c: safe_power(c))
+        if safe_power(target) < 2: return
+        for c in list(gs.zones.hand):
+            itype = classify_card(c)
+            if itype not in (InteractionType.REMOVAL, InteractionType.BURN): continue
+            if not gs.mana_pool.can_cast(c.mana_cost, c.cmc): continue
+            if itype == InteractionType.BURN:
+                if get_burn_damage(c) < safe_toughness(target): continue
+            gs.mana_pool.pay(c.mana_cost, c.cmc)
+            gs.zones.hand.remove(c)
+            gs.zones.graveyard.append(c)
+            gs.noncreature_spells_this_turn += 1
+            if target in opponent.zones.battlefield:
+                opponent.zones.battlefield.remove(target)
+                opponent.zones.graveyard.append(target)
+            return

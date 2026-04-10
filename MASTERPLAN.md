@@ -52,11 +52,11 @@
 - test_all_modern_apls.py / test_standard_apls.py / test_pioneer_apls.py
 
 ## NEXT PRIORITIES
-1. Phase 3B: Interaction layer (removal, counters, discard on the stack)
-2. Phase 3C: Evaluation function (Stockfish-style board scoring)
-3. Variant testing (swap cards, re-sim, compare)
+1. Phase 3E: Meta solver (Nash equilibrium, optimal 75 for a field)
+2. Calibrate eval weights against known tournament data
+3. Build match-aware APLs for top decks (Boros Energy, Izzet Prowess)
 4. Pioneer deck file naming fix (5 matchups need mapping)
-5. Standard Izzet Lessons/Prowess APL improvement
+5. Website integration (inject sim data into playbooks)
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances
@@ -66,4 +66,23 @@
 - Combat: flying, first strike, double strike, trample, deathtouch, lifelink
 - Smart blocking: trade/chump/eat/no-block decision tree
 - Validated: 50K games in 27s, Boros Energy vs Izzet Prowess
-- With real APLs: Izzet Prowess 84% vs Boros Energy (prowess triggers dominate)
+
+## PHASE 3B — INTERACTION LAYER ✅ (2026-04-10)
+- engine/stack.py: simplified spell stack (cast → respond → resolve LIFO)
+- 60+ spells classified: removal, counter, discard, burn, bounce, wrath, pump
+- Oracle text heuristic fallback for unknown spells
+- Reactive interaction wired into turn loop (after main phase 1)
+- Resolution: kill creatures, deal damage, discard cards, bounce, wrath boards
+
+## PHASE 3C — EVALUATION FUNCTION ✅ (2026-04-10)
+- engine/evaluator.py: 5-component board scoring
+- Components: material (keyword-weighted), tempo, clock (race math), threats (unanswered evasion), resources (hand+GY+energy)
+- Keyword multipliers: flying 1.4x, deathtouch 1.5x, double strike 1.6x, etc.
+- evaluate_breakdown() for per-component debugging
+- Validated: tracks game momentum correctly (T4 +4 → T8 -7 → T10 +21)
+
+## PHASE 3D — VARIANT TESTING ✅ (2026-04-10)
+- engine/variant.py: compare_variants() + field analysis
+- Swap cards, re-sim, compare win rates
+- Field-weighted analysis across multiple opponents
+- Validated: "Phlage → Bolt" = +0.3% vs Prowess but -1.0% field-weighted

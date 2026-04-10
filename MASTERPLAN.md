@@ -52,11 +52,11 @@
 - test_all_modern_apls.py / test_standard_apls.py / test_pioneer_apls.py
 
 ## NEXT PRIORITIES
-1. Phase 3E: Meta solver (Nash equilibrium, optimal 75 for a field)
+1. Build match-aware APLs for top decks (prowess triggers, energy mechanics)
 2. Calibrate eval weights against known tournament data
-3. Build match-aware APLs for top decks (Boros Energy, Izzet Prowess)
+3. Wire meta solver into Team Resolve website (inject recommendations)
 4. Pioneer deck file naming fix (5 matchups need mapping)
-5. Website integration (inject sim data into playbooks)
+5. Bo3 match support (sideboarding between games)
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances
@@ -85,4 +85,11 @@
 - engine/variant.py: compare_variants() + field analysis
 - Swap cards, re-sim, compare win rates
 - Field-weighted analysis across multiple opponents
-- Validated: "Phlage → Bolt" = +0.3% vs Prowess but -1.0% field-weighted
+- Validated: "Phlage -> Bolt" = +0.3% vs Prowess but -1.0% field-weighted
+
+## PHASE 3E — META SOLVER ✅ (2026-04-10)
+- engine/meta_solver.py: parallel matchup matrix + field-weighted ranking
+- Runs every deck vs every deck, computes full NxN matrix
+- Field-weighted win rate = expected performance at a tournament
+- Validated: 4-deck Modern field, 3000 games in 3.7s (16 workers)
+- Output: ranked deck list + matchup matrix + recommendation

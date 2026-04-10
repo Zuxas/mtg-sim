@@ -129,7 +129,15 @@ Performance: 3,088 g/s on 16 cores. Total: 52,500 games in 17s.
 - Validated: 4-deck Modern field, 3000 games in 3.7s (16 workers)
 - Output: ranked deck list + matchup matrix + recommendation
 
-## BO3 META SOLVE WITH TEAM RESOLVE SB PLANS (2026-04-10)
+## RC TOURNAMENT SIMULATION (2026-04-10)
+1000 events, 200 players, 8 rounds Swiss, Bo3 matchup data:
+  Boros Energy:  5.4-2.6 avg | 11.3% Top8 | 42.9% Day2
+  Izzet Prowess: 5.3-2.7 avg | 10.6% Top8 | 39.5% Day2
+  Orzhov Blink:  4.7-3.3 avg |  1.8% Top8 | 15.0% Day2
+  Everything else: <1% Top8 rate
+ANSWER: Play Boros or Prowess. Nothing else is close.
+
+
 15 decks, 21,000 Bo3 matches, 66 SB plans, 14.9s on 16 cores (1406/s)
 Rank  Deck              Bo3 WR   G1 WR    Worst MU (Bo3)
 1     Boros Energy      86.0%    80.0%    Prowess 50%

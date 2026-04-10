@@ -71,6 +71,17 @@
 - Website integration (inject sim data into playbooks)
 - Web dashboard / Discord bot
 
+## FULL MODERN META SOLVE (2026-04-10) — 15 decks, 31,500 games, 70s
+Rank  Deck              Field WR  Worst MU
+1     Boros Energy      86.3%     Jeskai Blink 68%
+2     Jeskai Blink      66.2%     Boros Energy 32%
+3     Izzet Prowess     56.5%     Boros Energy 29%
+4     Goryo's Vengeance 54.0%     Boros Energy 19%
+5     Eldrazi Ramp      52.1%     Boros Energy 18%
+NOTE: Only Boros/Prowess/Zoo have match-aware APLs. Combo decks
+(Breach, Storm) show 0-5% because GenericMatchAPL can't model combo kills.
+Next priority: more match-aware APLs for higher data accuracy.
+
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances
 - engine/match_engine.py: run_match, run_match_set with full turn loop

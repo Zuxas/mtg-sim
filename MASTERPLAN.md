@@ -129,7 +129,13 @@ Performance: 3,088 g/s on 16 cores. Total: 52,500 games in 17s.
 - Validated: 4-deck Modern field, 3000 games in 3.7s (16 workers)
 - Output: ranked deck list + matchup matrix + recommendation
 
-## P1 BO3 MATCH ENGINE ✅ (2026-04-10)
+## BO3 WITH TEAM RESOLVE SB PLANS (2026-04-10)
+Boros Energy vs Izzet Prowess Bo3 (500 matches):
+- Without SB: 58.0% Boros match WR (G1 55%, G2 55%, G3 56%)
+- With TR SB plans: 52.4% Boros match WR (G1 53%, G2 49% PROWESS FAVORED, G3 53%)
+- SB plans parsed from actual Team Resolve playbook HTML files
+- Prowess SB (+3 Unholy Heat) flips G2 in Prowess's favor
+- 58% of matches go to Game 3 — tight, competitive matchup
 - engine/bo3_match.py: real 3-game matches using Phase 3A match engine
 - Game 1 pre-board, Games 2-3 post-board with actual card swaps
 - Loser of previous game goes first (play/draw alternation)

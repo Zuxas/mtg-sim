@@ -59,18 +59,28 @@ class AmuletTitanMatchAPL(MatchAPL):
     def main_phase_match(self, gs, opponent):
         self._play_land_if_able(gs)
         gs.tap_lands()
-        gs.mana_pool.flex += self._extra_mana
-        self._extra_mana = 0
         
-        # Count Amulets on battlefield
+        # Amulet mana engine: each Amulet on board = bounce lands tap for double
+        # This is the core combo — Amulet + bounce land = 2 extra mana per turn
         amulet_count = sum(1 for c in gs.zones.battlefield if c.name == AMULET)
+        bounce_on_field = sum(1 for c in gs.zones.battlefield 
+                              if c.is_land() and c.name in BOUNCE_LANDS)
+        bounce_in_hand = [c for c in gs.zones.hand if c.name in BOUNCE_LANDS]
         has_spelunking = any(c.name == SPELUNKING for c in gs.zones.battlefield)
+        
+        # Amulet bonus: +2 per Amulet per bounce land on field
+        if amulet_count > 0:
+            gs.mana_pool.flex += amulet_count * max(bounce_on_field, 1)
+            # Bounce lands in hand = replay for extra mana
+            for _ in bounce_in_hand[:2]:
+                gs.mana_pool.flex += amulet_count
 
         # 1. Amulet of Vigor
         for c in list(gs.zones.hand):
             if c.name == AMULET and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
                 amulet_count += 1
+                gs.mana_pool.flex += 1  # immediate bonus
                 break
 
         # 2. Arboreal Grazer T1 (extra land drop + body)
@@ -81,11 +91,7 @@ class AmuletTitanMatchAPL(MatchAPL):
                 if extra_lands:
                     gs.zones.hand.remove(extra_lands[0])
                     gs.zones.battlefield.append(extra_lands[0])
-                    # With Amulet: bounce land enters untapped = +2 mana
-                    if amulet_count > 0 and extra_lands[0].name in BOUNCE_LANDS:
-                        gs.mana_pool.flex += 2 * amulet_count
-                    else:
-                        gs.mana_pool.flex += 1
+                    gs.mana_pool.flex += 1 + amulet_count  # +1 base, +1 per Amulet
                 break
 
         # 3. Spelunking (lands ETB untapped + Titan haste)
@@ -95,15 +101,6 @@ class AmuletTitanMatchAPL(MatchAPL):
                 has_spelunking = True
                 gs.mana_pool.flex += 1
                 break
-
-        # 4. Simulate Amulet + bounce land mana generation
-        # With Amulet: each bounce land in hand = play it, ETB untapped, tap for 2, bounce
-        # This is the engine that powers T3 Titan
-        if amulet_count > 0:
-            bounce_in_hand = [c for c in gs.zones.hand if c.name in BOUNCE_LANDS]
-            for bounce in bounce_in_hand[:2]:  # max 2 bounce land replays per turn
-                gs.mana_pool.flex += 2 * amulet_count  # each Amulet triggers
-                self._extra_mana += 1  # carry over for next turn
 
         # 4. Boseiju channel — destroy opponent's key artifact/enchantment
         if opponent:
@@ -128,8 +125,7 @@ class AmuletTitanMatchAPL(MatchAPL):
                 c.turn_entered = gs.turn
                 has_spelunking = any(x.name == SPELUNKING for x in gs.zones.battlefield)
                 c.summoning_sickness = not has_spelunking  # haste with Spelunking
-                # ETB: search 2 lands (simulate with +2 mana next turn)
-                self._extra_mana += 2
+                # ETB: search 2 lands (+2 mana effectively next turn)
                 gs._log(f"  Primeval Titan! ({'haste!' if has_spelunking else 'no haste'})")
                 break
 

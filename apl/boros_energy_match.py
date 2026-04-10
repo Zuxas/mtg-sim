@@ -262,6 +262,75 @@ class BorosEnergyMatchAPL(MatchAPL):
                 gs.cast_spell(c)
                 break
 
+        # 5b. PHLAGE — hardcast as removal, escape as finisher
+        # Hardcast {1}{R}{W}: ETB 3 damage + 3 life, then SACRIFICE (not a creature!)
+        # Escape {R}{R}{W}{W} + exile 5: STAYS as 6/6 haste
+        guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
+        
+        # First: try to ESCAPE Phlage from GY (permanent 6/6)
+        gy_phlages = [c for c in gs.zones.graveyard if c.name == PHLAGE]
+        other_gy = len(gs.zones.graveyard) - len(gy_phlages)
+        if gy_phlages and other_gy >= 5 and gs.mana_pool.total() >= 4:
+            # Escape cost: {R}{R}{W}{W} (4 colored mana)
+            if gs.mana_pool.can_pay("{R}{R}{W}{W}", 4):
+                phlage = gy_phlages[0]
+                gs.mana_pool.pay("{R}{R}{W}{W}", 4)
+                gs.zones.graveyard.remove(phlage)
+                # Exile 5 other cards from GY
+                exiled = 0
+                for x in list(gs.zones.graveyard):
+                    if exiled >= 5: break
+                    gs.zones.graveyard.remove(x)
+                    gs.zones.exile.append(x)
+                    exiled += 1
+                gs.zones.battlefield.append(phlage)
+                phlage.turn_entered = gs.turn
+                phlage.summoning_sickness = False  # escape gives haste? No — but it STAYS
+                # ETB: 3 damage + 3 life
+                if opponent:
+                    opp_creatures = [c for c in opponent.zones.battlefield
+                                     if not c.is_land() and c.has(Tag.CREATURE)]
+                    if opp_creatures:
+                        target = max(opp_creatures, key=lambda c: safe_power(c))
+                        if safe_toughness(target) <= 3 and target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                            gs._log(f"  PHLAGE ESCAPE → kill {target.name} + 3 life (6/6 STAYS)")
+                        else:
+                            gs.damage_dealt += 3
+                            gs._log(f"  PHLAGE ESCAPE → 3 face + 3 life (6/6 STAYS)")
+                    else:
+                        gs.damage_dealt += 3
+                        gs._log(f"  PHLAGE ESCAPE → 3 face + 3 life (6/6 STAYS)")
+                gs.life += 3
+                if guides: gs.life += guides; gs.energy = getattr(gs, 'energy', 0) + guides
+        
+        # Second: hardcast Phlage from hand as REMOVAL (sacrificed immediately)
+        for c in list(gs.zones.hand):
+            if c.name == PHLAGE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.mana_pool.pay(c.mana_cost, c.cmc)
+                gs.zones.hand.remove(c)
+                # ETB: 3 damage + 3 life
+                if opponent:
+                    opp_creatures = [c2 for c2 in opponent.zones.battlefield
+                                     if not c2.is_land() and c2.has(Tag.CREATURE)]
+                    if opp_creatures:
+                        target = max(opp_creatures, key=lambda c2: safe_power(c2))
+                        if safe_toughness(target) <= 3 and target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                            gs._log(f"  Phlage hardcast → kill {target.name} + 3 life (then sacrifice)")
+                        else:
+                            gs.damage_dealt += 3
+                            gs._log(f"  Phlage hardcast → 3 face + 3 life (then sacrifice)")
+                    else:
+                        gs.damage_dealt += 3
+                gs.life += 3
+                # SACRIFICE — goes to GY (available for escape later)
+                gs.zones.graveyard.append(c)
+                gs._log(f"  Phlage sacrificed (now in GY for future escape)")
+                break
+
         # 6. Galvanic for energy if no opponent targets
         if not opponent or not any(not c.is_land() for c in opponent.zones.battlefield):
             for c in list(gs.zones.hand):
@@ -273,11 +342,12 @@ class BorosEnergyMatchAPL(MatchAPL):
                         gs._log(f"  Galvanic: +3 energy (self-target, no opponent creatures)")
                     break
 
-        # 7. Fill remaining mana with creatures
+        # 7. Fill remaining mana with creatures (NOT Phlage — handled above)
         while True:
             castable = [c for c in gs.zones.hand
                         if c.has(Tag.CREATURE)
                         and c.name not in REMOVAL_SPELLS
+                        and c.name != PHLAGE  # Phlage handled in step 5b
                         and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
             if not castable:
                 break

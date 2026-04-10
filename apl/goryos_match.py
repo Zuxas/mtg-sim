@@ -63,10 +63,63 @@ class GoryosMatchAPL(MatchAPL):
 
     def main_phase_match(self, gs, opponent):
         self._play_land_if_able(gs)
-        gs.tap_lands()  # generate mana
+        gs.tap_lands()
 
-        # 1. Thoughtseize disruption
-        if opponent and gs.turn <= 2:
+        # PRIORITY 1: COMBO — get fatty in GY then Goryo's it
+        gy_targets = [c for c in gs.zones.graveyard if c.name in BIG_TARGETS]
+        hand_targets = [c for c in gs.zones.hand if c.name in BIG_TARGETS]
+        has_goryos = any(c.name == GORYOS for c in gs.zones.hand)
+
+        # 1A. Discard fatty via Psychic Frog (free discard outlet)
+        if hand_targets and not gy_targets:
+            frog_on_board = any(c.name == FROG for c in gs.zones.battlefield
+                                if not getattr(c, 'summoning_sickness', False))
+            if frog_on_board:
+                target = hand_targets[0]
+                gs.zones.hand.remove(target); gs.zones.graveyard.append(target)
+                gy_targets = [target]
+
+        # 1B. Discard via Faithful Mending / Tainted Indulgence
+        hand_targets = [c for c in gs.zones.hand if c.name in BIG_TARGETS]
+        if hand_targets and not gy_targets:
+            for c in list(gs.zones.hand):
+                if c.name in (MENDING, TAINTED) and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.mana_pool.pay(c.mana_cost, c.cmc)
+                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
+                    gs.zones.draw(2)
+                    to_discard = [x for x in gs.zones.hand if x.name in BIG_TARGETS]
+                    if to_discard:
+                        gs.zones.hand.remove(to_discard[0]); gs.zones.graveyard.append(to_discard[0])
+                    worst = min(gs.zones.hand, key=lambda x: 0 if x.name == GORYOS else getattr(x,'cmc',5), default=None)
+                    if worst and worst.name != GORYOS:
+                        gs.zones.hand.remove(worst); gs.zones.graveyard.append(worst)
+                    gy_targets = [c for c in gs.zones.graveyard if c.name in BIG_TARGETS]
+                    break
+
+        # 1C. GORYO'S VENGEANCE — reanimate NOW
+        gy_targets = [c for c in gs.zones.graveyard if c.name in BIG_TARGETS]
+        if gy_targets and gs.mana_pool.total() >= 2:
+            for c in list(gs.zones.hand):
+                if c.name == GORYOS:
+                    target = gy_targets[0]
+                    gs.mana_pool.pay("{1}{B}", 2)
+                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
+                    gs.zones.graveyard.remove(target)
+                    gs.zones.battlefield.append(target)
+                    target.turn_entered = gs.turn; target.summoning_sickness = False
+                    if target.name == ATRAXA:
+                        gs.zones.draw(min(7, 40 - len(gs.zones.hand)))
+                    elif target.name == GRISELBRAND:
+                        gs.zones.draw(7); gs.life -= 7
+                    break
+
+        # 2. Deploy Psychic Frog ASAP (discard outlet + threat)
+        for c in list(gs.zones.hand):
+            if c.name == FROG and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c); break
+
+        # 3. Thoughtseize (only if combo not ready)
+        if opponent and not has_goryos and gs.turn <= 2:
             for c in list(gs.zones.hand):
                 if c.name == THOUGHTSEIZE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.mana_pool.pay(c.mana_cost, c.cmc)
@@ -78,7 +131,7 @@ class GoryosMatchAPL(MatchAPL):
                         opponent.zones.hand.remove(t); opponent.zones.graveyard.append(t)
                     break
 
-        # 2. Solitude pitch on big threats
+        # 4. Solitude pitch on big threats
         if opponent:
             opp_c = [c for c in opponent.zones.battlefield
                      if not c.is_land() and c.has(Tag.CREATURE) and safe_power(c) >= 3]
@@ -86,7 +139,8 @@ class GoryosMatchAPL(MatchAPL):
                 target = max(opp_c, key=lambda c: safe_power(c))
                 sol = next((c for c in gs.zones.hand if c.name == SOLITUDE), None)
                 if sol:
-                    whites = [c for c in gs.zones.hand if c != sol and 'W' in (getattr(c,'mana_cost','') or '')]
+                    whites = [c for c in gs.zones.hand if c != sol and c.name not in BIG_TARGETS
+                              and 'W' in (getattr(c,'mana_cost','') or '')]
                     if whites:
                         pitch = whites[0]
                         gs.zones.hand.remove(sol); gs.zones.hand.remove(pitch)
@@ -96,59 +150,16 @@ class GoryosMatchAPL(MatchAPL):
                             opponent.zones.battlefield.remove(target); opponent.zones.exile.append(target)
                         opponent.life += safe_power(target)
 
-        # 3. Discard big creature into GY (setup for Goryo's)
-        gy_targets = [c for c in gs.zones.graveyard if c.name in BIG_TARGETS]
-        hand_targets = [c for c in gs.zones.hand if c.name in BIG_TARGETS]
-        if hand_targets and not gy_targets:
-            # Use Faithful Mending to discard
-            for c in list(gs.zones.hand):
-                if c.name == MENDING and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.mana_pool.pay(c.mana_cost, c.cmc)
-                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                    gs.zones.draw(2)
-                    # Discard 2: discard the big creature + worst card
-                    to_discard = hand_targets[0]
-                    gs.zones.hand.remove(to_discard); gs.zones.graveyard.append(to_discard)
-                    worst = max(gs.zones.hand, key=lambda c: getattr(c,'cmc',0) if c.is_land() else 0, default=None)
-                    if worst: gs.zones.hand.remove(worst); gs.zones.graveyard.append(worst)
-                    gy_targets = [c for c in gs.zones.graveyard if c.name in BIG_TARGETS]
-                    break
-
-        # 4. GORYO'S VENGEANCE — reanimate from GY!
-        if gy_targets and gs.mana_pool.total() >= 2:
-            for c in list(gs.zones.hand):
-                if c.name == GORYOS:
-                    target = gy_targets[0]
-                    gs.mana_pool.pay("{1}{B}", 2)
-                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                    gs.zones.graveyard.remove(target)
-                    gs.zones.battlefield.append(target)
-                    target.turn_entered = gs.turn; target.summoning_sickness = False  # haste
-                    # Atraxa ETB: draw up to 7
-                    if target.name == ATRAXA:
-                        gs.zones.draw(min(7, 40 - len(gs.zones.hand)))
-                    elif target.name == GRISELBRAND:
-                        gs.zones.draw(7); gs.life -= 7  # pay 7 life draw 7
-                    gs._log(f"  GORYO'S → reanimate {target.name}!")
-                    break
-
-        # 5. Fair game: Psychic Frog, Quantum Riddler
-        for name in (FROG, QUANTUM, GRAN_GRAN, EMPEROR):
+        # 5. Fair game: Quantum Riddler, Gran-Gran, Emperor
+        for name in (QUANTUM, GRAN_GRAN, EMPEROR):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c); break
 
-        # 6. Remaining creatures
-        changed = True
-        while changed:
-            changed = False
-            castable = [c for c in gs.zones.hand if c.has(Tag.CREATURE)
-                        and c.name not in BIG_TARGETS
-                        and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
-            if castable:
-                s = min(castable, key=lambda c: c.cmc)
-                if gs.cast_spell(s): changed = True
-                else: break
+        # 6. Remaining (not big targets)
+        for c in list(gs.zones.hand):
+            if c.has(Tag.CREATURE) and c.name not in BIG_TARGETS and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
 
     def respond_to_spell(self, gs, opponent, spell):
         for c in gs.zones.hand:

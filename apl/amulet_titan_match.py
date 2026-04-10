@@ -61,32 +61,49 @@ class AmuletTitanMatchAPL(MatchAPL):
         gs.tap_lands()
         gs.mana_pool.flex += self._extra_mana
         self._extra_mana = 0
+        
+        # Count Amulets on battlefield
+        amulet_count = sum(1 for c in gs.zones.battlefield if c.name == AMULET)
+        has_spelunking = any(c.name == SPELUNKING for c in gs.zones.battlefield)
 
-        # 1. Amulet of Vigor (enables the combo)
+        # 1. Amulet of Vigor
         for c in list(gs.zones.hand):
             if c.name == AMULET and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._extra_mana += 1  # simulate bounce land double-tap
+                amulet_count += 1
                 break
 
-        # 2. Arboreal Grazer T1 (extra land drop)
+        # 2. Arboreal Grazer T1 (extra land drop + body)
         for c in list(gs.zones.hand):
             if c.name == GRAZER and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                # Play extra land from hand
                 extra_lands = [l for l in gs.zones.hand if l.is_land()]
                 if extra_lands:
                     gs.zones.hand.remove(extra_lands[0])
                     gs.zones.battlefield.append(extra_lands[0])
-                    self._extra_mana += 1
+                    # With Amulet: bounce land enters untapped = +2 mana
+                    if amulet_count > 0 and extra_lands[0].name in BOUNCE_LANDS:
+                        gs.mana_pool.flex += 2 * amulet_count
+                    else:
+                        gs.mana_pool.flex += 1
                 break
 
         # 3. Spelunking (lands ETB untapped + Titan haste)
         for c in list(gs.zones.hand):
             if c.name == SPELUNKING and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._extra_mana += 1
+                has_spelunking = True
+                gs.mana_pool.flex += 1
                 break
+
+        # 4. Simulate Amulet + bounce land mana generation
+        # With Amulet: each bounce land in hand = play it, ETB untapped, tap for 2, bounce
+        # This is the engine that powers T3 Titan
+        if amulet_count > 0:
+            bounce_in_hand = [c for c in gs.zones.hand if c.name in BOUNCE_LANDS]
+            for bounce in bounce_in_hand[:2]:  # max 2 bounce land replays per turn
+                gs.mana_pool.flex += 2 * amulet_count  # each Amulet triggers
+                self._extra_mana += 1  # carry over for next turn
 
         # 4. Boseiju channel — destroy opponent's key artifact/enchantment
         if opponent:

@@ -38,9 +38,11 @@ MUTAGENIC  = "Mutagenic Growth"
 VIOLENT    = "Violent Urge"
 UNHOLY     = "Unholy Heat"
 
-# Creatures with prowess (NOT Cori-Steel — that's equipment)
-PROWESS_CREATURES = {SWIFTSPEAR, SLICKSHOT, DRC}
-# Note: Monk tokens from Cori-Steel also have prowess
+# Creatures with prowess (+1/+1 on noncreature cast)
+PROWESS_CREATURES = {SWIFTSPEAR, DRC}
+# Note: Monk tokens from Cori-Steel also have prowess (+1/+1)
+# Slickshot has a CUSTOM ability: +2/+0 per noncreature (NOT prowess)
+SLICKSHOT_BOOST = 2  # +2/+0, not +1/+1
 
 # Cards that are noncreature spells (trigger prowess)
 NONCREATURE_SPELLS = {BOLT, LAVA_DART, ITERATION, PREORDAIN, BAUBLE,
@@ -108,7 +110,8 @@ class IzzetProwessMatchAPL(MatchAPL):
     # ------------------------------------------------------------------
 
     def _count_prowess_on_board(self, gs: GameState) -> int:
-        """Count creatures with prowess currently on the battlefield."""
+        """Count creatures with standard prowess (+1/+1) on the battlefield.
+        Does NOT count Slickshot (which has +2/+0 custom ability)."""
         count = 0
         for c in gs.zones.battlefield:
             if c.is_land():
@@ -156,14 +159,22 @@ class IzzetProwessMatchAPL(MatchAPL):
                 continue
             base_power += safe_power(c)
 
-        # Plotted Slickshot adds 3 power (haste, can attack immediately)
+        # Plotted Slickshot adds 1 base power (1/2 stats) with haste
         plotted_slickshots = sum(1 for c in self._plotted_cards if c.name == SLICKSHOT)
         if plotted_slickshots:
-            base_power += 3 * plotted_slickshots
-            prowess_creatures += plotted_slickshots
+            base_power += 1 * plotted_slickshots  # 1/2 base stats
 
-        # Each noncreature spell gives +1 to every prowess creature
-        prowess_damage = fuel * prowess_creatures
+        # Each noncreature spell gives:
+        #   +1 power to each standard prowess creature (Swiftspear, DRC, Monks)
+        #   +2 power to each Slickshot Show-Off
+        prowess_damage = fuel * prowess_creatures  # standard prowess
+        
+        # Count Slickshots on board + plotted
+        slickshots_on_board = sum(1 for c in gs.zones.battlefield
+                                  if c.name == SLICKSHOT
+                                  and not getattr(c, 'summoning_sickness', False))
+        total_slickshots = slickshots_on_board + plotted_slickshots
+        slickshot_damage = fuel * total_slickshots * SLICKSHOT_BOOST  # +2/+0 each
 
         # Mutagenic Growth gives +2/+2 to one creature ON TOP of prowess
         has_mutagenic = any(c.name == MUTAGENIC for c in gs.zones.hand)
@@ -180,7 +191,7 @@ class IzzetProwessMatchAPL(MatchAPL):
         if any(c.name == LAVA_DART for c in gs.zones.graveyard):
             burn_damage += 1
 
-        total = base_power + prowess_damage + mutagenic_bonus + burn_damage
+        total = base_power + prowess_damage + slickshot_damage + mutagenic_bonus + burn_damage
         return total
 
     # ------------------------------------------------------------------
@@ -188,13 +199,19 @@ class IzzetProwessMatchAPL(MatchAPL):
     # ------------------------------------------------------------------
 
     def _trigger_prowess(self, gs: GameState, spell_name: str = "spell"):
-        """Give all prowess creatures +1/+1 until EOT."""
+        """Give prowess creatures +1/+1 and Slickshot +2/+0 until EOT."""
         for c in gs.zones.battlefield:
             if c.is_land():
                 continue
             if c.name in PROWESS_CREATURES or ('Monk' in c.name and 'Token' in c.name):
+                # Standard prowess: +1/+1
                 c.counters += 1
                 self._prowess_boosts.append(c)
+            elif c.name == SLICKSHOT:
+                # Slickshot's custom ability: +2/+0 (power only)
+                c.counters += SLICKSHOT_BOOST
+                self._prowess_boosts.append(c)
+                self._prowess_boosts.append(c)  # track 2 counters to remove
 
     def _try_plot_slickshot(self, gs: GameState) -> bool:
         """Plot Slickshot Show-Off if in hand and we have 2 mana."""

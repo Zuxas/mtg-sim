@@ -246,3 +246,87 @@ Costs:
 12. **Static Prison energy maintenance cost**
 13. **Arena of Glory exert for haste**
 14. **Dalkovan Encampment token generation**
+
+
+## CRITICAL INTERACTION LINES (Pilot Knowledge)
+
+### LINE 1: Ajani Defensive Transform (removal protection)
+**Situation:** Opponent targets Ajani with removal (Bolt, Fatal Push, Prismatic Ending, etc.)
+**Response:** Sacrifice a Cat token to Goblin Bombardment (or kill Cat with Galvanic Discharge)
+**Result:**
+  1. Cat dies → Ajani transform trigger: "exile Ajani, return transformed"
+  2. Ajani is EXILED (leaves the battlefield as part of transform)
+  3. Opponent's removal spell has NO LEGAL TARGET → FIZZLES (does nothing)
+  4. Ajani returns as planeswalker (Ajani, Resilient Leader)
+  5. Net result: opponent wasted a removal spell, you got a planeswalker + 1 Bombardment damage
+**APL requirement:** When opponent targets Ajani with removal AND we have a Cat + Bombardment,
+  the APL must sacrifice the Cat in response to protect Ajani. This is NOT optional — 
+  any competitive pilot does this 100% of the time.
+**Also works with:** Galvanic Discharge targeting your own Cat (costs energy but same result)
+
+### LINE 2: Bombardment Sacrifice in Response to Removal
+**Situation:** Opponent targets ANY creature with removal
+**Response:** Sacrifice that creature to Goblin Bombardment before removal resolves
+**Result:** 
+  1. Creature is sacrificed → Bombardment deals 1 damage
+  2. Removal spell has no target → FIZZLES
+  3. Net: opponent wasted a card, you got 1 damage
+**APL requirement:** Never let a creature die to removal when Bombardment is on board.
+  Always sacrifice in response for value.
+
+### LINE 3: Voice of Victory Spell Lock + Mobilize
+**Situation:** Voice of Victory is on board during your turn
+**Rule:** "Your opponents can't cast spells during your turn"
+**Result:**
+  - Opponent CANNOT use instant-speed removal during your combat
+  - Opponent CANNOT cast combat tricks
+  - Opponent CANNOT counter your spells (during your turn)
+  - Voice's Mobilize tokens are SAFE from instant-speed removal
+  - Opponent must interact ONLY during THEIR turn or your end step
+**APL requirement:** When Voice is on board, opponent's respond_to_spell should return None
+  during Boros's turn. Voice fundamentally changes the interaction dynamic.
+
+### LINE 4: Phlage Hardcast as Removal + GY Setup
+**Situation:** Opponent has a 3-toughness creature you need to kill
+**Play:** Hardcast Phlage for {1}{R}{W}
+**Result:**
+  1. ETB: 3 damage to the creature (kills it) + 3 life for you
+  2. Phlage is sacrificed (since not escaped)
+  3. Phlage goes to GY → available for future escape
+  4. If Seasoned Pyromancer discards Phlage → same GY setup without spending mana
+**APL requirement:** Phlage hardcast is a REMOVAL SPELL, not a creature deployment.
+  Use it to kill 3-toughness creatures while fueling the GY for later escape.
+
+### LINE 5: Guide of Souls Energy → Flying Pump
+**Situation:** Board stall, opponent has ground blockers
+**Play:** Attack, pay {E}{E}{E} from Guide of Souls
+**Result:**
+  1. Target attacking creature gets +2/+2 and FLYING
+  2. Creature is now an Angel in addition to other types
+  3. Flying bypasses ground blockers → guaranteed damage
+  4. +2/+2 makes the creature harder to block even if opponent has flyers
+**APL requirement:** When energy ≥ 3 and attacking into a board stall,
+  pump the biggest attacker with Guide's ability for evasion damage.
+
+### LINE 6: Screaming Nemesis Anti-Removal
+**Situation:** Opponent wants to remove Screaming Nemesis
+**Key:** ANY damage to Nemesis reflects to any target. If reflected to a player,
+  that player CAN'T GAIN LIFE for the rest of the game.
+**Result:**
+  - Opponent Bolts Nemesis → Nemesis reflects 3 to opponent → opponent can't gain life
+  - Opponent blocks with a 2/2 → Nemesis reflects 2 to opponent → can't gain life
+  - Opponent MUST use exile-based removal (Solitude, Prismatic Ending, Leyline Binding)
+**APL requirement:** From OPPONENT perspective: never use damage-based removal on Nemesis.
+  From PILOT perspective: attack Nemesis into blockers for upside.
+
+### LINE 7: Ocelot Pride Lifelink First Strike
+**Situation:** Ocelot Pride attacks
+**Key:** Ocelot has FIRST STRIKE and LIFELINK
+**Result:**
+  1. Ocelot deals 1 first strike damage → gains 1 life
+  2. Life gained → Ocelot end step trigger active (create Cat token)
+  3. If blocked by a 1/1: Ocelot kills it in first strike, takes no damage
+  4. If blocked by a 2/2: Ocelot deals 1 first strike, dies in regular combat
+     → But Guide already triggered the lifegain → end step Cat still happens
+**APL requirement:** Ocelot is always safe to attack into X/1 creatures.
+  The lifelink from combat guarantees the end step token.

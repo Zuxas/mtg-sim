@@ -60,11 +60,19 @@ class MetaSolution:
 
 def _run_pair(args):
     """Worker: run N games between two decks. Returns (name_a, name_b, wins_a, wins_b, kill_turns)."""
-    deck_a, deck_b, name_a, name_b, n, seed = args
+    deck_a, deck_b, name_a, name_b, n, seed, apl_cls_a, apl_cls_b = args
     import random
     rng = random.Random(seed)
-    apl_a = GenericMatchAPL()
-    apl_b = GenericMatchAPL()
+    
+    # Instantiate APLs (can't pickle instances across processes)
+    if apl_cls_a:
+        apl_a = apl_cls_a()
+    else:
+        apl_a = GenericMatchAPL()
+    if apl_cls_b:
+        apl_b = apl_cls_b()
+    else:
+        apl_b = GenericMatchAPL()
     
     wins_a = 0
     wins_b = 0
@@ -87,17 +95,17 @@ def solve_meta(candidate_decks: dict[str, list],
                field_shares: dict[str, float],
                n_per_pair: int = 1000,
                workers: int = None,
-               seed: int = 42) -> MetaSolution:
+               seed: int = 42,
+               apls: dict = None) -> MetaSolution:
     """
     Run every candidate deck against every other deck in the field.
-    Compute field-weighted win rates and rank decks.
     
-    candidate_decks: {name: deck_list} — decks to evaluate
-    field_shares: {name: meta_share} — expected field composition
+    candidate_decks: {name: deck_list}
+    field_shares: {name: meta_share}
     n_per_pair: games per matchup pair
     workers: parallel workers (default: cpu_count - 2)
-    
-    Returns MetaSolution with ranked deck scores and full matchup matrix.
+    apls: {name: APL_class} — optional custom APL classes per deck
+          (classes, not instances — they get instantiated in workers)
     """
     if workers is None:
         workers = min(20, max(1, os.cpu_count() - 2))
@@ -107,15 +115,17 @@ def solve_meta(candidate_decks: dict[str, list],
     
     names = list(candidate_decks.keys())
     
-    # Build all pairs (A vs B, skip mirror and duplicates since A vs B = 1 - B vs A)
+    # Build all pairs
     pairs = []
+    apl_map = apls or {}
     for i, name_a in enumerate(names):
         for j, name_b in enumerate(names):
             if i >= j:
-                continue  # skip mirrors and already-computed reverse
+                continue
             pairs.append((
                 candidate_decks[name_a], candidate_decks[name_b],
-                name_a, name_b, n_per_pair, rng.randint(0, 999_999)
+                name_a, name_b, n_per_pair, rng.randint(0, 999_999),
+                apl_map.get(name_a), apl_map.get(name_b),
             ))
     
     total_games = len(pairs) * n_per_pair

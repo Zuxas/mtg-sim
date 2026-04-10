@@ -52,11 +52,15 @@
 - test_all_modern_apls.py / test_standard_apls.py / test_pioneer_apls.py
 
 ## NEXT PRIORITIES
-1. Build match-aware APLs for top decks (prowess triggers, energy mechanics)
-2. Calibrate eval weights against known tournament data
-3. Wire meta solver into Team Resolve website (inject recommendations)
-4. Pioneer deck file naming fix (5 matchups need mapping)
-5. Bo3 match support (sideboarding between games)
+### P0 — Graphify setup (run /graphify . in Claude Code for all 3 projects)
+### P1 — Bo3 match support (sideboarding between games 1-2-3)
+### P2 — Match-aware APLs for Modern decks (Boros Energy, Izzet Prowess)
+### P3 — Eval weight calibration against tournament data
+### BACKLOG (non-Modern = low priority)
+- Pioneer deck file naming fix
+- Standard Izzet Lessons APL
+- Website integration (inject sim data into playbooks)
+- Web dashboard / Discord bot
 
 ## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
 - engine/match_state.py: MatchGameState wrapping two GameState instances

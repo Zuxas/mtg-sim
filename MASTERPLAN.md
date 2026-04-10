@@ -129,13 +129,17 @@ Performance: 3,088 g/s on 16 cores. Total: 52,500 games in 17s.
 - Validated: 4-deck Modern field, 3000 games in 3.7s (16 workers)
 - Output: ranked deck list + matchup matrix + recommendation
 
-## BO3 WITH TEAM RESOLVE SB PLANS (2026-04-10)
-Boros Energy vs Izzet Prowess Bo3 (500 matches):
-- Without SB: 58.0% Boros match WR (G1 55%, G2 55%, G3 56%)
-- With TR SB plans: 52.4% Boros match WR (G1 53%, G2 49% PROWESS FAVORED, G3 53%)
-- SB plans parsed from actual Team Resolve playbook HTML files
-- Prowess SB (+3 Unholy Heat) flips G2 in Prowess's favor
-- 58% of matches go to Game 3 — tight, competitive matchup
+## BO3 META SOLVE WITH TEAM RESOLVE SB PLANS (2026-04-10)
+15 decks, 21,000 Bo3 matches, 66 SB plans, 14.9s on 16 cores (1406/s)
+Rank  Deck              Bo3 WR   G1 WR    Worst MU (Bo3)
+1     Boros Energy      86.0%    80.0%    Prowess 50%
+2     Izzet Prowess     74.5%    52.5%    Boros 50% ← SB plan is incredible
+3     Orzhov Blink      66.8%    62.8%    Boros 31%
+4     Esper Blink       64.0%    62.9%    Boros 24%
+5     Jeskai Blink      52.9%    55.0%    Prowess 17%
+KEY INSIGHT: Prowess jumps from 52.5% G1 to 74.5% Bo3 because
+the +4 Unholy Heat SB plan flips most matchups post-board.
+Boros vs Prowess = 50/50 in Bo3 (coin flip — matches competitive reality).
 - engine/bo3_match.py: real 3-game matches using Phase 3A match engine
 - Game 1 pre-board, Games 2-3 post-board with actual card swaps
 - Loser of previous game goes first (play/draw alternation)

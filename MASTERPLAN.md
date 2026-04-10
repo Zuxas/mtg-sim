@@ -52,8 +52,18 @@
 - test_all_modern_apls.py / test_standard_apls.py / test_pioneer_apls.py
 
 ## NEXT PRIORITIES
-1. Phase 3: Matchup Simulator (two decks playing against each other)
-2. Variant testing (swap cards, re-sim, compare)
-3. Pioneer deck file naming fix (5 matchups need mapping)
-4. Standard Izzet Lessons/Prowess APL improvement
-5. Deck diff: "4 Phlage vs 3 Phlage + 1 Bolt, which is better?"
+1. Phase 3B: Interaction layer (removal, counters, discard on the stack)
+2. Phase 3C: Evaluation function (Stockfish-style board scoring)
+3. Variant testing (swap cards, re-sim, compare)
+4. Pioneer deck file naming fix (5 matchups need mapping)
+5. Standard Izzet Lessons/Prowess APL improvement
+
+## PHASE 3A — MATCH ENGINE ✅ (2026-04-10)
+- engine/match_state.py: MatchGameState wrapping two GameState instances
+- engine/match_engine.py: run_match, run_match_set with full turn loop
+- engine/parallel_match.py: 20-core parallel simulation (1861 games/sec)
+- apl/match_apl.py: MatchAPL interface, GoldfishAdapter, GenericMatchAPL
+- Combat: flying, first strike, double strike, trample, deathtouch, lifelink
+- Smart blocking: trade/chump/eat/no-block decision tree
+- Validated: 50K games in 27s, Boros Energy vs Izzet Prowess
+- With real APLs: Izzet Prowess 84% vs Boros Energy (prowess triggers dominate)

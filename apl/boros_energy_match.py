@@ -35,6 +35,7 @@ GALVANIC         = "Galvanic Discharge"
 STATIC_PRISON    = "Static Prison"
 THRABEN_CHARM    = "Thraben Charm"
 LIGHTNING_BOLT   = "Lightning Bolt"
+VOICE_OF_VICTORY = "Voice of Victory"
 
 # Dead in goldfish but LIVE in match mode
 REMOVAL_SPELLS = {LIGHTNING_BOLT, GALVANIC, STATIC_PRISON, THRABEN_CHARM}
@@ -311,9 +312,12 @@ class BorosEnergyMatchAPL(MatchAPL):
 
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list:
         """Attack with non-essential creatures. Hold back key engine pieces
-        if opponent has removal mana open."""
+        if opponent has removal mana open.
+        Also: Voice of Victory Mobilize 2 — creates 2 attacking 1/1 tokens per Voice attacking.
+        """
         from engine.keywords import KWTag
         attackers = []
+        voices_attacking = 0
         for c in gs.zones.battlefield:
             if c.is_land() or c.name == GOBLIN_BOMBARD:
                 continue
@@ -322,6 +326,32 @@ class BorosEnergyMatchAPL(MatchAPL):
             if getattr(c, 'tapped', False):
                 continue
             attackers.append(c)
+            if c.name == VOICE_OF_VICTORY:
+                voices_attacking += 1
+        
+        # Voice of Victory Mobilize 2: create 2x 1/1 Warriors per Voice attacking
+        # These tokens enter tapped and attacking → trigger Guide of Souls
+        if voices_attacking > 0:
+            new_tokens = voices_attacking * 2
+            guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
+            ocelots = sum(1 for c in gs.zones.battlefield if c.name == OCELOT_PRIDE)
+            
+            # Each token entering triggers Guide (gain life + energy) → Ocelot (more tokens)
+            life_gained = new_tokens * guides  # each token triggers each Guide
+            gs.life += life_gained
+            gs.energy = getattr(gs, 'energy', 0) + new_tokens * guides
+            
+            # Ocelot: each life gain event creates a Cat token
+            if ocelots > 0 and life_gained > 0:
+                cat_tokens = ocelots * min(life_gained, 3)  # cap cascade
+                new_tokens += cat_tokens
+                gs.life += cat_tokens * guides  # Cats trigger Guide too
+            
+            # Add token damage to combat (they're attacking)
+            gs.damage_dealt += new_tokens  # 1/1 tokens deal 1 each
+            self._tokens_entered += new_tokens
+            gs._log(f"  Voice Mobilize: {voices_attacking} Voices → {new_tokens} tokens attacking (+{life_gained} life)")
+        
         return attackers
 
     def declare_blockers(self, gs: GameState, opponent_gs: GameState,
@@ -396,8 +426,30 @@ class BorosEnergyMatchAPL(MatchAPL):
         return None
 
     def end_step_actions(self, gs, opponent):
-        """Nothing special at opponent's end step."""
-        pass
+        """Goblin Bombardment: sacrifice tokens for direct damage.
+        Oracle: "Sacrifice a creature: This enchantment deals 1 damage to any target."
+        """
+        has_bombardment = any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield)
+        if not has_bombardment:
+            return
+        
+        # Count expendable tokens on board
+        tokens = [c for c in gs.zones.battlefield
+                  if 'Token' in getattr(c, 'name', '') or 
+                  c.name in ('Cat', 'Warrior', 'Elemental', 'Cat Warrior')]
+        
+        if tokens:
+            # Sacrifice all tokens for face damage
+            dmg = len(tokens)
+            for t in tokens:
+                if t in gs.zones.battlefield:
+                    gs.zones.battlefield.remove(t)
+                    gs.zones.graveyard.append(t)
+            gs.damage_dealt += dmg
+            gs._log(f"  Bombardment: sac {dmg} tokens → {dmg} face damage ({gs.damage_dealt} total)")
+        
+        # Also sacrifice any creature about to die to removal
+        # (This is reactive — in a real game you'd sacrifice in response)
 
     def _play_land_if_able(self, gs: GameState):
         """Play best land."""

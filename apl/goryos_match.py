@@ -39,6 +39,7 @@ class GoryosMatchAPL(MatchAPL):
     name = "Goryos Vengeance"
     win_condition_damage = 20
     max_turns = 12
+    _goryos_target = None  # creature to exile at end step
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
@@ -107,6 +108,7 @@ class GoryosMatchAPL(MatchAPL):
                     gs.zones.graveyard.remove(target)
                     gs.zones.battlefield.append(target)
                     target.turn_entered = gs.turn; target.summoning_sickness = False
+                    self._goryos_target = target  # exile at end step
                     if target.name == ATRAXA:
                         gs.zones.draw(min(7, 40 - len(gs.zones.hand)))
                     elif target.name == GRISELBRAND:
@@ -175,7 +177,15 @@ class GoryosMatchAPL(MatchAPL):
                 and not getattr(c, 'tapped', False)]
 
     def declare_blockers(self, gs, opp, attackers): return {}
-    def end_step_actions(self, gs, opponent): pass
+    def end_step_actions(self, gs, opponent):
+        """Goryo's Vengeance: exile the reanimated creature at end step.
+        Oracle: "Exile it at the beginning of the next end step."
+        """
+        if self._goryos_target and self._goryos_target in gs.zones.battlefield:
+            gs.zones.battlefield.remove(self._goryos_target)
+            gs.zones.exile.append(self._goryos_target)
+            gs._log(f"  Goryo's end step: exile {self._goryos_target.name}")
+            self._goryos_target = None
 
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]

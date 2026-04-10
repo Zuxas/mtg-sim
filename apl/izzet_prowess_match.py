@@ -65,6 +65,20 @@ class IzzetProwessMatchAPL(MatchAPL):
         self._cori_on_battlefield = False
         self._monks_created = 0
 
+    def _has_delirium(self, gs: GameState) -> bool:
+        """Check if 4+ card types in GY (for DRC + Unholy Heat)."""
+        types_in_gy = set()
+        for c in gs.zones.graveyard:
+            tl = (getattr(c, 'type_line', '') or '').lower()
+            for t in ('creature', 'instant', 'sorcery', 'artifact', 'enchantment', 'land'):
+                if t in tl:
+                    types_in_gy.add(t)
+        return len(types_in_gy) >= 4
+
+    def _drc_power(self, gs: GameState) -> int:
+        """DRC base power: 1 normally, 3 with delirium (3/3 flyer)."""
+        return 3 if self._has_delirium(gs) else 1
+
     def _reset_turn(self):
         self._spells_this_turn = 0
         self._prowess_boosts = []
@@ -140,6 +154,10 @@ class IzzetProwessMatchAPL(MatchAPL):
                          if 'mountain' in (c.type_line or '').lower() and not c.tapped]
             if mountains:
                 count += 1
+        # Violent Urge cantrips (draws a card — likely another spell)
+        # Oracle: "Target creature gets +1/+0 and gains first strike. Draw a card."
+        violent_count = sum(1 for c in gs.zones.hand if c.name == VIOLENT)
+        count += violent_count  # each Violent Urge = 2 prowess triggers (itself + drawn card)
         return count
 
     def _calc_burst_damage(self, gs: GameState) -> int:
@@ -151,13 +169,18 @@ class IzzetProwessMatchAPL(MatchAPL):
         fuel = self._count_noncreature_fuel(gs)
 
         # Base power of each attacking creature
+        # DRC: 3/3 with delirium, 1/1 without
+        delirium = self._has_delirium(gs)
         base_power = 0
         for c in gs.zones.battlefield:
             if c.is_land():
                 continue
             if getattr(c, 'summoning_sickness', False):
                 continue
-            base_power += safe_power(c)
+            if c.name == DRC:
+                base_power += 3 if delirium else 1
+            else:
+                base_power += safe_power(c)
 
         # Plotted Slickshot adds 1 base power (1/2 stats) with haste
         plotted_slickshots = sum(1 for c in self._plotted_cards if c.name == SLICKSHOT)
@@ -426,8 +449,13 @@ class IzzetProwessMatchAPL(MatchAPL):
         target_t = safe_toughness(target)
 
         # Use Unholy Heat first (preserves Bolt for face on burst turn)
+        # Oracle: 2 damage, or 6 with delirium (4+ card types in GY)
+        delirium = self._has_delirium(gs)
+        unholy_dmg = 6 if delirium else 2
         for c in list(gs.zones.hand):
             if c.name == UNHOLY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                if unholy_dmg < target_t:
+                    continue  # won't kill without delirium
                 gs.mana_pool.pay(c.mana_cost, c.cmc)
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
@@ -437,7 +465,7 @@ class IzzetProwessMatchAPL(MatchAPL):
                 self._trigger_prowess(gs, UNHOLY)
                 self._spells_this_turn += 1
                 self._check_flurry(gs)
-                gs._log(f"  Unholy Heat → kill {target.name} (must-kill)")
+                gs._log(f"  Unholy Heat ({unholy_dmg} dmg, {'delirium' if delirium else 'no delirium'}) → kill {target.name}")
                 return
 
         # Only use Bolt on 4+ power threats — save it for face otherwise

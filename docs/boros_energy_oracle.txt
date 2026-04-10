@@ -1,0 +1,238 @@
+# BOROS ENERGY — COMPLETE ORACLE TEXT REFERENCE
+# Every card in the 75, full oracle text from Scryfall DB
+# For APL audit: pilot perspective + opponent perspective
+# Maindeck: 60 cards | Sideboard: 15 cards
+
+======================================================================
+  NONLAND CARDS (sorted by CMC)
+======================================================================
+
+--- Deafening Silence (SB x1) ---
+  Mana Cost: {W}
+  Type:      Enchantment
+  Oracle:
+    Each player can't cast more than one noncreature spell each turn.
+
+--- Galvanic Discharge (Main x4) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Choose target creature or planeswalker. You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Galvanic Discharge deals that much damage to that permanent.
+
+--- Guide of Souls (Main x4) ---
+  Mana Cost: {W}
+  Type:      Creature — Human Cleric
+  P/T:       1/2
+  Oracle:
+    Whenever another creature you control enters, you gain 1 life and get {E} (an energy counter).
+    Whenever you attack, you may pay {E}{E}{E}. When you do, put two +1/+1 counters and a flying counter on target attacking creature. It becomes an Angel in addition to its other types.
+
+--- Lightning Bolt (Main x1) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Lightning Bolt deals 3 damage to any target.
+
+--- Meltdown (SB x1) ---
+  Mana Cost: {X}{R}
+  Type:      Sorcery
+  Oracle:
+    Destroy each artifact with mana value X or less.
+
+--- Ocelot Pride (Main x4) ---
+  Mana Cost: {W}
+  Type:      Creature — Cat
+  P/T:       1/1
+  Oracle:
+    First strike, lifelink
+    Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.)
+    At the beginning of your end step, if you gained life this turn, create a 1/1 white Cat creature token. Then if you have the city's blessing, for each token you control that entered this turn, create a token that's a copy of it.
+
+--- Ragavan, Nimble Pilferer (Main x4) ---
+  Mana Cost: {R}
+  Type:      Legendary Creature — Monkey Pirate
+  P/T:       2/1
+  Oracle:
+    Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.
+    Dash {1}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)
+
+--- Static Prison (Main x2) ---
+  Mana Cost: {W}
+  Type:      Enchantment
+  Oracle:
+    When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. You get {E}{E} (two energy counters).
+    At the beginning of your first main phase, sacrifice this enchantment unless you pay {E}.
+
+--- Surgical Extraction (SB x2) ---
+  Mana Cost: {B/P}
+  Type:      Instant
+  Oracle:
+    ({B/P} can be paid with either {B} or 2 life.)
+    Choose target card in a graveyard other than a basic land card. Search its owner's graveyard, hand, and library for any number of cards with the same name as that card and exile them. Then that player shuffles.
+
+--- Vexing Bauble (SB x1) ---
+  Mana Cost: {1}
+  Type:      Artifact
+  Oracle:
+    Whenever a player casts a spell, if no mana was spent to cast it, counter that spell.
+    {1}, {T}, Sacrifice this artifact: Draw a card.
+
+--- Ajani, Nacatl Pariah (Main x4) ---
+  Mana Cost: {1}{W}
+  Type:      Legendary Creature — Cat Warrior
+  P/T:       1/2
+  Oracle:
+    When Ajani enters, create a 2/1 white Cat Warrior creature token.
+    Whenever one or more other Cats you control die, you may exile Ajani, then return him to the battlefield transformed under his owner's control.
+
+--- Celestial Purge (SB x2) ---
+  Mana Cost: {1}{W}
+  Type:      Instant
+  Oracle:
+    Exile target black or red permanent.
+
+--- Goblin Bombardment (Main x3) ---
+  Mana Cost: {1}{R}
+  Type:      Enchantment
+  Oracle:
+    Sacrifice a creature: This enchantment deals 1 damage to any target.
+
+--- High Noon (SB x1) ---
+  Mana Cost: {1}{W}
+  Type:      Enchantment
+  Oracle:
+    Each player can't cast more than one spell each turn.
+    {4}{R}, Sacrifice this enchantment: It deals 5 damage to any target.
+
+--- Thraben Charm (Main x2) ---
+  Mana Cost: {1}{W}
+  Type:      Instant
+  Oracle:
+    Choose one —
+    • Thraben Charm deals damage equal to twice the number of creatures you control to target creature.
+    • Destroy target enchantment.
+    • Exile any number of target players' graveyards.
+
+--- Voice of Victory (Main x3) ---
+  Mana Cost: {1}{W}
+  Type:      Creature — Human Bard
+  P/T:       1/3
+  Oracle:
+    Mobilize 2 (Whenever this creature attacks, create two tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.)
+    Your opponents can't cast spells during your turn.
+
+--- Wrath of the Skies (SB x2) ---
+  Mana Cost: {X}{W}{W}
+  Type:      Sorcery
+  Oracle:
+    You get X {E} (energy counters), then you may pay any amount of {E}. Destroy each artifact, creature, and enchantment with mana value less than or equal to the amount of {E} paid this way.
+
+--- Blood Moon (SB x2) ---
+  Mana Cost: {2}{R}
+  Type:      Enchantment
+  Oracle:
+    Nonbasic lands are Mountains.
+
+--- Clarion Conqueror (SB x1) ---
+  Mana Cost: {2}{W}
+  Type:      Creature — Dragon
+  P/T:       3/3
+  Oracle:
+    Flying
+    Activated abilities of artifacts, creatures, and planeswalkers can't be activated.
+
+--- Phlage, Titan of Fire's Fury (Main x4) ---
+  Mana Cost: {1}{R}{W}
+  Type:      Legendary Creature — Elder Giant
+  P/T:       6/6
+  Oracle:
+    When Phlage enters, sacrifice it unless it escaped.
+    Whenever Phlage enters or attacks, it deals 3 damage to any target and you gain 3 life.
+    Escape—{R}{R}{W}{W}, Exile five other cards from your graveyard. (You may cast this card from your graveyard for its escape cost.)
+
+--- Screaming Nemesis (Main x1) ---
+  Mana Cost: {2}{R}
+  Type:      Creature — Spirit
+  P/T:       3/3
+  Oracle:
+    Haste
+    Whenever this creature is dealt damage, it deals that much damage to any other target. If a player is dealt damage this way, they can't gain life for the rest of the game.
+
+--- Seasoned Pyromancer (Main x2) ---
+  Mana Cost: {1}{R}{R}
+  Type:      Creature — Human Shaman
+  P/T:       2/2
+  Oracle:
+    When this creature enters, discard two cards, then draw two cards. For each nonland card discarded this way, create a 1/1 red Elemental creature token.
+    {3}{R}{R}, Exile this card from your graveyard: Create two 1/1 red Elemental creature tokens.
+
+--- Wear/Tear (SB x1) ---
+  Mana Cost: {1}{R} // {W}
+  Type:      Instant // Instant
+  Oracle:
+    
+
+--- The Legend of Roku (SB x1) ---
+  Mana Cost: {2}{R}{R}
+  Type:      Enchantment — Saga
+  Oracle:
+    (As this Saga enters and after your draw step, add a lore counter.)
+    I — Exile the top three cards of your library. Until the end of your next turn, you may play those cards.
+    II — Add one mana of any color.
+    III — Exile this Saga, then return it to the battlefield transformed under your control.
+
+======================================================================
+  LANDS
+======================================================================
+
+--- Arena of Glory (Main x3) ---
+  Type:   Land
+  Oracle:
+    This land enters tapped unless you control a Mountain.
+    {T}: Add {R}.
+    {R}, {T}, Exert this land: Add {R}{R}. If that mana is spent on a creature spell, it gains haste until end of turn. (An exerted permanent won't untap during your next untap step.)
+
+--- Arid Mesa (Main x4) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Plains card, put it onto the battlefield, then shuffle.
+
+--- Dalkovan Encampment (Main x1) ---
+  Type:   Land
+  Oracle:
+    This land enters tapped unless you control a Swamp or a Mountain.
+    {T}: Add {W}.
+    {2}{W}, {T}: Whenever you attack this turn, create two 1/1 red Warrior creature tokens that are tapped and attacking. Sacrifice them at the beginning of the next end step.
+
+--- Elegant Parlor (Main x2) ---
+  Type:   Land — Mountain Plains
+  Oracle:
+    ({T}: Add {R} or {W}.)
+    This land enters tapped.
+    When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+
+--- Flooded Strand (Main x4) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Island card, put it onto the battlefield, then shuffle.
+
+--- Marsh Flats (Main x2) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Swamp card, put it onto the battlefield, then shuffle.
+
+--- Mountain (Main x1) ---
+  Type:   Basic Land — Mountain
+  Oracle:
+    ({T}: Add {R}.)
+
+--- Plains (Main x2) ---
+  Type:   Basic Land — Plains
+  Oracle:
+    ({T}: Add {W}.)
+
+--- Sacred Foundry (Main x3) ---
+  Type:   Land — Mountain Plains
+  Oracle:
+    ({T}: Add {R} or {W}.)
+    As this land enters, you may pay 2 life. If you don't, it enters tapped.

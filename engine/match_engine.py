@@ -71,6 +71,10 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
     Give the reactive player a chance to use instant-speed interaction.
     Checks hand for removal/burn/counter and uses the APL to decide.
     """
+    # Voice of Victory spell lock: "Your opponents can't cast spells during your turn"
+    if any(c.name == "Voice of Victory" for c in active_gs.zones.battlefield):
+        return
+    
     hand = reactive_gs.zones.hand
     
     # Find instants and flash creatures in hand

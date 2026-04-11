@@ -54,11 +54,11 @@ class AmuletTitanMatchAPL(MatchAPL):
             for c in gs.zones.battlefield if c.is_land())
 
     def _bounce_land_bonus(self, gs):
-        """With Amulet: each bounce land produces 2 mana (enters untapped, tap before return).
-        Without Amulet: bounce lands enter tapped = no immediate mana."""
-        if not self._amulet_active:
+        """With Amulet: each bounce land = 2 extra mana (enters untapped, tap for 2 before return).
+        With Spelunking: same effect. Total per bounce land with enabler = 3 mana (1 from tap_lands + 2 bonus)."""
+        if not self._amulet_active and not self._spelunking_active:
             return 0
-        return sum(1 for c in gs.zones.battlefield if c.name in BOUNCE_LANDS)
+        return sum(2 for c in gs.zones.battlefield if c.name in BOUNCE_LANDS)
 
     def keep(self, hand, mulligans, on_play):
         """Playbook: Keep Amulet + bounce land + threat. Mull hands without acceleration."""

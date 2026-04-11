@@ -421,3 +421,108 @@ Currently no Treasure generation.
 | 2 | Goblin Bombardment | Reactive sacrifice in response to removal | Engine: respond_to_removal hook |
 | 3 | Screaming Nemesis | Damage reflection + anti-lifegain | Engine: combat damage tracking |
 | 4 | Thraben Charm | Scaling 2× creature damage (partially modeled) | Already in removal section |
+
+
+## EDGE CASES FROM COMPETITIVE GUIDES (New Discoveries)
+
+### EDGE 1: Ajani Legend Rule Trick — MASSIVE, NOT MODELED
+Playing a SECOND Ajani while the first is on board:
+1. Legend Rule forces you to sacrifice one Ajani
+2. The new Ajani's ETB creates a 2/1 Cat token
+3. The sacrificed Ajani's death doesn't matter (but the Legend Rule sacrifice counts)
+4. BUT: the Cat token from the new Ajani is now on board
+5. You can now sacrifice that Cat (or wait for another to die) → transform the surviving Ajani
+**Net result:** Play 2nd Ajani → get a free 2/1 Cat → flip into PW. Two-card combo in hand.
+**This is cited as "the main reason Ajani is much stronger than expected in theory"**
+
+### EDGE 2: Arena of Glory + Phlage Escape = Haste Phlage
+Oracle (Arena of Glory): "{R}, {T}, Exert: Add {R}{R}. If that mana is spent on a 
+  creature spell, it gains haste until end of turn."
+- When escaping Phlage, you CAN use Arena of Glory's exert ability
+- The {R}{R} from Arena counts as being "spent on a creature spell" (Phlage IS a creature)
+- Phlage gains HASTE → attacks immediately → 3 damage + 3 life ATTACK trigger PLUS ETB
+- Net: 6 damage + 6 life from Phlage on the escape turn
+**Current APL:** Phlage escape has summoning sickness. This is wrong when Arena is available.
+
+### EDGE 3: Galvanic Discharge as Energy Banking
+Guides say: "using Discharge just to gain energy is a viable option, especially to 
+  keep Static Prison on the board longer"
+- Cast Galvanic Discharge targeting your own small creature (or opponent's 1/1)
+- Get {E}{E}{E}, pay 0 energy (or just 1 to kill a token)
+- Net: +3 energy for {R}, used to maintain Static Prison or save for Guide pump
+**Current APL:** Only uses Discharge on opponent creatures or for energy when no targets.
+This banking behavior should be prioritized when Static Prison needs energy.
+
+### EDGE 4: Guide of Souls + Ragavan = 4/3 Flying Attacker
+- Ragavan is 2/1. Guide pump gives +2/+2 and flying → 4/3 flying
+- A 4/3 flying Ragavan that connects creates a Treasure AND exiles a card
+- This is the premier use of Guide's {E}{E}{E} pump — on Ragavan
+**Current APL:** Pumps "best non-flying attacker" but doesn't specifically target Ragavan.
+Should prioritize: Ragavan > Screaming Nemesis > Voice > others for Guide pump.
+
+### EDGE 5: Ocelot Pride Ascend (City's Blessing) — Token Doubling
+Oracle: "Then if you have the city's blessing, for each token you control that 
+  entered this turn, create a token that's a copy of it."
+- Ascend: 10+ permanents → city's blessing (permanent)
+- With blessing: ALL tokens that entered this turn get COPIED
+- Turn where 4 tokens entered → 4 MORE copies = 8 total tokens
+- This is the late-game explosive finish
+**Current APL:** Does not track Ascend or city's blessing at all.
+
+### EDGE 6: Voice of Victory Blocks End-Step Interaction
+Guides cite: "Voice forces opponents to play fairly by punishing end-step plays 
+  like Phelia + Ephemerate loops"
+- Voice says "during YOUR turn" — but many key interactions happen at end step
+- Opponent's Ephemerate at end step? If it's still YOUR end step → blocked
+- Opponent's Solitude pitch during your combat? → blocked
+- This shuts down ENTIRE interaction patterns, not just spot removal
+**Current APL:** Engine correctly blocks all reactive spells during Boros's turn.
+But does it block end-step spells? Need to verify engine timing.
+
+### EDGE 7: Seasoned Pyromancer + Phlage = Deliberate GY Setup
+- Pyromancer discard is NOT random — you CHOOSE what to discard
+- Always discard Phlage (puts it in GY for escape)
+- Always discard extra copies of legendary creatures
+- Never discard Guide or Ocelot (engine pieces)
+**Current APL:** Already models this (Phlage priority discard). Confirmed correct.
+
+### EDGE 8: Thraben Charm Mode 3 — Graveyard Exile
+- Mode 3: "Exile any number of target players' graveyards"
+- Key vs: Murktide (Murktide delve), Breach, Yawgmoth, Goryo's
+- This is a MAIN DECK graveyard hate card
+- Also kills escape targets (Phlage in opponent's GY)
+**Current APL:** Only models Mode 1 (creature damage) and Mode 2 (enchantment destroy).
+Missing Mode 3 entirely.
+
+### EDGE 9: Galvanic Discharge Scales to Kill Anything
+- With enough energy, Discharge kills Primeval Titan (6 toughness), Murktide (8 toughness)
+- Energy stockpiling from Guide + Discharge ETB = 6-10 energy by T5
+- One Discharge with 8 energy kills anything in the format
+**Current APL:** Models energy spending correctly but may not save energy for big targets.
+
+### EDGE 10: Phlage Attack Trigger — 3+3 EVERY Attack
+Oracle: "Whenever Phlage enters OR ATTACKS, it deals 3 damage to any target and 
+  you gain 3 life."
+- Escaped Phlage that attacks = 3 damage + 3 life EACH TURN it attacks
+- Over 3 turns: 9 damage + 9 life from attacks alone (plus 6/6 body)
+- Phlage attack damage can target creatures OR players (any target)
+**Current APL:** Does not model Phlage attack trigger at all. Only ETB is modeled.
+This means escaped Phlage is significantly undervalued.
+
+### EDGE 11: Goblin Bombardment — Strategic Creature Sacrifice
+From guides: "Wear // Tear can take out Bombardment, which is a key card"
+- Opponents specifically sideboard artifact/enchantment removal for Bombardment
+- Bombardment is THE card that ties the deck together:
+  → Converts every creature death into damage
+  → Enables Ajani transform
+  → Sacrifices Mobilize tokens for value before forced sacrifice
+  → Makes all removal worse (opponent's removal = "kill creature" but you get 1 damage)
+**Current APL:** Models Mobilize sacrifice but not the full strategic picture.
+
+### EDGE 12: Dalkovan Encampment Token Generation
+Oracle: "{2}{W}, {T}: Whenever you attack this turn, create two 1/1 red Warrior tokens 
+  tapped and attacking. Sacrifice them at beginning of next end step."
+- This is another Voice of Victory effect, but from a LAND
+- Costs 3 mana + land tap, but generates 2 tokens per attack
+- Combined with Guide + Bombardment = more triggers
+**Current APL:** Not modeled. Minor — only 1 copy in deck.

@@ -357,7 +357,11 @@ class BorosEnergyMatchAPL(MatchAPL):
                     exiled += 1
                 gs.zones.battlefield.append(phlage)
                 phlage.turn_entered = gs.turn
-                phlage.summoning_sickness = True  # escape doesn't give haste — can't attack this turn
+                # Arena of Glory: "If mana spent on creature spell, it gains haste"
+                # Escaped Phlage can have haste if Arena provided mana
+                has_arena = any('arena of glory' in (getattr(c, 'name', '') or '').lower()
+                                for c in gs.zones.battlefield)
+                phlage.summoning_sickness = not has_arena  # haste if Arena available
                 # ETB: 3 damage + 3 life
                 if opponent:
                     opp_creatures = [c for c in opponent.zones.battlefield
@@ -495,17 +499,46 @@ class BorosEnergyMatchAPL(MatchAPL):
         # Guide of Souls attack pump: pay {E}{E}{E} → +2/+2 and flying on attacker
         # Oracle: "Whenever you attack, you may pay {E}{E}{E}. When you do, put two
         #          +1/+1 counters and a flying counter on target attacking creature."
+        # Priority: Ragavan (4/3 flying + Treasure/exile) > others
         guides_on_board = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
         if guides_on_board > 0 and attackers:
             energy = getattr(gs, 'energy', 0)
             if energy >= 3:
-                # Pump the best non-flying attacker (flying = evasion)
+                # Prioritize Ragavan for pump (4/3 flying with combat triggers is devastating)
+                ragavans = [a for a in attackers if a.name == RAGAVAN]
                 non_flyers = [a for a in attackers if not has_keyword(a, 'flying')]
-                target = max(non_flyers if non_flyers else attackers,
-                             key=lambda c: safe_power(c))
+                if ragavans:
+                    target = ragavans[0]
+                elif non_flyers:
+                    target = max(non_flyers, key=lambda c: safe_power(c))
+                else:
+                    target = max(attackers, key=lambda c: safe_power(c))
                 gs.energy = energy - 3
                 target.counters += 2  # +2/+2
                 gs._log(f"  Guide pump: {target.name} gets +2/+2 flying ({gs.energy}E left)")
+        
+        # Phlage attack trigger: "Whenever Phlage enters or ATTACKS, deals 3 to any target + 3 life"
+        # This fires EVERY attack, not just ETB. Massive damage over multiple turns.
+        phlages_attacking = [a for a in attackers if a.name == PHLAGE]
+        if phlages_attacking:
+            for p in phlages_attacking:
+                # 3 damage to best opponent creature or face
+                if opponent:
+                    opp_creatures = [c for c in opponent.zones.battlefield
+                                     if not c.is_land() and c.has(Tag.CREATURE)]
+                    killable = [c for c in opp_creatures if safe_toughness(c) <= 3]
+                    if killable:
+                        kill = max(killable, key=lambda c: safe_power(c))
+                        opponent.zones.battlefield.remove(kill)
+                        opponent.zones.graveyard.append(kill)
+                        gs._log(f"  Phlage attack trigger: kill {kill.name} + 3 life")
+                    else:
+                        gs.damage_dealt += 3
+                        gs._log(f"  Phlage attack trigger: 3 face + 3 life ({gs.damage_dealt} total)")
+                else:
+                    gs.damage_dealt += 3
+                gs.life += 3
+                self._gained_life_this_turn = True
         
         return attackers
 

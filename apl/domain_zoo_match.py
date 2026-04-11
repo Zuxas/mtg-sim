@@ -138,16 +138,16 @@ class DomainZooMatchAPL(MatchAPL):
                 break
 
         # 3. Scion of Draco — domain cost reduction ({2} with full domain)
-        scion_cost = self._scion_cost()
         for c in list(gs.zones.hand):
-            if c.name == SCION and avail >= scion_cost:
-                gs.zones.hand.remove(c)
-                gs.zones.battlefield.append(c)
-                c.turn_entered = gs.turn; c.summoning_sickness = True
-                self._scion_active = True
-                gs._log(f"  Scion of Draco: 4/4 flying (cost {scion_cost} with domain={self._domain_count})")
+            if c.name == SCION:
+                gs.mana_pool.cost_reduction = self._domain_count * 2  # domain reduces by 2 per type
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    self._scion_active = True
+                gs._log(f"  Scion of Draco: 4/4 flying (domain={self._domain_count})")
+                gs.mana_pool.cost_reduction = 0
                 gs._log(f"    → All creatures gain: hexproof, lifelink, first strike, trample, vigilance")
-                avail -= scion_cost
+                avail = gs.mana_pool.total()
                 break
 
         # 4. Territorial Kavu ({R}{G}) — size = domain count

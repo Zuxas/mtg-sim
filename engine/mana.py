@@ -53,6 +53,7 @@ class ManaPool:
     G: int = 0
     C: int = 0     # colorless / generic
     flex: int = 0  # any-color mana (Cavern, Ziggurat, Unclaimed Territory)
+    cost_reduction: int = 0  # generic cost reduction (affinity, delve, domain, convoke)
 
     def total(self) -> int:
         return self.W + self.U + self.B + self.R + self.G + self.C + self.flex
@@ -139,9 +140,10 @@ class ManaPool:
                 else:
                     return False  # Can't satisfy this pip
 
-        # Check generic requirement
+        # Check generic requirement (reduced by cost_reduction from affinity/delve/domain)
         total_left = sum(remaining.values())
-        return total_left >= req.get("generic", 0)
+        generic_needed = max(0, req.get("generic", 0) - self.cost_reduction)
+        return total_left >= generic_needed
 
     def can_cast(self, mana_cost: str, cmc: float) -> bool:
         """Alias for can_pay — used by game_state."""
@@ -171,7 +173,8 @@ class ManaPool:
                 self.flex -= used_flex
 
         # Pay generic with whatever's left (flex, then C, then WUBRG)
-        generic = req.get("generic", 0)
+        # Apply cost_reduction (affinity/delve/domain) to generic portion
+        generic = max(0, req.get("generic", 0) - self.cost_reduction)
         for color in ("flex", "C", "W", "U", "B", "R", "G"):
             if generic <= 0:
                 break
@@ -184,6 +187,7 @@ class ManaPool:
 
     def empty(self):
         self.W = self.U = self.B = self.R = self.G = self.C = self.flex = 0
+        self.cost_reduction = 0  # reset per-turn cost modifiers
 
     def __repr__(self):
         parts = [f"{c}:{getattr(self, c)}" for c in "WUBRG" if getattr(self, c) > 0]

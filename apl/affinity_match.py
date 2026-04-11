@@ -105,30 +105,26 @@ class IzzetAffinityMatchAPL(MatchAPL):
         # 3. Emry ({2}{U} with affinity for artifacts) — cast artifacts from GY
         for c in list(gs.zones.hand):
             if c.name == EMRY:
-                emry_cost = max(1, 3 - self._artifact_count)  # affinity reduces cost
-                if avail >= emry_cost:
-                    # Manual deploy (bypass can_cast which doesn't know affinity)
-                    gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
-                    c.turn_entered = gs.turn; c.summoning_sickness = True
-                    gs.mana_pool.flex -= min(emry_cost, gs.mana_pool.flex)
-                    gs._log(f"  Emry: cost {emry_cost} (affinity -{self._artifact_count})")
-                    avail = gs.mana_pool.total()
-                    break
+                gs.mana_pool.cost_reduction = self._artifact_count  # affinity
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    gs._log(f"  Emry: affinity -{self._artifact_count}")
+                gs.mana_pool.cost_reduction = 0
+                avail = gs.mana_pool.total()
+                break
 
         # 4. Kappa Cannoneer ({5}{U}, ward {4}) — grows on artifact ETB
         for c in list(gs.zones.hand):
             if c.name == KAPPA:
-                kappa_cost = max(2, 6 - self._artifact_count)  # affinity
-                if avail >= kappa_cost:
-                    gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
-                    c.turn_entered = gs.turn; c.summoning_sickness = True
-                    gs.mana_pool.flex -= min(kappa_cost, gs.mana_pool.flex)
-                    # Set initial size based on artifacts
+                gs.mana_pool.cost_reduction = self._artifact_count  # affinity
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
                     c.power = str(4 + self._kappa_counters)
                     c.toughness = str(4 + self._kappa_counters)
-                    gs._log(f"  Kappa: {safe_power(c)}/{safe_toughness(c)} (cost {kappa_cost}, ward 4)")
-                    avail = gs.mana_pool.total()
-                    break
+                    gs._log(f"  Kappa: {safe_power(c)}/{safe_toughness(c)} (affinity -{self._artifact_count}, ward 4)")
+                gs.mana_pool.cost_reduction = 0
+                avail = gs.mana_pool.total()
+                break
 
         # 5. Pinnacle Emissary — token flood
         for c in list(gs.zones.hand):

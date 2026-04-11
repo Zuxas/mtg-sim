@@ -620,3 +620,54 @@ Oracle: "Choose target creature or planeswalker"
 - Not just creatures — kills opposing Teferi, Karn, Liliana, etc.
 - With 6+ energy: kills nearly any planeswalker
 **Current APL:** Only targets creatures. Should add PW targeting.
+
+## APL QUALITY STANDARD (Established 2026-04-10)
+
+Every deck APL must go through this full audit process before being considered complete.
+The Boros Energy audit (`docs/boros_energy_audit.md`) is the gold standard.
+
+### Required Steps For Each Deck APL:
+
+1. **Full Oracle Text Pull** — Every card in the 75 from Scryfall local DB
+   - Complete oracle text, mana cost, type line, P/T, keywords
+   - Saved to `docs/{deck}_oracle.txt`
+
+2. **Card-by-Card Analysis** — Pilot + opponent perspective for every card
+   - What does this card do when I play it?
+   - What does this card do when my opponent plays it?
+   - What are the timing windows?
+   - How does it interact with other cards in MY deck?
+   - How does it interact with cards in OPPONENT'S deck?
+
+3. **Competitive Guide Research** — Search for primers, guides, tournament reports
+   - What lines do competitive pilots take?
+   - What edge cases do experienced players know?
+   - What do opponents sideboard against this deck?
+
+4. **Interaction Line Documentation** — Every non-obvious play sequence
+   - Defensive lines (sacrifice in response, transform to dodge removal)
+   - Offensive lines (burst calculations, combo sequences)
+   - Timing-dependent lines (end step triggers, upkeep costs)
+
+5. **Code-Level Cross-Reference** — Every card checked against APL source
+   - Is the card referenced in the APL?
+   - Is the oracle text correctly implemented?
+   - Are all triggers/abilities modeled?
+   - Are the costs correct (mana, life, energy)?
+
+6. **Individual Fix Verification** — Each fix tested with 500-1000 game matchups
+   - Before/after win rate comparison
+   - Play/draw split check
+   - Average turn length check
+
+7. **Layman's Terms Visualization** — Plain English APL walkthrough
+   - Every phase explained
+   - Every decision point documented
+   - New fixes tagged
+
+### Why This Matters:
+- Phlage escape cost wrong ({1}{R}{W} vs {R}{R}{W}{W}) = garbage data
+- Ajani PW pump without vulnerability = +9% swing
+- Missing Phlage attack trigger = missing 3+3 per attack
+- Ocelot wrong timing (per-trigger vs end-step) = too many tokens
+- Each error compounds across thousands of simulated games

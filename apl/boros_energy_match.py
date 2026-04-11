@@ -51,6 +51,8 @@ class BorosEnergyMatchAPL(MatchAPL):
         self._gained_life_this_turn = False
         self._tokens_entered = 0
         self._mobilize_tokens = 0  # Voice of Victory Warrior tokens to sacrifice
+        self._ajani_pw_active = False  # Ajani transformed into planeswalker
+        self._ajani_pw_loyalty = 0
 
     # ------------------------------------------------------------------
     # Mulligan
@@ -216,6 +218,20 @@ class BorosEnergyMatchAPL(MatchAPL):
 
         # 1. Play land
         self._play_land_if_able(gs)
+
+        # 1b. AJANI PLANESWALKER — +2 loyalty: put +1/+1 counter on each creature
+        # Oracle (back face): "+2: Put a +1/+1 counter on each creature you control"
+        # NOTE: Currently disabled — PW pump is too strong without modeling:
+        #   - Opponent can attack PW with creatures (redirect damage)
+        #   - Opponent can Bolt PW (3 damage kills it at loyalty 4 after +2 = 6, needs 2 Bolts)
+        #   - Sometimes -1 (return Cat from GY) is the correct activation
+        # Re-enable when engine supports PW targeting
+        # if self._ajani_pw_active:
+        #     self._ajani_pw_loyalty += 2
+        #     creatures = [c for c in gs.zones.battlefield
+        #                  if not c.is_land() and c.has(Tag.CREATURE)]
+        #     for creature in creatures:
+        #         creature.counters += 1
 
         # 2. REMOVAL FIRST — kill their threats before they combo
         if opponent:
@@ -532,26 +548,46 @@ class BorosEnergyMatchAPL(MatchAPL):
                     gs.energy = getattr(gs, 'energy', 0) + guides
             gs._log(f"  Ocelot end step: {ocelots} Cat token(s)")
         
-        # 2. BOMBARDMENT — sacrifice Mobilize tokens + other expendable tokens
+        # 2. BOMBARDMENT — sacrifice MOBILIZE tokens (they die anyway) + strategic Cat sac
+        # Key insight: Don't sacrifice ALL tokens. Keep Cats for blocking.
+        # Only sacrifice Cats deliberately for Ajani transform or when going for lethal.
         has_bombardment = any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield)
+        ajani_on_board = [c for c in gs.zones.battlefield if c.name == AJANI]
+        cat_died = False
         
         if has_bombardment:
-            # Sacrifice Mobilize tokens to Bombardment BEFORE forced sacrifice
-            # (They're getting sacrificed anyway — get Bombardment value)
+            # ONLY sacrifice Mobilize tokens (they're forced to die at end step anyway)
             bombard_dmg = self._mobilize_tokens
-            
-            # Also sacrifice Cat tokens (they've already triggered Guide/Ocelot)
-            tokens_on_board = [c for c in gs.zones.battlefield
-                              if 'Token' in getattr(c, 'name', '')]
-            bombard_dmg += len(tokens_on_board)
-            for t in tokens_on_board:
-                if t in gs.zones.battlefield:
-                    gs.zones.battlefield.remove(t)
-                    gs.zones.graveyard.append(t)
             
             if bombard_dmg > 0:
                 gs.damage_dealt += bombard_dmg
-                gs._log(f"  Bombardment: sac {bombard_dmg} tokens → {bombard_dmg} face ({gs.damage_dealt} total)")
+                gs._log(f"  Bombardment: sac {bombard_dmg} Mobilize tokens → {bombard_dmg} face ({gs.damage_dealt} total)")
+        
+        # 2b. Deliberately sacrifice ONE Cat to trigger Ajani transform
+        # Only if Ajani is on board AND we have 2+ creatures to benefit from PW pump
+        # AND we have a Cat to sacrifice
+        if ajani_on_board and not self._ajani_pw_active and has_bombardment:
+            our_creatures = sum(1 for c in gs.zones.battlefield
+                                if not c.is_land() and c.has(Tag.CREATURE))
+            cat_tokens = [c for c in gs.zones.battlefield
+                          if 'Cat' in getattr(c, 'name', '') and 'Token' in getattr(c, 'name', '')]
+            if cat_tokens and our_creatures >= 3:
+                # Worth transforming — sacrifice Cat for Ajani PW + 1 Bombardment damage
+                t = cat_tokens[0]
+                gs.zones.battlefield.remove(t)
+                gs.zones.graveyard.append(t)
+                gs.damage_dealt += 1
+                cat_died = True
+                gs._log(f"  Sac Cat → Ajani transform + 1 Bombardment dmg")
+        
+        # 2c. AJANI TRANSFORM — Cat died + Ajani on board → flip to planeswalker
+        if cat_died and ajani_on_board and not self._ajani_pw_active:
+            aj = ajani_on_board[0]
+            gs.zones.battlefield.remove(aj)
+            gs.zones.exile.append(aj)
+            self._ajani_pw_active = True
+            self._ajani_pw_loyalty = 4
+            gs._log(f"  AJANI TRANSFORMS → Ajani, Resilient Leader (Loyalty 4)")
         
         # 3. Forced Mobilize sacrifice (if no Bombardment, tokens just die)
         # (Already removed from battlefield if Bombardment ate them above)

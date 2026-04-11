@@ -203,6 +203,20 @@ class IzzetProwessMatchAPL(MatchAPL):
         has_mutagenic = any(c.name == MUTAGENIC for c in gs.zones.hand)
         mutagenic_bonus = 2 if has_mutagenic else 0
 
+        # Violent Urge: +1/+0 + first strike + draw. With delirium: DOUBLE STRIKE
+        # Double strike DOUBLES the combat damage of the target creature
+        has_violent = any(c.name == VIOLENT for c in gs.zones.hand)
+        violent_double_strike = delirium and has_violent
+
+        # Cori-Steel Flurry: if Cori on board and we cast 2+ spells, adds a 2/2 haste Monk
+        cori_on_board = any(c.name == CORI for c in gs.zones.battlefield) or self._cori_on_battlefield
+        monk_damage = 0
+        if cori_on_board and fuel >= 2:
+            # Monk starts as 2/2 (1/1 + equipment +1/+1), has prowess
+            # Remaining spells after the 2nd one pump the Monk
+            monk_prowess_triggers = max(0, fuel - 2)  # spells after Flurry trigger
+            monk_damage = 2 + monk_prowess_triggers  # 2 base + prowess
+
         # Direct damage from burn spells
         burn_damage = 0
         for c in gs.zones.hand:
@@ -214,7 +228,21 @@ class IzzetProwessMatchAPL(MatchAPL):
         if any(c.name == LAVA_DART for c in gs.zones.graveyard):
             burn_damage += 1
 
-        total = base_power + prowess_damage + slickshot_damage + mutagenic_bonus + burn_damage
+        # Combat damage total
+        combat_power = base_power + prowess_damage + slickshot_damage + mutagenic_bonus + monk_damage
+        
+        # If Violent Urge gives double strike (delirium), double the BEST creature's combat
+        # Apply double strike to Slickshot (highest damage output with +2/+0 per spell)
+        if violent_double_strike and total_slickshots > 0:
+            # Slickshot's contribution gets doubled
+            slickshot_power = 1 + (fuel * SLICKSHOT_BOOST) + (mutagenic_bonus if total_slickshots else 0) + 1  # +1 from Violent Urge
+            combat_power += slickshot_power  # add it again = double strike
+        elif violent_double_strike and prowess_creatures > 0:
+            # Double strike on best prowess creature
+            best_prowess = max(1, base_power // max(prowess_creatures, 1)) + fuel
+            combat_power += best_prowess
+        
+        total = combat_power + burn_damage
         return total
 
     # ------------------------------------------------------------------
@@ -420,33 +448,57 @@ class IzzetProwessMatchAPL(MatchAPL):
                     break
 
     def _use_removal_sparingly(self, gs: GameState, opponent: GameState):
-        """Only remove truly dangerous threats. Save burn for burst turn face damage.
+        """Remove Boros engine pieces FIRST, then big threats. Save Bolt for burst face.
         
-        Must-kill targets:
-        - Phlage (gains 3 life per attack, compounds the lifegain problem)
-        - Any creature with 4+ power (threatens to race us)
-        - Screaming Nemesis (3/3 haste, punishes our burn)
+        From competitive guides: "Focus on individual threats, making it difficult for 
+        opponent to establish Guide of Souls + Ocelot Pride, or Ajani + Bombardment."
         
-        DON'T kill:
-        - Guide of Souls (1/1, low power — we outrace it)
-        - Ocelot Pride (1/1 first strike — annoying but not lethal)
-        - Small tokens
+        Priority kill targets (vs Boros):
+        1. Guide of Souls (1/2) — THE engine piece. Kill with Lava Dart or Unholy Heat.
+        2. Ocelot Pride (1/1) — token generator. Kill with Lava Dart.
+        3. Cori-Steel Cutter (on our side - opponent perspective: kill our Cutter too)
+        4. Phlage (gains 3 life per attack)
+        5. Screaming Nemesis (3/3, reflects damage — use exile not burn)
+        6. Any creature with 4+ power (racing threat)
+        
+        Save Lightning Bolt for FACE damage on burst turn when possible.
+        Use Lava Dart and Unholy Heat for creature removal (lower opportunity cost).
         """
         opp_creatures = [c for c in opponent.zones.battlefield
                          if not c.is_land() and c.has(Tag.CREATURE)]
         if not opp_creatures:
             return
 
-        # Only target must-kill creatures
-        must_kill = [c for c in opp_creatures
-                     if safe_power(c) >= 4
-                     or c.name == "Phlage, Titan of Fire's Fury"
-                     or c.name == "Screaming Nemesis"]
+        # Priority: Engine pieces > Big threats > Everything else
+        engine_pieces = [c for c in opp_creatures
+                         if c.name in ("Guide of Souls", "Ocelot Pride", "Ajani, Nacatl Pariah")]
+        big_threats = [c for c in opp_creatures
+                       if safe_power(c) >= 4
+                       or c.name == "Phlage, Titan of Fire's Fury"
+                       or c.name == "Screaming Nemesis"]
+        
+        must_kill = engine_pieces if engine_pieces else big_threats
         if not must_kill:
             return
 
         target = max(must_kill, key=lambda c: safe_power(c))
         target_t = safe_toughness(target)
+        
+        # Use Lava Dart on 1-toughness engine pieces (Guide, Ocelot, Ragavan)
+        if target_t <= 1:
+            for c in list(gs.zones.hand):
+                if c.name == LAVA_DART and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.mana_pool.pay(c.mana_cost, c.cmc)
+                    gs.zones.hand.remove(c)
+                    gs.zones.graveyard.append(c)
+                    if target in opponent.zones.battlefield:
+                        opponent.zones.battlefield.remove(target)
+                        opponent.zones.graveyard.append(target)
+                    self._trigger_prowess(gs, LAVA_DART)
+                    self._spells_this_turn += 1
+                    self._check_flurry(gs)
+                    gs._log(f"  Lava Dart → kill {target.name} (engine piece)")
+                    return
 
         # Use Unholy Heat first (preserves Bolt for face on burst turn)
         # Oracle: 2 damage, or 6 with delirium (4+ card types in GY)

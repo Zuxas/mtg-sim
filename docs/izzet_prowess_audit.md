@@ -1,0 +1,179 @@
+# IZZET PROWESS — CARD-BY-CARD APL AUDIT
+# Every card analyzed from pilot + opponent perspective
+# What APL currently does vs what it SHOULD do
+
+## CRITICAL CORRECTIONS NEEDED
+
+### 1. Violent Urge DELIRIUM = DOUBLE STRIKE (NOT MODELED)
+**Oracle:** "Target creature gets +1/+0 and gains first strike until end of turn.
+           Draw a card.
+           Delirium — If 4+ card types in GY, that creature gains double strike."
+**Current APL:** Only models as +1 fuel in burst calculator. Missing:
+  - The CARD DRAW (cantrip) — already partially fixed
+  - The DOUBLE STRIKE with delirium — completely missing
+  - Double strike on a pumped Slickshot = LETHAL BURST
+    Example: Slickshot 1/2 + 3 spells cast = 7/2. With double strike = 14 flying damage.
+**Pilot:** Save Violent Urge for the kill turn. With delirium active, this doubles
+  your biggest creature's damage output.
+**Opponent:** Must remove Slickshot BEFORE the burst turn. Once spells start chaining,
+  it's too late.
+
+### 2. Slickshot Show-Off PLOT Mechanic (NOT MODELED)
+**Oracle:** "Plot {1}{R} (You may pay {1}{R} and exile this card from your hand. 
+           Cast it as a sorcery on a later turn without paying its mana cost.)"
+**Current APL:** Treats Slickshot as a normal 2-drop. Missing:
+  - T2: Plot Slickshot (pay {1}{R}, exile it face-up)
+  - T3: Cast Slickshot for FREE → all mana available for spells → maximum burst
+  - Plotted Slickshot has flying + haste, attacks immediately
+  - This is THE setup for burst kills
+**Pilot:** Plot T2 if you have a good T3 hand (multiple cheap spells).
+  Don't plot if you need to apply pressure immediately.
+**Opponent:** If opponent plots T2, expect T3 burst. Hold up removal.
+
+### 3. Cori-Steel Flurry — ANY Second Spell (PARTIALLY WRONG)
+**Oracle:** "Flurry — Whenever you cast your second spell each turn, create a 1/1 
+           white Monk creature token with prowess. You may attach this Equipment to it."
+**Current APL:** May only trigger on noncreature spells.
+**CORRECT:** Triggers on ANY second spell — creatures, instants, sorceries, artifacts.
+  - Cast Bauble (spell 1) → Cast Bolt (spell 2) → Flurry triggers → 1/1 Monk
+  - Monk gets equipment auto-attached: +1/+1, trample, haste = 2/2 trample haste
+  - Monk also has prowess → additional spells pump it further
+  - Works on OPPONENT'S TURN too — if you cast 2 instants during their turn, Flurry fires
+**Pilot:** Sequence matters. Cast your cheapest spell first (Bauble, Mutagenic),
+  then your second spell triggers Flurry.
+**Opponent:** Kill Cori-Steel Cutter on sight. Without it, Prowess loses its engine.
+
+### 4. Lava Dart = TWO Prowess Triggers (CRITICAL MATH)
+**Oracle:** "Lava Dart deals 1 damage to any target.
+           Flashback—Sacrifice a Mountain."
+**Current APL:** Partially models flashback but may not count as 2 separate triggers.
+**CORRECT behavior:**
+  - Cast from hand: 1 damage + prowess trigger #1
+  - Flashback from GY: 1 damage + prowess trigger #2 (sacrifice a Mountain)
+  - Each trigger gives: Swiftspear +1/+1, DRC surveil 1, Slickshot +2/+0
+  - With Slickshot: Lava Dart alone = +4/+0 from two prowess triggers
+  - Dart from hand + flashback can trigger Cori-Steel Flurry (2 spells)
+**Pilot:** Save Lava Dart for burst turns. One card = two prowess triggers.
+  Sacrifice Mountain is real cost — don't do it unless going for lethal.
+**Opponent:** If Prowess has a Mountain and Dart in GY, expect extra damage.
+
+### 5. DRC Surveil → Delirium Engine (PARTIALLY MODELED)
+**Oracle:** "Whenever you cast a noncreature spell, surveil 1."
+           "Delirium — 4+ card types in GY: +2/+2, flying, attacks each combat."
+**Current APL:** Has delirium check but doesn't model surveil filling GY.
+**CORRECT:** Each spell cast → DRC surveil 1 → potentially puts a card type in GY.
+  - Cast 3 spells → surveil 3 → could go from 0 delirium cards to 3-4
+  - Card types needed: creature, instant, sorcery, artifact, land, enchantment
+  - Bauble (artifact) + Bolt (instant) + Preordain (sorcery) + surveil land = 4 types
+**Pilot:** Surveil aggressively to turn on delirium ASAP.
+  Different card types in GY > raw card count.
+
+### 6. Expressive Iteration = Effectively 2 Cards (UNDERMODELED)
+**Oracle:** "Look at top 3. Put one in hand, one on bottom, exile one. 
+           You may play the exiled card this turn."
+**Current APL:** May not count the exiled card as additional fuel.
+**CORRECT:** Iteration draws 2 usable cards (1 hand + 1 exiled playable this turn).
+  - The exiled card can be a land (extra land drop) or a spell (more prowess fuel)
+  - On burst turn: Iteration → get 2 more spells → 2 more prowess triggers
+  - Iteration itself triggers prowess/Cori-Steel
+**Pilot:** Save Iteration for burst turn. It refuels the chain.
+
+### 7. Mutagenic Growth = Free Prowess + Pump (CORRECTLY MODELED)
+**Oracle:** "{G/P} can be paid with {G} or 2 life. Target creature gets +2/+2."
+**Analysis:** 
+  - 0 mana cost (pay 2 life)
+  - Triggers prowess (+1/+1 on Swiftspear, +2/+0 on Slickshot)
+  - PLUS the +2/+2 pump on the target
+  - Net on Swiftspear: +3/+3 for 2 life
+  - Net on Slickshot: +4/+2 for 2 life
+**Current APL:** Correctly identified as free spell. Verify pump is applied.
+
+### 8. Mishra's Bauble = Free Prowess + Delirium + Delayed Draw
+**Oracle:** "{T}, Sacrifice: Look at top card of target player's library. 
+           Draw a card at beginning of next turn's upkeep."
+**Analysis:**
+  - 0 mana cost → free prowess trigger
+  - Artifact type in GY (helps delirium — artifact + instant + sorcery = 3 types)
+  - Card draw is DELAYED (next turn upkeep, not immediate)
+  - The draw happens even if Bauble is exiled from GY (trigger already on stack)
+**Current APL:** Models as fuel but may not track delayed draw or delirium type.
+
+### 9. Monastery Swiftspear — Haste + Standard Prowess
+**Oracle:** "Haste. Prowess (+1/+1 per noncreature spell)."
+**Analysis:**
+  - T1 play: attacks immediately for 1 damage
+  - With 3 spells: 4/5 (1+3/2+3)
+  - With Mutagenic: +3/+3 for 2 life = 4/5
+  - Best T1 play on the play (Ragavan from Boros can't block on draw)
+**Current APL:** Correctly modeled. Verify prowess counter application.
+
+### 10. Slickshot Show-Off — +2/+0 Per Spell, NOT +1/+1
+**Oracle:** "Flying, haste. Whenever you cast a noncreature spell, +2/+0 until EOT."
+**CRITICAL:** Slickshot gets +2/+0, NOT standard prowess +1/+1.
+  - 3 spells: 1/2 → 7/2 flying haste
+  - 4 spells: 1/2 → 9/2 flying haste  
+  - With Mutagenic: 1/2 + 2/0 (trigger) + 2/2 (pump) = 5/4 for just one spell
+  - With Violent Urge double strike: 7/2 → 14 flying damage
+**Current APL:** Correctly models +2/+0 triggers. Verify.
+
+## EDGE CASES FROM COMPETITIVE GUIDES
+
+### EDGE 1: Cori-Steel Can Be Manually Equipped
+If no Flurry trigger, you can pay {1}{R} to equip Cori-Steel to any creature.
+- Equip DRC: 1/1 → 2/2 trample haste. With delirium: 4/4 flying trample haste.
+- Equip Swiftspear: 1/2 → 2/3 trample haste
+- This is a backup plan when Flurry isn't triggering
+
+### EDGE 2: Prowess Trigger Timing — Opponent Can Respond
+"The opponent can respond to the prowess triggers to kill the creature while it's smaller."
+- If opponent has 3 damage removal and your Swiftspear is 1/2:
+  → You cast Bolt → prowess trigger goes on stack → opponent responds with Bolt
+  → Swiftspear is still 1/2 (prowess hasn't resolved) → dies to 3 damage
+- Competitive pilots sequence around this by casting pump spells FIRST
+
+### EDGE 3: Lava Dart Stack Interaction
+"The opponent can respond to the Dart on the stack, at which point you don't have 
+access to it in the graveyard for a flashback."
+- Cast Lava Dart → it's on the stack → opponent responds
+- Dart is still on the stack (not in GY yet) → can't flashback
+- Must let Dart RESOLVE (goes to GY) → then flashback
+
+### EDGE 4: Iteration Exiled Card Timing
+"When you exile a card with Iteration, you don't need to play the card immediately."
+- The exiled card is playable any time during your turn
+- This means you can use it post-combat if needed
+
+### EDGE 5: Fiery Islet Sacrifice
+**Oracle:** "{1}, {T}, Sacrifice: Draw a card."
+- In the late game when hellbent (empty hand), sacrifice Islet to draw
+- Costs: lose a land + 1 mana → gain a card
+- Can turn a dead land into a prowess trigger
+
+### EDGE 6: Against Boros — Kill Engine Pieces
+From guides: "Focus on individual threats, making it difficult for opponent to 
+establish Guide of Souls + Ocelot Pride, or Ajani + Bombardment."
+- Priority kill targets: Guide of Souls (#1), Ocelot Pride (#2), Ajani (#3)
+- Don't waste removal on tokens — kill the engine
+- Lava Dart is excellent at killing 1-toughness creatures (Guide, Ocelot, Ragavan)
+
+### EDGE 7: Burst Damage Calculation (The Kill Turn)
+Full burst example with good hand:
+  Board: Swiftspear + Slickshot (plotted last turn, cast free this turn)
+  Hand: Bolt, Mutagenic, Lava Dart, Violent Urge
+  GY: Bauble (artifact), Preordain (sorcery), DRC (creature) = delirium ON
+  
+  1. Cast Slickshot (free, plotted) → Swiftspear prowess +1/+1
+  2. Cast Bauble → Swiftspear +1/+1, Slickshot +2/+0, Cori Flurry (2nd spell) → 2/2 Monk
+  3. Cast Mutagenic (2 life) → all prowess, Slickshot +2/+0, pump Slickshot +2/+2
+  4. Cast Violent Urge on Slickshot → prowess, +2/+0, +1/+0, DOUBLE STRIKE (delirium), draw
+  5. Cast Bolt face → prowess, Slickshot +2/+0
+  6. Lava Dart face → prowess, Slickshot +2/+0
+  7. Lava Dart flashback → prowess, Slickshot +2/+0
+
+  Slickshot: 1 + (7 spells × 2) = 15 power, + 2 (Mutagenic) + 1 (Violent) = 18/4 flying DOUBLE STRIKE = 36 damage
+  Swiftspear: 1 + 7 = 8 power + 2 (if Mutagenic on it) = 8/9 haste  
+  Monk: 2 + prowess from remaining spells = ~5/4 trample haste
+  Bolt: 3 face, Dart: 1 face, Dart flash: 1 face = 5 direct
+  TOTAL: 36 + 8 + 5 + 5 = 54 damage (overkill from 20)
+
+  Realistic scenario (3-4 spells, not 7): ~18-22 damage burst = lethal

@@ -1,0 +1,177 @@
+# IZZET PROWESS — COMPLETE ORACLE TEXT REFERENCE
+# Every card in the 75, full oracle text from Scryfall DB
+# Maindeck: 60 cards | Sideboard: 15 cards
+
+======================================================================
+  NONLAND CARDS (sorted by CMC)
+======================================================================
+
+--- Mishra's Bauble (Main x4) ---
+  Mana Cost: {0}
+  Type:      Artifact
+  Oracle:
+    {T}, Sacrifice this artifact: Look at the top card of target player's library. Draw a card at the beginning of the next turn's upkeep.
+
+--- Consign to Memory (SB x4) ---
+  Mana Cost: {U}
+  Type:      Instant
+  Oracle:
+    Replicate {1} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.)
+    Counter target triggered ability or colorless spell.
+
+--- Dragon's Rage Channeler (Main x4) ---
+  Mana Cost: {R}
+  Type:      Creature — Human Shaman
+  P/T:       1/1
+  Oracle:
+    Whenever you cast a noncreature spell, surveil 1. (Look at the top card of your library. You may put that card into your graveyard.)
+    Delirium — As long as there are four or more card types among cards in your graveyard, this creature gets +2/+2, has flying, and attacks each combat if able.
+
+--- Lava Dart (Main x4) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Lava Dart deals 1 damage to any target.
+    Flashback—Sacrifice a Mountain. (You may cast this card from your graveyard for its flashback cost. Then exile it.)
+
+--- Lightning Bolt (Main x4) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Lightning Bolt deals 3 damage to any target.
+
+--- Meltdown (SB x2) ---
+  Mana Cost: {X}{R}
+  Type:      Sorcery
+  Oracle:
+    Destroy each artifact with mana value X or less.
+
+--- Monastery Swiftspear (Main x4) ---
+  Mana Cost: {R}
+  Type:      Creature — Human Monk
+  P/T:       1/2
+  Oracle:
+    Haste
+    Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)
+
+--- Mutagenic Growth (Main x3) ---
+  Mana Cost: {G/P}
+  Type:      Instant
+  Oracle:
+    ({G/P} can be paid with either {G} or 2 life.)
+    Target creature gets +2/+2 until end of turn.
+
+--- Preordain (Main x4) ---
+  Mana Cost: {U}
+  Type:      Sorcery
+  Oracle:
+    Scry 2, then draw a card. (To scry 2, look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
+
+--- Spell Pierce (SB x2) ---
+  Mana Cost: {U}
+  Type:      Instant
+  Oracle:
+    Counter target noncreature spell unless its controller pays {2}.
+
+--- Spell Snare (SB x1) ---
+  Mana Cost: {U}
+  Type:      Instant
+  Oracle:
+    Counter target spell with mana value 2.
+
+--- Surgical Extraction (SB x2) ---
+  Mana Cost: {B/P}
+  Type:      Instant
+  Oracle:
+    ({B/P} can be paid with either {B} or 2 life.)
+    Choose target card in a graveyard other than a basic land card. Search its owner's graveyard, hand, and library for any number of cards with the same name as that card and exile them. Then that player shuffles.
+
+--- Unholy Heat (Main x1, SB x3) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Unholy Heat deals 2 damage to target creature or planeswalker.
+    Delirium — Unholy Heat deals 6 damage instead if there are four or more card types among cards in your graveyard.
+
+--- Violent Urge (Main x2) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Target creature gets +1/+0 and gains first strike until end of turn.
+    Delirium — If there are four or more card types among cards in your graveyard, that creature gains double strike until end of turn.
+
+--- Cori-Steel Cutter (Main x4) ---
+  Mana Cost: {1}{R}
+  Type:      Artifact — Equipment
+  Oracle:
+    Equipped creature gets +1/+1 and has trample and haste.
+    Flurry — Whenever you cast your second spell each turn, create a 1/1 white Monk creature token with prowess. You may attach this Equipment to it. (Whenever you cast a noncreature spell, the token gets +1/+1 until end of turn.)
+    Equip {1}{R}
+
+--- Expressive Iteration (Main x4) ---
+  Mana Cost: {U}{R}
+  Type:      Sorcery
+  Oracle:
+    Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.
+
+--- Slickshot Show-Off (Main x4) ---
+  Mana Cost: {1}{R}
+  Type:      Creature — Bird Wizard
+  P/T:       1/2
+  Oracle:
+    Flying, haste
+    Whenever you cast a noncreature spell, this creature gets +2/+0 until end of turn.
+    Plot {1}{R} (You may pay {1}{R} and exile this card from your hand. Cast it as a sorcery on a later turn without paying its mana cost. Plot only as a sorcery.)
+
+--- Murktide Regent (SB x1) ---
+  Mana Cost: {5}{U}{U}
+  Type:      Creature — Dragon
+  P/T:       3/3
+  Oracle:
+    Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)
+    Flying
+    This creature enters with a +1/+1 counter on it for each instant and sorcery card exiled with it.
+    Whenever an instant or sorcery card leaves your graveyard, put a +1/+1 counter on this creature.
+
+======================================================================
+  LANDS
+======================================================================
+
+--- Arid Mesa (Main x4) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Plains card, put it onto the battlefield, then shuffle.
+
+--- Bloodstained Mire (Main x4) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Swamp or Mountain card, put it onto the battlefield, then shuffle.
+
+--- Fiery Islet (Main x2) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life: Add {U} or {R}.
+    {1}, {T}, Sacrifice this land: Draw a card.
+
+--- Mountain (Main x3) ---
+  Type:   Basic Land — Mountain
+  Oracle:
+    ({T}: Add {R}.)
+
+--- Scalding Tarn (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for an Island or Mountain card, put it onto the battlefield, then shuffle.
+
+--- Steam Vents (Main x3) ---
+  Type:   Land — Island Mountain
+  Oracle:
+    ({T}: Add {U} or {R}.)
+    As this land enters, you may pay 2 life. If you don't, it enters tapped.
+
+--- Thundering Falls (Main x1) ---
+  Type:   Land — Island Mountain
+  Oracle:
+    ({T}: Add {U} or {R}.)
+    This land enters tapped.
+    When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)

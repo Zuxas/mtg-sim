@@ -330,3 +330,67 @@ Costs:
      → But Guide already triggered the lifegain → end step Cat still happens
 **APL requirement:** Ocelot is always safe to attack into X/1 creatures.
   The lifelink from combat guarantees the end step token.
+
+
+## CODE-LEVEL AUDIT (Cross-referenced with APL source)
+
+### Issue A: Phlage Escape — Summoning Sickness Wrong (line ~290)
+```python
+phlage.summoning_sickness = False  # WRONG — escape doesn't give haste
+```
+Escaped Phlage has summoning sickness. Can't attack turn it enters.
+ETB still fires (3 dmg + 3 life). But NO attack that turn.
+**Fix:** `phlage.summoning_sickness = True`
+
+### Issue B: Ocelot Token Timing — Wrong Phase (line ~370)
+`_simulate_end_step()` is called at end of `main_phase_match` (step 8).
+But Ocelot triggers at END STEP — AFTER combat, not before.
+Currently: tokens created → then attack. Should be: attack → then tokens at end step.
+**Fix:** Move `_simulate_end_step` to `end_step_actions` method.
+
+### Issue C: Voice Mobilize — Damage Double-Counted (line ~406)
+```python
+gs.damage_dealt += new_tokens  # BAD — bypasses combat, may double-count
+```
+Mobilize tokens are "tapped and attacking" — they should go through combat,
+not add damage directly. If they're also counted in the combat step as
+part of the attackers list, damage is counted twice.
+**Fix:** Don't add damage_dealt here. Instead track tokens for end_step
+Bombardment sacrifice (since tokens get sacrificed at end step anyway).
+
+### Issue D: Ocelot Cascade in Voice Section — Oracle Wrong (line ~416)
+```python
+if ocelots > 0 and life_gained > 0:
+    cat_tokens = ocelots * min(life_gained, 3)  # WRONG
+```
+Ocelot creates ONE Cat per Ocelot at end step — NOT one per lifegain event.
+This creates way too many tokens.
+**Fix:** Remove cascade from Voice section. Ocelot tokens only in end_step_actions.
+
+### Issue E: respond_to_spell — No Defensive Lines (line ~487)
+Current implementation only checks for Bolt on opponent creatures.
+Missing:
+- Sacrifice to Bombardment in response to removal targeting our creature
+- Ajani defensive transform (sac Cat → Ajani exiles → fizzles removal)
+- Static Prison on opponent's newly deployed threat
+**Fix:** Complete rewrite of respond_to_spell with defensive interaction tree.
+
+### Issue F: Guide Attack Pump — Completely Missing
+No code for: "Whenever you attack, pay {E}{E}{E} → +2/+2 and flying counter"
+This is how Boros breaks through board stalls.
+**Fix:** Add to declare_attackers — check energy ≥ 3, pump best attacker.
+
+### Issue G: Fetchland/Shockland Life — Not Modeled
+Both players start at 20. Boros typically pays 4-6 life from mana base.
+Real starting life: ~14-16.
+**Fix:** Add to _play_land_if_able — pay 1 life for fetches, 2 for shocklands.
+
+### Issue H: Static Prison Maintenance — Not Tracked
+Static Prison costs 1{E} per turn. If energy runs dry, prison breaks.
+The exiled creature returns. Currently modeled as permanent exile.
+**Fix:** Track Static Prisons on board, pay energy each turn in main phase.
+
+### Issue I: Ragavan Treasure — Not Tracked
+Each Ragavan combat hit creates a Treasure (extra mana next turn).
+Currently no Treasure generation.
+**Fix:** In end_step_actions, count Ragavans that attacked → create Treasures.

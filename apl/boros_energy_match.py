@@ -50,6 +50,7 @@ class BorosEnergyMatchAPL(MatchAPL):
         self._treasures = 0
         self._gained_life_this_turn = False
         self._tokens_entered = 0
+        self._mobilize_tokens = 0  # Voice of Victory Warrior tokens to sacrifice
 
     # ------------------------------------------------------------------
     # Mulligan
@@ -285,7 +286,7 @@ class BorosEnergyMatchAPL(MatchAPL):
                     exiled += 1
                 gs.zones.battlefield.append(phlage)
                 phlage.turn_entered = gs.turn
-                phlage.summoning_sickness = False  # escape gives haste? No — but it STAYS
+                phlage.summoning_sickness = True  # escape doesn't give haste — can't attack this turn
                 # ETB: 3 damage + 3 life
                 if opponent:
                     opp_creatures = [c for c in opponent.zones.battlefield
@@ -360,8 +361,7 @@ class BorosEnergyMatchAPL(MatchAPL):
                 gs.energy = getattr(gs, 'energy', 0) + guides
                 self._gained_life_this_turn = True
 
-        # 8. Simulate end-step Ocelot tokens
-        self._simulate_end_step(gs)
+        # 8. NOTE: Ocelot tokens happen at END STEP (in end_step_actions), not here
 
     def _simulate_end_step(self, gs: GameState):
         """Ocelot Pride: create Cat token if we gained life this turn."""
@@ -400,27 +400,41 @@ class BorosEnergyMatchAPL(MatchAPL):
                 voices_attacking += 1
         
         # Voice of Victory Mobilize 2: create 2x 1/1 Warriors per Voice attacking
-        # These tokens enter tapped and attacking → trigger Guide of Souls
+        # Oracle: "create two tapped and attacking 1/1 red Warrior creature tokens.
+        #          Sacrifice them at the beginning of the next end step."
+        # Tokens enter tapped and attacking → trigger Guide of Souls
+        # Tokens will be sacrificed at end step → sacrifice to Bombardment FIRST
         if voices_attacking > 0:
             new_tokens = voices_attacking * 2
             guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-            ocelots = sum(1 for c in gs.zones.battlefield if c.name == OCELOT_PRIDE)
             
-            # Each token entering triggers Guide (gain life + energy) → Ocelot (more tokens)
-            life_gained = new_tokens * guides  # each token triggers each Guide
+            # Each token entering triggers Guide (gain life + energy)
+            life_gained = new_tokens * guides
             gs.life += life_gained
             gs.energy = getattr(gs, 'energy', 0) + new_tokens * guides
+            if life_gained > 0:
+                self._gained_life_this_turn = True
             
-            # Ocelot: each life gain event creates a Cat token
-            if ocelots > 0 and life_gained > 0:
-                cat_tokens = ocelots * min(life_gained, 3)  # cap cascade
-                new_tokens += cat_tokens
-                gs.life += cat_tokens * guides  # Cats trigger Guide too
-            
-            # Add token damage to combat (they're attacking)
-            gs.damage_dealt += new_tokens  # 1/1 tokens deal 1 each
+            # Track tokens for Bombardment sacrifice at end step
+            # DON'T add damage_dealt here — tokens go through combat normally
             self._tokens_entered += new_tokens
-            gs._log(f"  Voice Mobilize: {voices_attacking} Voices → {new_tokens} tokens attacking (+{life_gained} life)")
+            self._mobilize_tokens = new_tokens  # track for end_step sacrifice
+            gs._log(f"  Voice Mobilize: {voices_attacking} Voices → {new_tokens} Warrior tokens (+{life_gained} life)")
+        
+        # Guide of Souls attack pump: pay {E}{E}{E} → +2/+2 and flying on attacker
+        # Oracle: "Whenever you attack, you may pay {E}{E}{E}. When you do, put two
+        #          +1/+1 counters and a flying counter on target attacking creature."
+        guides_on_board = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
+        if guides_on_board > 0 and attackers:
+            energy = getattr(gs, 'energy', 0)
+            if energy >= 3:
+                # Pump the best non-flying attacker (flying = evasion)
+                non_flyers = [a for a in attackers if not has_keyword(a, 'flying')]
+                target = max(non_flyers if non_flyers else attackers,
+                             key=lambda c: safe_power(c))
+                gs.energy = energy - 3
+                target.counters += 2  # +2/+2
+                gs._log(f"  Guide pump: {target.name} gets +2/+2 flying ({gs.energy}E left)")
         
         return attackers
 
@@ -496,30 +510,54 @@ class BorosEnergyMatchAPL(MatchAPL):
         return None
 
     def end_step_actions(self, gs, opponent):
-        """Goblin Bombardment: sacrifice tokens for direct damage.
-        Oracle: "Sacrifice a creature: This enchantment deals 1 damage to any target."
+        """End step — oracle-correct timing for all end-step triggers.
+        
+        1. Ocelot Pride: "At the beginning of your end step, if you gained life
+           this turn, create a 1/1 white Cat creature token." (ONCE per Ocelot)
+        2. Mobilize tokens: "Sacrifice them at the beginning of the next end step."
+           → Sacrifice to Bombardment FIRST for free damage before forced sacrifice
+        3. Goblin Bombardment: sacrifice remaining expendable tokens for face damage
         """
+        guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
+        
+        # 1. OCELOT END STEP — one Cat per Ocelot if gained life this turn
+        ocelots = sum(1 for c in gs.zones.battlefield if c.name == OCELOT_PRIDE)
+        if ocelots > 0 and self._gained_life_this_turn:
+            for _ in range(ocelots):
+                gs._make_token("Cat Token", "1", "1", "Creature — Cat")
+                self._tokens_entered += 1
+                # Cat entering triggers Guide
+                if guides:
+                    gs.life += guides
+                    gs.energy = getattr(gs, 'energy', 0) + guides
+            gs._log(f"  Ocelot end step: {ocelots} Cat token(s)")
+        
+        # 2. BOMBARDMENT — sacrifice Mobilize tokens + other expendable tokens
         has_bombardment = any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield)
-        if not has_bombardment:
-            return
         
-        # Count expendable tokens on board
-        tokens = [c for c in gs.zones.battlefield
-                  if 'Token' in getattr(c, 'name', '') or 
-                  c.name in ('Cat', 'Warrior', 'Elemental', 'Cat Warrior')]
-        
-        if tokens:
-            # Sacrifice all tokens for face damage
-            dmg = len(tokens)
-            for t in tokens:
+        if has_bombardment:
+            # Sacrifice Mobilize tokens to Bombardment BEFORE forced sacrifice
+            # (They're getting sacrificed anyway — get Bombardment value)
+            bombard_dmg = self._mobilize_tokens
+            
+            # Also sacrifice Cat tokens (they've already triggered Guide/Ocelot)
+            tokens_on_board = [c for c in gs.zones.battlefield
+                              if 'Token' in getattr(c, 'name', '')]
+            bombard_dmg += len(tokens_on_board)
+            for t in tokens_on_board:
                 if t in gs.zones.battlefield:
                     gs.zones.battlefield.remove(t)
                     gs.zones.graveyard.append(t)
-            gs.damage_dealt += dmg
-            gs._log(f"  Bombardment: sac {dmg} tokens → {dmg} face damage ({gs.damage_dealt} total)")
+            
+            if bombard_dmg > 0:
+                gs.damage_dealt += bombard_dmg
+                gs._log(f"  Bombardment: sac {bombard_dmg} tokens → {bombard_dmg} face ({gs.damage_dealt} total)")
         
-        # Also sacrifice any creature about to die to removal
-        # (This is reactive — in a real game you'd sacrifice in response)
+        # 3. Forced Mobilize sacrifice (if no Bombardment, tokens just die)
+        # (Already removed from battlefield if Bombardment ate them above)
+        
+        # Reset per-turn trackers
+        self._mobilize_tokens = 0
 
     def _play_land_if_able(self, gs: GameState):
         """Play best land."""

@@ -1,0 +1,141 @@
+# ELDRAZI TRON — ORACLE TEXT (31 unique cards)
+
+
+============================================================
+  NONLAND
+============================================================
+
+--- Tormod's Crypt ({0})  [SB x1] ---
+  {T}, Sacrifice this artifact: Exile target player's graveyard.
+
+--- Walking Ballista ({X}{X}) 0/0 [SB x1] ---
+  This creature enters with X +1/+1 counters on it.
+  {4}: Put a +1/+1 counter on this creature.
+  Remove a +1/+1 counter from this creature: It deals 1 damage to any target.
+
+--- Expedition Map ({1})  [Main x4] ---
+  {2}, {T}, Sacrifice this artifact: Search your library for a land card, reveal it, put it into your hand, then shuffle.
+
+--- Grafdigger's Cage ({1})  [SB x1] ---
+  Creature cards in graveyards and libraries can't enter the battlefield.
+  Players can't cast spells from graveyards or libraries.
+
+--- Haywire Mite ({1}) 1/1 [SB x1] ---
+  When this creature dies, you gain 2 life.
+  {G}, Sacrifice this creature: Exile target noncreature artifact or noncreature enchantment.
+
+--- Relic of Progenitus ({1})  [Main x1] ---
+  {T}: Target player exiles a card from their graveyard.
+  {1}, Exile this artifact: Exile all graveyards. Draw a card.
+
+--- Vexing Bauble ({1})  [SB x1] ---
+  Whenever a player casts a spell, if no mana was spent to cast it, counter that spell.
+  {1}, {T}, Sacrifice this artifact: Draw a card.
+
+--- Damping Sphere ({2})  [SB x1] ---
+  If a land is tapped for two or more mana, it produces {C} instead of any other type and amount.
+  Each spell a player casts costs {1} more to cast for each other spell that player has cast this turn.
+
+--- Disruptor Flute ({2})  [SB x3] ---
+  Flash
+  As this artifact enters, choose a card name.
+  Spells with the chosen name cost {3} more to cast.
+  Activated abilities of sources with the chosen name can't be activated unless they're mana abilities.
+
+--- Kozilek's Command ({X}{C}{C})  [Main x4] ---
+  Choose two —
+  • Target player creates X 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}."
+  • Target player scries X, then draws a card.
+  • Exile target creature with mana value X or less.
+  • Exile up to X target cards from graveyards.
+
+--- Liquimetal Coating ({2})  [SB x1] ---
+  {T}: Target permanent becomes an artifact in addition to its other types until end of turn.
+
+--- Talisman of Impulse ({2})  [Main x2] ---
+  {T}: Add {C}.
+  {T}: Add {R} or {G}. This artifact deals 1 damage to you.
+
+--- Talisman of Resilience ({2})  [Main x4] ---
+  {T}: Add {C}.
+  {T}: Add {B} or {G}. This artifact deals 1 damage to you.
+
+--- The Filigree Sylex ({2})  [SB x1] ---
+  {T}: Put an oil counter on The Filigree Sylex.
+  {T}, Sacrifice The Filigree Sylex: Destroy each nonland permanent with mana value equal to the number of oil counters on The Filigree Sylex.
+  {T}, Remove ten oil counters from among permanents you control and sacrifice The Filigree Sylex: It deals 10 damage to any target.
+
+--- Torpor Orb ({2})  [SB x1] ---
+  Creatures entering don't cause abilities to trigger.
+
+--- Dismember ({1}{B/P}{B/P})  [Main x2] ---
+  ({B/P} can be paid with either {B} or 2 life.)
+  Target creature gets -5/-5 until end of turn.
+
+--- Ensnaring Bridge ({3})  [SB x1] ---
+  Creatures with power greater than the number of cards in your hand can't attack.
+
+--- Trinisphere ({3})  [SB x1] ---
+  As long as this artifact is untapped, each spell that would cost less than three mana to cast costs three mana to cast. (Additional mana in the cost may be paid with any color of mana or colorless mana. For example, a spell that would cost {1}{B} to cast costs {2}{B} to cast instead.)
+
+--- Karn, the Great Creator ({4})  [Main x4] ---
+  Activated abilities of artifacts your opponents control can't be activated.
+  +1: Until your next turn, up to one target noncreature artifact becomes an artifact creature with power and toughness each equal to its mana value.
+  −2: You may reveal an artifact card you own from outside the game or choose a face-up artifact card you own in exile. Put that card into your hand.
+
+--- Sowing Mycospawn ({3}{G}) 3/3 [Main x4] ---
+  Devoid (This card has no color.)
+  Kicker {1}{C} (You may pay an additional {1}{C} as you cast this spell.)
+  When you cast this spell, search your library for a land card, put it onto the battlefield, then shuffle.
+  When you cast this spell, if it was kicked, exile target land.
+
+--- Thought-Knot Seer ({3}{C}) 4/4 [Main x4] ---
+  ({C} represents colorless mana.)
+  When this creature enters, target opponent reveals their hand. You choose a nonland card from it and exile that card.
+  When this creature leaves the battlefield, target opponent draws a card.
+
+--- Devourer of Destiny ({5}{C}{C}) 6/6 [Main x4] ---
+  You may reveal this card from your opening hand. If you do, at the beginning of your first upkeep, look at the top four cards of your library. You may put one of those cards back on top of your library. Exile the rest.
+  When you cast this spell, exile target permanent that's one or more colors.
+
+--- Ugin, Eye of the Storms ({7})  [Main x4] ---
+  When you cast this spell, exile up to one target permanent that's one or more colors.
+  Whenever you cast a colorless spell, exile up to one target permanent that's one or more colors.
+  +2: You gain 3 life and draw a card.
+  0: Add {C}{C}{C}.
+  −11: Search your library for any number of colorless nonland cards, exile them, then shuffle. Until end of turn, you may cast those cards without paying their mana costs.
+
+--- Extinguisher Battleship ({8}) 10/10 [SB x1] ---
+  When this Spacecraft enters, destroy target noncreature permanent. Then this Spacecraft deals 4 damage to each creature.
+  Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 5+.)
+  5+ | Flying, trample
+
+--- Ulamog, the Ceaseless Hunger ({10}) 10/10 [Main x2] ---
+  When you cast this spell, exile two target permanents.
+  Indestructible
+  Whenever Ulamog attacks, defending player exiles the top twenty cards of their library.
+
+============================================================
+  LANDS
+============================================================
+
+--- Eldrazi Temple ()  [Main x4] ---
+  {T}: Add {C}.
+  {T}: Add {C}{C}. Spend this mana only to cast colorless Eldrazi spells or activate abilities of colorless Eldrazi.
+
+--- Forest ()  [Main x1] ---
+  ({T}: Add {G}.)
+
+--- Ugin's Labyrinth ()  [Main x4] ---
+  Imprint — When this land enters, you may exile a colorless card with mana value 7 or greater from your hand.
+  {T}: Add {C}. If a card is exiled with this land, add {C}{C} instead.
+  {T}: Return the exiled card to its owner's hand.
+
+--- Urza's Mine ()  [Main x4] ---
+  {T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead.
+
+--- Urza's Power Plant ()  [Main x4] ---
+  {T}: Add {C}. If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead.
+
+--- Urza's Tower ()  [Main x4] ---
+  {T}: Add {C}. If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead.

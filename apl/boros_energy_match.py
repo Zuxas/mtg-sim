@@ -558,18 +558,28 @@ class BorosEnergyMatchAPL(MatchAPL):
         
         # Reset per-turn trackers
         self._mobilize_tokens = 0
+        
+        # Ragavan Treasure — each Ragavan that attacked and wasn't blocked = Treasure
+        # Oracle: "Whenever Ragavan deals combat damage to a player, create a Treasure token"
+        from engine.keywords import KWTag
+        ragavans = sum(1 for c in gs.zones.battlefield
+                       if c.name == RAGAVAN
+                       and not getattr(c, 'summoning_sickness', False))
+        if ragavans > 0:
+            self._treasures += ragavans
+            gs._log(f"  Ragavan: +{ragavans} Treasure(s) ({self._treasures} total)")
 
     def _play_land_if_able(self, gs: GameState):
-        """Play best land."""
+        """Play best land. Fetchland/shockland life costs handled by engine automatically."""
         lands = [c for c in gs.zones.hand if c.is_land()]
         if not lands or gs.land_played:
             return
         def score(c):
             n = c.name.lower()
             if 'mesa' in n or 'strand' in n or 'marsh' in n or 'heath' in n:
-                return 0
+                return 0  # fetchlands first (fix mana)
             if 'foundry' in n:
-                return 1
+                return 1  # shockland
             if 'arena' in n:
                 return 2
             if 'parlor' in n:

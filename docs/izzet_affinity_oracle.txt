@@ -1,0 +1,131 @@
+# IZZET AFFINITY — ORACLE TEXT (31 unique cards)
+
+
+============================================================
+  NONLAND
+============================================================
+
+--- Claws of Gix ({0})  [Main x3] ---
+  {1}, Sacrifice a permanent: You gain 1 life.
+
+--- Engineered Explosives ({X})  [Main x4] ---
+  Sunburst (This artifact enters with a charge counter on it for each color of mana spent to cast it.)
+  {2}, Sacrifice this artifact: Destroy each nonland permanent with mana value equal to the number of charge counters on this artifact.
+
+--- Mishra's Bauble ({0})  [Main x4] ---
+  {T}, Sacrifice this artifact: Look at the top card of target player's library. Draw a card at the beginning of the next turn's upkeep.
+
+--- Mox Opal ({0})  [Main x4] ---
+  Metalcraft — {T}: Add one mana of any color. Activate only if you control three or more artifacts.
+
+--- Tormod's Crypt ({0})  [Main x3] ---
+  {T}, Sacrifice this artifact: Exile target player's graveyard.
+
+--- Welding Jar ({0})  [Main x1] ---
+  Sacrifice this artifact: Regenerate target artifact.
+
+--- Aether Spellbomb ({1})  [Main x1] ---
+  {U}, Sacrifice this artifact: Return target creature to its owner's hand.
+  {1}, Sacrifice this artifact: Draw a card.
+
+--- Consign to Memory ({U})  [SB x3] ---
+  Replicate {1} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.)
+  Counter target triggered ability or colorless spell.
+
+--- Galvanic Blast ({R})  [SB x2] ---
+  Galvanic Blast deals 2 damage to any target.
+  Metalcraft — Galvanic Blast deals 4 damage instead if you control three or more artifacts.
+
+--- Grafdigger's Cage ({1})  [SB x1] ---
+  Creature cards in graveyards and libraries can't enter the battlefield.
+  Players can't cast spells from graveyards or libraries.
+
+--- Pithing Needle ({1})  [Main x1] ---
+  As this artifact enters, choose a card name.
+  Activated abilities of sources with the chosen name can't be activated unless they're mana abilities.
+
+--- Reckless Air Strike ({R})  [SB x1] ---
+  Choose one —
+  • Reckless Air Strike deals 3 damage to target creature with flying.
+  • Destroy target artifact.
+
+--- Shadowspear ({1})  [Main x1] ---
+  Equipped creature gets +1/+1 and has trample and lifelink.
+  {1}: Permanents your opponents control lose hexproof and indestructible until end of turn.
+  Equip {2}
+
+--- Skateboard ({1})  [Main x1] ---
+  When this Equipment enters, tap target permanent.
+  Equipped creature gets +1/+0 and has haste.
+  Equip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)
+
+--- Swan Song ({U})  [SB x1] ---
+  Counter target enchantment, instant, or sorcery spell. Its controller creates a 2/2 blue Bird creature token with flying.
+
+--- Arcbound Ravager ({2}) 0/0 [Main x2] ---
+  Sacrifice an artifact: Put a +1/+1 counter on this creature.
+  Modular 1 (This creature enters with a +1/+1 counter on it. When it dies, you may put its +1/+1 counters on target artifact creature.)
+
+--- Damping Sphere ({2})  [SB x3] ---
+  If a land is tapped for two or more mana, it produces {C} instead of any other type and amount.
+  Each spell a player casts costs {1} more to cast for each other spell that player has cast this turn.
+
+--- Weapons Manufacturing ({1}{R})  [Main x4] ---
+  Whenever a nontoken artifact you control enters, create a colorless artifact token named Munitions with "When this token leaves the battlefield, it deals 2 damage to any target."
+
+--- Whipflare ({1}{R})  [SB x2] ---
+  Whipflare deals 2 damage to each nonartifact creature.
+
+--- Ashiok, Dream Render ({1}{U/B}{U/B})  [SB x1] ---
+  Spells and abilities your opponents control can't cause their controller to search their library.
+  −1: Target player mills four cards. Then exile each opponent's graveyard.
+
+--- Blood Moon ({2}{R})  [SB x1] ---
+  Nonbasic lands are Mountains.
+
+--- Emry, Lurker of the Loch ({2}{U}) 1/2 [Main x3] ---
+  Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)
+  When Emry enters, mill four cards.
+  {T}: Choose target artifact card in your graveyard. You may cast that card this turn. (You still pay its costs. Timing rules still apply.)
+
+--- Metallic Rebuke ({2}{U})  [Main x3] ---
+  Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)
+  Counter target spell unless its controller pays {3}.
+
+--- Pinnacle Emissary ({1}{U}{R}) 3/3 [Main x4] ---
+  Whenever you cast an artifact spell, create a 1/1 colorless Drone artifact creature token with flying and "This token can block only creatures with flying."
+  Warp {U/R} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)
+
+--- Kappa Cannoneer ({5}{U}) 4/4 [Main x4] ---
+  Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)
+  Ward {4}
+  Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature. It can't be blocked this turn.
+
+============================================================
+  LANDS
+============================================================
+
+--- Fiery Islet ()  [Main x3] ---
+  {T}, Pay 1 life: Add {U} or {R}.
+  {1}, {T}, Sacrifice this land: Draw a card.
+
+--- Island ()  [Main x1] ---
+  ({T}: Add {U}.)
+
+--- Shivan Reef ()  [Main x1] ---
+  {T}: Add {C}.
+  {T}: Add {U} or {R}. This land deals 1 damage to you.
+
+--- Spirebluff Canal ()  [Main x4] ---
+  This land enters tapped unless you control two or fewer other lands.
+  {T}: Add {U} or {R}.
+
+--- Steam Vents ()  [Main x2] ---
+  ({T}: Add {U} or {R}.)
+  As this land enters, you may pay 2 life. If you don't, it enters tapped.
+
+--- Urza's Saga ()  [Main x4] ---
+  (As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)
+  I — This Saga gains "{T}: Add {C}."
+  II — This Saga gains "{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'"
+  III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.

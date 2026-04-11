@@ -1,0 +1,164 @@
+# AMULET TITAN — ORACLE TEXT (36 unique cards)
+
+
+============================================================
+  NONLAND
+============================================================
+
+--- Summoner's Pact ({0})  [Main x2] ---
+  Search your library for a green creature card, reveal it, put it into your hand, then shuffle.
+  At the beginning of your next upkeep, pay {2}{G}{G}. If you don't, you lose the game.
+
+--- Amulet of Vigor ({1})  [Main x4] ---
+  Whenever a permanent you control enters tapped, untap it.
+
+--- Arboreal Grazer ({G}) 0/3 [Main x4] ---
+  Reach
+  When this creature enters, you may put a land card from your hand onto the battlefield tapped.
+
+--- Fire Magic ({R})  [SB x3] ---
+  Tiered (Choose one additional cost.)
+  • Fire — {0} — Fire Magic deals 1 damage to each creature.
+  • Fira — {2} — Fire Magic deals 2 damage to each creature.
+  • Firaga — {5} — Fire Magic deals 3 damage to each creature.
+
+--- Green Sun's Zenith ({X}{G})  [Main x3] ---
+  Search your library for a green creature card with mana value X or less, put it onto the battlefield, then shuffle. Shuffle Green Sun's Zenith into its owner's library.
+
+--- Vexing Bauble ({1})  [Main x1] ---
+  Whenever a player casts a spell, if no mana was spent to cast it, counter that spell.
+  {1}, {T}, Sacrifice this artifact: Draw a card.
+
+--- Aftermath Analyst ({1}{G}) 1/3 [Main x1] ---
+  When this creature enters, mill three cards. (Put the top three cards of your library into your graveyard.)
+  {3}{G}, Sacrifice this creature: Return all land cards from your graveyard to the battlefield tapped.
+
+--- Collector Ouphe ({1}{G}) 2/2 [SB x1] ---
+  Activated abilities of artifacts can't be activated.
+
+--- Malevolent Rumble ({1}{G})  [Main x3] ---
+  Reveal the top four cards of your library. You may put a permanent card from among them into your hand. Put the rest into your graveyard. Create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}."
+
+--- The Wandering Minstrel ({G}{U}) 1/3 [SB x1] ---
+  Lands you control enter untapped.
+  The Minstrel's Ballad — At the beginning of combat on your turn, if you control five or more Towns, create a 2/2 Elemental creature token that's all colors.
+  {3}{W}{U}{B}{R}{G}: Other creatures you control get +X/+X until end of turn, where X is the number of Towns you control.
+
+--- Dismember ({1}{B/P}{B/P})  [SB x2] ---
+  ({B/P} can be paid with either {B} or 2 life.)
+  Target creature gets -5/-5 until end of turn.
+
+--- Six ({2}{G}) 2/4 [SB x1] ---
+  Reach
+  Whenever Six attacks, mill three cards. You may put a land card from among them into your hand.
+  During your turn, nonland permanent cards in your graveyard have retrace. (You may cast permanent cards from your graveyard by discarding a land card in addition to paying their other costs.)
+
+--- Spelunking ({2}{G})  [Main x4] ---
+  When this enchantment enters, draw a card, then you may put a land card from your hand onto the battlefield. If you put a Cave onto the battlefield this way, you gain 4 life.
+  Lands you control enter untapped.
+
+--- Trinisphere ({3})  [SB x2] ---
+  As long as this artifact is untapped, each spell that would cost less than three mana to cast costs three mana to cast. (Additional mana in the cost may be paid with any color of mana or colorless mana. For example, a spell that would cost {1}{B} to cast costs {2}{B} to cast instead.)
+
+--- Force of Vigor ({2}{G}{G})  [SB x3] ---
+  If it's not your turn, you may exile a green card from your hand rather than pay this spell's mana cost.
+  Destroy up to two target artifacts and/or enchantments.
+
+--- Icetill Explorer ({2}{G}{G}) 2/4 [SB x1] ---
+  You may play an additional land on each of your turns.
+  You may play lands from your graveyard.
+  Landfall — Whenever a land you control enters, mill a card.
+
+--- Scapeshift ({2}{G}{G})  [Main x4] ---
+  Sacrifice any number of lands. Search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle.
+
+--- Primeval Titan ({4}{G}{G}) 6/6 [Main x3] ---
+  Trample
+  Whenever this creature enters or attacks, you may search your library for up to two land cards, put them onto the battlefield tapped, then shuffle.
+
+--- Cultivator Colossus ({4}{G}{G}{G}) */* [Main x1] ---
+  Trample
+  Cultivator Colossus's power and toughness are each equal to the number of lands you control.
+  When this creature enters, you may put a land card from your hand onto the battlefield tapped. If you do, draw a card and repeat this process.
+
+============================================================
+  LANDS
+============================================================
+
+--- Bojuka Bog ()  [SB x1] ---
+  This land enters tapped.
+  When this land enters, exile target player's graveyard.
+  {T}: Add {B}.
+
+--- Boseiju, Who Endures ()  [Main x3] ---
+  {T}: Add {G}.
+  Channel — {1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.
+
+--- Crumbling Vestige ()  [Main x4] ---
+  This land enters tapped.
+  When this land enters, add one mana of any color.
+  {T}: Add {C}. ({C} represents colorless mana.)
+
+--- Dryad Arbor () 1/1 [Main x1] ---
+  (This land isn't a spell, it's affected by summoning sickness, and it has "{T}: Add {G}.")
+
+--- Echoing Deeps ()  [Main x1] ---
+  You may have this land enter tapped as a copy of any land card in a graveyard, except it's a Cave in addition to its other types.
+  {T}: Add {C}.
+
+--- Forest ()  [Main x3] ---
+  ({T}: Add {G}.)
+
+--- Gruul Turf ()  [Main x4] ---
+  This land enters tapped.
+  When this land enters, return a land you control to its owner's hand.
+  {T}: Add {R}{G}.
+
+--- Hanweir Battlements ()  [Main x1] ---
+  {T}: Add {C}.
+  {R}, {T}: Target creature gains haste until end of turn.
+  {3}{R}{R}, {T}: If you both own and control this land and a creature named Hanweir Garrison, exile them, then meld them into Hanweir, the Writhing Township.
+
+--- Lotus Field ()  [Main x2] ---
+  Hexproof
+  This land enters tapped.
+  When this land enters, sacrifice two lands.
+  {T}: Add three mana of any one color.
+
+--- Mirrorpool ()  [Main x1] ---
+  This land enters tapped.
+  {T}: Add {C}.
+  {2}{C}, {T}, Sacrifice this land: Copy target instant or sorcery spell you control. You may choose new targets for the copy.
+  {4}{C}, {T}, Sacrifice this land: Create a token that's a copy of target creature you control.
+
+--- Otawara, Soaring City ()  [Main x1] ---
+  {T}: Add {U}.
+  Channel — {3}{U}, Discard this card: Return target artifact, creature, enchantment, or planeswalker to its owner's hand. This ability costs {1} less to activate for each legendary creature you control.
+
+--- Shifting Woodland ()  [Main x1] ---
+  This land enters tapped unless you control a Forest.
+  {T}: Add {G}.
+  Delirium — {2}{G}{G}: This land becomes a copy of target permanent card in your graveyard until end of turn. Activate only if there are four or more card types among cards in your graveyard.
+
+--- Simic Growth Chamber ()  [Main x2] ---
+  This land enters tapped.
+  When this land enters, return a land you control to its owner's hand.
+  {T}: Add {G}{U}.
+
+--- Tolaria West ()  [Main x1] ---
+  This land enters tapped.
+  {T}: Add {U}.
+  Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with mana value 0, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)
+
+--- Urza's Cave ()  [Main x1] ---
+  {T}: Add {C}.
+  {3}, {T}, Sacrifice this land: Search your library for a land card, put it onto the battlefield tapped, then shuffle.
+
+--- Urza's Saga ()  [Main x4] ---
+  (As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)
+  I — This Saga gains "{T}: Add {C}."
+  II — This Saga gains "{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'"
+  III — Search your library for an artifact card with mana cost {0} or {1}, put it onto the battlefield, then shuffle.
+
+--- Vesuva ()  [Main x1] ---
+  You may have this land enter tapped as a copy of any land on the battlefield.

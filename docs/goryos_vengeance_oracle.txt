@@ -1,0 +1,131 @@
+# GORYOS VENGEANCE — ORACLE TEXT (29 unique cards)
+
+
+============================================================
+  NONLAND
+============================================================
+
+--- Ephemerate ({W})  [Main x4] ---
+  Exile target creature you control, then return it to the battlefield under its owner's control.
+  Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast this card from exile without paying its mana cost.)
+
+--- Fatal Push ({B})  [Main x2, SB x1] ---
+  Destroy target creature if it has mana value 2 or less.
+  Revolt — Destroy that creature if it has mana value 4 or less instead if a permanent left the battlefield under your control this turn.
+
+--- Nihil Spellbomb ({1})  [SB x2] ---
+  {T}, Sacrifice this artifact: Exile target player's graveyard.
+  When this artifact is put into a graveyard from the battlefield, you may pay {B}. If you do, draw a card.
+
+--- Prismatic Ending ({X}{W})  [Main x2, SB x1] ---
+  Converge — Exile target nonland permanent if its mana value is less than or equal to the number of colors of mana spent to cast this spell.
+
+--- Thoughtseize ({B})  [Main x3, SB x2] ---
+  Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.
+
+--- Celestial Purge ({1}{W})  [SB x1] ---
+  Exile target black or red permanent.
+
+--- Dress Down ({1}{U})  [SB x1] ---
+  Flash
+  When this enchantment enters, draw a card.
+  Creatures lose all abilities.
+  At the beginning of the end step, sacrifice this enchantment.
+
+--- Emperor of Bones ({1}{B}) 2/2 [SB x1] ---
+  At the beginning of combat on your turn, exile up to one target card from a graveyard.
+  {1}{B}: Adapt 2.
+  Whenever one or more +1/+1 counters are put on this creature, put a creature card exiled with this creature onto the battlefield under your control with a finality counter on it. It gains haste. Sacrifice it at the beginning of the next end step.
+
+--- Goryo's Vengeance ({1}{B})  [Main x4] ---
+  Return target legendary creature card from your graveyard to the battlefield. That creature gains haste. Exile it at the beginning of the next end step.
+  Splice onto Arcane {2}{B} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. If you do, add this card's effects to that spell.)
+
+--- Psychic Frog ({U}{B}) 1/2 [Main x4] ---
+  Whenever this creature deals combat damage to a player or planeswalker, draw a card.
+  Discard a card: Put a +1/+1 counter on this creature.
+  Exile three cards from your graveyard: This creature gains flying until end of turn.
+
+--- Flare of Denial ({1}{U}{U})  [SB x1] ---
+  You may sacrifice a nontoken blue creature rather than pay this spell's mana cost.
+  Counter target spell.
+
+--- Mystical Dispute ({2}{U})  [SB x1] ---
+  This spell costs {2} less to cast if it targets a blue spell.
+  Counter target spell unless its controller pays {3}.
+
+--- Wear // Tear ({1}{R} // {W})  [SB x2] ---
+  
+
+--- Subtlety ({2}{U}{U}) 3/3 [SB x2] ---
+  Flash
+  Flying
+  When this creature enters, choose up to one target creature spell or planeswalker spell. Its owner puts it on their choice of the top or bottom of their library.
+  Evoke—Exile a blue card from your hand.
+
+--- Quantum Riddler ({3}{U}{U}) 4/6 [Main x4] ---
+  Flying
+  When this creature enters, draw a card.
+  As long as you have one or fewer cards in hand, if you would draw one or more cards, you draw that many cards plus one instead.
+  Warp {1}{U}
+
+--- Solitude ({3}{W}{W}) 3/2 [Main x4] ---
+  Flash
+  Lifelink
+  When this creature enters, exile up to one other target creature. That creature's controller gains life equal to its power.
+  Evoke—Exile a white card from your hand.
+
+--- Atraxa, Grand Unifier ({3}{G}{W}{U}{B}) 7/7 [Main x4] ---
+  Flying, vigilance, deathtouch, lifelink
+  When Atraxa enters, reveal the top ten cards of your library. For each card type, you may put a card of that type from among the revealed cards into your hand. Put the rest on the bottom of your library in a random order. (Artifact, battle, creature, enchantment, instant, land, planeswalker, and sorcery are card types.)
+
+--- Griselbrand ({4}{B}{B}{B}{B}) 7/7 [Main x1] ---
+  Flying, lifelink
+  Pay 7 life: Draw seven cards.
+
+--- Ulamog, the Defiler ({10}) 7/7 [Main x1] ---
+  When you cast this spell, target opponent exiles the top half of their library, rounded up.
+  Ward—Sacrifice two permanents.
+  Ulamog enters with a number of +1/+1 counters on it equal to the greatest mana value among cards in exile.
+  Ulamog has annihilator X, where X is the number of +1/+1 counters on it.
+
+============================================================
+  LANDS
+============================================================
+
+--- Flooded Strand ()  [Main x3] ---
+  {T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Island card, put it onto the battlefield, then shuffle.
+
+--- Godless Shrine ()  [Main x1] ---
+  ({T}: Add {W} or {B}.)
+  As this land enters, you may pay 2 life. If you don't, it enters tapped.
+
+--- Hallowed Fountain ()  [Main x1] ---
+  ({T}: Add {W} or {U}.)
+  As this land enters, you may pay 2 life. If you don't, it enters tapped.
+
+--- Island ()  [Main x2] ---
+  ({T}: Add {U}.)
+
+--- Marsh Flats ()  [Main x3] ---
+  {T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Swamp card, put it onto the battlefield, then shuffle.
+
+--- Meticulous Archive ()  [Main x1] ---
+  ({T}: Add {W} or {U}.)
+  This land enters tapped.
+  When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+
+--- Polluted Delta ()  [Main x4] ---
+  {T}, Pay 1 life, Sacrifice this land: Search your library for an Island or Swamp card, put it onto the battlefield, then shuffle.
+
+--- Swamp ()  [Main x2] ---
+  ({T}: Add {B}.)
+
+--- Undercity Sewers ()  [Main x1] ---
+  ({T}: Add {U} or {B}.)
+  This land enters tapped.
+  When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+
+--- Watery Grave ()  [Main x2] ---
+  ({T}: Add {U} or {B}.)
+  As this land enters, you may pay 2 life. If you don't, it enters tapped.

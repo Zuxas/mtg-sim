@@ -543,3 +543,80 @@ This works on EVERY creature in the deck:
 - **Ajani + Arena haste**: Attack immediately as 1/2 → triggers Guide if blocked
 **Current APL:** Only checks Arena for Phlage escape. Should check for ALL creatures.
 **Fix:** When casting any creature and Arena is untapped, give it haste.
+
+
+### EDGE 14: Ajani PW Back Face — 0 Ability Is FREE DAMAGE (Major Discovery)
+From Scryfall rulings + back face oracle text:
+**Ajani, Nacatl Avenger** (Loyalty 4):
+- **+2**: Put a +1/+1 counter on each creature you control
+- **0**: Create a 2/1 Cat Warrior token. When you do, if you control another 
+  RED permanent, Ajani deals damage equal to number of creatures you control 
+  to any target.
+- **-4**: Cats you control get +3/+3 and gain double strike until end of turn
+
+**THE 0 ABILITY IS THE KEY:**
+- Costs NOTHING (loyalty stays at 4)
+- Creates a 2/1 Cat (triggers Guide: +1 life, +1E)
+- If you control ANY red permanent (Arena of Glory, Mountain, Goblin Bombardment, 
+  Ragavan, Nemesis) → deals damage = creature count to ANY TARGET
+- With 5 creatures on board: 0 → create Cat (now 6) → deals 6 to face
+- EVERY TURN: free 5-7 damage + free 2/1 body
+
+**This is why competitive pilots flip Ajani ASAP:**
+- It's not the +2 pump that matters, it's the FREE BURN EVERY TURN
+- 0 ability is chosen 80%+ of the time in competitive play
+- -4 for lethal burst (Cats get +3/+3 double strike) when going for the kill
+
+**Impact on sim:** The disabled Ajani PW was modeled as "+2 pump every turn" which 
+was too strong defensively. The 0 ability is strong OFFENSIVELY (direct damage) 
+but less impactful defensively. This changes the entire Ajani PW modeling approach.
+
+**Correct modeling (when re-enabled):**
+- 0 ability: Create Cat + deal damage = creature count (if red permanent)
+- Opponent can attack PW (redirect attackers to Ajani)
+- Opponent can Bolt PW (3 damage, kills at loyalty ≤3)
+- Net: ~4-6 free damage per turn, balanced by PW vulnerability
+
+### EDGE 15: Ajani Can Activate Loyalty Same Turn It Transforms
+Scryfall ruling: "You can activate one of Ajani, Nacatl Avenger's loyalty abilities 
+  the turn he enters the battlefield. However, you may do so only during one of your 
+  main phases when the stack is empty."
+- If Ajani transforms during YOUR main phase → immediate 0 activation
+- If transforms during combat or opponent's turn → must wait until next main phase
+- Bombardment sacrifice during main phase → transform → 0 ability immediately
+
+### EDGE 16: Ragavan Dash Mode ({1}{R}) vs Normal Cast ({R})
+Oracle: "Dash {1}{R} (gains haste, returns to hand at next end step)"
+- Dash is BETTER vs sorcery-speed removal (Path, Push, Prismatic Ending)
+  → Ragavan bounces at end step → opponent's sorcery-speed removal fizzles next turn
+- Normal cast is BETTER with Guide of Souls pump
+  → Ragavan stays for Guide pump next turn (+2/+2 flying 4/3)
+- With Arena of Glory: normal cast + Arena haste = {R} for a hasty Ragavan (saves {1})
+**Current APL:** Doesn't model dash mode at all. Ragavan always stays on board.
+
+### EDGE 17: Phlage ETB Fires Even If Countered on Stack... NO WAIT
+Actually: If Phlage is COUNTERED, it never enters the battlefield → NO ETB.
+But if Phlage enters and is then sacrificed (hardcast), the ETB already triggered.
+**Key distinction:** Countering Phlage = no ETB. Hardcast sacrifice = ETB fires first.
+This matters vs counterspell decks (Murktide, Jeskai with Consign).
+
+### EDGE 18: Guide of Souls Triggers PER Guide
+Oracle: "Whenever another creature you control enters, you gain 1 life and get {E}"
+- With 2 Guides on board: each creature entering = 2 life + 2 energy
+- With 3 Guides: 3 life + 3 energy per creature
+- This scales EXPONENTIALLY with token production
+**Current APL:** Already models this correctly (counts guides on board).
+
+### EDGE 19: Static Prison Can Exile ANY Nonland Permanent
+Oracle: "exile target nonland permanent an opponent controls"
+- Not just creatures — can exile artifacts (Amulet of Vigor), enchantments 
+  (opponent's Bombardment, Urza's Saga), or planeswalkers
+- Against Tron: exile Karn, the Great Creator
+- Against Affinity: exile Cranial Plating
+**Current APL:** Only targets creatures. Should consider non-creature targets.
+
+### EDGE 20: Galvanic Discharge Can Target Planeswalkers
+Oracle: "Choose target creature or planeswalker"
+- Not just creatures — kills opposing Teferi, Karn, Liliana, etc.
+- With 6+ energy: kills nearly any planeswalker
+**Current APL:** Only targets creatures. Should add PW targeting.

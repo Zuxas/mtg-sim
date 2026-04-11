@@ -245,19 +245,43 @@ class BorosEnergyMatchAPL(MatchAPL):
                 gs.zones.graveyard.append(prison)
                 gs._log(f"  Static Prison falls off (no energy to maintain)")
 
-        # 1b. AJANI PLANESWALKER — +2 loyalty: put +1/+1 counter on each creature
-        # Oracle (back face): "+2: Put a +1/+1 counter on each creature you control"
-        # NOTE: Currently disabled — PW pump is too strong without modeling:
-        #   - Opponent can attack PW with creatures (redirect damage)
-        #   - Opponent can Bolt PW (3 damage kills it at loyalty 4 after +2 = 6, needs 2 Bolts)
-        #   - Sometimes -1 (return Cat from GY) is the correct activation
-        # Re-enable when engine supports PW targeting
-        # if self._ajani_pw_active:
-        #     self._ajani_pw_loyalty += 2
-        #     creatures = [c for c in gs.zones.battlefield
-        #                  if not c.is_land() and c.has(Tag.CREATURE)]
-        #     for creature in creatures:
-        #         creature.counters += 1
+        # 1b. AJANI PLANESWALKER — 0 ability: create Cat + deal damage = creature count
+        # Oracle (back face): "0: Create a 2/1 Cat Warrior token. When you do, if you
+        #   control another red permanent, deals damage = number of creatures to any target."
+        # Balanced by: opponent can attack PW or Bolt it. Subtract opponent pressure each turn.
+        if self._ajani_pw_active and self._ajani_pw_loyalty > 0:
+            # Count creatures and red permanents
+            creatures = [c for c in gs.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
+            has_red = any('mountain' in (getattr(c, 'type_line', '') or '').lower() or
+                         c.name in (GOBLIN_BOMBARD, RAGAVAN, SCREAMING_NEMESIS, SEASONED_PYRO)
+                         for c in gs.zones.battlefield)
+            
+            # 0 ability: create Cat + damage
+            token = gs._make_token("Cat Warrior Token", "2", "1", "Creature — Cat Warrior")
+            self._tokens_entered += 1
+            guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
+            if guides:
+                gs.life += guides
+                gs.energy = getattr(gs, 'energy', 0) + guides
+                self._gained_life_this_turn = True
+            
+            creature_count = len(creatures) + 1  # +1 for the new token
+            if has_red:
+                gs.damage_dealt += creature_count
+                gs._log(f"  Ajani PW 0: Cat token + {creature_count} dmg to face (Loyalty {self._ajani_pw_loyalty})")
+            
+            # Opponent pressure: simulate that opponent can attack/Bolt the PW
+            # ~2 effective damage per turn from opponent interaction
+            if opponent:
+                opp_power = sum(safe_power(c) for c in opponent.zones.battlefield
+                                if not c.is_land() and c.has(Tag.CREATURE)
+                                and not getattr(c, 'summoning_sickness', False))
+                pw_damage = min(opp_power, 3)  # cap at 3 per turn (one attacker redirected)
+                self._ajani_pw_loyalty -= pw_damage
+                if self._ajani_pw_loyalty <= 0:
+                    self._ajani_pw_active = False
+                    gs._log(f"  Ajani PW dies to opponent pressure")
 
         # 2. REMOVAL FIRST — kill their threats before they combo
         if opponent:

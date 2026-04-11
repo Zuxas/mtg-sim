@@ -107,7 +107,10 @@ class IzzetAffinityMatchAPL(MatchAPL):
             if c.name == EMRY:
                 emry_cost = max(1, 3 - self._artifact_count)  # affinity reduces cost
                 if avail >= emry_cost:
-                    gs.cast_spell(c)
+                    # Manual deploy (bypass can_cast which doesn't know affinity)
+                    gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
+                    c.turn_entered = gs.turn; c.summoning_sickness = True
+                    gs.mana_pool.flex -= min(emry_cost, gs.mana_pool.flex)
                     gs._log(f"  Emry: cost {emry_cost} (affinity -{self._artifact_count})")
                     avail = gs.mana_pool.total()
                     break
@@ -117,11 +120,13 @@ class IzzetAffinityMatchAPL(MatchAPL):
             if c.name == KAPPA:
                 kappa_cost = max(2, 6 - self._artifact_count)  # affinity
                 if avail >= kappa_cost:
-                    gs.cast_spell(c)
-                    # Set initial size based on artifacts already on board
+                    gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
+                    c.turn_entered = gs.turn; c.summoning_sickness = True
+                    gs.mana_pool.flex -= min(kappa_cost, gs.mana_pool.flex)
+                    # Set initial size based on artifacts
                     c.power = str(4 + self._kappa_counters)
                     c.toughness = str(4 + self._kappa_counters)
-                    gs._log(f"  Kappa Cannoneer: {safe_power(c)}/{safe_toughness(c)} (ward 4, unblockable-ish)")
+                    gs._log(f"  Kappa: {safe_power(c)}/{safe_toughness(c)} (cost {kappa_cost}, ward 4)")
                     avail = gs.mana_pool.total()
                     break
 

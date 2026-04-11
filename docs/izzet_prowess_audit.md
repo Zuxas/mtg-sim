@@ -177,3 +177,86 @@ Full burst example with good hand:
   TOTAL: 36 + 8 + 5 + 5 = 54 damage (overkill from 20)
 
   Realistic scenario (3-4 spells, not 7): ~18-22 damage burst = lethal
+
+
+## ADDITIONAL EDGE CASES (Deep Dive #2)
+
+### EDGE 8: Cori-Steel Cutter Spell Count Ruling (CRITICAL)
+Scryfall ruling: "Spells that were cast BEFORE a permanent with flurry count. If 
+  that permanent was the first spell you cast that turn, the next spell triggers Flurry."
+**Impact:** If you cast Bauble (spell 1) → Cori-Steel (spell 2) → Flurry triggers
+  IMMEDIATELY when Cori enters. Current APL may not count Cori itself as spell #2.
+**Also:** If Cori is spell 1, the NEXT spell (anything) triggers Flurry.
+
+### EDGE 9: Cori-Steel Flurry on OPPONENT'S Turn
+Flurry says "your second spell each turn" — not "each of YOUR turns."
+If you cast 2 instants during opponent's turn → Flurry creates a 2/2 Monk with haste.
+**Defensive play:** Opponent attacks → cast Bolt (spell 1) → cast Mutagenic (spell 2)
+  → Flurry → 2/2 Monk appears → block with Monk.
+**Current APL:** Flurry only triggers during your turn. Missing defensive Monks.
+
+### EDGE 10: DRC FORCED Attack with Delirium
+Oracle: "attacks each combat if able"
+**Impact:** With delirium, DRC is a 3/3 flyer that MUST attack. You cannot hold it 
+  back for blocking. If opponent has a 4/4 flyer, your DRC flies into it and dies.
+**Current APL:** DRC is in the optional attackers list. Should be FORCED with delirium.
+
+### EDGE 11: Mishra's Bauble Delayed Draw — NOT Immediate
+Oracle: "Draw a card at the beginning of the NEXT TURN'S upkeep."
+**Impact on burst:** Bauble draw does NOT arrive during the burst turn. Cast Bauble 
+  for prowess trigger only. The draw is next turn (if you survive).
+**Current APL:** Burst turn casts Bauble and draws immediately (gs.zones.draw(1)).
+  This overvalues Bauble during burst turns.
+
+### EDGE 12: Preordain Scry 2 = Card Selection
+Oracle: "Scry 2, then draw a card."
+**Impact:** Look at top 2, put bad ones on bottom, THEN draw the good one.
+  This is card selection — better than a random draw.
+**Current APL:** Models as draw 1. Missing scry quality improvement.
+
+### EDGE 13: Mutagenic Growth Life Cost Compounds
+Each Mutagenic costs 2 life. Prowess starts at ~15-17 life (fetches + shocks).
+With 2 Mutangenics: 4 life spent. Against Boros with lifegain, this is significant.
+**Current APL:** Correctly pays 2 life per Mutagenic. No fix needed.
+
+### EDGE 14: Lava Dart Flashback Loses a Land
+Flashback sacrifices a Mountain. After flashback, you have fewer lands = less mana.
+**Decision:** Only flashback when going for lethal or when the extra prowess trigger
+  pushes damage over the threshold.
+**Current APL:** Flashbacks when available. Should check if mana loss matters.
+
+### EDGE 15: Multiple Slickshots Stack
+2 Slickshots + 3 noncreature spells = each Slickshot is 1+(3×2) = 7/2 flying.
+Total flying damage: 14. This is why the deck runs 4 copies.
+**Current APL:** Correctly models multiple Slickshots.
+
+### EDGE 16: Monk Gets Prowess from Subsequent Spells
+After Flurry creates a 2/2 Monk (with equipment), each subsequent noncreature spell
+gives it +1/+1 prowess. After 3 more spells: 5/5 trample haste.
+**Current APL:** Monk is in PROWESS_CREATURES check (name contains "Monk" + "Token").
+  Should be correct. Verify.
+
+### EDGE 17: Delirium Card Types Available
+Types in deck: instant (Bolt), sorcery (Preordain), artifact (Bauble/Cori), 
+  creature (DRC/Swiftspear), land (Mountain). NO enchantments.
+Need 4 types for delirium. Typical path: instant + sorcery + artifact + (creature OR land).
+Bauble is critical — artifact type is hard to get otherwise.
+**Current APL:** _has_delirium checks card types in GY. Verify it counts correctly.
+
+### EDGE 18: Plotted Slickshot Cast Counts for Flurry
+Casting from plot IS casting a spell. Plot Slickshot (spell 1) → Cast Bolt (spell 2)
+  → Flurry triggers. OR: Plotted Slickshot was cast as spell 2 → Flurry triggers.
+**Current APL:** _cast_from_plot increments _spells_this_turn and calls _check_flurry.
+  Should be correct. Verify.
+
+### EDGE 19: Violent Urge First Strike Before Regular Damage
+With first strike (non-delirium), the target creature deals damage FIRST.
+If Slickshot has first strike and deals 7 damage → opponent takes 7 before
+their blockers deal damage. This matters when both creatures would trade.
+**Current APL:** First strike not modeled in combat resolution engine.
+
+### EDGE 20: Expressive Iteration Exile = Land Drop + Spell
+The exiled card can be a LAND (extra land drop this turn) or a spell (more fuel).
+If exiled card is a land: you get an extra land → more mana for spells.
+If exiled card is a spell: extra prowess trigger + effect.
+**Current APL:** Models Iteration as draw 1. Missing the exiled card value.

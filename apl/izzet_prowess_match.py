@@ -573,12 +573,14 @@ class IzzetProwessMatchAPL(MatchAPL):
             if c.name == BAUBLE:
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
-                gs.zones.draw(1)
+                # NOTE: Bauble draw is DELAYED (next turn's upkeep), NOT immediate
+                # Oracle: "Draw a card at the beginning of the next turn's upkeep"
+                # During burst turn, cast purely for prowess trigger + delirium (artifact in GY)
                 self._trigger_prowess(gs, BAUBLE)
                 self._spells_this_turn += 1
                 gs.noncreature_spells_this_turn += 1
                 self._check_flurry(gs)
-                gs._log(f"  Bauble: draw 1 + prowess")
+                gs._log(f"  Bauble: prowess trigger + artifact in GY (draw delayed to next upkeep)")
 
         # Lava Dart from hand — cast ALL
         for c in list(gs.zones.hand):

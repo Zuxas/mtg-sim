@@ -1,0 +1,255 @@
+# ELDRAZI RAMP — COMPLETE ORACLE TEXT REFERENCE
+# Maindeck: 60 cards | Sideboard: 15 cards
+
+======================================================================
+  NONLAND CARDS (sorted by CMC)
+======================================================================
+
+--- Ancient Stirrings (Main x2) ---
+  Mana Cost: {G}
+  Type:      Sorcery
+  Oracle:
+    Look at the top five cards of your library. You may reveal a colorless card from among them and put it into your hand. Then put the rest on the bottom of your library in any order.
+
+--- Unholy Heat (SB x3) ---
+  Mana Cost: {R}
+  Type:      Instant
+  Oracle:
+    Unholy Heat deals 2 damage to target creature or planeswalker.
+    Delirium — Unholy Heat deals 6 damage instead if there are four or more card types among cards in your graveyard.
+
+--- Utopia Sprawl (Main x4) ---
+  Mana Cost: {G}
+  Type:      Enchantment — Aura
+  Oracle:
+    Enchant Forest
+    As this Aura enters, choose a color.
+    Whenever enchanted Forest is tapped for mana, its controller adds an additional one mana of the chosen color.
+
+--- Vexing Bauble (SB x2) ---
+  Mana Cost: {1}
+  Type:      Artifact
+  Oracle:
+    Whenever a player casts a spell, if no mana was spent to cast it, counter that spell.
+    {1}, {T}, Sacrifice this artifact: Draw a card.
+
+--- Disruptor Flute (SB x3) ---
+  Mana Cost: {2}
+  Type:      Artifact
+  Oracle:
+    Flash
+    As this artifact enters, choose a card name.
+    Spells with the chosen name cost {3} more to cast.
+    Activated abilities of sources with the chosen name can't be activated unless they're mana abilities.
+
+--- Kozilek's Command (Main x4) ---
+  Mana Cost: {X}{C}{C}
+  Type:      Kindred Instant — Eldrazi
+  Oracle:
+    Choose two —
+    • Target player creates X 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}."
+    • Target player scries X, then draws a card.
+    • Exile target creature with mana value X or less.
+    • Exile up to X target cards from graveyards.
+
+--- Malevolent Rumble (Main x4) ---
+  Mana Cost: {1}{G}
+  Type:      Sorcery
+  Oracle:
+    Reveal the top four cards of your library. You may put a permanent card from among them into your hand. Put the rest into your graveyard. Create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}."
+
+--- Soulless Jailer (SB x2) ---
+  Mana Cost: {2}
+  Type:      Artifact Creature — Phyrexian Golem
+  P/T:       0/4
+  Oracle:
+    Permanent cards in graveyards can't enter the battlefield.
+    Players can't cast noncreature spells from graveyards or exile.
+
+--- Talisman of Impulse (Main x4) ---
+  Mana Cost: {2}
+  Type:      Artifact
+  Oracle:
+    {T}: Add {C}.
+    {T}: Add {R} or {G}. This artifact deals 1 damage to you.
+
+--- Formidable Speaker (Main x2) ---
+  Mana Cost: {2}{G}
+  Type:      Creature — Elf Druid
+  P/T:       2/4
+  Oracle:
+    When this creature enters, you may discard a card. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.
+    {1}, {T}: Untap another target permanent.
+
+--- Kozilek's Return (Main x3) ---
+  Mana Cost: {2}{R}
+  Type:      Instant
+  Oracle:
+    Devoid (This card has no color.)
+    Kozilek's Return deals 2 damage to each creature.
+    Whenever you cast an Eldrazi creature spell with mana value 7 or greater, you may exile this card from your graveyard. If you do, this card deals 5 damage to each creature.
+
+--- Trinisphere (SB x3) ---
+  Mana Cost: {3}
+  Type:      Artifact
+  Oracle:
+    As long as this artifact is untapped, each spell that would cost less than three mana to cast costs three mana to cast. (Additional mana in the cost may be paid with any color of mana or colorless mana. For example, a spell that would cost {1}{B} to cast costs {2}{B} to cast instead.)
+
+--- Fade from History (SB x2) ---
+  Mana Cost: {2}{G}{G}
+  Type:      Sorcery
+  Oracle:
+    Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments.
+
+--- Icetill Explorer (Main x1) ---
+  Mana Cost: {2}{G}{G}
+  Type:      Creature — Insect Scout
+  P/T:       2/4
+  Oracle:
+    You may play an additional land on each of your turns.
+    You may play lands from your graveyard.
+    Landfall — Whenever a land you control enters, mill a card.
+
+--- Sowing Mycospawn (Main x4) ---
+  Mana Cost: {3}{G}
+  Type:      Creature — Eldrazi Fungus
+  P/T:       3/3
+  Oracle:
+    Devoid (This card has no color.)
+    Kicker {1}{C} (You may pay an additional {1}{C} as you cast this spell.)
+    When you cast this spell, search your library for a land card, put it onto the battlefield, then shuffle.
+    When you cast this spell, if it was kicked, exile target land.
+
+--- Devourer of Destiny (Main x2) ---
+  Mana Cost: {5}{C}{C}
+  Type:      Creature — Eldrazi
+  P/T:       6/6
+  Oracle:
+    You may reveal this card from your opening hand. If you do, at the beginning of your first upkeep, look at the top four cards of your library. You may put one of those cards back on top of your library. Exile the rest.
+    When you cast this spell, exile target permanent that's one or more colors.
+
+--- Sire of Seven Deaths (Main x1) ---
+  Mana Cost: {7}
+  Type:      Creature — Eldrazi
+  P/T:       7/7
+  Oracle:
+    First strike, vigilance
+    Menace, trample
+    Reach, lifelink
+    Ward—Pay 7 life.
+
+--- Ugin, Eye of the Storms (Main x2) ---
+  Mana Cost: {7}
+  Type:      Legendary Planeswalker — Ugin
+  Oracle:
+    When you cast this spell, exile up to one target permanent that's one or more colors.
+    Whenever you cast a colorless spell, exile up to one target permanent that's one or more colors.
+    +2: You gain 3 life and draw a card.
+    0: Add {C}{C}{C}.
+    −11: Search your library for any number of colorless nonland cards, exile them, then shuffle. Until end of turn, you may cast those cards without paying their mana costs.
+
+--- World Breaker (Main x2) ---
+  Mana Cost: {6}{G}
+  Type:      Creature — Eldrazi
+  P/T:       5/7
+  Oracle:
+    Devoid (This card has no color.)
+    When you cast this spell, exile target artifact, enchantment, or land.
+    Reach
+    {2}{C}, Sacrifice a land: Return this card from your graveyard to your hand. ({C} represents colorless mana.)
+
+--- Emrakul, the Promised End (Main x3) ---
+  Mana Cost: {13}
+  Type:      Legendary Creature — Eldrazi
+  P/T:       13/13
+  Oracle:
+    This spell costs {1} less to cast for each card type among cards in your graveyard.
+    When you cast this spell, you gain control of target opponent during that player's next turn. After that turn, that player takes an extra turn.
+    Flying, trample, protection from instants
+
+======================================================================
+  LANDS
+======================================================================
+
+--- Bojuka Bog (Main x1) ---
+  Type:   Land
+  Oracle:
+    This land enters tapped.
+    When this land enters, exile target player's graveyard.
+    {T}: Add {B}.
+
+--- Boseiju, Who Endures (Main x1) ---
+  Type:   Legendary Land
+  Oracle:
+    {T}: Add {G}.
+    Channel — {1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.
+
+--- Cavern of Souls (Main x1) ---
+  Type:   Land
+  Oracle:
+    As this land enters, choose a creature type.
+    {T}: Add {C}.
+    {T}: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type, and that spell can't be countered.
+
+--- Commercial District (Main x1) ---
+  Type:   Land — Mountain Forest
+  Oracle:
+    ({T}: Add {R} or {G}.)
+    This land enters tapped.
+    When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+
+--- Eldrazi Temple (Main x4) ---
+  Type:   Land
+  Oracle:
+    {T}: Add {C}.
+    {T}: Add {C}{C}. Spend this mana only to cast colorless Eldrazi spells or activate abilities of colorless Eldrazi.
+
+--- Forest (Main x3) ---
+  Type:   Basic Land — Forest
+  Oracle:
+    ({T}: Add {G}.)
+
+--- Ghost Quarter (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}: Add {C}.
+    {T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle.
+
+--- Misty Rainforest (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Forest or Island card, put it onto the battlefield, then shuffle.
+
+--- Sanctum of Ugin (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}: Add {C}.
+    Whenever you cast a colorless spell with mana value 7 or greater, you may sacrifice this land. If you do, search your library for a colorless creature card, reveal it, put it into your hand, then shuffle.
+
+--- Stomping Ground (Main x1) ---
+  Type:   Land — Mountain Forest
+  Oracle:
+    ({T}: Add {R} or {G}.)
+    As this land enters, you may pay 2 life. If you don't, it enters tapped.
+
+--- Ugin's Labyrinth (Main x4) ---
+  Type:   Land
+  Oracle:
+    Imprint — When this land enters, you may exile a colorless card with mana value 7 or greater from your hand.
+    {T}: Add {C}. If a card is exiled with this land, add {C}{C} instead.
+    {T}: Return the exiled card to its owner's hand.
+
+--- Verdant Catacombs (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Swamp or Forest card, put it onto the battlefield, then shuffle.
+
+--- Windswept Heath (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Forest or Plains card, put it onto the battlefield, then shuffle.
+
+--- Wooded Foothills (Main x1) ---
+  Type:   Land
+  Oracle:
+    {T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Forest card, put it onto the battlefield, then shuffle.

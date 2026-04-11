@@ -394,3 +394,30 @@ The exiled creature returns. Currently modeled as permanent exile.
 Each Ragavan combat hit creates a Treasure (extra mana next turn).
 Currently no Treasure generation.
 **Fix:** In end_step_actions, count Ragavans that attacked → create Treasures.
+
+
+## FIXES COMPLETED (Verified Against Oracle Text)
+
+| # | Card | Fix | Verified |
+|---|------|-----|----------|
+| 1 | Phlage | Hardcast = sacrifice. Escape {R}{R}{W}{W}+exile 5. | 57.8% vs Prowess |
+| 2 | Phlage | Summoning sickness on escape (no haste). | Tested |
+| 3 | Ocelot Pride | End step timing (once per turn per Ocelot). | Moved to end_step_actions |
+| 4 | Guide of Souls | Attack pump {E}{E}{E} → +2/+2 flying on attacker. | Tested |
+| 5 | Voice of Victory | Mobilize token tracking (no damage bypass). | Fixed double-count |
+| 6 | Voice of Victory | Spell lock in match engine. | 58% vs Prowess |
+| 7 | Goblin Bombardment | Mobilize token sacrifice for free damage. | In end_step_actions |
+| 8 | Static Prison | Energy maintenance (1{E}/turn or falls off). | In main_phase_match |
+| 9 | Seasoned Pyromancer | ETB: discard 2 (Phlage→GY synergy), draw 2, Elemental tokens. | 57.8% |
+| 10 | Ajani | Transform trigger when Cat dies + Bombardment. PW DISABLED (too strong). | +9% swing |
+| 11 | Ragavan | Treasure generation on combat damage. | In end_step_actions |
+| 12 | Fetchland/Shockland | Life loss already in engine (verified no double-count). | Confirmed |
+
+## STILL NEEDS ENGINE SUPPORT
+
+| # | Card | Issue | Engine Need |
+|---|------|-------|-------------|
+| 1 | Ajani PW | +2 pump too strong without PW targeting | Engine: PW attack/burn targeting |
+| 2 | Goblin Bombardment | Reactive sacrifice in response to removal | Engine: respond_to_removal hook |
+| 3 | Screaming Nemesis | Damage reflection + anti-lifegain | Engine: combat damage tracking |
+| 4 | Thraben Charm | Scaling 2× creature damage (partially modeled) | Already in removal section |

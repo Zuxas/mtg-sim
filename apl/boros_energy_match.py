@@ -219,6 +219,20 @@ class BorosEnergyMatchAPL(MatchAPL):
         # 1. Play land
         self._play_land_if_able(gs)
 
+        # 1a. STATIC PRISON MAINTENANCE — pay {E} per prison or lose it
+        # Oracle: "At the beginning of your first main phase, sacrifice unless you pay {E}"
+        prisons = [c for c in gs.zones.battlefield if c.name == STATIC_PRISON]
+        energy = getattr(gs, 'energy', 0)
+        for prison in prisons:
+            if energy >= 1:
+                energy -= 1
+                gs.energy = energy
+            else:
+                # Can't pay — prison breaks, exiled card returns
+                gs.zones.battlefield.remove(prison)
+                gs.zones.graveyard.append(prison)
+                gs._log(f"  Static Prison falls off (no energy to maintain)")
+
         # 1b. AJANI PLANESWALKER — +2 loyalty: put +1/+1 counter on each creature
         # Oracle (back face): "+2: Put a +1/+1 counter on each creature you control"
         # NOTE: Currently disabled — PW pump is too strong without modeling:
@@ -277,6 +291,47 @@ class BorosEnergyMatchAPL(MatchAPL):
         for c in list(gs.zones.hand):
             if c.name == GOBLIN_BOMBARD and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
+                break
+
+        # 5a. Seasoned Pyromancer — discard 2, draw 2, create Elemental tokens
+        # Oracle: "When enters, discard two cards, draw two cards. For each nonland
+        #          card discarded this way, create a 1/1 red Elemental creature token."
+        # Key synergy: discarding Phlage sets up GY for escape
+        for c in list(gs.zones.hand):
+            if c.name == SEASONED_PYRO and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
+                if guides:
+                    gs.life += guides
+                    gs.energy = getattr(gs, 'energy', 0) + guides
+                    self._gained_life_this_turn = True
+                # Discard 2: prefer Phlage (GY setup) > excess lands > highest CMC
+                discarded_nonlands = 0
+                for _ in range(2):
+                    if not gs.zones.hand: break
+                    # Priority: Phlage (want in GY for escape)
+                    phlages = [x for x in gs.zones.hand if x.name == PHLAGE]
+                    lands = [x for x in gs.zones.hand if x.is_land()]
+                    if phlages:
+                        d = phlages[0]; gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
+                        discarded_nonlands += 1
+                    elif lands and len(lands) > 2:
+                        d = lands[-1]; gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
+                    elif gs.zones.hand:
+                        d = max(gs.zones.hand, key=lambda x: getattr(x, 'cmc', 0))
+                        gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
+                        if not d.is_land(): discarded_nonlands += 1
+                # Draw 2
+                gs.zones.draw(2)
+                # Create Elemental tokens for each nonland discarded
+                for _ in range(discarded_nonlands):
+                    gs._make_token("Elemental Token", "1", "1", "Creature - Elemental")
+                    self._tokens_entered += 1
+                    if guides:
+                        gs.life += guides
+                        gs.energy = getattr(gs, 'energy', 0) + guides
+                        self._gained_life_this_turn = True
+                gs._log(f"  Pyromancer: discard 2 (Phlage→GY), draw 2, +{discarded_nonlands} Elementals")
                 break
 
         # 5b. PHLAGE — hardcast as removal, escape as finisher

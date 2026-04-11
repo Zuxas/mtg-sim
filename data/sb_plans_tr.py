@@ -62,3 +62,17 @@ SB_PLANS = {
     ("Uw Control", "Sideboard"): (['3 Consign to Memory'], ['1 Spell Snare']),
     ("Uw Control", "UW Control Mirror"): (['2 Mystical Dispute'], []),
 }
+
+
+def get_tr_sb_plan(deck_name, opponent_name):
+    """Look up SB plan for a deck vs an opponent."""
+    key = (deck_name, opponent_name)
+    if key in SB_PLANS:
+        return SB_PLANS[key]
+    # Try fuzzy matching
+    for (d, o), plan in SB_PLANS.items():
+        if d.lower() == deck_name.lower() and o.lower() in opponent_name.lower():
+            return plan
+        if d.lower() == deck_name.lower() and opponent_name.lower() in o.lower():
+            return plan
+    return None

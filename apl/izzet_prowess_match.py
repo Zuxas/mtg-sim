@@ -671,7 +671,8 @@ class IzzetProwessMatchAPL(MatchAPL):
           plus +2/+2 on the target
         """
         mutagenic = next((c for c in gs.zones.hand if c.name == MUTAGENIC), None)
-        if not mutagenic:
+        violent = next((c for c in gs.zones.hand if c.name == VIOLENT), None)
+        if not mutagenic and not violent:
             return None
 
         # Find best target: unblocked attacker with highest power
@@ -695,24 +696,45 @@ class IzzetProwessMatchAPL(MatchAPL):
             else:
                 target = max(unblocked, key=lambda c: safe_power(c))
 
-        # Cast Mutagenic Growth (pay 2 life)
-        gs.life -= 2
-        gs.zones.hand.remove(mutagenic)
-        gs.zones.graveyard.append(mutagenic)
+        # Cast Mutagenic Growth (pay 2 life) if available
+        if mutagenic:
+            gs.life -= 2
+            gs.zones.hand.remove(mutagenic)
+            gs.zones.graveyard.append(mutagenic)
 
-        # +2/+2 on target
-        target.counters += 2
-        self._prowess_boosts.append(target)
-        self._prowess_boosts.append(target)
+            # +2/+2 on target
+            target.counters += 2
+            self._prowess_boosts.append(target)
+            self._prowess_boosts.append(target)
 
-        # Prowess trigger on ALL prowess creatures
-        self._trigger_prowess(gs, MUTAGENIC)
-        self._spells_this_turn += 1
-        gs.noncreature_spells_this_turn += 1
-        self._check_flurry(gs)
+            # Prowess trigger on ALL prowess creatures
+            self._trigger_prowess(gs, MUTAGENIC)
+            self._spells_this_turn += 1
+            gs.noncreature_spells_this_turn += 1
+            self._check_flurry(gs)
 
-        gs._log(f"  [COMBAT TRICK] Mutagenic Growth on {target.name} "
-                f"(+2/+2 pump + prowess on all, paid 2 life)")
+            gs._log(f"  [COMBAT TRICK] Mutagenic Growth on {target.name} "
+                    f"(+2/+2 pump + prowess on all, paid 2 life)")
+
+        # Also cast Violent Urge if in hand — +1/+0, first strike, draw a card
+        # With delirium: DOUBLE STRIKE (devastating on Slickshot)
+        violent = next((c for c in gs.zones.hand if c.name == VIOLENT), None)
+        if violent and gs.mana_pool.can_cast(violent.mana_cost, violent.cmc):
+            gs.mana_pool.pay(violent.mana_cost, violent.cmc)
+            gs.zones.hand.remove(violent)
+            gs.zones.graveyard.append(violent)
+            target.counters += 1  # +1/+0
+            self._trigger_prowess(gs, VIOLENT)
+            self._spells_this_turn += 1
+            gs.noncreature_spells_this_turn += 1
+            self._check_flurry(gs)
+            # Draw a card (cantrip)
+            gs.zones.draw(1)
+            delirium = self._has_delirium(gs)
+            mode = "DOUBLE STRIKE" if delirium else "first strike"
+            gs._log(f"  [COMBAT TRICK] Violent Urge on {target.name} "
+                    f"(+1/+0, {mode}, draw 1 + prowess)")
+
         return mutagenic
 
     def respond_to_spell(self, gs, opponent, spell):

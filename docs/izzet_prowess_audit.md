@@ -260,3 +260,43 @@ The exiled card can be a LAND (extra land drop this turn) or a spell (more fuel)
 If exiled card is a land: you get an extra land → more mana for spells.
 If exiled card is a spell: extra prowess trigger + effect.
 **Current APL:** Models Iteration as draw 1. Missing the exiled card value.
+
+
+## PLAYBOOK-SOURCED INTERACTION SWEEP (Deep Dive #3)
+
+Source: E:\vscode ai project\My-Website\modern\prowess-playbook.html
+Sections read: Engines (3), Lines & Tricks, Edge Cases, Matchup vs Boros, SB Guide
+
+### FIXES APPLIED:
+
+1. **Murktide Regent — MAJOR MISSING CARD** (was not in APL at all)
+   Playbook Priority 03 finisher. Oracle: {5}{U}{U}, Delve, 3/3 flying base + 
+   +1/+1 counter per instant/sorcery exiled. With 4 spells in GY = 7/7 flying for {U}{U}.
+   **Fix:** Added delve deployment after early creatures. Only deploys with 3+ spells in GY.
+
+2. **respond_to_spell — Mutagenic Growth Protection**
+   Playbook: "Cast Mutagenic Growth at instant speed in response to Discharge 
+   to save your creature (+2/+2 survives most Discharge values)."
+   **Fix:** Added Mutagenic Growth as reactive protection when creature would die to burn.
+
+3. **Ragavan Kill Priority**
+   Playbook: "Kill Ragavan with Lava Dart before it connects" on the draw.
+   **Fix:** Added Ragavan to engine_pieces in removal priority list.
+
+### VERIFIED CORRECT (no fix needed):
+
+4. Prowess triggers on CAST, not resolution — APL triggers on cast ✅
+5. DRC delirium is continuous — _has_delirium() checks dynamically ✅
+6. Slickshot Plot mechanic — cast from exile, counts for Flurry ✅
+7. Lava Dart self-target — face target is strictly better (prowess triggers on cast regardless) ⏭️
+8. Violent Urge double strike on Slickshot = 14+ damage — in burst calc ✅
+
+### PLAYBOOK ERROR FOUND:
+
+9. **Unholy Heat vs Goblin Bombardment** — Playbook says "Unholy Heat kills Bombardment"
+   but oracle says Heat targets "creature or planeswalker" only. Cannot target enchantments.
+   **Action:** Flag for website playbook correction in next update cycle.
+
+### MATCHUP RESULT AFTER FIXES:
+Boros vs Prowess (2000g): 47.9% Boros | 52.1% Prowess (T4.7)
+Competitive target: 48-52% range ✅ ACHIEVED

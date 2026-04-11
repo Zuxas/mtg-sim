@@ -37,6 +37,7 @@ BAUBLE     = "Mishra's Bauble"
 MUTAGENIC  = "Mutagenic Growth"
 VIOLENT    = "Violent Urge"
 UNHOLY     = "Unholy Heat"
+MURKTIDE   = "Murktide Regent"
 
 # Creatures with prowess (+1/+1 on noncreature cast)
 PROWESS_CREATURES = {SWIFTSPEAR, DRC}
@@ -419,6 +420,31 @@ class IzzetProwessMatchAPL(MatchAPL):
                     self._check_flurry(gs)
                     break
 
+        # 4b. Deploy Murktide Regent as finisher (delve instants/sorceries from GY)
+        # Playbook: "Murktide costs {2}{U} with enough instants/sorceries in GY"
+        # Oracle: Base {5}{U}{U}, Delve, 3/3 flying + 1 counter per exiled instant/sorcery
+        for c in list(gs.zones.hand):
+            if c.name == MURKTIDE:
+                gy_spells = [g for g in gs.zones.graveyard 
+                             if not g.is_land() and not g.has(Tag.CREATURE)]
+                delve_count = len(gy_spells)
+                effective_cost = max(2, 7 - delve_count)  # min {U}{U} = 2
+                if gs.mana_pool.total() >= effective_cost and delve_count >= 3:
+                    # Exile instants/sorceries to pay delve
+                    for spell in gy_spells[:min(delve_count, 5)]:
+                        if spell in gs.zones.graveyard:
+                            gs.zones.graveyard.remove(spell)
+                            gs.zones.exile.append(spell)
+                    gs.zones.hand.remove(c)
+                    gs.zones.battlefield.append(c)
+                    c.turn_entered = gs.turn
+                    c.summoning_sickness = True
+                    # Size: 3/3 base + 1 counter per exiled spell
+                    murktide_size = 3 + min(delve_count, 5)
+                    c.counters = min(delve_count, 5)
+                    gs._log(f"  Murktide Regent: {murktide_size}/{murktide_size} flying (delved {min(delve_count,5)} spells)")
+                    break
+
         # 5. Use removal ONLY on high-value targets
         if opponent:
             self._use_removal_sparingly(gs, opponent)
@@ -453,10 +479,10 @@ class IzzetProwessMatchAPL(MatchAPL):
         From competitive guides: "Focus on individual threats, making it difficult for 
         opponent to establish Guide of Souls + Ocelot Pride, or Ajani + Bombardment."
         
-        Priority kill targets (vs Boros):
+        Priority kill targets (vs Boros — from playbook):
         1. Guide of Souls (1/2) — THE engine piece. Kill with Lava Dart or Unholy Heat.
         2. Ocelot Pride (1/1) — token generator. Kill with Lava Dart.
-        3. Cori-Steel Cutter (on our side - opponent perspective: kill our Cutter too)
+        3. Ragavan (2/1) — Playbook: "Kill with Lava Dart before it connects" on the draw.
         4. Phlage (gains 3 life per attack)
         5. Screaming Nemesis (3/3, reflects damage — use exile not burn)
         6. Any creature with 4+ power (racing threat)
@@ -471,7 +497,8 @@ class IzzetProwessMatchAPL(MatchAPL):
 
         # Priority: Engine pieces > Big threats > Everything else
         engine_pieces = [c for c in opp_creatures
-                         if c.name in ("Guide of Souls", "Ocelot Pride", "Ajani, Nacatl Pariah")]
+                         if c.name in ("Guide of Souls", "Ocelot Pride", "Ajani, Nacatl Pariah",
+                                       "Ragavan, Nimble Pilferer")]
         big_threats = [c for c in opp_creatures
                        if safe_power(c) >= 4
                        or c.name == "Phlage, Titan of Fire's Fury"
@@ -740,7 +767,32 @@ class IzzetProwessMatchAPL(MatchAPL):
         return mutagenic
 
     def respond_to_spell(self, gs, opponent, spell):
-        """Prowess doesn't run reactive interaction — it's all-in aggro."""
+        """Protect key creatures with Mutagenic Growth in response to removal.
+        Playbook: 'Cast Mutagenic Growth at instant speed in response to Discharge 
+        to save your creature (+2/+2 survives most Discharge values).'
+        """
+        if not spell:
+            return None
+        # Check if opponent is targeting one of our creatures with removal
+        burn_dmg = get_burn_damage(spell)
+        if burn_dmg <= 0:
+            return None
+        # Find our most valuable creature that would die
+        for c in gs.zones.battlefield:
+            if not c.has(Tag.CREATURE) or c.is_land():
+                continue
+            t = safe_toughness(c)
+            if t <= burn_dmg and t + 2 > burn_dmg:
+                # Mutagenic Growth saves it (+2/+2)
+                for h in list(gs.zones.hand):
+                    if h.name == MUTAGENIC:
+                        gs.zones.hand.remove(h)
+                        gs.zones.graveyard.append(h)
+                        gs.life -= 2  # Phyrexian mana cost
+                        self._trigger_prowess(gs, MUTAGENIC)
+                        self._spells_this_turn += 1
+                        gs._log(f"  Mutagenic Growth saves {c.name} from {spell.name}!")
+                        return h
         return None
 
     def end_step_actions(self, gs: GameState, opponent: GameState):

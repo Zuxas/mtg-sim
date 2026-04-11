@@ -56,6 +56,15 @@ APL_REGISTRY = {
     "Eldrazi Ramp": EldraziRampMatchAPL,
     "Goryos Vengeance": GoryosMatchAPL,
     "Amulet Titan": AmuletTitanMatchAPL,
+    "Dimir Oculus": DimirOculusMatchAPL,
+    "Glockulous": GlockulousMatchAPL,
+    "Humans": HumansMatchAPL,
+    "Living End": LivingEndMatchAPL,
+    "Neoform": NeoformMatchAPL,
+    "Ruby Storm": RubyStormMatchAPL,
+    "Uw Blink": UWBlinkMatchAPL,
+    "Uw Control": UWControlMatchAPL,
+    "Yawgmoth": YawgmothMatchAPL,
 }
 
 DEFAULT_FIELD = {
@@ -217,7 +226,16 @@ def _bo3_worker(args):
     deck_a, deck_b, sb_a, sb_b, na, nb, n, seed, apl_a, apl_b, sp_a, sp_b = args
     import random, sys
     sys.path.insert(0, '.')
-    from apl.match_apl import GenericMatchAPL
+    from apl.dimir_oculus_match import DimirOculusMatchAPL
+from apl.glockulous_match import GlockulousMatchAPL
+from apl.humans_match import HumansMatchAPL
+from apl.living_end_match import LivingEndMatchAPL
+from apl.neoform_match import NeoformMatchAPL
+from apl.ruby_storm_match import RubyStormMatchAPL
+from apl.uw_blink_match import UWBlinkMatchAPL
+from apl.uw_control_match import UWControlMatchAPL
+from apl.yawgmoth_match import YawgmothMatchAPL
+from apl.match_apl import GenericMatchAPL
     from engine.bo3_match import run_bo3
     rng = random.Random(seed)
     a = apl_a() if apl_a else GenericMatchAPL()
@@ -233,4 +251,13 @@ def _bo3_worker(args):
 
 
 # Import for GenericMatchAPL
+from apl.dimir_oculus_match import DimirOculusMatchAPL
+from apl.glockulous_match import GlockulousMatchAPL
+from apl.humans_match import HumansMatchAPL
+from apl.living_end_match import LivingEndMatchAPL
+from apl.neoform_match import NeoformMatchAPL
+from apl.ruby_storm_match import RubyStormMatchAPL
+from apl.uw_blink_match import UWBlinkMatchAPL
+from apl.uw_control_match import UWControlMatchAPL
+from apl.yawgmoth_match import YawgmothMatchAPL
 from apl.match_apl import GenericMatchAPL

@@ -35,7 +35,7 @@ from apl.domain_zoo_match import DomainZooMatchAPL
 from apl.mono_red_match import MonoRedMatchAPL
 from apl.murktide_match import MurktideMatchAPL
 from apl.jeskai_blink_match import JeskaiBlinkMatchAPL
-from apl.affinity_match import AffinityMatchAPL
+from apl.affinity_match import IzzetAffinityMatchAPL as AffinityMatchAPL
 from apl.esper_blink_match import EsperBlinkMatchAPL
 from apl.eldrazi_tron_match import EldraziTronMatchAPL
 from apl.eldrazi_ramp_match import EldraziRampMatchAPL

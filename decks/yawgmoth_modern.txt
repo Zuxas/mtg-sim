@@ -1,0 +1,35 @@
+3 Yawgmoth, Thran Physician
+2 Melira, Sylvok Outcast
+2 Blood Artist
+1 Zulaport Cutthroat
+4 Young Wolf
+4 Geralf's Messenger
+2 Renata, Called to the Hunt
+4 Collected Company
+4 Chord of Calling
+3 Eldritch Evolution
+2 Hapatra, Vizier of Poisons
+2 Grist, the Hunger Tide
+2 Bloodline Cultivator
+1 Postmaster Pell
+3 Overgrown Tomb
+4 Verdant Catacombs
+2 Misty Rainforest
+4 Forest
+2 Swamp
+2 Boseiju, Who Endures
+1 Yavimaya, Cradle of Growth
+1 Urborg, Tomb of Yawgmoth
+1 Westvale Abbey
+1 Castle Locthwain
+1 Nurturing Peatland
+
+Sideboard
+2 Endurance
+2 Force of Vigor
+2 Haywire Mite
+2 Fulminator Mage
+1 Reclamation Sage
+3 Thoughtseize
+2 Veil of Summer
+1 Agatha's Soul Cauldron

@@ -1,35 +1,34 @@
-// Domain Zoo - Clément Lumeau (28/03/26)
-// Event: Urza series, Place: 2
-2 Arena of Glory
-4 Arid Mesa
-2 Consign to Memory
-4 Doorkeeper Thrull
-4 Flooded Strand
-1 Godless Shrine
-1 Indatha Triome
+4 Scion of Draco
+4 Territorial Kavu
+3 Doorkeeper Thrull
+3 Phlage, Titan of Fire's Fury
+3 Psychic Frog
+3 Ragavan, Nimble Pilferer
+3 Tribal Flames
+4 Lightning Bolt
+3 Stubborn Denial
+1 Thraben Charm
 4 Leyline Binding
 4 Leyline of the Guildpact
-4 Lightning Bolt
-1 Mountain
-4 Phlage, Titan of Fire's Fury
-1 Plains
-4 Ragavan, Nimble Pilferer
-4 Scion of Draco
-2 Steam Vents
-1 Stock Up
-2 Stubborn Denial
-1 Teferi, Time Raveler
-1 Temple Garden
-4 Territorial Kavu
-1 Thundering Falls
+4 Arid Mesa
 4 Wooded Foothills
+3 Flooded Strand
+1 Sacred Foundry
+1 Spara's Headquarters
+1 Steam Vents
+1 Temple Garden
+1 Thundering Falls
+1 Arena of Glory
+1 Blood Crypt
+1 Indatha Triome
+1 Mountain
+1 Plains
 
 Sideboard
-2 Consign to Memory
-2 Damping Sphere
-3 Mystical Dispute
-1 Nihil Spellbomb
-1 Path to Exile
-1 Surgical Extraction
-2 Wear / Tear
-3 Wrath of the Skies
+4 Consign to Memory
+1 Stubborn Denial
+2 Pyroclasm
+2 Pest Control
+2 Magebane Lizard
+2 Clarion Conqueror
+2 Thraben Charm

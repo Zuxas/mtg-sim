@@ -1,0 +1,36 @@
+4 Ruby Medallion
+4 Desperate Ritual
+4 Manamorphose
+4 Pyretic Ritual
+4 Reckless Impulse
+4 Wrenn's Resolve
+1 Glimpse the Impossible
+3 Past in Flames
+2 Wish
+1 Grapeshot
+1 Strike It Rich
+2 Artist's Talent
+4 Mountain
+3 Arid Mesa
+2 Bloodstained Mire
+2 Scalding Tarn
+2 Wooded Foothills
+1 Commercial District
+1 Elegant Parlor
+1 Gemstone Caverns
+1 Heroes' Hangout
+1 Romantic Rendezvous
+1 Sacred Foundry
+1 Sunbaked Canyon
+
+Sideboard
+3 Untimely Malfunction
+2 Orim's Chant
+1 Silence
+2 Wear // Tear
+1 Meltdown
+2 Grapeshot
+1 Empty the Warrens
+1 Past in Flames
+1 Hexing Squelcher
+1 Mine Collapse

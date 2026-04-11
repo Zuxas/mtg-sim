@@ -289,7 +289,21 @@ class BorosEnergyMatchAPL(MatchAPL):
 
         # 3. Deploy lifegain engine creatures (priority order)
         # Guide of Souls is #1 — every creature entering = +1 life +1 energy
-        for name in (GUIDE_OF_SOULS, OCELOT_PRIDE, AJANI, VOICE_OF_VICTORY):
+        # Playbook: vs Prowess, skip deploying 1-toughness creatures (die to free Lava Dart)
+        facing_burn = False
+        if opponent:
+            opp_names = {c.name for c in opponent.zones.battlefield if not c.is_land()}
+            facing_burn = bool(opp_names & {"Monastery Swiftspear", "Dragon's Rage Channeler",
+                                            "Slickshot Show-Off", "Cori-Steel Cutter"})
+        
+        deploy_order = [GUIDE_OF_SOULS, AJANI]  # Always safe (2+ toughness)
+        if not facing_burn:
+            deploy_order = [GUIDE_OF_SOULS, OCELOT_PRIDE, AJANI, VOICE_OF_VICTORY]
+        # Playbook: "At 8 or less life, switch to Tempo Control — stop advancing board"
+        if gs.life <= 8 and facing_burn:
+            deploy_order = [GUIDE_OF_SOULS]  # Only deploy lifegain engine
+        
+        for name in deploy_order:
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)

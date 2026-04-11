@@ -526,3 +526,20 @@ Oracle: "{2}{W}, {T}: Whenever you attack this turn, create two 1/1 red Warrior 
 - Costs 3 mana + land tap, but generates 2 tokens per attack
 - Combined with Guide + Bombardment = more triggers
 **Current APL:** Not modeled. Minor — only 1 copy in deck.
+
+
+### EDGE 13: Arena of Glory Haste — ALL Creatures, Not Just Phlage
+Oracle: "{R}, {T}, Exert: Add {R}{R}. If that mana is spent on a creature spell, 
+  it gains haste until end of turn."
+This works on EVERY creature in the deck:
+- **Voice of Victory + Arena haste**: Attack immediately → 2 Mobilize tokens T2
+  → Guide triggers → Ocelot triggers → massive value one turn earlier
+- **Seasoned Pyromancer + Arena haste**: ETB discard/draw + attack for 2 damage
+- **Clarion Conqueror (SB) + Arena haste**: 3/3 flying that shuts down activated abilities
+  → Devastating vs Affinity, Tron (Karn), Amulet
+- **Ragavan + Arena haste**: Ragavan already has haste via dash, so Arena is redundant
+  → BUT: Arena saves {1} mana vs dash cost (Arena Ragavan = {R} vs Dash = {1}{R})
+- **Screaming Nemesis + Arena haste**: Already has haste (redundant)
+- **Ajani + Arena haste**: Attack immediately as 1/2 → triggers Guide if blocked
+**Current APL:** Only checks Arena for Phlage escape. Should check for ALL creatures.
+**Fix:** When casting any creature and Arena is untapped, give it haste.

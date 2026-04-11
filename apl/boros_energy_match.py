@@ -54,6 +54,18 @@ class BorosEnergyMatchAPL(MatchAPL):
         self._ajani_pw_active = False  # Ajani transformed into planeswalker
         self._ajani_pw_loyalty = 0
 
+    def _grant_arena_haste(self, gs, creature):
+        """Arena of Glory: if untapped Arena on board, creature gets haste.
+        Oracle: "{R}, {T}, Exert: Add {R}{R}. If mana spent on creature spell, it gains haste."
+        Works on: Voice of Victory, Seasoned Pyromancer, Clarion Conqueror, Ajani, etc.
+        """
+        arena = next((c for c in gs.zones.battlefield
+                      if 'arena of glory' in (c.name or '').lower()
+                      and not getattr(c, 'tapped', False)), None)
+        if arena and getattr(creature, 'summoning_sickness', False):
+            creature.summoning_sickness = False
+            gs._log(f"  Arena of Glory haste: {creature.name}")
+
     # ------------------------------------------------------------------
     # Mulligan
     # ------------------------------------------------------------------
@@ -253,10 +265,11 @@ class BorosEnergyMatchAPL(MatchAPL):
 
         # 3. Deploy lifegain engine creatures (priority order)
         # Guide of Souls is #1 — every creature entering = +1 life +1 energy
-        for name in (GUIDE_OF_SOULS, OCELOT_PRIDE, AJANI):
+        for name in (GUIDE_OF_SOULS, OCELOT_PRIDE, AJANI, VOICE_OF_VICTORY):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
+                    self._grant_arena_haste(gs, c)
                     # Guide triggers for itself entering
                     guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
                     if guides and c.has(Tag.CREATURE):
@@ -280,6 +293,7 @@ class BorosEnergyMatchAPL(MatchAPL):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
+                    self._grant_arena_haste(gs, c)
                     guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
                     if guides:
                         gs.life += guides
@@ -300,6 +314,7 @@ class BorosEnergyMatchAPL(MatchAPL):
         for c in list(gs.zones.hand):
             if c.name == SEASONED_PYRO and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
+                self._grant_arena_haste(gs, c)
                 guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
                 if guides:
                     gs.life += guides
@@ -430,6 +445,7 @@ class BorosEnergyMatchAPL(MatchAPL):
             card = min(castable, key=lambda c: (c.cmc, c.name))
             if not gs.cast_spell(card):
                 break
+            self._grant_arena_haste(gs, card)
             guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
             if guides:
                 gs.life += guides

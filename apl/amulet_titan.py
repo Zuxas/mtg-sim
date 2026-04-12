@@ -256,15 +256,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             or self._icetill_on_bf
             or (not self._extra_land_used and self._icetill_on_bf)
         )
-        # Also check if Grazer is in hand (ETB = extra land drop)
-        grazer_in_hand = any(c.name == GRAZER for c in gs.zones.hand)
+        # RULES: Grazer in hand does NOT grant extra land drops until CAST
+        # Only actual remaining drops count for self-return eligibility
         
-        # Calculate remaining drops: base (1) + extra from Grazer ETBs + Icetill + Spelunking
+        # Calculate remaining drops: base (1) + extra from Grazer ETBs + Icetill
         max_drops = self._max_land_drops
         if self._icetill_on_bf:
             max_drops += 1
         remaining_drops = max_drops - self._land_drops_used
-        can_replay = remaining_drops > 0 or grazer_in_hand
+        can_replay = remaining_drops > 0
         
         # CRITICAL: Don't self-return if only 1 land on BF!
         # Need at least 2 lands so one stays as permanent mana while we chain the other.
@@ -554,6 +554,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         gs.land_played = True
         self._land_drops_used += 1
         self._place_land_on_bf(land, gs, from_hand=True)
+        # If self-return happened (land_played reset to False),
+        # un-count the land drop since the same land will replay
+        if not gs.land_played:
+            self._land_drops_used -= 1
         return True
 
     # ══════════════════════════════════════════════════════════════════

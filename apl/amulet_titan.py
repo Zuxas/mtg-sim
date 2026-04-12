@@ -1025,6 +1025,35 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             gs.damage_dealt = 999
             return True
 
+        # All pieces EXCEPT Analyst — try to find it!
+        if ((has_lotus and has_2nd_field and has_woodland and has_amulet and has_delirium)
+                or (has_lotus and has_woodland and self._amulets >= 2 and has_delirium)):
+            if not analyst_available:
+                analyst_in_lib = any(x.name == ANALYST for x in gs.zones.library)
+                if analyst_in_lib:
+                    # Pact for Analyst
+                    pact_in_hand = any(h.name == PACT for h in gs.zones.hand)
+                    if pact_in_hand and not self._pact_owed:
+                        a = next((x for x in gs.zones.library if x.name == ANALYST), None)
+                        if a:
+                            gs.zones.library.remove(a)
+                            gs.zones.hand.append(a)
+                            self._pact_owed = True
+                            self._pact_turn_cast = gs.turn
+                            gs._log("  Loop setup: Pact -> Analyst")
+                    # GSZ X=2 for Analyst ({2}{G} = 3 mana)
+                    if not any(h.name == ANALYST for h in gs.zones.hand):
+                        if gs.mana_pool.total() >= 3 and any(h.name == ZENITH for h in gs.zones.hand):
+                            self._try_green_sun_zenith(gs, 2)
+                    # Now try casting Analyst from hand
+                    analyst_card = next((h for h in gs.zones.hand if h.name == ANALYST), None)
+                    if analyst_card and gs.mana_pool.total() >= 2:
+                        if self._try_cast_analyst(gs):
+                            if gs.mana_pool.total() >= 4:
+                                self._try_sacrifice_analyst(gs)
+                            # Re-check loop
+                            return self._check_analyst_loop_win(gs)
+
         return False
 
     # ══════════════════════════════════════════════════════════════════

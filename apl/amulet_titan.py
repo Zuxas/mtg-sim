@@ -2160,33 +2160,33 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if not self._titan_on_bf:
             self._try_deploy_titan(gs)
 
-        # Try Scapeshift with post-combat mana
+        # Rumble FIRST to dig for combo pieces (Analyst, Scapeshift)
+        if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
+            self._try_cast_rumble(gs)
+
+        # Play remaining hand lands (bounce chains for more mana)
+        for _ in range(5):
+            hand_lands = [h for h in gs.zones.hand if h.is_land()]
+            if not hand_lands: break
+            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
+            if self._land_play_value(best, gs) <= 0: break
+            self._place_land_on_bf(best, gs, from_hand=True)
+
+        # Try Scapeshift OHKO with all available mana
         if gs.mana_pool.total() >= 4:
             self._try_scapeshift(gs)
             if gs.damage_dealt >= 20: return
 
-        # Cast Analyst + sac for combo loop
+        # Cast Analyst + sac for combo loop (uses newly found pieces from Rumble)
         if gs.mana_pool.total() >= 6 and not self._analyst_on_bf:
             self._try_cast_analyst(gs)
             if self._analyst_on_bf and gs.mana_pool.total() >= 4:
                 self._try_sacrifice_analyst(gs)
                 if gs.damage_dealt >= 20: return
 
-        # Rumble to dig for missing pieces (Analyst, Scapeshift)
-        if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
-            self._try_cast_rumble(gs)
-
         # Cast Colossus for next turn damage
         if gs.mana_pool.total() >= 7:
             self._try_cast_colossus(gs)
-
-        # Play remaining hand lands
-        for _ in range(3):
-            hand_lands = [h for h in gs.zones.hand if h.is_land()]
-            if not hand_lands: break
-            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
-            if self._land_play_value(best, gs) <= 0: break
-            self._place_land_on_bf(best, gs, from_hand=True)
 
         # Check Analyst loop
         self._check_analyst_loop_win(gs)

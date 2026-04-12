@@ -1147,6 +1147,30 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         if self._titan_has_haste:
                             self._titan_attack(gs)
                         return True
+                elif x_target >= 2:
+                    # X=2: find Analyst (MV 2) for combo loop
+                    analyst = next((x for x in gs.zones.library if x.name == ANALYST), None)
+                    if analyst:
+                        gs.zones.library.remove(analyst)
+                        gs.zones.battlefield.append(analyst)
+                        analyst.summoning_sickness = True
+                        self._analyst_on_bf = True
+                        # Analyst ETB: mill 3
+                        for _ in range(min(3, len(gs.zones.library))):
+                            milled = gs.zones.library.pop(0)
+                            gs.zones.graveyard.append(milled)
+                            if milled.is_land(): self._track_land_to_gy(milled.name)
+                            else: self._track_card_to_gy(milled.type_line)
+                        gs._log("  GSZ X=2 → Analyst + mill 3")
+                        return True
+                    # Fallback: try Grazer (MV 1)
+                    grazer = next((x for x in gs.zones.library if x.name == GRAZER), None)
+                    if grazer:
+                        gs.zones.library.remove(grazer)
+                        gs.zones.battlefield.append(grazer)
+                        grazer.summoning_sickness = True
+                        gs._log("  GSZ X=2 → Grazer (fallback)")
+                        return True
                 elif x_target >= 1:
                     grazer = next((x for x in gs.zones.library if x.name == GRAZER), None)
                     if grazer:
@@ -2177,6 +2201,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if not self._analyst_on_bf:
                 if self._try_cast_analyst(gs):
                     did = True; actions += 1; continue
+                # GSZ X=2 for Analyst when we have the loop pieces but no Analyst
+                if (gs.mana_pool.total() >= 3 and gs.mana_pool.G >= 1
+                        and any(h.name == ZENITH for h in gs.zones.hand)
+                        and len(self._delirium_types) >= 4):
+                    if self._try_green_sun_zenith(gs, 2):
+                        did = True; actions += 1; continue
 
             # ── 11.5 CULTIVATOR COLOSSUS (7 mana, chains lands from hand) ──
             if gs.mana_pool.total() + self._spawn_count >= 7 and not self._titan_on_bf:

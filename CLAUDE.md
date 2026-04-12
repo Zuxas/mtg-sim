@@ -2,12 +2,6 @@
 
 This project has a graphify knowledge graph at graphify-out/.
 
-Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
-
-
 ## Ecosystem Sources of Truth
 - Website playbooks = PRIMARY source for APL strategy
 - Meta-analyzer DB = source for meta % and tournament decklists
@@ -16,33 +10,40 @@ Rules:
 
 ## APL Registry (unified)
 - Single source of truth: apl/__init__.py
-- get_apl(name) goldfish APL (52 keys)
-- get_match_apl(name) MatchAPL with fallback (34 match keys)
+- Amulet Titan uses file-based deck: decks/amulet_titan_modern.txt
 
-## Amulet Titan APL — COMPLETE REWRITE (April 11 2026)
+## Amulet Titan APL — FINAL STATE (April 11 2026)
 
-### Status: 1854L | avg T7.49 | 91.7% WR | 21.7% mull (5000 games, COMMITTED)
+### 1928 lines | avg T7.83 | 90.0% WR | 21.7% mull (5000 games, 4 commits)
 
-Bible-based combo deck model with:
-- Scapeshift OHKO (fires 41.5%, kills 2.2%)
-- Analyst infinite loop wins (~5%)
-- Titan haste via Hanweir (67% rate)
-- Saga Ch III Amulet fetch
-- Bounce self-return chaining
-- 22 edge cases
+Bible-based combo deck with:
+- Scapeshift OHKO (fires 41.5%, deterministic kills ~2%)
+- Analyst infinite loop (wins ~3-5%, avg T6.7)
+- Titan haste via Hanweir (80% rate)
+- Titan deploys avg T5.7, 55% by T5, 4.3% T2 deploys
+- Saga Ch III Amulet fetch reliable
+- Bounce self-return with land drop tracking
+- 22 edge cases documented
+- Pact safety: 5+ lands with 2+ G-sources OR winning this turn
+- Lotus Field: won't play without 2 sac targets
+- Bounce won't self-return with <=1 land on BF
 
-### Remaining targets:
-- avg T7.49 to T5-6 (more Scapeshift kills, better burst chains)
-- Add Mycosynth Gardens to stub deck
-- Multiple bounce replays per turn
-- Deeper Titan fetch decision tree
-- Mirrorpool spell copy
+### Decklist: decks/amulet_titan_modern.txt (60 main, 15 SB)
+- Added: Mycosynth Gardens, Cultivator Colossus, Dryad Arbor main
+- Removed: Ghost Quarter, Selesnya Sanctuary, Snow-Covered Forest main
 
-## Compute
-- 24 CPU cores, RTX 3080 10GB
-- ALWAYS kill Python processes after tasks
+### Remaining improvement targets:
+- avg T7.83 → target T6-7 (reduce T10+ tail: 17% of games)
+- Bounce chain replay: works but limited by permanent mana base establishment
+- Scapeshift deterministic kill: only 2% of Shifts are full OHKO (most are ramp)
+- Titan fetch tree: ~10 branches, could expand to 20+
+- Construct damage: tokens attack but power scaling needs audit
+
+### Design docs:
+- docs/amulet_titan_bible_audit.md — full rewrite spec
+- docs/SESSION_STATE_CRITICAL.md — implementation checklist
 
 ## Next Up
-- Amulet Titan: improve kill speed
+- Amulet Titan: reduce T10+ tail (better land sequencing, Scapeshift kill rate)
 - Domain Zoo: fix P/T propagation
 - Deep audit 9 basic match APLs

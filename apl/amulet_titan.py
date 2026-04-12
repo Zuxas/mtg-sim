@@ -2244,6 +2244,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     self._titan_attack(gs)
                     break
 
+        # Check Analyst loop FIRST while mana is highest (avg 22.3 post-attack)
+        self._check_analyst_loop_win(gs)
+        if gs.damage_dealt >= 20: return
+
+        # Analyst sac if on BF (may have been cast in main_phase pre-deploy)
+        if self._analyst_on_bf and gs.mana_pool.total() >= 4:
+            self._try_sacrifice_analyst(gs)
+            if gs.damage_dealt >= 20: return
+
         # Try deploy Titan if we haven't yet
         if not self._titan_on_bf:
             self._try_deploy_titan(gs)

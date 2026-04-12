@@ -2056,8 +2056,21 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     if self._amulets < 4 and gs.mana_pool.total() >= 1:
                         self._try_cast_amulet_with_spawn(gs)
 
-                    # Second Titan is cast in main_phase2 (after combat)
-                    # Can't cast sorcery-speed spells between main_phase and combat
+                    # Cast Analyst now so it's on BF for sac in main_phase2
+                    if gs.mana_pool.total() >= 2 and not self._analyst_on_bf:
+                        self._try_cast_analyst(gs)
+
+                    # Rumble to find 2nd Titan (for main_phase2 cast)
+                    if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
+                        self._try_cast_rumble(gs)
+
+                    # Play remaining lands (generates mana for main_phase2)
+                    if not gs.land_played:
+                        best = self._best_land_to_play(gs)
+                        if best:
+                            gs.land_played = True
+                            self._place_land_on_bf(best, gs, from_hand=True)
+
                     return  # done — let combat handle the rest
             # Check combo win
             if gs.damage_dealt >= 20 or gs.damage_dealt == 999:

@@ -1,22 +1,20 @@
 4 Arboreal Grazer
-3 Primeval Titan
+4 Primeval Titan
 1 Aftermath Analyst
-1 Cultivator Colossus
-1 Dryad Arbor
 4 Scapeshift
 3 Green Sun's Zenith
 3 Malevolent Rumble
 2 Summoner's Pact
 4 Amulet of Vigor
-1 Vexing Bauble
 4 Spelunking
 4 Urza's Saga
 4 Crumbling Vestige
-4 Gruul Turf
+3 Gruul Turf
 3 Boseiju, Who Endures
-3 Forest
-2 Lotus Field
 2 Simic Growth Chamber
+2 Forest
+2 Lotus Field
+1 The Mycosynth Gardens
 1 Echoing Deeps
 1 Hanweir Battlements
 1 Mirrorpool
@@ -25,14 +23,18 @@
 1 Tolaria West
 1 Urza's Cave
 1 Vesuva
+1 Cultivator Colossus
+1 Dryad Arbor
 
 Sideboard
-3 Fire Magic
-2 Dismember
 3 Force of Vigor
-2 Trinisphere
+2 Fire Magic
+2 Dismember
 1 Bojuka Bog
 1 Collector Ouphe
 1 Icetill Explorer
 1 Six
 1 The Wandering Minstrel
+1 Vexing Bauble
+1 Trinisphere
+1 Snow-Covered Forest

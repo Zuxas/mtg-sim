@@ -43,7 +43,7 @@ APL_REGISTRY = {
     "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
     "domain":          ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
     "moderndomainzoo": ("apl.modern_domain_zoo","ModernDomainZooAPL","domain"),
-    "amulettitan":     ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
+    "amulettitan":     ("apl.amulet_titan",     "AmuletTitanAPL",    "decks/amulet_titan_modern.txt"),
     "amulet":          ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
     "titan":           ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
     "eldrazitron":     ("apl.eldrazi_tron",     "EldraziTronAPL",    "etron"),

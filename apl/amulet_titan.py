@@ -145,6 +145,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         self._extra_land_used = False
         self._titan_etb_used  = False
         self._mirror_used     = False
+        self._land_drops_used = 0     # total land drops this turn (including replays)
+        self._max_land_drops  = 1     # base: 1 land drop per turn
 
     # ══════════════════════════════════════════════════════════════════
     # CORE ENGINE: Amulet untap + mana generation
@@ -237,7 +239,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         # Also check if Grazer is in hand (ETB = extra land drop)
         grazer_in_hand = any(c.name == GRAZER for c in gs.zones.hand)
         
-        can_replay = has_extra_drops or grazer_in_hand
+        # Calculate remaining drops: base (1) + extra from Grazer ETBs + Icetill + Spelunking
+        max_drops = self._max_land_drops
+        if self._icetill_on_bf:
+            max_drops += 1
+        remaining_drops = max_drops - self._land_drops_used
+        can_replay = remaining_drops > 0 or grazer_in_hand
         
         if can_replay and self._amulets >= 1:
             # BOUNCE ITSELF — replay for another Amulet chain
@@ -247,6 +254,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 rid = id(to_return)
                 gs.zones.battlefield = [c for c in gs.zones.battlefield if id(c) != rid]
                 gs.zones.hand.append(to_return)
+                # Reset land_played so the greedy loop can replay this bounce land
+                gs.land_played = False
                 gs._log(f"  Bounce SELF-RETURN: {bounce_name} → hand (will replay)")
                 return
         
@@ -480,6 +489,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if not land:
             return False
         gs.land_played = True
+        self._land_drops_used += 1
         self._place_land_on_bf(land, gs, from_hand=True)
         return True
 
@@ -606,14 +616,22 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # Tap lands for mana before trying to pay
             self._tap_all_lands_for_mana(gs)
             if gs.mana_pool.total() >= 4 and gs.mana_pool.G >= 2:
+                # Pay {2}{G}{G}: 2 green + 2 generic
                 gs.mana_pool.G -= 2
-                for attr in ('flex', 'C', 'U', 'R', 'B', 'W'):
+                remaining = 2
+                for attr in ('flex', 'C', 'U', 'R', 'B', 'W', 'G'):
                     have = getattr(gs.mana_pool, attr)
-                    if have >= 2:
-                        setattr(gs.mana_pool, attr, have - 2)
-                        break
-                self._pact_owed = False
-                gs._log("  Pact upkeep: paid {2}{G}{G}")
+                    take = min(have, remaining)
+                    if take > 0:
+                        setattr(gs.mana_pool, attr, have - take)
+                        remaining -= take
+                    if remaining <= 0: break
+                if remaining <= 0:
+                    self._pact_owed = False
+                    gs._log("  Pact upkeep: paid {2}{G}{G}")
+                else:
+                    gs.damage_dealt = -999
+                    gs._log("  Pact upkeep: CANNOT PAY — loss!")
             else:
                 gs.damage_dealt = -999  # loss
                 gs._log("  Pact upkeep: CANNOT PAY — loss!")
@@ -755,8 +773,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 land = self._best_land_to_play(gs)
                 if land:
                     self._place_land_on_bf(land, gs, from_hand=True)
-                    # Grazer's land ETB doesn't use the land drop
-                    gs.land_played = False  # Grazer provides its own extra drop
+                    # Grazer ETB is an EXTRA land drop (doesn't use normal drop)
+                    # But it does count as a drop for chain-limiting purposes
+                    self._max_land_drops += 1
+                    self._land_drops_used += 1
+                    gs.land_played = False  # normal land drop still available
                 gs._log("  Grazer: 0/3 + extra land")
                 return True
         return False
@@ -946,10 +967,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             return False
         for c in list(gs.zones.hand):
             if c.name != PACT: continue
-            # Safety check
-            bf_lands = len([x for x in gs.zones.battlefield if x.is_land()])
-            can_pay = bf_lands >= 4
-            can_win = (self._titan_on_bf or gs.mana_pool.total() + self._spawn_count >= 6)
+            # Safety check — Pact costs {2}{G}{G} next upkeep
+            # Need at least 2 green-producing lands + 2 other lands
+            bf_lands = [x for x in gs.zones.battlefield if x.is_land()]
+            g_sources = sum(1 for x in bf_lands if x.name in FOREST_TYPES
+                           or x.name in BOUNCE_LANDS or x.name == SHIFTING
+                           or x.name == LOTUS)
+            total_lands = len(bf_lands)
+            can_pay = total_lands >= 5 and g_sources >= 2
+            can_win = (gs.mana_pool.total() + self._spawn_count >= 6
+                       and any(h.name == TITAN for h in gs.zones.hand))
+            # Also win if Titan is on BF and we have haste
+            can_win = can_win or (self._titan_on_bf and self._titan_has_haste)
             if not can_pay and not can_win:
                 continue
 
@@ -1073,14 +1102,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ETB: first priority = give Titan haste
             if not hanweir_bf and not self._titan_has_haste:
                 if in_lib(HANWEIR):
-                    # Hanweir + R-producing land (need R to activate haste)
+                    # Hanweir needs {R} to activate — MUST pair with R source
                     if am >= 2 and in_lib(MIRRORPOOL):
-                        return [HANWEIR, MIRRORPOOL]  # haste + copy (double Amulet)
-                    # Gruul Turf gives {R}{G} — perfect for Hanweir activation
-                    for ml in [GRUUL_TURF, VESTIGE, SIMIC_CHAMBER, SELESNYA_SANC]:
-                        if in_lib(ml):
-                            return [HANWEIR, ml]
-                    return [HANWEIR, FOREST_]
+                        return [HANWEIR, MIRRORPOOL]
+                    # Gruul Turf: best (gives {R}{G} directly)
+                    if in_lib(GRUUL_TURF):
+                        return [HANWEIR, GRUUL_TURF]
+                    # Vestige ETB: gives any color (will choose R for haste)
+                    if in_lib(VESTIGE):
+                        return [HANWEIR, VESTIGE]
+                    # No R source available — DON'T fetch Hanweir (no haste = waste)
+                    # Fall through to default fetch below
 
             # Have haste or Hanweir already on BF
             if am >= 2:
@@ -1674,6 +1706,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
         while actions < MAX_ACTIONS:
             did = False
+
+            # ── 0.5 PLAY HANWEIR BEFORE TITAN (haste setup) ──
+            if (not gs.land_played and not self._titan_on_bf
+                    and not self._hanweir_on_bf
+                    and any(h.name == HANWEIR for h in gs.zones.hand)
+                    and gs.mana_pool.total() + self._spawn_count >= 6
+                    and any(h.name in {TITAN, ZENITH, PACT} for h in gs.zones.hand)):
+                # Play Hanweir BEFORE casting Titan so ETB can activate haste
+                hanweir = next(h for h in gs.zones.hand if h.name == HANWEIR)
+                gs.land_played = True
+                self._land_drops_used += 1
+                self._place_land_on_bf(hanweir, gs, from_hand=True)
+                did = True; actions += 1
+                continue
 
             # ── 1. WIN CONDITION CHECK ──
             if not self._titan_on_bf:

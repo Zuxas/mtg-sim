@@ -1638,6 +1638,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 self._icetill_on_bf = True
                 c.summoning_sickness = True
                 c.turn_entered = gs.turn
+                self._max_land_drops += 1  # Icetill grants +1 land drop per turn
                 gs._log("  Icetill: extra land drop + play from GY")
                 return True
         return False

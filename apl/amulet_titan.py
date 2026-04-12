@@ -1321,10 +1321,25 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         self._mirror_on_bf = False
         self._mirror_used = True
 
-        # Token copy: Titan ETB fires → fetch 2 more lands
-        # Then legendary rule kills the token (we keep original)
-        gs._log("  Mirrorpool: copy Titan → token ETB fires!")
-        self._titan_etb(gs)
+        # Prefer Colossus copy (non-legendary, token survives!)
+        colossus_on_bf = any(cc.name == COLOSSUS for cc in gs.zones.battlefield)
+        if colossus_on_bf:
+            n_lands = len([x for x in gs.zones.battlefield if x.is_land()])
+            from data.card import Card
+            token = Card.__new__(Card)
+            token.name = "Colossus Token"
+            token.power = str(n_lands)
+            token.toughness = str(n_lands)
+            token.type_line = "Creature - Plant Beast"
+            token.tags = {'creature'}
+            token.summoning_sickness = True
+            token.turn_entered = gs.turn
+            token.tapped = False
+            gs.zones.battlefield.append(token)
+            gs._log(f"  Mirrorpool -> Colossus copy! ({n_lands}/{n_lands} token STAYS)")
+        else:
+            gs._log("  Mirrorpool -> Titan copy! (ETB fires, legendary rule kills token)")
+            self._titan_etb(gs)
         gs._log("  Legendary rule: token Titan sacrificed (original stays)")
 
     # ══════════════════════════════════════════════════════════════════

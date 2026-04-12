@@ -339,6 +339,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if t in tl:
                 self._delirium_types.add(t)
 
+    def _refresh_delirium(self, gs: GameState):
+        """Scan actual GY for all card types — catches anything the manual tracking missed."""
+        self._delirium_types = set()
+        for c in gs.zones.graveyard:
+            tl = getattr(c, 'type_line', '').lower()
+            if c.is_land():
+                self._delirium_types.add('land')
+            for t in ("creature", "artifact", "enchantment", "instant", "sorcery", "planeswalker"):
+                if t in tl:
+                    self._delirium_types.add(t)
+
     # ══════════════════════════════════════════════════════════════════
     # LAND PLACEMENT: place a land on BF with proper tracking
     # ══════════════════════════════════════════════════════════════════
@@ -699,6 +710,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         gs.zones.battlefield.append(token)
         self._construct_count += 1
         gs._log(f"  Saga Ch II: {pt}/{pt} Construct token")
+
+    def _update_construct_power(self, gs: GameState):
+        """Update all Construct tokens' P/T based on current artifact count."""
+        n_artifacts = sum(1 for c in gs.zones.battlefield
+                         if 'artifact' in getattr(c, 'type_line', '').lower()
+                         or c.name == AMULET or c.name == "Amulet of Vigor (Gardens)")
+        for c in gs.zones.battlefield:
+            if c.name == "Construct Token":
+                # Each construct counts itself, so +1
+                pt = max(1, n_artifacts)
+                c.power = str(pt)
+                c.toughness = str(pt)
 
     def _resolve_saga_chapter3(self, gs: GameState):
         """Saga Ch III: Search library for artifact with MV 0-1, put on BF."""
@@ -1477,6 +1500,57 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
     # UTILITY SPELLS: Icetill, Urza's Cave, Tolaria West, Vexing
     # ══════════════════════════════════════════════════════════════════
 
+    def _try_cast_colossus(self, gs: GameState) -> bool:
+        """
+        Cultivator Colossus ({4}{G}{G}{G} = 7 mana): *//* Trample.
+        ETB: repeatedly put land from hand onto BF, draw a card.
+        With Amulet: each tapped land untaps → massive mana burst.
+        P/T = number of lands you control. Often 8/8+ after chain.
+        """
+        for card in list(gs.zones.hand):
+            if card.name != COLOSSUS: continue
+            total = gs.mana_pool.total() + self._spawn_count
+            if total < 7: continue
+            if gs.mana_pool.total() < 7:
+                self._sac_spawn_for_mana(gs, 7 - gs.mana_pool.total())
+            if gs.mana_pool.G < 3: continue
+            # Pay {4}{G}{G}{G}
+            gs.mana_pool.G -= 3
+            remaining = 4
+            for attr in ('flex', 'C', 'U', 'R', 'B', 'W', 'G'):
+                have = getattr(gs.mana_pool, attr)
+                take = min(have, remaining)
+                if take > 0:
+                    setattr(gs.mana_pool, attr, have - take)
+                    remaining -= take
+                if remaining <= 0: break
+            gs.zones.hand.remove(card)
+            gs.zones.battlefield.append(card)
+            card.summoning_sickness = True
+            card.turn_entered = gs.turn
+            card.tags.add('creature')
+            gs._log("  Cultivator Colossus: ETB chain starting...")
+            # ETB: put land from hand → draw → repeat
+            chain = 0
+            while chain < 30:  # safety
+                hand_lands = [h for h in gs.zones.hand if h.is_land()]
+                if not hand_lands: break
+                # Pick best land to put in
+                best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
+                self._place_land_on_bf(best, gs, from_hand=True)
+                # Draw a card
+                if gs.zones.library:
+                    drawn = gs.zones.library.pop(0)
+                    gs.zones.hand.append(drawn)
+                chain += 1
+            # Colossus P/T = lands controlled
+            n_lands = len([x for x in gs.zones.battlefield if x.is_land()])
+            card.power = str(n_lands)
+            card.toughness = str(n_lands)
+            gs._log(f"  Colossus: chained {chain} lands, now {n_lands}/{n_lands}")
+            return True
+        return False
+
     def _try_cast_icetill(self, gs: GameState) -> bool:
         """Icetill Explorer ({2}{G}{G}): extra land drop + play lands from GY."""
         for c in list(gs.zones.hand):
@@ -1777,6 +1851,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         actions = 0
         MAX_ACTIONS = 40
 
+        # Refresh delirium from actual GY (catches engine-tracked cards)
+        self._refresh_delirium(gs)
+        # Update Construct power (dynamic: +1/+1 per artifact)
+        self._update_construct_power(gs)
+
         # Pre-loop: cast first Amulet so land drops generate chain mana
         if self._amulets == 0:
             self._try_cast_amulet_with_spawn(gs)
@@ -1845,6 +1924,16 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ── 3. GRAZER (extra land drop → chain mana) ──
             if self._try_cast_grazer(gs):
                 did = True; actions += 1; continue
+            
+            # ── 3.5 GSZ X=1 for Grazer (ONLY T1-2, save GSZ for Titan later) ──
+            if (gs.turn <= 2
+                    and self._amulets >= 1
+                    and gs.mana_pool.total() >= 2
+                    and gs.mana_pool.total() < 6
+                    and any(h.name == ZENITH for h in gs.zones.hand)
+                    and any(h.name in BOUNCE_LANDS for h in gs.zones.hand)):
+                if self._try_green_sun_zenith(gs, 1):
+                    did = True; actions += 1; continue
 
             # ── 4. SPELUNKING ──
             # Don't cast if we already have Amulet and saving 3 mana → Titan this turn
@@ -1897,6 +1986,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ── 11. ANALYST CAST ──
             if not self._analyst_on_bf:
                 if self._try_cast_analyst(gs):
+                    did = True; actions += 1; continue
+
+            # ── 11.5 CULTIVATOR COLOSSUS (7 mana, chains lands from hand) ──
+            if gs.mana_pool.total() + self._spawn_count >= 7 and not self._titan_on_bf:
+                if self._try_cast_colossus(gs):
                     did = True; actions += 1; continue
 
             # ── 12. ICETILL ──

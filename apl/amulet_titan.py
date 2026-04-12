@@ -1144,8 +1144,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._titan_on_bf = True
                         gs._log("  GSZ X=6 → Titan!")
                         self._titan_etb(gs)
-                        if self._titan_has_haste:
-                            self._titan_attack(gs)
+                        # Attack trigger fires during COMBAT
                         return True
                 elif x_target >= 2:
                     # X=2: find Analyst (MV 2) for combo loop
@@ -1214,8 +1213,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         gs._log("  Primeval Titan cast → ETB trigger")
                         self._titan_etb(gs)
                         if self._titan_has_haste:
-                            gs._log("  Titan has haste → attack trigger!")
-                            self._titan_attack(gs)
+                            gs._log("  Titan has haste → will attack in combat!")
+                        # Attack trigger fires during COMBAT, not here
                         return True
 
         # GSZ for Titan (7 mana)
@@ -1352,62 +1351,27 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         gs._log("  Hanweir: activated haste!")
 
     def _titan_attack(self, gs: GameState):
-        """Titan attack trigger: fetch 2 more lands. Combat damage is handled by engine."""
+        """
+        Titan attack trigger: resolves during combat (before damage).
+        
+        RULES-CORRECT: Only actions legal during combat with priority:
+        - Fetch 2 lands (trigger resolution)
+        - Mirrorpool copy (activated ability — legal during combat)
+        - Check Analyst loop (state check, not a spell)
+        
+        All sorcery-speed spending (Analyst, Scapeshift, Colossus, land plays,
+        second Titan) happens in main_phase2 AFTER combat.
+        """
         fetches = self._titan_fetch_priority(gs, is_etb=False)
         gs._log(f"  Titan attack trigger: fetching {fetches}")
         for land_name in fetches:
             self._fetch_land_to_bf(land_name, gs)
 
-        # Try Mirrorpool copy of Titan
+        # Mirrorpool copy of Titan (activated ability — legal during combat)
         if self._mirror_on_bf and not self._mirror_used:
             self._try_mirrorpool_copy(gs)
 
-        # SPEND EXCESS MANA from attack trigger lands
-        # The attack fetches lands → Amulet chains → often 10-20+ mana floating
-        # Use it for additional threats or combo setup
-        pool = gs.mana_pool.total()
-        
-        # Cast Analyst → sac → return lands → check loop
-        if pool >= 6 and not self._analyst_on_bf:
-            if self._try_cast_analyst(gs):
-                if gs.mana_pool.total() >= 4 and len(self._lands_in_gy) >= 2:
-                    self._try_sacrifice_analyst(gs)
-                    if gs.damage_dealt >= 20: return
-
-        # Try Scapeshift OHKO with the floating mana
-        if gs.mana_pool.total() >= 4:
-            if self._try_scapeshift(gs):
-                if gs.damage_dealt >= 20: return
-
-        # Cast GSZ for Colossus/extra threat
-        if gs.mana_pool.total() >= 7:
-            self._try_cast_colossus(gs)
-
-        # Play remaining lands from hand (bounce returns from ETB fetches)
-        for _ in range(5):
-            hand_lands = [h for h in gs.zones.hand if h.is_land()]
-            if not hand_lands: break
-            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
-            val = self._land_play_value(best, gs)
-            if val <= 0: break
-            self._place_land_on_bf(best, gs, from_hand=True)
-
-        # Try casting a SECOND Titan from hand (legendary rule kills old, but ETB fires!)
-        # Bible: "you want to be making new Titans, not attacking with old ones"
-        if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
-            for card in list(gs.zones.hand):
-                if card.name == TITAN:
-                    if gs.cast_spell(card):
-                        gs._log("  Second Titan! (legendary rule kills old, ETB fires)")
-                        self._titan_etb(gs)
-                        if self._titan_has_haste:
-                            self._titan_attack(gs)
-                        break
-            # Also try GSZ X=6 for another Titan
-            if gs.mana_pool.total() >= 7:
-                self._try_green_sun_zenith(gs, 6)
-
-        # Check Analyst loop
+        # Check Analyst loop (state check — no casting involved)
         self._check_analyst_loop_win(gs)
 
     def _try_mirrorpool_copy(self, gs: GameState):
@@ -2088,21 +2052,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     if self._amulets < 4 and gs.mana_pool.total() >= 1:
                         self._try_cast_amulet_with_spawn(gs)
 
-                    # Try second Titan (legend rule kills old, but NEW ETB fires!)
-                    if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
-                        has_titan2 = any(h.name == TITAN for h in gs.zones.hand)
-                        # If no 2nd Titan in hand but Pact available, Pact for one
-                        if not has_titan2 and not self._pact_owed:
-                            self._try_summoners_pact(gs)
-                        for card in list(gs.zones.hand):
-                            if card.name == TITAN:
-                                if gs.cast_spell(card):
-                                    gs._log("  2nd Titan from main! (legend kills old, ETB fires)")
-                                    self._titan_etb(gs)
-                                    if self._titan_has_haste:
-                                        self._titan_attack(gs)
-                                    if gs.damage_dealt >= 20: return
-                                break
+                    # Second Titan is cast in main_phase2 (after combat)
+                    # Can't cast sorcery-speed spells between main_phase and combat
                     return  # done — let combat handle the rest
             # Check combo win
             if gs.damage_dealt >= 20 or gs.damage_dealt == 999:
@@ -2267,12 +2218,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         Titan attack trigger (if Titan attacked this turn without haste on ETB turn).
         Try any remaining spells.
         """
-        # Titan attack trigger (on subsequent turns when Titan attacks without haste)
-        if self._titan_on_bf and not self._titan_has_haste:
-            # The attack trigger fires during combat (handled by engine),
-            # but we fire the land fetch here for simplicity
+        # Titan attack trigger fires during combat for ALL attack turns
+        # (both haste turn and subsequent turns)
+        if self._titan_on_bf:
             for c in gs.zones.battlefield:
-                if c.name == TITAN and not getattr(c, 'summoning_sickness', True):
+                if c.name == TITAN and (not getattr(c, 'summoning_sickness', True)
+                                        or self._titan_has_haste):
                     self._titan_attack(gs)
                     break
 
@@ -2308,7 +2259,33 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if gs.mana_pool.total() >= 7:
             self._try_cast_colossus(gs)
 
-        # Check Analyst loop
+        # Cast SECOND Titan (legend rule kills old, NEW ETB fires!)
+        # Bible: "you want to be making new Titans, not attacking with old ones"
+        if self._titan_on_bf and gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
+            has_titan2 = any(h.name == TITAN for h in gs.zones.hand)
+            # Pact for 2nd Titan if none in hand
+            if not has_titan2 and not self._pact_owed:
+                self._try_summoners_pact(gs)
+            for card in list(gs.zones.hand):
+                if card.name == TITAN:
+                    if gs.cast_spell(card):
+                        gs._log("  2nd Titan from mp2! (legend kills old, ETB fires)")
+                        self._titan_etb(gs)
+                        if gs.damage_dealt >= 20: return
+                    break
+            # GSZ X=6 for another Titan
+            if gs.mana_pool.total() >= 7:
+                self._try_green_sun_zenith(gs, 6)
+
+        # Play MORE lands from hand after all the spending
+        for _ in range(5):
+            hand_lands = [h for h in gs.zones.hand if h.is_land()]
+            if not hand_lands: break
+            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
+            if self._land_play_value(best, gs) <= 0: break
+            self._place_land_on_bf(best, gs, from_hand=True)
+
+        # Final Analyst loop check
         self._check_analyst_loop_win(gs)
 
     # ══════════════════════════════════════════════════════════════════

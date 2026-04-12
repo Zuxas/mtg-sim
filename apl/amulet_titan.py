@@ -2098,6 +2098,13 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 if self._try_green_sun_zenith(gs, 1):
                     did = True; actions += 1; continue
 
+            # ── 3.7 EARLY RUMBLE (when no threat in hand — dig for Titan) ──
+            if (gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1
+                    and not any(h.name in {TITAN, ZENITH, PACT} for h in gs.zones.hand)
+                    and any(h.name == RUMBLE for h in gs.zones.hand)):
+                if self._try_cast_rumble(gs):
+                    did = True; actions += 1; continue
+
             # ── 4. SPELUNKING ──
             # Without Amulet: Spelunking IS the engine — cast eagerly
             # With Amulet: skip if saving 3 mana → Titan this/next turn

@@ -1083,17 +1083,21 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         for c in list(gs.zones.hand):
             if c.name != PACT: continue
             # Safety check — Pact costs {2}{G}{G} next upkeep
-            # Need at least 2 green-producing lands + 2 other lands
+            # Safety check: need BF lands to pay {2}{G}{G} next upkeep
+            # OR we'll definitely win this turn by casting the Titan we find
             bf_lands = [x for x in gs.zones.battlefield if x.is_land()]
             g_sources = sum(1 for x in bf_lands if x.name in FOREST_TYPES
                            or x.name in BOUNCE_LANDS or x.name == SHIFTING
                            or x.name == LOTUS)
             total_lands = len(bf_lands)
             can_pay = total_lands >= 5 and g_sources >= 2
-            can_win = (gs.mana_pool.total() + self._spawn_count >= 6
-                       and any(h.name == TITAN for h in gs.zones.hand))
-            # Also win if Titan is on BF and we have haste
-            can_win = can_win or (self._titan_on_bf and self._titan_has_haste)
+            # can_win: only if we ALREADY have Titan in hand (Pact not needed)
+            # or if Titan is on BF with haste (already winning)
+            can_win = (self._titan_on_bf and self._titan_has_haste)
+            # OR: we have 6+ mana pool right now and no Titan in hand — Pact will find one
+            # and we'll cast it immediately. But only if we'd also be able to pay Pact next turn.
+            if gs.mana_pool.total() >= 6 and not self._titan_on_bf:
+                can_win = can_win or can_pay  # must be able to pay even if we "expect" to win
             if not can_pay and not can_win:
                 continue
 

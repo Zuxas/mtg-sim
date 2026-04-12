@@ -725,7 +725,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 pt = max(1, n_artifacts)
                 c.power = str(pt)
                 c.toughness = str(pt)
-            elif c.name == COLOSSUS:
+            elif c.name == COLOSSUS or c.name == "Colossus Token":
                 # Colossus P/T = number of lands you control
                 c.power = str(n_lands)
                 c.toughness = str(n_lands)
@@ -1949,7 +1949,23 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ── 1. WIN CONDITION CHECK ──
             if not self._titan_on_bf:
                 if self._try_deploy_titan(gs):
-                    return  # Titan deployed + ETB + possible attack
+                    if gs.damage_dealt >= 20 or gs.damage_dealt == 999:
+                        return
+                    # Spend excess mana on KILL SPELLS only (not value plays)
+                    pool = gs.mana_pool.total()
+                    if pool >= 4:
+                        self._try_scapeshift(gs)
+                        if gs.damage_dealt >= 20: return
+                    if pool >= 6 and not self._analyst_on_bf:
+                        self._try_cast_analyst(gs)
+                        if self._analyst_on_bf and gs.mana_pool.total() >= 4:
+                            self._try_sacrifice_analyst(gs)
+                            if gs.damage_dealt >= 20: return
+                    self._check_analyst_loop_win(gs)
+                    if gs.damage_dealt >= 20: return
+                    if gs.mana_pool.total() >= 7:
+                        self._try_cast_colossus(gs)
+                    return  # done — let combat handle the rest
             # Check combo win
             if gs.damage_dealt >= 20 or gs.damage_dealt == 999:
                 return

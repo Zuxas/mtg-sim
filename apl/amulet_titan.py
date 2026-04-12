@@ -1311,13 +1311,28 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             self._try_cast_colossus(gs)
 
         # Play remaining lands from hand (bounce returns from ETB fetches)
-        for _ in range(5):  # max 5 land plays (safety)
+        for _ in range(5):
             hand_lands = [h for h in gs.zones.hand if h.is_land()]
             if not hand_lands: break
             best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
             val = self._land_play_value(best, gs)
             if val <= 0: break
             self._place_land_on_bf(best, gs, from_hand=True)
+
+        # Try casting a SECOND Titan from hand (legendary rule kills old, but ETB fires!)
+        # Bible: "you want to be making new Titans, not attacking with old ones"
+        if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
+            for card in list(gs.zones.hand):
+                if card.name == TITAN:
+                    if gs.cast_spell(card):
+                        gs._log("  Second Titan! (legendary rule kills old, ETB fires)")
+                        self._titan_etb(gs)
+                        if self._titan_has_haste:
+                            self._titan_attack(gs)
+                        break
+            # Also try GSZ X=6 for another Titan
+            if gs.mana_pool.total() >= 7:
+                self._try_green_sun_zenith(gs, 6)
 
         # Check Analyst loop
         self._check_analyst_loop_win(gs)

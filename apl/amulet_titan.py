@@ -2287,13 +2287,14 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if gs.mana_pool.total() >= 7:
             self._try_cast_colossus(gs)
 
-        # Cast SECOND Titan (legend rule kills old, NEW ETB fires!)
-        # Bible: "you want to be making new Titans, not attacking with old ones"
+        # Cast SECOND Titan (from hand, or Pact ONLY if we can pay next upkeep)
         if self._titan_on_bf and gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
             has_titan2 = any(h.name == TITAN for h in gs.zones.hand)
-            # Pact for 2nd Titan if none in hand
+            # Pact for 2nd Titan only if we have enough BF lands to pay {2}{G}{G} next turn
             if not has_titan2 and not self._pact_owed:
-                self._try_summoners_pact(gs)
+                bf_lands = len([c for c in gs.zones.battlefield if c.is_land()])
+                if bf_lands >= 5:  # 5+ lands = safe to Pact (at least 4 mana from tapping)
+                    self._try_summoners_pact(gs)
             for card in list(gs.zones.hand):
                 if card.name == TITAN:
                     if gs.cast_spell(card):
@@ -2301,9 +2302,6 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._titan_etb(gs)
                         if gs.damage_dealt >= 20: return
                     break
-            # GSZ X=6 for another Titan
-            if gs.mana_pool.total() >= 7:
-                self._try_green_sun_zenith(gs, 6)
 
         # Play lands from hand (must respect land drop limit)
         # RULES: 1 land per turn + extras from Grazer/Icetill/Spelunking

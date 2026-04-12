@@ -1284,6 +1284,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         for land_name in fetches:
             self._fetch_land_to_bf(land_name, gs)
 
+        # Play bounce lands returned to hand by ETB fetch triggers
+        for _ in range(5):
+            hand_bounces = [h for h in gs.zones.hand if h.name in BOUNCE_LANDS and h.is_land()]
+            if not hand_bounces: break
+            if self._amulets < 1: break
+            best = max(hand_bounces, key=lambda l: self._land_play_value(l, gs))
+            if self._land_play_value(best, gs) <= 0: break
+            self._place_land_on_bf(best, gs, from_hand=True)
+
         # Check haste from Hanweir (already on BF or just fetched)
         if not self._titan_has_haste and self._hanweir_on_bf and not self._hanweir_tapped:
             # Need R mana to activate Hanweir

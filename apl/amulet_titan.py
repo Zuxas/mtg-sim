@@ -1936,19 +1936,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     did = True; actions += 1; continue
 
             # ── 4. SPELUNKING ──
-            # Don't cast if we already have Amulet and saving 3 mana → Titan this turn
+            # Without Amulet: Spelunking IS the engine — cast eagerly
+            # With Amulet: skip if saving 3 mana → Titan this/next turn
             if self._spelunking_cnt == 0 and not self._minstrel_up:
                 should_spelunk = True
                 if self._amulets >= 1:
-                    # If saving this 3 mana would let us cast Titan NOW, skip Spelunking
                     has_titan = any(h.name in {TITAN, ZENITH, PACT} for h in gs.zones.hand)
                     if has_titan and gs.mana_pool.total() + self._spawn_count >= 6:
-                        should_spelunk = False  # cast Titan instead!
-                    # If saving would let us cast Titan NEXT turn, also skip
-                    bf_lands = len([x for x in gs.zones.battlefield if x.is_land()])
-                    next_turn_mana = bf_lands * 2 if self._amulets >= 1 else bf_lands
-                    if has_titan and next_turn_mana + 2 >= 6 and gs.mana_pool.total() >= 3:
-                        should_spelunk = False  # save mana, deploy Titan next turn
+                        should_spelunk = False
+                # Without Amulet: ALWAYS cast Spelunking (it's the only engine)
                 if should_spelunk:
                     if self._try_cast_spelunking(gs):
                         did = True; actions += 1; continue

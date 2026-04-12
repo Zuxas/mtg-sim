@@ -1311,7 +1311,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     return fetches
             return fetches[:2] or [FOREST_]
 
-    def _titan_etb(self, gs: GameState):
+    def _titan_etb(self, gs: GameState, during_combat: bool = False):
         """Titan ETB: search for 2 lands, put onto BF tapped (Amulet untaps)."""
         fetches = self._titan_fetch_priority(gs, is_etb=True)
         gs._log(f"  Titan ETB: fetching {fetches}")
@@ -1319,16 +1319,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             self._fetch_land_to_bf(land_name, gs)
 
         # Play bounce lands returned to hand by ETB fetch triggers
-        for _ in range(5):
-            hand_bounces = [h for h in gs.zones.hand if h.name in BOUNCE_LANDS and h.is_land()]
-            if not hand_bounces: break
-            if self._amulets < 1: break
-            best = max(hand_bounces, key=lambda l: self._land_play_value(l, gs))
-            if self._land_play_value(best, gs) <= 0: break
-            self._place_land_on_bf(best, gs, from_hand=True)
+        # RULES: Can only play lands during main phase — NOT during combat
+        if not during_combat:
+            for _ in range(5):
+                hand_bounces = [h for h in gs.zones.hand if h.name in BOUNCE_LANDS and h.is_land()]
+                if not hand_bounces: break
+                if self._amulets < 1: break
+                best = max(hand_bounces, key=lambda l: self._land_play_value(l, gs))
+                if self._land_play_value(best, gs) <= 0: break
+                self._place_land_on_bf(best, gs, from_hand=True)
 
         # Check haste from Hanweir (already on BF or just fetched)
-        if not self._titan_has_haste and self._hanweir_on_bf and not self._hanweir_tapped:
+        # RULES: Activated ability — legal at any time with priority
+        # During combat (Mirrorpool copy): haste won't help — copy can't attack this combat
+        if not during_combat and not self._titan_has_haste and self._hanweir_on_bf and not self._hanweir_tapped:
             # Need R mana to activate Hanweir
             if gs.mana_pool.R >= 1:
                 gs.mana_pool.R -= 1
@@ -1421,7 +1425,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             gs._log(f"  Mirrorpool -> Colossus copy! ({n_lands}/{n_lands} token STAYS)")
         else:
             gs._log("  Mirrorpool -> Titan copy! (ETB fires, legendary rule kills token)")
-            self._titan_etb(gs)
+            self._titan_etb(gs, during_combat=True)
         gs._log("  Legendary rule: token Titan sacrificed (original stays)")
 
     # ══════════════════════════════════════════════════════════════════
@@ -2277,13 +2281,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if gs.mana_pool.total() >= 7:
                 self._try_green_sun_zenith(gs, 6)
 
-        # Play MORE lands from hand after all the spending
-        for _ in range(5):
-            hand_lands = [h for h in gs.zones.hand if h.is_land()]
-            if not hand_lands: break
-            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
-            if self._land_play_value(best, gs) <= 0: break
-            self._place_land_on_bf(best, gs, from_hand=True)
+        # Play lands from hand (must respect land drop limit)
+        # RULES: 1 land per turn + extras from Grazer/Icetill/Spelunking
+        if not gs.land_played:
+            best = self._best_land_to_play(gs)
+            if best:
+                gs.land_played = True
+                self._place_land_on_bf(best, gs, from_hand=True)
+                # Icetill extra drop
+                if self._icetill_on_bf and not self._extra_land_used:
+                    gs.land_played = False
+                    self._extra_land_used = True
 
         # Final Analyst loop check
         self._check_analyst_loop_win(gs)

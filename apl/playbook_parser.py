@@ -383,6 +383,193 @@ def load_all_tac_guides(tac_dir: str = None) -> dict[str, PlaybookData]:
     return results
 
 
+
+# ---------------------------------------------------------------------------
+# SB Plan extraction from HTML playbooks (used by sideboard.py)
+# ---------------------------------------------------------------------------
+
+def extract_sb_plans_from_html(html_path: str) -> list:
+    """
+    Extract real SB plans from HTML playbooks.
+    Returns list of MatchupEntry with proper sb_in / sb_out card lists.
+    
+    Handles two HTML formats:
+      1. Newer (div-based): .sb-table > .sb-col > .sb-item with .c and .sb-qty
+      2. Older (table-based): table.sb-table > tr > td.sb-in / td.sb-out
+    """
+    if not BS4_AVAILABLE:
+        return []
+    
+    text = Path(html_path).read_text(encoding="utf-8", errors="replace")
+    soup = BeautifulSoup(text, "html.parser")
+    
+    results = []
+    sb_tables = soup.select('.sb-table')
+    
+    for table in sb_tables:
+        # ── Find opponent name ──
+        opp_name = _find_matchup_opponent(table)
+        if not opp_name:
+            continue
+        
+        # ── Detect format and extract cards ──
+        if table.name == 'table':
+            # Older table-based format: <tr><td class="sb-out">-2 Card</td><td class="sb-in">+2 Card</td></tr>
+            in_cards, out_cards = _extract_sb_table_format(table)
+        else:
+            # Newer div-based format: .sb-col > .sb-item
+            in_cards, out_cards = _extract_sb_div_format(table)
+        
+        if in_cards or out_cards:
+            results.append(MatchupEntry(
+                opponent=opp_name,
+                sb_in=in_cards,
+                sb_out=out_cards,
+            ))
+    
+    return results
+
+
+def _find_matchup_opponent(table) -> str:
+    """Find the opponent name for a given sb-table element."""
+    import re
+    
+    # Strategy 1: .matchup-writeup parent (newer format)
+    mu_div = table.find_parent(class_='matchup-writeup')
+    if mu_div:
+        first_text = mu_div.get_text(strip=True)[:120]
+        m = re.match(r'^(.+?)\s*[\u2014\u2013\-]\s', first_text)
+        if m:
+            return m.group(1).strip()
+    
+    # Strategy 2: .matchup-detail parent div with preceding h2 (older format)
+    md_div = table.find_parent(class_='matchup-detail')
+    if md_div:
+        prev = md_div.find_previous_sibling('h2')
+        if prev:
+            h2_text = prev.get_text(strip=True)
+            opp = h2_text.split('\u2014')[0].split('\u2013')[0].strip()
+            opp = re.sub(r'\s*[\-]\s*[\d.]+%.*$', '', opp).strip()
+            if opp:
+                return opp
+    
+    # Strategy 3: td.matchup-detail parent in a matchup-table (Amulet Titan format)
+    td_parent = table.find_parent('td', class_='matchup-detail')
+    if td_parent:
+        row = td_parent.find_parent('tr')
+        if row:
+            # Opponent name is in the PREVIOUS row's first cell
+            prev_row = row.find_previous_sibling('tr')
+            if prev_row:
+                first_td = prev_row.select_one('td')
+                if first_td:
+                    opp = first_td.get_text(strip=True).strip()
+                    if opp and len(opp) > 2:
+                        return opp
+        # Fallback: parse from the td's id attribute (e.g. mu-boros -> Boros)
+        td_id = td_parent.get('id', '')
+        if td_id.startswith('mu-'):
+            return td_id[3:].replace('-', ' ').title()
+    
+    return ""
+
+
+def _extract_sb_div_format(table) -> tuple:
+    """Extract IN/OUT from div-based .sb-col > .sb-item format."""
+    in_cards = []
+    out_cards = []
+    
+    for col in table.select('.sb-col'):
+        label = col.select_one('.sb-col-label')
+        if not label:
+            continue
+        label_txt = label.get_text(strip=True).lower()
+        
+        card_list = []
+        for item in col.select('.sb-item'):
+            name_el = item.select_one('.c')
+            if not name_el:
+                spans = item.select('span > span')
+                if not spans:
+                    spans = item.select('span')
+                name_el = spans[0] if spans else None
+            
+            qty_el = item.select_one('.sb-qty')
+            if name_el and qty_el:
+                name = name_el.get_text(strip=True)
+                qty_raw = qty_el.get_text(strip=True)
+                qty_raw = qty_raw.replace('\u2212', '').replace('+', '').replace('-', '').strip()
+                try:
+                    qty = int(qty_raw)
+                except ValueError:
+                    qty = 1
+                card_list.append(f"{qty} {name}")
+            elif not qty_el:
+                # Fallback: parse inline text like "+2 Dismember (kills Ragavan)"
+                raw = item.get_text(strip=True)
+                m = re.match(r'[\+\-\u2212]?\s*(\d+)\s*(.+?)(?:\s*\(.*\))?$', raw)
+                if m:
+                    card_list.append(f"{int(m.group(1))} {m.group(2).strip()}")
+        
+        if 'in' in label_txt:
+            in_cards = card_list
+        elif 'out' in label_txt:
+            out_cards = card_list
+    
+    return in_cards, out_cards
+
+
+def _extract_sb_table_format(table) -> tuple:
+    """
+    Extract IN/OUT from table-based <tr><td class="sb-in/sb-out"> format.
+    
+    Cell text patterns:
+      "+2 Pyroclasm (sweeps tokens)" -> "2 Pyroclasm"
+      "\u22122 Psychic Frog" -> "2 Psychic Frog"
+      "+4 Consign to Memory(counters FoN)" -> "4 Consign to Memory"
+    """
+    import re
+    in_cards = []
+    out_cards = []
+    
+    for row in table.select('tr'):
+        for td in row.select('td'):
+            classes = td.get('class', [])
+            is_in  = 'sb-in' in classes
+            is_out = 'sb-out' in classes
+            if not (is_in or is_out):
+                continue
+            
+            # Try to get card name from .c span first
+            c_el = td.select_one('.c')
+            if c_el:
+                card_name = c_el.get_text(strip=True)
+            else:
+                # Parse from raw text: "+2 Card Name (notes)" or "\u22122 Card Name"
+                raw = td.get_text(strip=True)
+                card_name = raw
+            
+            # Extract quantity and clean card name from the full cell text
+            raw_text = td.get_text(strip=True)
+            # Pattern: optional +/- or \u2212, then digits, then card name, optional (notes)
+            m = re.match(r'[\+\-\u2212]?\s*(\d+)\s*(.+?)(?:\s*\(.*\))?$', raw_text)
+            if m:
+                qty = int(m.group(1))
+                # Prefer .c element name if available, else use regex capture
+                if c_el:
+                    name = card_name
+                else:
+                    name = m.group(2).strip()
+                entry = f"{qty} {name}"
+                if is_in:
+                    in_cards.append(entry)
+                else:
+                    out_cards.append(entry)
+    
+    return in_cards, out_cards
+
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------

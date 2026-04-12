@@ -25,14 +25,15 @@ from sim_bridge import _infer_archetype_key, avg_kill_turn
 def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
     """
     Load a deck and APL by name.
-    Priority: hand-tuned APL → real stub from DB → legacy stub → GenericAPL
+    Uses unified registry from apl/__init__.py.
+    Priority: registered APL → playbook → stub deck → None
     """
+    from apl import get_apl, get_apl_entry, _normalize_key
     from apl.generic_apl import GenericAPL
     from data.card import Card
     from engine.card_db import CardDB
 
     _db = CardDB()
-    deck_key = deck_name.lower().replace(" ", "").replace("-", "").replace("'", "")
 
     def build_deck_from_dict(card_dict):
         """Convert {card_name: qty} dict to list of Card objects."""
@@ -52,7 +53,6 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                         colors=data.get("colors", []),
                     ))
                 else:
-                    # Minimal placeholder card
                     deck.append(Card(
                         name=card_name, mana_cost="{1}", cmc=1,
                         type_line="Creature", oracle_text="",
@@ -60,45 +60,15 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                     ))
         return deck
 
-    # Hand-tuned APL registry — add new decks here
-    APL_REGISTRY = {
-        "legacyhumans":    ("apl.humans",          "HumansAPL",         "decks/humans_legacy.txt"),
-        "humans":          ("apl.humans",           "HumansAPL",         "decks/humans_legacy.txt"),
-        "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "boros_energy"),
-        "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
-        "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
-        "uwblink":         ("apl.uw_blink",         "UWBlinkAPL",        "uw_blink"),
-        "espermidrange":   ("apl.esper_midrange",   "EsperMidrangeAPL",  "esper_mid"),
-        "esperblink":      ("apl.esper_blink",      "EsperBlinkAPL",     "esper_blink"),
-        "goryosvengeance": ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
-        "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
-        "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
-        "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "esper_vengance"),
-        "amulet":          ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
-        "amulettitan":     ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
-        "titan":           ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
-        "eldrazitron":     ("apl.eldrazi_tron",     "EldraziTronAPL",    "etron"),
-        "etron":           ("apl.eldrazi_tron",     "EldraziTronAPL",    "etron"),
-        "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
-        "domain":          ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
-        "neoform":         ("apl.neoform_combo",    "NeoformComboAPL",   "neoform"),
-        "jeskaicontrol":   ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
-        "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
-        "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
-        "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
-        "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   None),
-        "monoredaggro":    ("apl.mono_red_aggro",   "MonoRedAggroAPL",   None),
-        "izzetphoenix":    ("apl.izzet_phoenix",    "IzzetPhoenixAPL",   None),
-        "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
-    }
-
-    if deck_key in APL_REGISTRY:
-        mod_path, cls_name, stub_key = APL_REGISTRY[deck_key]
+    # 1. Check unified APL registry
+    entry = get_apl_entry(deck_name)
+    if entry:
+        mod_path, cls_name, stub_key = entry
         try:
             import importlib
-            mod  = importlib.import_module(mod_path)
+            mod = importlib.import_module(mod_path)
             APLClass = getattr(mod, cls_name)
-            apl  = APLClass()
+            apl = APLClass()
 
             # Load deck from file or stub
             if stub_key and stub_key.endswith(".txt"):
@@ -120,25 +90,16 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
         mb = get_stub_deck_list(deck_name)
         if mb and sum(mb.values()) >= 40:
             main = build_deck_from_dict(mb)
-            apl  = GenericAPL(deck_name)
+            apl = GenericAPL(deck_name)
             return main, [], apl
     except Exception:
         pass
 
-    # 3. Legacy hardcoded stubs
-    try:
-        from data.stub_decks import get_stub_deck
-        stub = get_stub_deck(deck_name)
-        if stub and len(stub) >= 40:
-            return stub, [], GenericAPL(deck_name)
-    except Exception:
-        pass
-
-    # 4. Playbook
+    # 3. Playbook
     try:
         from apl.playbook_parser import load_all_playbooks, load_all_tac_guides, find_playbook
         pbs = {**load_all_playbooks(), **load_all_tac_guides()}
-        pb  = find_playbook(deck_name, pbs)
+        pb = find_playbook(deck_name, pbs)
         if pb and pb.mainboard and sum(pb.mainboard.values()) >= 40:
             lines = [f"{q} {n}" for n, q in pb.mainboard.items()]
             from data.deck import load_deck_from_text
@@ -149,69 +110,17 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
     except Exception:
         pass
 
+    # 4. Legacy stub
+    try:
+        from data.stub_decks import get_stub_deck
+        stub = get_stub_deck(deck_name)
+        if stub and len(stub) >= 40:
+            return stub, [], GenericAPL(deck_name)
+    except Exception:
+        pass
+
     print(f"  [No deck found for {deck_name}]")
     return None, None, None
-    """
-    Load a deck and its APL by name.
-    Priority: hand-tuned APL → AutoAPL → GenericAPL
-    """
-    from apl.playbook_parser import (load_all_playbooks, load_all_tac_guides,
-                                      find_playbook)
-    from apl.generic_apl import generic_from_playbook, GenericAPL
-    from data.deck import load_deck_from_file
-
-    # Special case: our own decks
-    deck_files = {
-        "legacy humans": "decks/humans_legacy.txt",
-        "humans":        "decks/humans_legacy.txt",
-    }
-    deck_key = deck_name.lower().replace(" ", "").replace("-","")
-    for k, path in deck_files.items():
-        if deck_key == k.replace(" ",""):
-            from apl.humans import HumansAPL
-            main, side = load_deck_from_file(path)
-            apl = HumansAPL()
-            return main, side, apl
-
-    # Load from playbooks
-    pbs = {**load_all_playbooks(), **load_all_tac_guides()}
-    pb  = find_playbook(deck_name, pbs)
-
-    if pb and pb.mainboard and sum(pb.mainboard.values()) >= 40:
-        # Build deck from playbook
-        lines = []
-        for card, qty in pb.mainboard.items():
-            lines.append(f"{qty} {card}")
-        for card, qty in (pb.sideboard or {}).items():
-            lines.append(f"SB: {qty} {card}")
-
-        try:
-            from data.deck import load_deck_from_text
-            main, side = load_deck_from_text("\n".join(lines))
-            if len(main) >= 40:
-                apl = generic_from_playbook(pb)
-                return main, side, apl
-        except Exception as e:
-            print(f"  [Deck load failed for {deck_name}: {e}]")
-
-    print(f"  [No playbook for {deck_name} — trying stub deck]")
-    from data.stub_decks import get_stub_deck
-    from engine.match_runner import ComboKillSampler
-    from apl.generic_apl import GenericAPL
-
-    # Check if this is a known combo archetype — use named APL for sampler detection
-    combo_keys = set(ComboKillSampler.KILL_DISTS.keys())
-    d_key = deck_name.lower().replace(" ","").replace("-","")
-    is_combo = any(k.replace(" ","") == d_key for k in combo_keys)
-
-    stub = get_stub_deck(deck_name)
-    if stub and len(stub) >= 40:
-        apl = GenericAPL(deck_name)   # name matters — sampler matches on it
-        return stub, [], apl
-
-    print(f"  [No deck found for {deck_name} — skipping]")
-    return None, None, None
-
 
 def run_matchup(
     deck_a_name:  str,

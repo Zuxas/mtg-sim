@@ -120,9 +120,78 @@ AGGRO_OUR = {"aggro","prowess","burn","swiftspear","mono red","gruul","humans"}
 
 def _run_fair(result, our_deck, opp_name, format_name, n, seed):
     """
-    Fair matchup: real DB G1 if available, else both-sides combat sim.
-    G2/G3: G1 + deck-specific SB premium.
+    Fair matchup simulation with REAL sideboarding.
+    
+    Strategy:
+      1. Try to load real SB plans for both decks from playbook HTML
+      2. If both SB plans available: run actual Bo3 with sideboarded decks
+      3. Otherwise: fall back to G1 sim + sb_premium heuristic
     """
+    from generate_matchup_data import load_deck_and_apl
+    from engine.sideboard import get_sb_plan
+
+    # ── Load decks ──
+    our_main, our_side, our_apl = load_deck_and_apl(our_deck, format_name)
+    opp_main, opp_side, opp_apl = load_deck_and_apl(opp_name, format_name)
+
+    if not our_main or not opp_main:
+        raise ValueError(f"Could not load deck for {opp_name}")
+
+    # ── Try real SB plans ──
+    our_sb_in, our_sb_out = get_sb_plan(our_deck, opp_name)
+    opp_sb_in, opp_sb_out = get_sb_plan(opp_name, our_deck)
+
+    has_our_sb = bool(our_sb_in or our_sb_out)
+    has_opp_sb = bool(opp_sb_in or opp_sb_out)
+
+    # ── Path A: Real Bo3 with actual sideboarding ──
+    if has_our_sb:
+        try:
+            from apl import get_match_apl
+            from engine.bo3_match import run_bo3_set, print_bo3_report
+
+            our_mapl = get_match_apl(our_deck)
+            opp_mapl = get_match_apl(opp_name)
+
+            if our_mapl and opp_mapl:
+                # Build sideboard dicts from loaded side cards
+                our_sb_dict = {}
+                for c in (our_side or []):
+                    our_sb_dict[c.name] = our_sb_dict.get(c.name, 0) + 1
+                opp_sb_dict = {}
+                for c in (opp_side or []):
+                    opp_sb_dict[c.name] = opp_sb_dict.get(c.name, 0) + 1
+
+                sb_plan_a = (our_sb_in, our_sb_out) if has_our_sb else None
+                sb_plan_b = (opp_sb_in, opp_sb_out) if has_opp_sb else None
+
+                bo3 = run_bo3_set(
+                    our_mapl, our_main, our_sb_dict,
+                    opp_mapl, opp_main, opp_sb_dict,
+                    sb_plan_a=sb_plan_a,
+                    sb_plan_b=sb_plan_b,
+                    n=n, mix_play_draw=True, seed=seed,
+                )
+
+                result.update({
+                    "g1":      bo3.g1_wr_a,
+                    "g2":      bo3.g2_wr_a,
+                    "g3":      bo3.g3_wr_a if bo3.g3_wr_a else bo3.g2_wr_a,
+                    "match":   bo3.match_wr_a(),
+                    "g3_rate": bo3.g3_rate,
+                    "g1_source": "bo3",
+                    "sb_mode": "real",
+                    "our_sb":  has_our_sb,
+                    "opp_sb":  has_opp_sb,
+                })
+
+                # Apply credibility caps
+                _apply_caps(result, our_deck, opp_name)
+                return
+        except Exception as e:
+            print(f"  [Bo3 failed, falling back to heuristic: {e}]")
+
+    # ── Path B: Fallback — G1 sim + sb_premium heuristic ──
     # Try real DB data first
     real_g1 = None
     try:
@@ -133,38 +202,55 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
 
     if real_g1 is None:
         from engine.match_runner import run_match_set
-        from generate_matchup_data import load_deck_and_apl
-
-        our_main, _, our_apl = load_deck_and_apl(our_deck, format_name)
-        opp_main, _, opp_apl = load_deck_and_apl(opp_name, format_name)
-
-        if not our_main or not opp_main:
-            raise ValueError(f"Could not load deck for {opp_name}")
 
         r = run_match_set(our_apl, our_main, opp_apl, opp_main,
                           n=n, seed=seed, mix_play_draw=True)
         real_g1 = r.win_pct()
-
-        # Credibility caps for SIM results where stubs lack real interaction
-        opp_lower = opp_name.lower()
-        if real_g1 > 75 and any(k in opp_lower for k in INTERACTIVE):
-            real_g1 = min(real_g1, 65.0)
-            result["g1_capped"] = True
-
-        our_lower = our_deck.lower()
-        if real_g1 < 25 and any(k in our_lower for k in AGGRO_OUR):
-            real_g1 = max(real_g1, 25.0)
-            result["g1_floored"] = True
-
         result["g1_source"] = "sim"
     else:
         result["g1_source"] = "db"
+
+    # Apply credibility caps to G1
+    _apply_caps_g1(result, real_g1, our_deck, opp_name)
+    real_g1 = result.get("g1", real_g1)
 
     sb  = _get_sb_premium(our_deck, opp_name, format_name)
     g2  = min(98.0, real_g1 + sb)
     g3  = min(98.0, real_g1 + sb * 0.75)
     result.update({"g1": real_g1, "g2": round(g2,1), "g3": round(g3,1),
-                   "match": bo3_win(real_g1, g2, g3)})
+                   "match": bo3_win(real_g1, g2, g3), "sb_mode": "heuristic"})
+
+
+def _apply_caps(result, our_deck, opp_name):
+    """Apply credibility caps to Bo3 match results."""
+    match_wr = result.get("match", 50.0)
+    opp_lower = opp_name.lower()
+    our_lower = our_deck.lower()
+
+    if match_wr > 75 and any(k in opp_lower for k in INTERACTIVE):
+        result["match"] = min(match_wr, 70.0)
+        result["match_capped"] = True
+
+    if match_wr < 25 and any(k in our_lower for k in AGGRO_OUR):
+        result["match"] = max(match_wr, 25.0)
+        result["match_floored"] = True
+
+
+def _apply_caps_g1(result, g1, our_deck, opp_name):
+    """Apply credibility caps to G1 win rate (heuristic path)."""
+    opp_lower = opp_name.lower()
+    our_lower = our_deck.lower()
+
+    if g1 > 75 and any(k in opp_lower for k in INTERACTIVE):
+        g1 = min(g1, 65.0)
+        result["g1_capped"] = True
+
+    if g1 < 25 and any(k in our_lower for k in AGGRO_OUR):
+        g1 = max(g1, 25.0)
+        result["g1_floored"] = True
+
+    result["g1"] = g1
+
 
 
 def main():

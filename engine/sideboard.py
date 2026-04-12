@@ -178,22 +178,70 @@ def get_sb_plan(
     playbooks: dict = None,
 ) -> tuple[list[str], list[str]]:
     """
-    Look up sb_in / sb_out for a matchup from playbook data.
+    Look up sb_in / sb_out for a matchup from playbook HTML data.
     Returns (sb_in_raw_list, sb_out_raw_list).
+    
+    Uses extract_sb_plans_from_html for real card-level SB plans,
+    falling back to cached playbook matchup data.
     """
+    import re
+    from pathlib import Path
+    
+    # Try extracting real SB plans directly from HTML first
+    try:
+        from apl.playbook_parser import extract_sb_plans_from_html, find_playbook
+        
+        # Find the HTML file for this deck
+        pb_dirs = [
+            Path(__file__).parent.parent.parent / "My-Website" / "modern",
+            Path(__file__).parent.parent.parent / "My-Website" / "standard",
+            Path(__file__).parent.parent.parent / "My-Website" / "pioneer",
+        ]
+        
+        deck_slug = re.sub(r"[^a-z0-9]+", "-", our_deck.lower()).strip("-")
+        
+        for d in pb_dirs:
+            if not d.exists():
+                continue
+            for f in d.glob("*playbook*.html"):
+                if deck_slug in f.stem or f.stem.replace("-playbook", "") in deck_slug:
+                    plans = extract_sb_plans_from_html(str(f))
+                    if plans:
+                        # Fuzzy-match opponent name
+                        opp_clean = re.sub(r"[^a-z0-9]", "", opponent.lower())
+                        for plan in plans:
+                            plan_clean = re.sub(r"[^a-z0-9]", "", plan.opponent.lower())
+                            if opp_clean in plan_clean or plan_clean in opp_clean:
+                                return plan.sb_in, plan.sb_out
+                        # Try partial word matching
+                        opp_words = [w for w in re.split(r"[^a-z]+", opponent.lower()) if len(w) > 2]
+                        for plan in plans:
+                            plan_lower = plan.opponent.lower()
+                            if any(w in plan_lower for w in opp_words):
+                                return plan.sb_in, plan.sb_out
+    except Exception:
+        pass
+    
+    # Fallback to cached playbook matchup data
     if playbooks is None:
-        from apl.playbook_parser import load_all_playbooks, load_all_tac_guides
-        playbooks = {**load_all_playbooks(), **load_all_tac_guides()}
+        try:
+            from apl.playbook_parser import load_all_playbooks, load_all_tac_guides
+            playbooks = {**load_all_playbooks(), **load_all_tac_guides()}
+        except Exception:
+            return [], []
 
-    from apl.playbook_parser import find_playbook
-    pb = find_playbook(our_deck, playbooks)
-    if not pb or not pb.matchups:
-        return [], []
+    try:
+        from apl.playbook_parser import find_playbook
+        pb = find_playbook(our_deck, playbooks)
+        if not pb or not pb.matchups:
+            return [], []
 
-    opp_clean = re.sub(r"[^a-z0-9]", "", opponent.lower())
-    for matchup in pb.matchups:
-        mu_clean = re.sub(r"[^a-z0-9]", "", matchup.opponent.lower())
-        if opp_clean in mu_clean or mu_clean in opp_clean:
-            return matchup.sb_in, matchup.sb_out
+        opp_clean = re.sub(r"[^a-z0-9]", "", opponent.lower())
+        for matchup in pb.matchups:
+            mu_clean = re.sub(r"[^a-z0-9]", "", matchup.opponent.lower())
+            if opp_clean in mu_clean or mu_clean in opp_clean:
+                return matchup.sb_in, matchup.sb_out
+    except Exception:
+        pass
 
     return [], []

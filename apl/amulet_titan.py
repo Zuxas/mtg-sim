@@ -1042,9 +1042,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if not analyst_available:
                 analyst_in_lib = any(x.name == ANALYST for x in gs.zones.library)
                 if analyst_in_lib:
-                    # Pact for Analyst
+                    # Pact for Analyst — only if we can pay {2}{G}{G} next turn
                     pact_in_hand = any(h.name == PACT for h in gs.zones.hand)
-                    if pact_in_hand and not self._pact_owed:
+                    bf_lands_count = len([x for x in gs.zones.battlefield if x.is_land()])
+                    if pact_in_hand and not self._pact_owed and bf_lands_count >= 5:
                         a = next((x for x in gs.zones.library if x.name == ANALYST), None)
                         if a:
                             gs.zones.library.remove(a)

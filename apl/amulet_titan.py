@@ -1292,7 +1292,16 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ═══ PATH A: Full deterministic kill (4+ lands, 1+ Amulet) ═══
             if n_lands >= 4 and am >= 1 and (n_lotus_lib >= 2 or (n_lotus_lib >= 1 and ECHOING in lib_names)):
                 has_bounce_lib = any(n in lib_names for n in BOUNCE_LANDS)
-                if has_bounce_lib and has_twest and has_analyst:
+                # Path A.1: Full TWest chain (TWest + Pact + Analyst in lib)
+                # Path A.2: Direct Analyst (Analyst in hand/GY, skip TWest)
+                # Path A.3: Pact in hand (skip TWest, Pact → Analyst)
+                has_analyst_hand = any(h.name == ANALYST for h in gs.zones.hand if h is not c)
+                has_analyst_gy = any(x.name == ANALYST for x in gs.zones.graveyard)
+                has_pact_hand = any(h.name == PACT for h in gs.zones.hand if h is not c)
+                has_direct_analyst = has_analyst_hand or has_analyst_gy or has_pact_hand
+                can_full_chain = has_bounce_lib and has_twest and has_analyst
+                can_direct = has_bounce_lib and has_direct_analyst
+                if can_full_chain or can_direct:
                     if gs.cast_spell(c):
                         gs._log("  *** SCAPESHIFT DETERMINISTIC KILL ***")
                         # Sac all lands
@@ -1355,7 +1364,47 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         # Lotus sac: sac remaining lands
                         # (simplified: we have massive mana floating)
 
-                        # Transmute TWest → Pact → Analyst → cast + sac → return lands
+                        # Try direct Analyst path first (skip TWest chain)
+                        analyst_ready = None
+                        for h in list(gs.zones.hand):
+                            if h.name == ANALYST:
+                                analyst_ready = h
+                                break
+                        if not analyst_ready:
+                            # Try Pact → Analyst
+                            for h in list(gs.zones.hand):
+                                if h.name == PACT:
+                                    a = next((x for x in gs.zones.library if x.name == ANALYST), None)
+                                    if a:
+                                        gs.zones.library.remove(a)
+                                        gs.zones.hand.append(a)
+                                        analyst_ready = a
+                                        self._pact_owed = True
+                                        self._pact_turn_cast = gs.turn
+                                        gs._log("  Direct Pact → Analyst (skip TWest)")
+                                    break
+
+                        if analyst_ready and gs.mana_pool.total() >= 6:
+                            # Cast Analyst directly
+                            if analyst_ready in gs.zones.hand:
+                                gs.mana_pool.G = max(0, gs.mana_pool.G - 1)
+                                gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1)
+                                gs.zones.hand.remove(analyst_ready)
+                                gs.zones.battlefield.append(analyst_ready)
+                                self._analyst_on_bf = True
+                                for _ in range(min(3, len(gs.zones.library))):
+                                    milled = gs.zones.library.pop(0)
+                                    gs.zones.graveyard.append(milled)
+                                    if milled.is_land(): self._track_land_to_gy(milled.name)
+                                    else: self._track_card_to_gy(milled.type_line)
+                                gs._log("  Direct Analyst cast + mill 3")
+                                if gs.mana_pool.total() >= 4:
+                                    self._try_sacrifice_analyst(gs)
+                                    self._try_deploy_titan(gs)
+                                    self._check_analyst_loop_win(gs)
+                                    return True
+
+                        # Fallback: TWest transmute chain
                         if gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3:
                             gs.mana_pool.U -= 2
                             gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1) if gs.mana_pool.flex > 0 else 0
@@ -1396,7 +1445,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         return True
 
             # ═══ PATH B: Ramp shift (Titan in hand, need mana) ═══
-            if n_lands >= 2 and am >= 1 and has_titan_hand:
+            # ONLY use this if we can't reach 6 mana any other way this turn.
+            # Scapeshift is too valuable as a kill spell to waste as ramp.
+            can_reach_6_naturally = (gs.mana_pool.total() + self._spawn_count >= 6)
+            has_grazer_or_spelunk = any(h.name in {GRAZER, SPELUNKING} for h in gs.zones.hand)
+            if n_lands >= 2 and am >= 1 and has_titan_hand and not can_reach_6_naturally and not has_grazer_or_spelunk:
                 if gs.cast_spell(c):
                     gs._log(f"  Scapeshift ramp: sac {n_lands} lands for Titan mana")
                     sac_ids = {id(sl) for sl in bf_lands}
@@ -1725,6 +1778,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
         while actions < MAX_ACTIONS:
             did = False
+
+            # ── 0.3 SCAPESHIFT DETERMINISTIC KILL (highest priority) ──
+            # If we have 4+ lands, Amulet, and Shift in hand: try the OHKO first
+            if not self._titan_on_bf:
+                bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])
+                if bf_land_count >= 4 and self._amulets >= 1:
+                    shift_in_hand = any(h.name == SCAPESHIFT for h in gs.zones.hand)
+                    if shift_in_hand and gs.mana_pool.total() >= 4:
+                        if self._try_scapeshift(gs):
+                            did = True; actions += 1
+                            if gs.damage_dealt >= 20: return
+                            continue
 
             # ── 0.5 PLAY HANWEIR BEFORE TITAN (haste setup) ──
             if (not gs.land_played and not self._titan_on_bf

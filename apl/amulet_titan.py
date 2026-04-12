@@ -396,6 +396,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if name == MIRRORPOOL: self._mirror_on_bf = True
         if name == SAGA:      self._saga_on_bf = True
         if name == GARDENS:   self._gardens_on_bf = True
+        # Dryad Arbor is a creature — always tag it so engine counts it in combat
+        if name == DRYAD_ARBOR:
+            land.tags.add('creature')
+            land.power = '1'
+            land.toughness = '1'
 
         # Generate mana from Amulet/Spelunking
         mana = 0

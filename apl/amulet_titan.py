@@ -712,16 +712,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         gs._log(f"  Saga Ch II: {pt}/{pt} Construct token")
 
     def _update_construct_power(self, gs: GameState):
-        """Update all Construct tokens' P/T based on current artifact count."""
+        """Update Construct tokens and Colossus P/T each turn."""
         n_artifacts = sum(1 for c in gs.zones.battlefield
                          if 'artifact' in getattr(c, 'type_line', '').lower()
                          or c.name == AMULET or c.name == "Amulet of Vigor (Gardens)")
+        n_lands = len([x for x in gs.zones.battlefield if x.is_land()])
         for c in gs.zones.battlefield:
             if c.name == "Construct Token":
-                # Each construct counts itself, so +1
                 pt = max(1, n_artifacts)
                 c.power = str(pt)
                 c.toughness = str(pt)
+            elif c.name == COLOSSUS:
+                # Colossus P/T = number of lands you control
+                c.power = str(n_lands)
+                c.toughness = str(n_lands)
 
     def _resolve_saga_chapter3(self, gs: GameState):
         """Saga Ch III: Search library for artifact with MV 0-1, put on BF."""
@@ -1087,6 +1091,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         grazer.summoning_sickness = True
                         gs._log("  GSZ X=1 → Grazer")
                         return True
+                elif x_target == 0:
+                    # Dryad Arbor: 1/1 Forest creature — free ramp + delirium type
+                    dryad = next((x for x in gs.zones.library if x.name == DRYAD_ARBOR), None)
+                    if dryad:
+                        gs.zones.library.remove(dryad)
+                        gs.zones.battlefield.append(dryad)
+                        dryad.summoning_sickness = True
+                        dryad.turn_entered = gs.turn
+                        dryad.tags.add('creature')
+                        gs._log("  GSZ X=0 → Dryad Arbor (Forest creature)")
+                        return True
         return False
 
     # ══════════════════════════════════════════════════════════════════
@@ -1249,6 +1264,30 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         # Try Mirrorpool copy of Titan
         if self._mirror_on_bf and not self._mirror_used:
             self._try_mirrorpool_copy(gs)
+
+        # SPEND EXCESS MANA from attack trigger lands
+        # The attack fetches lands → Amulet chains → often 10-20+ mana floating
+        # Use it for additional threats or combo setup
+        pool = gs.mana_pool.total()
+        
+        # Cast Analyst → sac → return lands → check loop
+        if pool >= 6 and not self._analyst_on_bf:
+            if self._try_cast_analyst(gs):
+                if gs.mana_pool.total() >= 4 and len(self._lands_in_gy) >= 2:
+                    self._try_sacrifice_analyst(gs)
+                    if gs.damage_dealt >= 20: return
+
+        # Try Scapeshift OHKO with the floating mana
+        if gs.mana_pool.total() >= 4:
+            if self._try_scapeshift(gs):
+                if gs.damage_dealt >= 20: return
+
+        # Cast GSZ for Colossus/extra threat
+        if gs.mana_pool.total() >= 7:
+            self._try_cast_colossus(gs)
+
+        # Check Analyst loop
+        self._check_analyst_loop_win(gs)
 
     def _try_mirrorpool_copy(self, gs: GameState):
         """Mirrorpool: {4}{C}, {T}, sacrifice → copy Titan → ETB fires (legendary rule kills token)."""
@@ -1987,6 +2026,14 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ── 11.5 CULTIVATOR COLOSSUS (7 mana, chains lands from hand) ──
             if gs.mana_pool.total() + self._spawn_count >= 7 and not self._titan_on_bf:
                 if self._try_cast_colossus(gs):
+                    did = True; actions += 1; continue
+
+            # ── 11.8 GSZ X=0 for Dryad Arbor (when we need a green source) ──
+            if (not gs.land_played and gs.mana_pool.G >= 1
+                    and not any(h.is_land() for h in gs.zones.hand)
+                    and any(h.name == ZENITH for h in gs.zones.hand)
+                    and gs.turn <= 3):
+                if self._try_green_sun_zenith(gs, 0):
                     did = True; actions += 1; continue
 
             # ── 12. ICETILL ──

@@ -2252,13 +2252,24 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
             self._try_cast_rumble(gs)
 
-        # Play remaining hand lands (bounce chains for more mana)
-        for _ in range(5):
+        # Play hand lands using available land drops
+        # RULES: Bounce self-return chains reset gs.land_played, enabling
+        # legal replay: play bounce → Amulet tap → self-return → land_played=False → replay
+        # Non-self-return plays consume the land drop normally.
+        for _ in range(10):  # safety limit for self-return chains
+            if gs.land_played:
+                break  # no drops available
             hand_lands = [h for h in gs.zones.hand if h.is_land()]
             if not hand_lands: break
             best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
             if self._land_play_value(best, gs) <= 0: break
+            gs.land_played = True
             self._place_land_on_bf(best, gs, from_hand=True)
+            # _apply_bounce_return may reset gs.land_played for self-returns
+            # Icetill extra drop
+            if gs.land_played and self._icetill_on_bf and not self._extra_land_used:
+                gs.land_played = False
+                self._extra_land_used = True
 
         # Try Scapeshift OHKO with all available mana
         if gs.mana_pool.total() >= 4:

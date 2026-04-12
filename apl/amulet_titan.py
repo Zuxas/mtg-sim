@@ -246,6 +246,13 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         remaining_drops = max_drops - self._land_drops_used
         can_replay = remaining_drops > 0 or grazer_in_hand
         
+        # CRITICAL: Don't self-return if only 1 land on BF!
+        # Need at least 2 lands so one stays as permanent mana while we chain the other.
+        # Bible: the bounce chain generates burst mana on TOP of your permanent mana base.
+        n_bf_lands = len(bf_lands)
+        if n_bf_lands <= 1:
+            can_replay = False
+        
         if can_replay and self._amulets >= 1:
             # BOUNCE ITSELF — replay for another Amulet chain
             bounce_cards = [c for c in bf_lands if c.name == bounce_name]
@@ -465,6 +472,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if n == SAGA:                return 60
             if n in ALWAYS_UNTAPPED:     return 50
             if n == LOTUS and am == 0:   return 5
+
+        # ═══ LOTUS FIELD: needs 2 lands to sacrifice ═══
+        if n == LOTUS:
+            bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])
+            if bf_land_count < 2:
+                return -10  # can't sac 2 lands → don't play
+
+        # ═══ BOUNCE LANDS: need at least 1 other land on BF to bounce ═══
+        if n in BOUNCE_LANDS:
+            bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])
+            if bf_land_count == 0 and not (am > 0 or repl):
+                return 10  # enters tapped, bounces nothing useful — very bad
 
         # ═══ No engine ═══
         if not repl and am == 0:

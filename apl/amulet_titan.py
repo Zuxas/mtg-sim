@@ -179,6 +179,26 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         repl = self._spelunking_cnt > 0 or self._minstrel_up
         total = 0
 
+        # Vesuva: copies best land already on BF
+        if land_name == VESUVA:
+            bf_land_names = [x.name for x in gs.zones.battlefield if x.is_land() and x.name != VESUVA]
+            if bf_land_names:
+                for target in [LOTUS, GRUUL_TURF, SIMIC_CHAMBER, SAGA]:
+                    if target in bf_land_names:
+                        land_name = target
+                        gs._log(f"  Vesuva copies {target}")
+                        break
+
+        # Echoing Deeps: copies best land in GY
+        if land_name == ECHOING:
+            gy_names = list(self._lands_in_gy)
+            if gy_names:
+                for target in [LOTUS, GRUUL_TURF, SIMIC_CHAMBER, VESTIGE]:
+                    if target in gy_names:
+                        land_name = target
+                        gs._log(f"  Deeps copies {target} from GY")
+                        break
+
         if repl and am == 0:
             # Spelunking only: enters untapped, tap once
             self._add_land_mana(land_name, gs)

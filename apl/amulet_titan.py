@@ -1200,15 +1200,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     # No R source available — DON'T fetch Hanweir (no haste = waste)
                     # Fall through to default fetch below
 
-            # Have haste or Hanweir already on BF
-            if am >= 2:
-                # Double Amulet: Mirrorpool + Lotus for massive chains
-                if in_lib(MIRRORPOOL) and not mirror_bf:
-                    if in_lib(LOTUS):
-                        return [MIRRORPOOL, LOTUS]
-                    for bl in [GRUUL_TURF, SIMIC_CHAMBER]:
-                        if in_lib(bl):
-                            return [MIRRORPOOL, bl]
+            # Have haste or Hanweir already on BF — fetch Mirrorpool for copy
+            if am >= 1 and not mirror_bf and in_lib(MIRRORPOOL):
+                # Mirrorpool copy costs {4}{C} — need 5 mana after fetch
+                # Prioritize Lotus (3 mana) or bounce (2 mana) as partner
+                if in_lib(LOTUS) and am >= 2:
+                    return [MIRRORPOOL, LOTUS]
+                for bl in [GRUUL_TURF, SIMIC_CHAMBER, VESTIGE]:
+                    if in_lib(bl):
+                        return [MIRRORPOOL, bl]
 
             # Default: 2 bounce lands for mana
             fetches = []
@@ -2013,6 +2013,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._try_cast_colossus(gs)
                     # Try second Titan (legend rule kills old, but NEW ETB fires!)
                     if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
+                        has_titan2 = any(h.name == TITAN for h in gs.zones.hand)
+                        # If no 2nd Titan in hand but Pact available, Pact for one
+                        if not has_titan2 and not self._pact_owed:
+                            self._try_summoners_pact(gs)
                         for card in list(gs.zones.hand):
                             if card.name == TITAN:
                                 if gs.cast_spell(card):

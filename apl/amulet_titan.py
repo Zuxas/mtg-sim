@@ -1828,6 +1828,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._extra_land_used = True
                     continue
 
+            # ── 2.1 CAST AMULET (immediately after land generates mana) ──
+            # Amulet before Grazer/Spelunking so engine is active for their ETBs
+            if self._amulets == 0 and gs.mana_pool.total() >= 1:
+                if self._try_cast_amulet_with_spawn(gs):
+                    did = True; actions += 1; continue
+
             # ── 2.5 ANALYST SAC (burst mana) ──
             if self._analyst_on_bf and len(self._lands_in_gy) >= 2:
                 if gs.mana_pool.total() + self._spawn_count >= 4:

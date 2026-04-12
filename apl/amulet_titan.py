@@ -996,6 +996,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
         # Check: did we assemble the Analyst loop?
         self._check_analyst_loop_win(gs)
+        if gs.damage_dealt >= 20: return True
+
+        # Try Scapeshift OHKO with the massive post-sac mana
+        if gs.mana_pool.total() >= 4:
+            self._try_scapeshift(gs)
+
         return True
 
     def _check_analyst_loop_win(self, gs: GameState):
@@ -2054,6 +2060,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     if gs.damage_dealt >= 20: return
                     if gs.mana_pool.total() >= 7:
                         self._try_cast_colossus(gs)
+                    # Cast Amulet #2 if available (doubles subsequent attack trigger mana)
+                    if self._amulets < 4 and gs.mana_pool.total() >= 1:
+                        self._try_cast_amulet_with_spawn(gs)
+
                     # Try second Titan (legend rule kills old, but NEW ETB fires!)
                     if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
                         has_titan2 = any(h.name == TITAN for h in gs.zones.hand)

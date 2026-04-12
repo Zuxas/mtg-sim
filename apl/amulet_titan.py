@@ -289,9 +289,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         # No extra drops or last replay — bounce least valuable other land
         def bounce_prio(c):
             n = c.name
+            # Bible: bouncing TWest for transmute→Pact is a KEY play
+            # Priority 0 when we need to find a threat or combo piece
+            if n == TOLARIA:
+                need_transmute = (
+                    not self._titan_on_bf and  # need Titan
+                    not any(h.name in {TITAN, PACT, ZENITH} for h in gs.zones.hand)
+                ) or (
+                    self._titan_on_bf and  # have Titan, need Analyst for loop
+                    not self._analyst_on_bf and
+                    not any(h.name == ANALYST for h in gs.zones.hand)
+                )
+                return -1 if need_transmute else 2
             if n in FOREST_TYPES:      return 0   # return first (cheap, replaceable)
             if n == DRYAD_ARBOR:       return 1
-            if n == TOLARIA:           return 2   # good to pick up for transmute
             if n == VESTIGE:           return 3   # replay for ETB mana
             if n == SHIFTING:          return 4
             if n == URZA_CAVE:         return 5
@@ -1282,6 +1293,14 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     if in_lib(bl):
                         return [MIRRORPOOL, bl]
 
+            # Bible: "SGC + Tolaria West" is default for setting up next threat
+            if (not any(h.name in {TITAN, PACT, ZENITH} for h in gs.zones.hand)
+                    and in_lib(TOLARIA)):
+                # Need to find a threat — TWest transmutes for Pact
+                for bl in [SIMIC_CHAMBER, GRUUL_TURF]:
+                    if in_lib(bl):
+                        return [bl, TOLARIA]
+
             # Default: 2 bounce lands for mana
             fetches = []
             for bl in [GRUUL_TURF, SIMIC_CHAMBER, SELESNYA_SANC]:
@@ -1310,6 +1329,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 return [LOTUS, SHIFTING]
             if in_lib(LOTUS) and in_lib(ECHOING):
                 return [LOTUS, ECHOING]
+
+            # Bible: TWest + bounce for transmute→Pact chain
+            # "Titan Attack finds Tolaria West + bounceland, returning TWest"
+            need_pact = (not any(h.name in {PACT, ANALYST, TITAN} for h in gs.zones.hand)
+                        and not self._analyst_on_bf)
+            if need_pact and in_lib(TOLARIA):
+                for bl in [SIMIC_CHAMBER, GRUUL_TURF]:  # Simic for U (transmute cost)
+                    if in_lib(bl):
+                        return [TOLARIA, bl]
 
             # Default: more bounce lands
             fetches = []
@@ -2112,6 +2140,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # ── 3. GRAZER (extra land drop → chain mana) ──
             if self._try_cast_grazer(gs):
                 did = True; actions += 1; continue
+
+            # ── 3.3 EARLY TRANSMUTE (when no threat in hand — find Pact for Titan) ──
+            # Bible: TWest→Pact→Titan is a PRIMARY line
+            if (gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3
+                    and not self._titan_on_bf
+                    and not any(h.name in {TITAN, PACT, ZENITH} for h in gs.zones.hand)
+                    and any(h.name == TOLARIA for h in gs.zones.hand)):
+                if self._try_transmute_tolaria(gs):
+                    did = True; actions += 1; continue
             
             # ── 3.5 GSZ X=1 for Grazer (ONLY T1-2, save GSZ for Titan later) ──
             if (gs.turn <= 2

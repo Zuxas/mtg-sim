@@ -828,10 +828,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     gs.zones.hand.append(drawn)
                     gs._log(f"  Spelunking ETB: drew {drawn.name}")
                 # ETB: may put a land from hand onto BF
+                # This is a SPECIAL ABILITY, NOT a land drop — doesn't use the land drop!
                 land = self._best_land_to_play(gs)
-                if land and not gs.land_played:
-                    gs.land_played = True
+                if land:
                     self._place_land_on_bf(land, gs, from_hand=True)
+                    # DON'T set gs.land_played — Spelunking ETB is separate from land drop
                 return True
         return False
 

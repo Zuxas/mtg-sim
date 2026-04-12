@@ -1310,6 +1310,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if gs.mana_pool.total() >= 7:
             self._try_cast_colossus(gs)
 
+        # Play remaining lands from hand (bounce returns from ETB fetches)
+        for _ in range(5):  # max 5 land plays (safety)
+            hand_lands = [h for h in gs.zones.hand if h.is_land()]
+            if not hand_lands: break
+            best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
+            val = self._land_play_value(best, gs)
+            if val <= 0: break
+            self._place_land_on_bf(best, gs, from_hand=True)
+
         # Check Analyst loop
         self._check_analyst_loop_win(gs)
 

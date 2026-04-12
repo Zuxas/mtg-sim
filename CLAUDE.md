@@ -8,34 +8,41 @@ Rules:
 - After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
 
 
-## APL Audit Workflow (5 phases — see docs/WORKFLOW_OPTIMIZATION.md)
-
-Phase 1: Data extraction (Sonnet) — read playbook, extract strategy, pull oracle
-Phase 2: Interaction analysis (Opus) — cross-reference, find holes, design APL  
-Phase 3: Code writing (Sonnet Extended) — write full APL from design spec
-Phase 4: Testing (Sonnet) — run matchups, tune values, fix bugs
-Phase 5: Gauntlet (Sonnet) — full Bo3 run, commit, push
-
-Context handoff files (each phase produces input for the next):
-- docs/{deck}_playbook_extract.md (P1→P2)
-- docs/{deck}_oracle.txt (P1→P2+P3)
-- docs/{deck}_audit.md (P2→P3)
-- apl/{deck}_match.py (P3→P4)
-
 ## Ecosystem Sources of Truth
-- Website playbooks (My-Website/modern/*.html) = PRIMARY source for APL strategy
+- Website playbooks = PRIMARY source for APL strategy
 - Meta-analyzer DB = source for meta % and tournament decklists
-- Sim decks synced FROM playbooks (17 Modern decks, sync script in repo)
 - Scryfall local DB (162MB, 37K cards) = oracle text verification
+- Titan Bible (uploaded as All_About_Amulet_Titan.txt) = Dom Harvey 2651-line guide
 
-## Audited Decks (as of April 2026)
-- Boros Energy: 767L, gold standard ✅
-- Izzet Prowess: 821L, 33 edge cases ✅
-- Jeskai Blink: 594L, 50.1% vs Boros (PERFECT) ✅
-- Domain Zoo: 395L, needs engine P/T propagation fix ⚠️
-- Eldrazi Ramp: 373L, matchups high ⚠️
+## APL Registry (unified)
+- Single source of truth: apl/__init__.py
+- get_apl(name) goldfish APL (52 keys)
+- get_match_apl(name) MatchAPL with fallback (34 match keys)
+
+## Amulet Titan APL — COMPLETE REWRITE (April 11 2026)
+
+### Status: 1854L | avg T7.49 | 91.7% WR | 21.7% mull (5000 games, COMMITTED)
+
+Bible-based combo deck model with:
+- Scapeshift OHKO (fires 41.5%, kills 2.2%)
+- Analyst infinite loop wins (~5%)
+- Titan haste via Hanweir (67% rate)
+- Saga Ch III Amulet fetch
+- Bounce self-return chaining
+- 22 edge cases
+
+### Remaining targets:
+- avg T7.49 to T5-6 (more Scapeshift kills, better burst chains)
+- Add Mycosynth Gardens to stub deck
+- Multiple bounce replays per turn
+- Deeper Titan fetch decision tree
+- Mirrorpool spell copy
 
 ## Compute
-- 24 CPU cores (Ryzen 9 3900XT), RTX 3080 10GB
-- ALWAYS kill Python processes after tasks: Get-Process python* | Stop-Process
-- GPU sim would need engine rewrite (branching logic not GPU-friendly)
+- 24 CPU cores, RTX 3080 10GB
+- ALWAYS kill Python processes after tasks
+
+## Next Up
+- Amulet Titan: improve kill speed
+- Domain Zoo: fix P/T propagation
+- Deep audit 9 basic match APLs

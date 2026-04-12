@@ -278,8 +278,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if n == MIRRORPOOL:        return 6
             if n == ECHOING:           return 7
             if n in BOUNCE_LANDS:      return 8   # keep bounce on BF
+            if n == LOTUS:             return 9   # NEVER bounce (3-mana land!)
             if n == HANWEIR:           return 9   # NEVER bounce (need for haste)
             if n == SAGA:              return 10  # NEVER bounce (need Ch III)
+            if n == BOSEIJU:           return 6
+            if n == GARDENS:           return 7
             return 5
 
         candidates = [c for c in bf_lands if c.name != bounce_name]

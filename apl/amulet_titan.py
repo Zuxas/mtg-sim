@@ -2011,6 +2011,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     if gs.damage_dealt >= 20: return
                     if gs.mana_pool.total() >= 7:
                         self._try_cast_colossus(gs)
+                    # Try second Titan (legend rule kills old, but NEW ETB fires!)
+                    if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
+                        for card in list(gs.zones.hand):
+                            if card.name == TITAN:
+                                if gs.cast_spell(card):
+                                    gs._log("  2nd Titan from main! (legend kills old, ETB fires)")
+                                    self._titan_etb(gs)
+                                    if self._titan_has_haste:
+                                        self._titan_attack(gs)
+                                    if gs.damage_dealt >= 20: return
+                                break
                     return  # done — let combat handle the rest
             # Check combo win
             if gs.damage_dealt >= 20 or gs.damage_dealt == 999:

@@ -1352,6 +1352,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     # Vestige ETB: gives any color (will choose R for haste)
                     if in_lib(VESTIGE):
                         return [HANWEIR, VESTIGE]
+                    # Pool already has R from existing lands (tapped Gruul on BF etc)
+                    if gs.mana_pool.R >= 1:
+                        # Pair Hanweir with any useful land
+                        for partner in [SIMIC_CHAMBER, VESTIGE, LOTUS if am >= 1 else None]:
+                            if partner and in_lib(partner):
+                                return [HANWEIR, partner]
                     # No R source available — DON'T fetch Hanweir (no haste = waste)
                     # Fall through to default fetch below
 

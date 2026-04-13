@@ -926,8 +926,25 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if gs.cast_spell(c):
                 revealed = [gs.zones.library.pop(0) for _ in range(min(4, len(gs.zones.library)))]
                 if revealed:
-                    # Priority: Amulet > Titan > Spelunking > Scapeshift > other permanents
-                    priority = [AMULET, TITAN, SPELUNKING, ZENITH, PACT, SCAPESHIFT, ANALYST]
+                    # Dynamic priority based on what we NEED right now
+                    has_amulet = self._amulets >= 1
+                    has_threat = any(h.name in {TITAN, PACT, ZENITH, SCAPESHIFT} for h in gs.zones.hand) or self._titan_on_bf
+                    has_engine = has_amulet or self._spelunking_cnt > 0
+                    has_bounce = any(h.name in BOUNCE_LANDS for h in gs.zones.hand if h.is_land())
+                    
+                    priority = []
+                    if not has_engine:
+                        priority.extend([AMULET, SPELUNKING])
+                    if not has_threat:
+                        priority.extend([TITAN, ZENITH, PACT, SCAPESHIFT])
+                    if not has_bounce:
+                        # Bounce lands are permanents — Rumble can find them!
+                        for bl in BOUNCE_LANDS:
+                            priority.append(bl)
+                    # Always want these as fallbacks
+                    if has_engine and has_threat:
+                        priority.extend([TITAN, AMULET, SPELUNKING, ZENITH, PACT, SCAPESHIFT])
+                    priority.extend([ANALYST, GRAZER])
                     kept = None
                     for pn in priority:
                         kept = next((r for r in revealed if r.name == pn), None)

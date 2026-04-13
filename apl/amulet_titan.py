@@ -1385,16 +1385,9 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         for land_name in fetches:
             self._fetch_land_to_bf(land_name, gs)
 
-        # Play bounce lands returned to hand by ETB fetch triggers
-        # RULES: Can only play lands during main phase — NOT during combat
-        if not during_combat:
-            for _ in range(5):
-                hand_bounces = [h for h in gs.zones.hand if h.name in BOUNCE_LANDS and h.is_land()]
-                if not hand_bounces: break
-                if self._amulets < 1: break
-                best = max(hand_bounces, key=lambda l: self._land_play_value(l, gs))
-                if self._land_play_value(best, gs) <= 0: break
-                self._place_land_on_bf(best, gs, from_hand=True)
+        # RULES: Titan ETB only puts lands from LIBRARY onto BF.
+        # Playing lands from HAND is a separate action that uses land drops.
+        # Hand land plays are handled by the greedy loop in main_phase/mp2.
 
         # Check haste from Hanweir (already on BF or just fetched)
         # RULES: Activated ability — legal at any time with priority

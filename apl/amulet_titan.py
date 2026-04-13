@@ -1148,6 +1148,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if gs.cast_spell(c):
                 self._pact_owed = True
                 self._pact_turn_cast = gs.turn
+                self._track_card_to_gy("instant")  # Pact is instant → GY for delirium
                 # Find best green creature
                 for target in [TITAN, ANALYST, COLOSSUS, GRAZER]:
                     found = next((x for x in gs.zones.library if x.name == target), None)

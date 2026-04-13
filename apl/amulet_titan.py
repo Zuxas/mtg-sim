@@ -1564,36 +1564,27 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
                         fetch_order = fetch_order[:min(n_lands, 4)]
 
-                        # Place on BF + generate mana
-                        total_mana = 0
+                        # Reorder: TWest must enter BEFORE bounce land!
+                        # Bible: "all lands enter simultaneously, resolve bounce trigger first
+                        # picking up TWest." In our sequential model, TWest first so it's
+                        # on BF when the bounce trigger fires.
+                        twest_cards = [f for f in fetch_order if f.name == TOLARIA]
+                        bounce_cards = [f for f in fetch_order if f.name in BOUNCE_LANDS]
+                        lotus_cards = [f for f in fetch_order if f.name == LOTUS or f.name == ECHOING]
+                        other_cards = [f for f in fetch_order if f not in twest_cards + bounce_cards + lotus_cards]
+                        fetch_order = lotus_cards + twest_cards + other_cards + bounce_cards
+
+                        # Place on BF via _place_land_on_bf for proper ETB handling
+                        self._skip_lotus_sac = True
                         for ft in fetch_order:
                             gs.zones.library.remove(ft)
-                            ft.tapped = False
-                            ft.turn_entered = gs.turn
-                            gs.zones.battlefield.append(ft)
-                            if ft.name == LOTUS:
-                                m = am * 3
-                                gs.mana_pool.G += m
-                            elif ft.name in BOUNCE_LANDS:
-                                m = am * 2
-                                self._add_land_mana(ft.name, gs)
-                                if am > 1:
-                                    for _ in range(am - 1):
-                                        self._add_land_mana(ft.name, gs)
-                            elif ft.name == TOLARIA:
-                                gs.mana_pool.U += am
-                                m = am
-                            else:
-                                m = max(1, am)
-                                gs.mana_pool.C += m
-                            total_mana += m
+                            self._place_land_on_bf(ft, gs, from_hand=False)
+                        self._skip_lotus_sac = False
 
-                        gs._log(f"  Shift fetched {len(fetch_order)} lands, +{total_mana} mana")
-
-                        # Bible: "Resolve the bounceland trigger first, picking up TWest"
-                        # The bounce land that entered picks up TWest → hand
-                        twest_on_bf = next((c for c in gs.zones.battlefield if c.name == TOLARIA), None)
-                        if twest_on_bf:
+                        # Ensure TWest is in hand for transmute (may already be bounced by _apply_bounce_return)
+                        twest_on_bf = next((cc for cc in gs.zones.battlefield if cc.name == TOLARIA), None)
+                        twest_in_hand = any(hh.name == TOLARIA for hh in gs.zones.hand)
+                        if twest_on_bf and not twest_in_hand:
                             gs.zones.battlefield.remove(twest_on_bf)
                             gs.zones.hand.append(twest_on_bf)
                             gs._log("  Bounce trigger: TWest → hand for transmute")
@@ -1724,11 +1715,13 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._track_land_to_gy(sl.name)
                     gs.zones.battlefield = [x for x in gs.zones.battlefield if id(x) not in sac_ids]
                     # Fetch Lotus + bounce for 6+ mana
+                    self._skip_lotus_sac = True
                     fetched = 0
                     for target in [LOTUS, LOTUS, GRUUL_TURF, SIMIC_CHAMBER, VESTIGE]:
                         if fetched >= n_lands: break
                         if self._fetch_land_to_bf(target, gs):
                             fetched += 1
+                    self._skip_lotus_sac = False
                     self._try_deploy_titan(gs)
                     return True
 

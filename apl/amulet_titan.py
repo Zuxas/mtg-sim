@@ -2283,6 +2283,37 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     and any(h.name == TOLARIA for h in gs.zones.hand)):
                 if self._try_transmute_tolaria(gs):
                     did = True; actions += 1; continue
+
+            # ── 3.4 TRANSMUTE FOR ANALYST LOOP COMPLETION ──
+            # Bible: When loop pieces on BF (Lotus+Woodland+delirium) but no Analyst,
+            # transmute TWest → Pact → Analyst to complete the loop!
+            if (self._titan_on_bf
+                    and gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3
+                    and any(h.name == TOLARIA for h in gs.zones.hand)
+                    and not self._analyst_on_bf
+                    and not any(h.name == ANALYST for h in gs.zones.hand)):
+                # Check if loop pieces are FULLY assembled on BF (need 2 Lotus sources!)
+                lotus_bf_count = sum(1 for c in gs.zones.battlefield if c.name == LOTUS)
+                deeps_as_lotus = any(c.name == ECHOING for c in gs.zones.battlefield)
+                has_2_lotus = lotus_bf_count >= 2 or (lotus_bf_count >= 1 and deeps_as_lotus) or (lotus_bf_count >= 1 and self._amulets >= 2)
+                has_woodland_bf = any(c.name == SHIFTING for c in gs.zones.battlefield)
+                has_delirium = len(self._delirium_types) >= 4
+                analyst_in_gy = any(c.name == ANALYST for c in gs.zones.graveyard)
+                if has_2_lotus and (has_woodland_bf or analyst_in_gy) and has_delirium:
+                    # TWest → Pact → Analyst to complete the loop!
+                    gs._log("  Loop pieces assembled! Transmute TWest for Analyst path")
+                    if self._try_transmute_tolaria(gs):
+                        # Now find Analyst via Pact
+                        pact_in_hand = next((h for h in gs.zones.hand if h.name == PACT), None)
+                        if pact_in_hand:
+                            a = next((x for x in gs.zones.library if x.name == ANALYST), None)
+                            if a:
+                                gs.zones.library.remove(a)
+                                gs.zones.hand.append(a)
+                                self._pact_owed = True
+                                self._pact_turn_cast = gs.turn
+                                gs._log("  Pact → Analyst (loop completion)")
+                        did = True; actions += 1; continue
             
             # ── 3.5 GSZ X=1 for Grazer (ONLY T1-2, save GSZ for Titan later) ──
             if (gs.turn <= 2

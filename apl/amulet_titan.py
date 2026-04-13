@@ -275,16 +275,23 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         
         if can_replay and self._amulets >= 1:
             # BOUNCE ITSELF — replay for another Amulet chain
-            bounce_cards = [c for c in bf_lands if c.name == bounce_name]
-            if bounce_cards:
-                to_return = bounce_cards[-1]
-                rid = id(to_return)
-                gs.zones.battlefield = [c for c in gs.zones.battlefield if id(c) != rid]
-                gs.zones.hand.append(to_return)
-                # Reset land_played so the greedy loop can replay this bounce land
-                gs.land_played = False
-                gs._log(f"  Bounce SELF-RETURN: {bounce_name} → hand (will replay)")
-                return
+            # BUT: only if there's at least 1 OTHER permanent land on BF
+            # so we don't end up with 0 lands after the chain
+            other_lands = [c for c in bf_lands if c.name != bounce_name]
+            if other_lands or n_bf_lands >= 2:
+                bounce_cards = [c for c in bf_lands if c.name == bounce_name]
+                if bounce_cards:
+                    to_return = bounce_cards[-1]
+                    rid = id(to_return)
+                    gs.zones.battlefield = [c for c in gs.zones.battlefield if id(c) != rid]
+                    gs.zones.hand.append(to_return)
+                    # DON'T reset land_played — self-return uses the same drop
+                    # Actually the rules say: playing the land again uses a NEW drop
+                    # But the _play_land function checks land_played which was just set
+                    # The self-return un-counting in _play_land handles this
+                    gs.land_played = False
+                    gs._log(f"  Bounce SELF-RETURN: {bounce_name} → hand (will replay)")
+                    return
         
         # No extra drops or last replay — bounce least valuable other land
         def bounce_prio(c):
@@ -520,7 +527,13 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
         # ═══ Engine active ═══
         if repl or am > 0:
-            if n in BOUNCE_LANDS:        return 90 + am * 5
+            bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])
+            if n in BOUNCE_LANDS:
+                if bf_land_count == 0:
+                    # NO lands on BF — bounce will eat itself (mandatory trigger)
+                    # Play a non-bounce land first to establish a permanent base
+                    return 40  # lower than Forest/Vestige/Saga so they play first
+                return 90 + am * 5
             if n == LOTUS and am >= 1:   return 85 + am * 3
             if n == VESTIGE:             return 70 + am
             if n == GARDENS:             return 65  # copy Amulet opportunity
@@ -537,8 +550,13 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         # ═══ BOUNCE LANDS: need at least 1 other land on BF to bounce ═══
         if n in BOUNCE_LANDS:
             bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])
-            if bf_land_count == 0 and not (am > 0 or repl):
-                return 10  # enters tapped, bounces nothing useful — very bad
+            if bf_land_count == 0:
+                # NO other land to bounce — the bounce will eat itself!
+                # Only play if we have extra drops AND Amulet (chain mana worth it)
+                # Otherwise the bounce self-returns leaving 0 lands on BF
+                if (am > 0 or repl) and self._max_land_drops - self._land_drops_used > 1:
+                    return 85  # have extra drops, chain is worth it
+                return -10  # terrible — self-returns leaving 0 permanent lands
 
         # ═══ No engine ═══
         if not repl and am == 0:

@@ -1258,13 +1258,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         """Try to cast Titan or find it via Pact/GSZ."""
         if self._titan_on_bf:
             return False
-        total = gs.mana_pool.total() + self._spawn_count
+        # Spawn tokens produce {C} — can pay generic but NOT colored pips
+        pool_total = gs.mana_pool.total()
+        total = pool_total + self._spawn_count  # total available mana
 
-        # Direct cast: Titan ({4}{G}{G} = 6 mana)
+        # Direct cast: Titan ({4}{G}{G} = 6 mana, MUST have G>=2 from pool)
         for c in list(gs.zones.hand):
-            if c.name == TITAN and total >= 6:
-                if gs.mana_pool.total() < 6:
-                    self._sac_spawn_for_mana(gs, 6 - gs.mana_pool.total())
+            if c.name == TITAN and total >= 6 and gs.mana_pool.G >= 2:
+                if pool_total < 6:
+                    self._sac_spawn_for_mana(gs, 6 - pool_total)
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     if gs.cast_spell(c):
                         self._titan_on_bf = True
@@ -1276,11 +1278,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         # Attack trigger fires during COMBAT, not here
                         return True
 
-        # GSZ for Titan (7 mana)
-        if total >= 7 and any(c.name == ZENITH for c in gs.zones.hand):
+        # GSZ for Titan ({6}{G} = 7 mana, need G>=1)
+        if total >= 7 and gs.mana_pool.G >= 1 and any(c.name == ZENITH for c in gs.zones.hand):
             return self._try_green_sun_zenith(gs, 6)
 
-        # Pact for Titan (need 6 mana to cast Titan after Pact)
+        # Pact for Titan (Pact free, then Titan {4}{G}{G} = need G>=2 at cast time)
         if total >= 6 and any(c.name == PACT for c in gs.zones.hand):
             if self._try_summoners_pact(gs):
                 # Now cast the Titan we just found

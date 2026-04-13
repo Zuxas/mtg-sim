@@ -1,9 +1,13 @@
 # Bible Audit — Things the APL Doesn't Model or Gets Wrong
 # Systematic pass through Dom Harvey's "All About Amulet Titan" vs current APL
+# Last updated: Session of April 13-14, 2026
+
+## VERIFIED STATUS:
+## ✅ = Confirmed working | ⚠️ = Fixed this session | ❌ = Still needs work | 🔲 = Low priority
 
 ## CRITICAL (likely affects speed/WR by 0.5%+ each)
 
-### 1. Mirrorpool Copy BEFORE Lotus Sac Resolves (Lines 679-681)
+### ⚠️ 1. Mirrorpool Copy BEFORE Lotus Sac Resolves (Lines 679-681) — FIXED
 Bible: "Titan ETB finds Lotus + Mirrorpool, COPY BEFORE Lotus sac resolves"
 The copy uses Mirrorpool activation ({4}{C}) with mana generated from Amulet
 untapping the lands — but the Lotus sac trigger is still on the stack.
@@ -17,7 +21,7 @@ Lotus sac fires before Mirrorpool can be activated.
 **Fix needed:** During Titan ETB, defer Lotus sac until after Mirrorpool 
 copy resolves (same _skip_lotus_sac pattern).
 
-### 2. Titan Copy → ETB → Fetches MORE Lands → Chain Kills (Lines 641-662)
+### ❌ 2. Titan Copy → ETB → Fetches MORE Lands → Chain Kills (Lines 641-662)
 Bible describes Triple/Quad Titan via: Titan ETB → Lotus + Mirrorpool → 
 copy Titan → Copy ETB → Deeps(Mirror) + Lotus → copy again → etc.
 Each copy's ETB fetches 2 more lands, chaining into 3-4 Titan attacks.
@@ -30,7 +34,7 @@ chaining Copy ETB → Deeps(Mirror) → copy AGAIN. The APL doesn't chain.
 from GY (where original Mirrorpool went after legendary rule), the APL
 should activate Deeps-as-Mirrorpool for a SECOND copy, and so on.
 
-### 3. Scapeshift OHKO Line Not Fully Implemented (Lines 916-927)
+### ✅ 3. Scapeshift OHKO Line FULLY IMPLEMENTED (Lines 916-927)
 Bible: Shift for 2 Lotus + bounce + TWest → 9 mana → Transmute → Pact → 
 Analyst → return all lands → 13+ mana → Transmute → Pact → Titan → 
 Titan ETB → Woodland + Lotus → Analyst loop = infinite damage.
@@ -43,7 +47,7 @@ win condition from combat Titan.
 **Fix needed:** Implement the full Scapeshift deterministic kill sequence
 when conditions are met (Amulet + 4 lands + Shift in hand).
 
-### 4. Vestige → Bounce → Replay Vestige = Extra Mana (Line 1458)
+### ✅ 4. Vestige → Bounce → Replay Vestige = Extra Mana (Line 1458) — VERIFIED WORKING
 Bible: "With one Amulet, playing Vestige → bounceland returning Vestige → 
 replay Vestige gets you the same amount of mana as playing the bounceland 
 repeatedly while letting you keep this additional land in play."
@@ -56,7 +60,7 @@ it, then replay gives ANOTHER ETB → 1 more mana. Net: 2 Vestige ETBs
 **Fix needed:** Check if bounce return of Vestige + replay is available
 as a mana-generating sequence in the greedy loop.
 
-### 5. Mycosynth Gardens Copying Amulet for Double Amulet Lines (Lines 541-604)
+### ✅ 5. Mycosynth Gardens Copying Amulet — LOGIC EXISTS, DECKLIST ISSUE (Lines 541-604)
 Bible: "Titan ETB finds Battlements + Gardens, haste Titan + copy Amulet"
 Gardens taps for {C}, then {1} to copy Amulet artifact = double Amulet.
 This upgrades single-Amulet hands into double-Amulet kills.
@@ -97,7 +101,7 @@ wider range of things)"
 during main phase. Instant-speed Cave → fetch bounce → mana generation
 during opponent's turn or in response to triggers isn't modeled.
 
-### 9. Spelunking's Explore — Put a Land From Hand (Line 1093)  
+### ✅ 9. Spelunking's Explore — Put a Land From Hand (Line 1093) — VERIFIED WORKING  
 Bible: "Stapled to this Amulet riff is an Explore"
 Spelunking ETB: draw a card + if it's a land, you MAY put it onto the BF.
 

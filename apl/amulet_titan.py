@@ -1129,21 +1129,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         for c in list(gs.zones.hand):
             if c.name != PACT: continue
             # Safety check — Pact costs {2}{G}{G} next upkeep
-            # Safety check: need BF lands to pay {2}{G}{G} next upkeep
-            # OR we'll definitely win this turn by casting the Titan we find
             bf_lands = [x for x in gs.zones.battlefield if x.is_land()]
             g_sources = sum(1 for x in bf_lands if x.name in FOREST_TYPES
                            or x.name in BOUNCE_LANDS or x.name == SHIFTING
                            or x.name == LOTUS)
             total_lands = len(bf_lands)
             can_pay = total_lands >= 5 and g_sources >= 2
-            # can_win: only if we ALREADY have Titan in hand (Pact not needed)
-            # or if Titan is on BF with haste (already winning)
             can_win = (self._titan_on_bf and self._titan_has_haste)
-            # OR: we have 6+ mana pool right now and no Titan in hand — Pact will find one
-            # and we'll cast it immediately. But only if we'd also be able to pay Pact next turn.
             if gs.mana_pool.total() >= 6 and not self._titan_on_bf:
-                can_win = can_win or can_pay  # must be able to pay even if we "expect" to win
+                can_win = can_win or can_pay
             if not can_pay and not can_win:
                 continue
 
@@ -1591,18 +1585,27 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
                         gs._log(f"  Shift fetched {len(fetch_order)} lands, +{total_mana} mana")
 
-                        # Bounce trigger picks up TWest
-                        # Lotus sac: sac remaining lands
-                        # (simplified: we have massive mana floating)
+                        # Bible: "Resolve the bounceland trigger first, picking up TWest"
+                        # The bounce land that entered picks up TWest → hand
+                        twest_on_bf = next((c for c in gs.zones.battlefield if c.name == TOLARIA), None)
+                        if twest_on_bf:
+                            gs.zones.battlefield.remove(twest_on_bf)
+                            gs.zones.hand.append(twest_on_bf)
+                            gs._log("  Bounce trigger: TWest → hand for transmute")
+                        
+                        # Lotus sac triggers: sac the remaining shift lands
+                        # (Bible: "sac bounceland + 2 Lotus to the Lotus triggers")
+                        # After this, 0 lands on BF but massive floating mana
 
-                        # Try direct Analyst path first (skip TWest chain)
+                        # ═══ CHAIN: TWest transmute → Pact → Analyst → sac → Titan ═══
+                        # Try direct Analyst path first (skip TWest if Analyst already available)
                         analyst_ready = None
                         for h in list(gs.zones.hand):
                             if h.name == ANALYST:
                                 analyst_ready = h
                                 break
                         if not analyst_ready:
-                            # Try Pact → Analyst
+                            # Try Pact in hand → Analyst
                             for h in list(gs.zones.hand):
                                 if h.name == PACT:
                                     a = next((x for x in gs.zones.library if x.name == ANALYST), None)
@@ -1614,12 +1617,52 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                                         self._pact_turn_cast = gs.turn
                                         gs._log("  Direct Pact → Analyst (skip TWest)")
                                     break
+                        if not analyst_ready:
+                            # TWest transmute chain — THE primary Bible line
+                            twest_in_hand = next((h for h in gs.zones.hand if h.name == TOLARIA), None)
+                            if twest_in_hand and gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3:
+                                # Pay {1}{U}{U}
+                                gs.mana_pool.U -= 2
+                                remaining = 1
+                                for attr in ('flex', 'C', 'G', 'R', 'B', 'W'):
+                                    have = getattr(gs.mana_pool, attr)
+                                    take = min(have, remaining)
+                                    if take > 0:
+                                        setattr(gs.mana_pool, attr, have - take)
+                                        remaining -= take
+                                    if remaining <= 0: break
+                                gs.zones.hand.remove(twest_in_hand)
+                                gs.zones.graveyard.append(twest_in_hand)
+                                self._track_land_to_gy(TOLARIA)
+                                gs._log("  Transmute TWest ({1}{U}{U})")
+                                # Find Pact
+                                pact = next((x for x in gs.zones.library if x.name == PACT), None)
+                                if pact:
+                                    gs.zones.library.remove(pact)
+                                    gs.zones.hand.append(pact)
+                                    gs._log("  TWest → Pact")
+                                    # Pact → Analyst
+                                    a2 = next((x for x in gs.zones.library if x.name == ANALYST), None)
+                                    if a2:
+                                        gs.zones.library.remove(a2)
+                                        gs.zones.hand.append(a2)
+                                        analyst_ready = a2
+                                        self._pact_owed = True
+                                        self._pact_turn_cast = gs.turn
+                                        gs._log("  Pact → Analyst")
 
                         if analyst_ready and gs.mana_pool.total() >= 6:
-                            # Cast Analyst directly
+                            # Cast Analyst directly (costs {1}{G})
                             if analyst_ready in gs.zones.hand:
                                 gs.mana_pool.G = max(0, gs.mana_pool.G - 1)
-                                gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1)
+                                remaining_cost = 1
+                                for attr in ('flex', 'C', 'U', 'R', 'B', 'W'):
+                                    have = getattr(gs.mana_pool, attr)
+                                    take = min(have, remaining_cost)
+                                    if take > 0:
+                                        setattr(gs.mana_pool, attr, have - take)
+                                        remaining_cost -= take
+                                    if remaining_cost <= 0: break
                                 gs.zones.hand.remove(analyst_ready)
                                 gs.zones.battlefield.append(analyst_ready)
                                 self._analyst_on_bf = True
@@ -1628,51 +1671,37 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                                     gs.zones.graveyard.append(milled)
                                     if milled.is_land(): self._track_land_to_gy(milled.name)
                                     else: self._track_card_to_gy(milled.type_line)
-                                gs._log("  Direct Analyst cast + mill 3")
+                                gs._log("  Analyst cast + mill 3")
+                                # Sac Analyst → return ALL GY lands (Scapeshift lands + milled)
                                 if gs.mana_pool.total() >= 4:
                                     self._try_sacrifice_analyst(gs)
-                                    self._try_deploy_titan(gs)
+                                    if gs.damage_dealt >= 20: return True
+                                    # After Analyst sac: try ALL routes to deploy Titan
+                                    # Route 1: TWest chain round 2 (transmute → Pact → Titan)
+                                    tw2 = next((h for h in gs.zones.hand if h.name == TOLARIA), None)
+                                    if tw2 and gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3:
+                                        gs.mana_pool.U -= 2
+                                        rem = 1
+                                        for attr in ('flex', 'C', 'G', 'R', 'B', 'W'):
+                                            have = getattr(gs.mana_pool, attr)
+                                            take = min(have, rem)
+                                            if take > 0:
+                                                setattr(gs.mana_pool, attr, have - take)
+                                                rem -= take
+                                            if rem <= 0: break
+                                        gs.zones.hand.remove(tw2)
+                                        gs.zones.graveyard.append(tw2)
+                                        gs._log("  2nd transmute TWest → Pact")
+                                        pact2 = next((x for x in gs.zones.library if x.name == PACT), None)
+                                        if pact2:
+                                            gs.zones.library.remove(pact2)
+                                            gs.zones.hand.append(pact2)
+                                    # Route 2: Deploy Titan (direct cast, Pact, or GSZ)
+                                    if not self._titan_on_bf:
+                                        self._try_deploy_titan(gs)
+                                    # Route 3: Check analyst loop (may have assembled it)
                                     self._check_analyst_loop_win(gs)
                                     return True
-
-                        # Fallback: TWest transmute chain
-                        if gs.mana_pool.U >= 2 and gs.mana_pool.total() >= 3:
-                            gs.mana_pool.U -= 2
-                            gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1) if gs.mana_pool.flex > 0 else 0
-                            gs.mana_pool.G = max(0, gs.mana_pool.G - 1) if gs.mana_pool.U < 0 else gs.mana_pool.G
-                            # Find Pact
-                            pact = next((x for x in gs.zones.library if x.name == PACT), None)
-                            if pact:
-                                gs.zones.library.remove(pact)
-                                gs.zones.hand.append(pact)
-                                gs._log("  Transmute → Pact")
-                            # Pact → Analyst
-                            analyst = next((x for x in gs.zones.library if x.name == ANALYST), None)
-                            if analyst:
-                                gs.zones.library.remove(analyst)
-                                gs.zones.hand.append(analyst)
-                                self._pact_owed = True
-                                self._pact_turn_cast = gs.turn
-                                gs._log("  Pact → Analyst")
-                                # Cast Analyst
-                                if gs.mana_pool.total() >= 2:
-                                    gs.mana_pool.G = max(0, gs.mana_pool.G - 1)
-                                    gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1)
-                                    gs.zones.hand.remove(analyst)
-                                    gs.zones.battlefield.append(analyst)
-                                    self._analyst_on_bf = True
-                                    # Mill 3
-                                    for _ in range(min(3, len(gs.zones.library))):
-                                        milled = gs.zones.library.pop(0)
-                                        gs.zones.graveyard.append(milled)
-                                        if milled.is_land(): self._track_land_to_gy(milled.name)
-                                        else: self._track_card_to_gy(milled.type_line)
-                                    # Sac Analyst → return all GY lands
-                                    if gs.mana_pool.total() >= 4:
-                                        self._try_sacrifice_analyst(gs)
-                                        # Now try to cast Titan
-                                        self._try_deploy_titan(gs)
-                                        self._check_analyst_loop_win(gs)
                         return True
 
             # ═══ PATH B: Ramp shift (Titan in hand, need mana) ═══

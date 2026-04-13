@@ -764,8 +764,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         """Pay Summoner's Pact debt or lose. Advance Urza's Saga chapters."""
         # Pact debt
         if self._pact_owed and gs.turn > self._pact_turn_cast:
-            # Check if we CAN pay by temporarily tapping lands
-            self._tap_all_lands_for_mana(gs)
+            # RULES: Pact creates a delayed trigger at beginning of upkeep.
+            # Player taps lands for mana to pay {2}{G}{G}.
+            # Tap ALL lands (including Hanweir — no combat during upkeep!)
+            old_pool = (gs.mana_pool.G, gs.mana_pool.R, gs.mana_pool.U, 
+                       gs.mana_pool.C, gs.mana_pool.flex, gs.mana_pool.total())
+            # Tap every untapped land for mana (no reservations during upkeep)
+            for c in gs.zones.battlefield:
+                if not c.is_land(): continue
+                if getattr(c, 'tapped', False): continue
+                if c.name == DRYAD_ARBOR and getattr(c, 'summoning_sickness', False): continue
+                c.tapped = True
+                self._add_land_mana(c.name, gs)
             if gs.mana_pool.total() >= 4 and gs.mana_pool.G >= 2:
                 # Pay {2}{G}{G}: 2 green + 2 generic
                 gs.mana_pool.G -= 2

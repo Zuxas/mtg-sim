@@ -1106,7 +1106,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         has_2nd_field = (bf_names.count(LOTUS) >= 2
                         or (bf_names.count(LOTUS) >= 1 and bf_names.count(ECHOING) >= 1))
         has_woodland = SHIFTING in bf_names
-        has_amulet = self._amulets >= 1
+        has_amulet = self._amulets >= 1 or self._spelunking_cnt > 0  # Spelunking enables loop too!
         has_delirium = len(self._delirium_types) >= 4
         analyst_in_gy = any(c.name == ANALYST for c in gs.zones.graveyard)
         analyst_available = analyst_in_gy or self._analyst_on_bf
@@ -1119,14 +1119,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             return True
 
         # Partial loop with 2 Amulets: only need 1 Lotus + Woodland
-        if (has_lotus and has_woodland and self._amulets >= 2
+        # Partial loop with 2 Amulets (or Amulet+Spelunking): only need 1 Lotus + Woodland
+        if (has_lotus and has_woodland and (self._amulets >= 2 or (self._amulets >= 1 and self._spelunking_cnt > 0))
                 and has_delirium and analyst_available):
             gs._log("  *** ANALYST LOOP (2 Amulets) — INFINITE DAMAGE ***")
             gs.damage_dealt = 999
             return True
 
         # All pieces EXCEPT Analyst — try to find it!
-        if ((has_lotus and has_2nd_field and has_woodland and has_amulet and has_delirium)
+        # Only actively hunt for Analyst with real Amulet (Spelunking loop works but don't spend
+        # mana hunting for it when combat would be faster)
+        has_real_amulet = self._amulets >= 1
+        if ((has_lotus and has_2nd_field and has_woodland and has_real_amulet and has_delirium)
                 or (has_lotus and has_woodland and self._amulets >= 2 and has_delirium)):
             if not analyst_available:
                 analyst_in_lib = any(x.name == ANALYST for x in gs.zones.library)

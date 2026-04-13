@@ -630,17 +630,25 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             return False
 
         # Pattern A: T2-3 Titan (Amulet + bounce + threat)
+        # Bible: need a green source to cast Amulet T1!
+        has_green_src = any(c.name in ALWAYS_UNTAPPED or c.name == VESTIGE for c in hand if c.is_land())
         if amulets and bounce and threats and n_lands >= 2:
-            return True
+            if has_green_src:
+                return True
+            # No green source: Amulet is stuck in hand. Mull unless we have Saga
+            if any(c.name == SAGA for c in hand):
+                return True  # Saga taps for {C} to cast Amulet
+            # Fall through — this hand can't cast Amulet T1
         if len(amulets) >= 2 and bounce:
-            return True  # double Amulet + bounce = T2 potential
+            if has_green_src or any(c.name == SAGA for c in hand):
+                return True
 
         # Pattern B: Spelunking hand
         if any(c.name == SPELUNKING for c in hand) and n_lands >= 2 and threats:
             return True
 
-        # Pattern C: Grazer + Amulet + bounce
-        if grazers and amulets and bounce and n_lands >= 1:
+        # Pattern C: Grazer + Amulet + bounce (need land to play Grazer from)
+        if grazers and amulets and bounce and n_lands >= 1 and has_green_src:
             return True
 
         # Pattern D: GSZ hand
@@ -657,17 +665,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if n_lands >= 2 and bounce and threats and (rumbles or grazers):
             return True
 
-        # Pattern G: Multiple bounce + threat
+        # Pattern G: Multiple bounce + threat — need mana source to start
         if n_lands >= 2 and len(bounce) >= 2 and threats:
-            return True
+            if has_green_src or any(c.name == SAGA for c in hand):
+                return True
 
-        # Pattern H: Scapeshift + lands/engine
+        # Pattern H: Scapeshift + lands/engine — need a mana source
         if any(c.name == SCAPESHIFT for c in hand) and n_lands >= 2 and (engines or bounce):
-            return True
+            if has_green_src or any(c.name == SAGA for c in hand):
+                return True
 
-        # Generic: 2-4 lands + engine + threat
+        # Generic: 2-4 lands + engine + threat — need castable mana
         if 2 <= n_lands <= 4 and engines and (threats or rumbles or grazers):
-            return True
+            if has_green_src or any(c.name == SAGA for c in hand):
+                return True
 
         # On mull 1+: keep more liberally
         if mulligans >= 1 and 2 <= n_lands <= 4 and (engines or bounce or threats):

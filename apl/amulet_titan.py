@@ -86,6 +86,7 @@ LAND_MANA = {
     VESUVA:        {'C': 1},       # copies whatever it entered as
     SHIFTING:      {'G': 1},
     GARDENS:       {'C': 1},
+    TOLARIA:       {'U': 1},       # "{T}: Add {U}" — Tolaria West taps for BLUE
     "Ghost Quarter": {'C': 1},
 }
 

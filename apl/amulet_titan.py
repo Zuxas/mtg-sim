@@ -1154,8 +1154,20 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             total_lands = len(bf_lands)
             can_pay = total_lands >= 5 and g_sources >= 2
             can_win = (self._titan_on_bf and self._titan_has_haste)
-            if gs.mana_pool.total() >= 6 and not self._titan_on_bf:
-                can_win = can_win or can_pay
+            # PREDICTIVE: If pool >= 6 and G >= 2, we can Pact -> Titan immediately.
+            # Titan ETB fetches 2 lands. If haste, attack fetches 2 more.
+            # Predict whether those fetched lands give enough for next upkeep.
+            if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2 and not self._titan_on_bf:
+                hanweir_avail = any(x.name == HANWEIR for x in gs.zones.library) or self._hanweir_on_bf
+                bounce_in_lib = sum(1 for x in gs.zones.library if x.name in BOUNCE_LANDS)
+                # Conservative estimate: Titan adds ~2 net permanent lands (bounces replace)
+                predicted_lands = total_lands + 2
+                if hanweir_avail:
+                    predicted_lands += 1  # attack trigger adds ~1 net permanent
+                predicted_g = g_sources + min(2, bounce_in_lib)
+                if predicted_lands >= 6 and predicted_g >= 2:
+                    can_win = True
+                    can_win = True
             if not can_pay and not can_win:
                 continue
 

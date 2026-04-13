@@ -415,6 +415,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         
         land.tapped = False
         land.turn_entered = gs.turn
+        # RULES: When a land returns from GY (Analyst sac), it reverts to its printed
+        # characteristics. Strip any "becomes" effects (e.g. Woodland→Titan copy).
+        # CR 400.7: An object that moves zones becomes a new object with no memory.
+        if 'creature' in land.tags and land.is_land() and land.name != DRYAD_ARBOR:
+            land.tags.discard('creature')
+            land.tags.discard(KWTag.HASTE)
         gs.zones.battlefield.append(land)
 
         name = land.name

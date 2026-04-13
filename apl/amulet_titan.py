@@ -439,7 +439,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         
         # Lotus sac trigger
         if name == LOTUS:
-            self._apply_lotus_sac(gs)
+            if not getattr(self, '_skip_lotus_sac', False):
+                self._apply_lotus_sac(gs)
 
         # Saga enters on Ch I (gains "{T}: Add {C}")
         if name == SAGA:
@@ -1026,46 +1027,21 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 break
         self._analyst_on_bf = False
 
-        # Return ALL GY lands to BF tapped (Amulet untaps)
+        # Return ALL GY lands to BF — use _place_land_on_bf for proper ETB handling
+        # This correctly triggers: Amulet untap chains, Vestige ETB, bounce triggers
+        # NOTE: Skip Lotus sac during Analyst return — we WANT all lands on BF
         gy_lands = [c for c in gs.zones.graveyard if c.is_land()]
-        total_mana = 0
+        self._skip_lotus_sac = True  # Prevent Lotus from saccing returned lands
         for gl in gy_lands:
             gs.zones.graveyard.remove(gl)
-            gl.tapped = False
-            gl.turn_entered = gs.turn
-            gs.zones.battlefield.append(gl)
-            # Mana from Amulet chains
-            if gl.name in BOUNCE_LANDS:
-                m = self._amulets * 2
-            elif gl.name == LOTUS:
-                m = self._amulets * 3
-            elif gl.name == VESTIGE:
-                m = self._amulets + (1 if self._amulets > 0 else 0)
-            elif gl.name in ALWAYS_UNTAPPED:
-                m = 1
-            else:
-                m = max(1, self._amulets)
-            total_mana += m
-            # Add the mana
-            if gl.name in BOUNCE_LANDS:
-                for _ in range(self._amulets):
-                    self._add_land_mana(gl.name, gs)
-            elif gl.name == LOTUS:
-                for _ in range(self._amulets):
-                    gs.mana_pool.G += 3
-            else:
-                self._add_land_mana(gl.name, gs)
-            # Track
+            self._place_land_on_bf(gl, gs, from_hand=False)
+            # Track special permanents
             if gl.name == HANWEIR: self._hanweir_on_bf = True
             if gl.name == MIRRORPOOL: self._mirror_on_bf = True
+        self._skip_lotus_sac = False
 
         self._lands_in_gy = []
-        gs._log(f"  Analyst sac: returned {len(gy_lands)} lands → +{total_mana} mana")
-
-        # Bounce triggers from returned bounce lands
-        for gl in gy_lands:
-            if gl.name in BOUNCE_LANDS:
-                self._apply_bounce_return(gl.name, gs)
+        gs._log(f"  Analyst sac: returned {len(gy_lands)} lands")
 
         # Check: did we assemble the Analyst loop?
         self._check_analyst_loop_win(gs)

@@ -2278,8 +2278,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 if self._try_cast_colossus(gs):
                     did = True; actions += 1; continue
 
-            # ── 11.8 GSZ X=0 for Dryad Arbor (when we need a green source) ──
-            if (not gs.land_played and gs.mana_pool.G >= 1
+            # ── 11.8 GSZ X=0 for Dryad Arbor (free ramp when no engine) ──
+            # Dryad Arbor adds a green source for next turn — critical when no Amulet
+            if (gs.mana_pool.G >= 1
+                    and any(h.name == ZENITH for h in gs.zones.hand)
+                    and gs.turn <= 2
+                    and self._amulets == 0 and self._spelunking_cnt == 0
+                    and not any(h.name in {AMULET, SPELUNKING} for h in gs.zones.hand)):
+                if self._try_green_sun_zenith(gs, 0):
+                    did = True; actions += 1; continue
+            # Fallback: also fire when no lands in hand (any turn)
+            if (gs.mana_pool.G >= 1
                     and not any(h.is_land() for h in gs.zones.hand)
                     and any(h.name == ZENITH for h in gs.zones.hand)
                     and gs.turn <= 3):

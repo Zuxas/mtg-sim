@@ -220,8 +220,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             # No engine: land enters tapped, no mana this turn
             total = 0
 
-        if land_name == VESTIGE and (am > 0 or repl):
-            # Vestige ETB: add 1 mana of any color (triggered, separate from tap)
+        if land_name == VESTIGE:
+            # Vestige ETB: add 1 mana of any color (ALWAYS triggers, independent of Amulet)
             # Choose R if Hanweir is on BF and needs haste activation
             if self._hanweir_on_bf and not self._titan_has_haste and not self._hanweir_tapped:
                 gs.mana_pool.R += 1
@@ -485,7 +485,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         elif n == LOTUS and am >= 1:
             chain_mana = am * 3
         elif n == VESTIGE:
-            chain_mana = (am + 1) if am > 0 else (1 if repl else 0)
+            # Vestige ETB ALWAYS gives 1 mana. With Amulet, also tap for C.
+            chain_mana = (am + 1) if am > 0 else 1
         elif n in ALWAYS_UNTAPPED or n == "Snow-Covered Forest":
             chain_mana = 1
         else:

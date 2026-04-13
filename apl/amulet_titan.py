@@ -1707,8 +1707,9 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         return True
 
             # ═══ PATH B: Ramp shift (Titan in hand, need mana) ═══
-            # ONLY use this if we can't reach 6 mana any other way this turn.
-            # Scapeshift is too valuable as a kill spell to waste as ramp.
+            # Scapeshift costs 4 but fetched lands generate more with Amulet
+            # 1 Lotus + 2 bounces = 3+2+2 = 7 mana (enough for Titan!)
+            # Even without Lotus: 3 bounces = 2+2+2 = 6 mana
             can_reach_6_naturally = (gs.mana_pool.total() + self._spawn_count >= 6)
             has_grazer_or_spelunk = any(h.name in {GRAZER, SPELUNKING} for h in gs.zones.hand)
             if n_lands >= 2 and am >= 1 and has_titan_hand and not can_reach_6_naturally and not has_grazer_or_spelunk:

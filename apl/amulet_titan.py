@@ -540,6 +540,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if n == VESTIGE:             return 70 + am
             if n == GARDENS:             return 65  # copy Amulet opportunity
             if n == SAGA:                return 60
+            if n == TOLARIA:             return 45  # enters tapped → Amulet → {U}
             if n in ALWAYS_UNTAPPED:     return 50
             if n == LOTUS and am == 0:   return 5
 

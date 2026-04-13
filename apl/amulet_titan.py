@@ -1375,13 +1375,43 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             return fetches[:2] or [FOREST_]
 
         else:
-            # ATTACK trigger: maximize mana or setup combo
+            # ATTACK trigger: prioritize ANALYST LOOP setup over Mirrorpool!
+            # Analyst loop = 999 damage > Mirrorpool copy = 6 combat damage
+            
+            # Setup Analyst loop: need Lotus + Woodland on BF
+            has_woodland_bf = any(c.name == SHIFTING for c in gs.zones.battlefield)
+            has_lotus_bf = any(c.name == LOTUS for c in gs.zones.battlefield)
+            analyst_available = (any(c.name == ANALYST for c in gs.zones.graveyard)
+                               or any(c.name == ANALYST for c in gs.zones.hand)
+                               or any(c.name == ANALYST for c in gs.zones.library))
+            has_delirium = len(self._delirium_types) >= 4
+            
+            # Fetch Lotus+Woodland if we're close to the loop
+            if analyst_available and has_delirium:
+                if not has_lotus_bf and in_lib(LOTUS) and not has_woodland_bf and in_lib(SHIFTING):
+                    return [LOTUS, SHIFTING]
+                if not has_lotus_bf and in_lib(LOTUS) and in_lib(ECHOING):
+                    return [LOTUS, ECHOING]
+                if has_lotus_bf and not has_woodland_bf and in_lib(SHIFTING):
+                    # Already have Lotus — fetch Woodland + 2nd Lotus/bounce
+                    for partner in [LOTUS, ECHOING, GRUUL_TURF, SIMIC_CHAMBER]:
+                        if in_lib(partner):
+                            return [SHIFTING, partner]
+                if not has_lotus_bf and in_lib(LOTUS) and has_woodland_bf:
+                    # Already have Woodland — fetch Lotus + 2nd Lotus/Deeps
+                    for partner in [LOTUS, ECHOING, GRUUL_TURF]:
+                        if in_lib(partner) and partner != LOTUS:
+                            return [LOTUS, partner]
+                    if in_lib(LOTUS):
+                        return [LOTUS, GRUUL_TURF if in_lib(GRUUL_TURF) else SIMIC_CHAMBER]
+            
+            # Mirrorpool copy (fallback when loop isn't close)
             if not mirror_bf and in_lib(MIRRORPOOL):
                 for bl in [GRUUL_TURF, SIMIC_CHAMBER, LOTUS]:
                     if in_lib(bl):
                         return [MIRRORPOOL, bl]
 
-            # Setup Analyst loop: need Lotus + Woodland/Deeps
+            # Setup Analyst loop (no delirium yet — still useful to get pieces)
             if in_lib(LOTUS) and in_lib(SHIFTING):
                 return [LOTUS, SHIFTING]
             if in_lib(LOTUS) and in_lib(ECHOING):

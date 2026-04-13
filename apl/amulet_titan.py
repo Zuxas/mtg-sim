@@ -643,17 +643,21 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             return False
 
         # Pattern A: T2-3 Titan (Amulet + bounce + threat)
-        # Bible: need a green source to cast Amulet T1!
-        has_green_src = any(c.name in ALWAYS_UNTAPPED or c.name == VESTIGE for c in hand if c.is_land())
+        # Mana source checks:
+        # has_mana_src: any untapped land (for casting Amulet {1})
+        # has_green_src: land that produces {G} (for Grazer/Spelunking)
+        GREEN_SOURCES = {FOREST_, "Snow-Covered Forest", BOSEIJU, SHIFTING, DRYAD_ARBOR}
+        has_green_src = any(c.name in GREEN_SOURCES or c.name == VESTIGE for c in hand if c.is_land())
+        has_mana_src = any(c.name in ALWAYS_UNTAPPED or c.name == VESTIGE for c in hand if c.is_land())
         if amulets and bounce and threats and n_lands >= 2:
-            if has_green_src:
+            if has_mana_src:  # Amulet costs {1} — any untapped land works
                 return True
-            # No green source: Amulet is stuck in hand. Mull unless we have Saga
+            # No mana source: Amulet is stuck in hand. Mull unless we have Saga
             if any(c.name == SAGA for c in hand):
                 return True  # Saga taps for {C} to cast Amulet
-            # Fall through — this hand can't cast Amulet T1
+            # Fall through — this hand can't cast anything T1
         if len(amulets) >= 2 and bounce:
-            if has_green_src or any(c.name == SAGA for c in hand):
+            if has_mana_src or any(c.name == SAGA for c in hand):
                 return True
 
         # Pattern B: Spelunking hand
@@ -678,14 +682,14 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if n_lands >= 2 and bounce and threats and (rumbles or grazers):
             return True
 
-        # Pattern G: Multiple bounce + threat — need mana source to start
+        # Pattern G: Multiple bounce + threat — need any mana source to start
         if n_lands >= 2 and len(bounce) >= 2 and threats:
-            if has_green_src or any(c.name == SAGA for c in hand):
+            if has_mana_src or any(c.name == SAGA for c in hand):
                 return True
 
-        # Pattern H: Scapeshift + lands/engine — need a mana source
+        # Pattern H: Scapeshift + lands/engine — need any mana source
         if any(c.name == SCAPESHIFT for c in hand) and n_lands >= 2 and (engines or bounce):
-            if has_green_src or any(c.name == SAGA for c in hand):
+            if has_mana_src or any(c.name == SAGA for c in hand):
                 return True
 
         # Generic: 2-4 lands + engine + threat — need castable mana

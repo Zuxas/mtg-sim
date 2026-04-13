@@ -194,11 +194,22 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if land_name == ECHOING:
             gy_names = list(self._lands_in_gy)
             if gy_names:
-                for target in [LOTUS, GRUUL_TURF, SIMIC_CHAMBER, VESTIGE]:
-                    if target in gy_names:
-                        land_name = target
-                        gs._log(f"  Deeps copies {target} from GY")
-                        break
+                # Bible: Deeps as Mirrorpool enables chain kills (Triple Titan)
+                # Prioritize copying Mirror from GY when we have 2+ Amulets + Titan
+                if MIRRORPOOL in gy_names and am >= 2 and self._titan_on_bf:
+                    land_name = MIRRORPOOL
+                    self._mirror_on_bf = True  # Deeps IS now a functional Mirrorpool
+                    self._mirror_used = False  # Fresh copy — can activate again!
+                    gs._log(f"  Deeps copies Mirrorpool from GY → CHAIN available!")
+                else:
+                    for target in [LOTUS, GRUUL_TURF, SIMIC_CHAMBER, VESTIGE, MIRRORPOOL]:
+                        if target in gy_names:
+                            land_name = target
+                            if target == MIRRORPOOL:
+                                self._mirror_on_bf = True
+                                self._mirror_used = False
+                            gs._log(f"  Deeps copies {target} from GY")
+                            break
 
         if repl and am == 0:
             # Spelunking only: enters untapped, tap once
@@ -1360,6 +1371,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                                 return [HANWEIR, partner]
                     # No R source available — DON'T fetch Hanweir (no haste = waste)
                     # Fall through to default fetch below
+
 
             # Have haste or Hanweir already on BF — fetch Mirrorpool for copy
             if am >= 1 and not mirror_bf and in_lib(MIRRORPOOL):

@@ -723,7 +723,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         """Pay Summoner's Pact debt or lose. Advance Urza's Saga chapters."""
         # Pact debt
         if self._pact_owed and gs.turn > self._pact_turn_cast:
-            # Tap lands for mana before trying to pay
+            # Check if we CAN pay by temporarily tapping lands
             self._tap_all_lands_for_mana(gs)
             if gs.mana_pool.total() >= 4 and gs.mana_pool.G >= 2:
                 # Pay {2}{G}{G}: 2 green + 2 generic
@@ -739,6 +739,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 if remaining <= 0:
                     self._pact_owed = False
                     gs._log("  Pact upkeep: paid {2}{G}{G}")
+                    # CRITICAL FIX: Reset pool and untap all lands after Pact payment.
+                    # The main phase will re-tap them for fresh mana.
+                    # Leaving lands tapped would rob the main phase of ALL mana.
+                    gs.mana_pool.W = gs.mana_pool.U = gs.mana_pool.B = 0
+                    gs.mana_pool.R = gs.mana_pool.G = gs.mana_pool.C = 0
+                    gs.mana_pool.flex = 0
+                    for c in gs.zones.battlefield:
+                        if c.is_land():
+                            c.tapped = False
                 else:
                     gs.damage_dealt = -999
                     gs._log("  Pact upkeep: CANNOT PAY — loss!")

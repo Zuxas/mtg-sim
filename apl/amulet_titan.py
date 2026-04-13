@@ -535,15 +535,17 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 if bf_land_count == 0:
                     # NO lands on BF — bounce will eat itself (mandatory trigger)
                     return 40  # lower than Forest/Vestige/Saga so they play first
-                # When Scapeshift in hand and we need lands on BF, prefer non-bounces
-                # to accumulate permanent lands for the Shift threshold (4 lands)
+                # When Scapeshift is our ONLY win condition and we're close to
+                # threshold, prefer non-bounces to accumulate permanent lands.
+                # DON'T suppress when we also have Titan/Pact/GSZ (use bounces for Titan mana!)
                 shift_in_hand = any(h.name == SCAPESHIFT for h in gs.zones.hand)
-                if shift_in_hand and bf_land_count < 4:
+                has_titan_path = any(h.name in {TITAN, PACT, ZENITH} for h in gs.zones.hand)
+                if shift_in_hand and not has_titan_path and bf_land_count < 4:
                     has_non_bounce = any(h.name not in BOUNCE_LANDS and h.is_land() 
                                         and h.name != LOTUS for h in gs.zones.hand 
                                         if h.name != n)
                     if has_non_bounce:
-                        return 40  # let non-bounces build the BF land count first
+                        return 40  # accumulate permanent lands for Scapeshift
                 return 90 + am * 5
             if n == LOTUS and am >= 1:   return 85 + am * 3
             if n == VESTIGE:             return 70 + am

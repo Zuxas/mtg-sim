@@ -312,7 +312,16 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             if n in FOREST_TYPES:      return 0   # return first (cheap, replaceable)
             if n == DRYAD_ARBOR:       return 1
             if n == VESTIGE:           return 3   # replay for ETB mana
-            if n == SHIFTING:          return 4
+            if n == SHIFTING:
+                # Woodland is CRITICAL for Analyst loop — NEVER bounce when loop is close
+                has_lotus_bf = any(x.name == LOTUS for x in bf_lands)
+                analyst_in_gy = any(x.name == ANALYST for x in gs.zones.graveyard)
+                has_delirium = len(self._delirium_types) >= 4
+                if has_lotus_bf and (analyst_in_gy or self._analyst_on_bf) and has_delirium:
+                    return 9  # NEVER bounce — loop needs Woodland on BF!
+                if self._amulets >= 1 and has_lotus_bf:
+                    return 8  # high priority to keep — close to loop
+                return 4
             if n == URZA_CAVE:         return 5
             if n == MIRRORPOOL:        return 6
             if n == ECHOING:           return 7

@@ -1448,8 +1448,24 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         """Titan ETB: search for 2 lands, put onto BF tapped (Amulet untaps)."""
         fetches = self._titan_fetch_priority(gs, is_etb=True)
         gs._log(f"  Titan ETB: fetching {fetches}")
+        # RULES CR 603.3b: All lands enter simultaneously. Player orders triggers.
+        # Optimal: Amulet untaps first (tap for mana), then Mirrorpool copy,
+        # THEN Lotus sac resolves last (sacrifices tapped/empty lands).
+        # Bible: "copy before Lotus sac resolves"
+        self._skip_lotus_sac = True
+        lotus_count_before = sum(1 for c in gs.zones.battlefield if c.name == LOTUS)
         for land_name in fetches:
             self._fetch_land_to_bf(land_name, gs)
+        new_lotuses = sum(1 for c in gs.zones.battlefield if c.name == LOTUS) - lotus_count_before
+        
+        # Try Mirrorpool copy BEFORE Lotus sac resolves (Bible lines 679-681)
+        if self._mirror_on_bf and not self._mirror_used:
+            self._try_mirrorpool_copy(gs)
+        
+        # NOW resolve deferred Lotus sacs
+        self._skip_lotus_sac = False
+        for _ in range(new_lotuses):
+            self._apply_lotus_sac(gs)
 
         # RULES: Titan ETB only puts lands from LIBRARY onto BF.
         # Playing lands from HAND is a separate action that uses land drops.

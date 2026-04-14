@@ -38,9 +38,13 @@ PREORDAIN  = "Preordain"
 BAUBLE     = "Mishra's Bauble"
 MUTAGENIC  = "Mutagenic Growth"
 VIOLENT    = "Violent Urge"
+SCAMP      = "Cacophony Scamp"
 
-# All prowess creatures
-PROWESS_CREATURES = {SWIFTSPEAR, SLICKSHOT, CORI}
+# Prowess creatures (get +1/+1 per noncreature spell)
+PROWESS_CREATURES = {SWIFTSPEAR}  # standard prowess
+# Slickshot gets +2/+0 (NOT standard prowess)
+# Cori-Steel Cutter is an Equipment that makes Monk tokens with prowess
+MONK_TOKEN = "Monk Token"
 
 
 class IzzetProwessAPL(BaseAPL):
@@ -49,11 +53,13 @@ class IzzetProwessAPL(BaseAPL):
     max_turns = 10
 
     _prowess_boosts = []  # track temporary boosts for EOT cleanup
+    _spells_this_turn = 0  # for Cori Flurry trigger
+    _cori_on_bf = 0  # count of Cori-Steel Cutters on BF
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
         lands = sum(1 for c in hand if c.is_land())
-        threats = sum(1 for c in hand if c.name in PROWESS_CREATURES or c.name == DRC)
+        threats = sum(1 for c in hand if c.name in {SWIFTSPEAR, SLICKSHOT, DRC, CORI, SCAMP})
         spells = sum(1 for c in hand if c.name in {BOLT, LAVA_DART, MUTAGENIC, BAUBLE})
         if lands == 0: return False
         if threats == 0 and mulligans < 2: return False
@@ -79,12 +85,44 @@ class IzzetProwessAPL(BaseAPL):
                    if c.name in PROWESS_CREATURES)
 
     def _trigger_prowess(self, gs, spell_name="spell"):
-        """Give all prowess creatures +1/+1 until EOT."""
+        """Trigger prowess/Slickshot/Cori on noncreature spell cast."""
+        self._spells_this_turn += 1
         for c in gs.zones.creatures_on_battlefield():
-            if c.name in PROWESS_CREATURES:
+            if c.name in PROWESS_CREATURES or c.name == MONK_TOKEN:
+                # Standard prowess: +1/+1
                 c.counters += 1
                 self._prowess_boosts.append(c)
-        count = self._count_prowess_creatures(gs)
+            elif c.name == SLICKSHOT:
+                # Slickshot: +2/+0 (only power, not toughness)
+                c.counters += 2
+                self._prowess_boosts.append(c)
+                self._prowess_boosts.append(c)  # track 2 for cleanup
+        # Cori Flurry: on 2nd spell each turn, create 1/1 Monk token with prowess
+        if self._spells_this_turn == 2 and self._cori_on_bf > 0:
+            for _ in range(self._cori_on_bf):
+                from data.card import Card
+                token = Card(
+                    name=MONK_TOKEN,
+                    mana_cost="",
+                    cmc=0,
+                    type_line="Creature Token — Human Monk",
+                    oracle_text="Prowess",
+                    power="1",
+                    toughness="1",
+                    colors=[],
+                    color_identity=[],
+                    scryfall_id="token-monk",
+                    tags={'creature'},
+                    counters=1,  # Cori auto-equips: +1/+1
+                    summoning_sickness=False,  # Cori gives haste
+                    tapped=False,
+                    turn_entered=gs.turn,
+                )
+                gs.zones.battlefield.append(token)
+                # DON'T track equip bonus in _prowess_boosts — it's permanent
+                gs._log(f"  Cori Flurry: 1/1 Monk token (equipped → 2/2 haste trample prowess)")
+        count = sum(1 for c in gs.zones.creatures_on_battlefield() 
+                    if c.name in PROWESS_CREATURES or c.name == SLICKSHOT or c.name == MONK_TOKEN)
         if count:
             gs._log(f"  Prowess: {spell_name} → +1/+1 to {count} creature(s)")
 
@@ -155,23 +193,38 @@ class IzzetProwessAPL(BaseAPL):
     def main_phase(self, gs: GameState):
         """Pre-combat: deploy threats, chain prowess spells, bolt face."""
         self._prowess_boosts = []
+        self._spells_this_turn = 0
+        # Reset per-game state on turn 1
+        if gs.turn == 1:
+            self._cori_on_bf = 0
 
         # 1. Land
         self._play_land_if_able(gs)
 
-        # 2. Deploy haste threats FIRST (attack this turn)
+        # 2. Deploy Cori-Steel Cutter FIRST (Equipment — triggers on 2nd spell)
+        for card in list(gs.hand()):
+            if card.name == CORI and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                self._cori_on_bf += 1
+                # Casting Cori is spell #1 toward Flurry
+                self._spells_this_turn += 1
+
+        # 3. Deploy haste threats (attack this turn)
         for name in (SWIFTSPEAR, SLICKSHOT):
             for card in list(gs.hand()):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
 
-        # 3. Free spells — cast ALL copies (trigger prowess for each!)
-        # Mutagenic Growth — pay 2 life, +2/+2 + prowess trigger
+        # 4. Deploy DRC (surveil, delirium → 3/3 flyer)
+        for card in list(gs.hand()):
+            if card.name == DRC and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+
+        # 5. Free spells — cast ALL (trigger prowess + Cori Flurry)
         for card in list(gs.hand()):
             if card.name == MUTAGENIC:
                 self._cast_free_spell(gs, card)
 
-        # Bauble — 0 mana, draw + prowess
         for card in list(gs.hand()):
             if card.name == BAUBLE:
                 self._cast_free_spell(gs, card)
@@ -195,26 +248,35 @@ class IzzetProwessAPL(BaseAPL):
                 self._trigger_prowess(gs, BOLT)
                 gs._log(f"  Bolt face: 3 dmg ({gs.damage_dealt} total)")
 
-        # 7. Deploy remaining creatures (DRC, Cori — no haste, but build board)
-        for name in (DRC, CORI):
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
+        # 6.5 Violent Urge — pump + prowess trigger (double strike with delirium)
+        for card in list(gs.hand()):
+            if card.name == VIOLENT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.mana_pool.pay(card.mana_cost, card.cmc)
+                gs.zones.hand.remove(card)
+                gs.zones.graveyard.append(card)
+                self._trigger_prowess(gs, VIOLENT)
+                gs._log(f"  Violent Urge: +1/+0 + prowess triggers")
 
-        # 8. Cantrips (prowess trigger + dig) — cast ALL
+        # 7. Cantrips (prowess trigger + dig) — cast ALL
         for card in list(gs.hand()):
             if card.name in (PREORDAIN, ITERATION) and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
-                gs.zones.draw(1)  # simplified cantrip draw
+                gs.zones.draw(1)
                 self._trigger_prowess(gs, card.name)
 
     def main_phase2(self, gs: GameState):
         """Post-combat: cast remaining creatures and burn spells."""
-        # Cast any remaining threats
-        for name in (SWIFTSPEAR, DRC, CORI, SLICKSHOT):
+        # Cast any remaining threats (summoning sick but ready next turn)
+        for name in (SWIFTSPEAR, DRC, SLICKSHOT):
             for card in list(gs.hand()):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
+
+        # Deploy more Cori if possible
+        for card in list(gs.hand()):
+            if card.name == CORI and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                self._cori_on_bf += 1
 
         # ALL remaining bolts
         for card in list(gs.hand()):

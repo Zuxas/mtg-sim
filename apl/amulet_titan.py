@@ -1846,6 +1846,41 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     self._try_deploy_titan(gs)
                     return True
 
+            # ═══ PATH C: Ramp shift WITHOUT Titan in hand ═══
+            # Bible: "Scapeshift is the single most powerful angle in the deck"
+            # When no Titan/Pact in hand, Shift can still ramp into finding one:
+            # Sac lands → fetch Lotus+bounce → generate mana → Pact/GSZ/TWest chain
+            # Only fire when we've been stuck for a while (T4+ with no deploy)
+            has_threat_access = any(h.name in {PACT, ZENITH} for h in gs.zones.hand if h is not c)
+            has_twest_hand = any(h.name == TOLARIA for h in gs.zones.hand)
+            if (n_lands >= 3 and am >= 1 and not has_titan_hand
+                    and (has_threat_access or has_twest_hand or has_twest)
+                    and gs.turn >= 4):
+                # Check: will the ramp actually get us to 6+ mana?
+                # n_lands lands sacced → fetch Lotus(3) + bounces(2 each)
+                # With Amulet: Lotus untaps=3, bounce untaps=2 = at least 5+ mana
+                # PACT SAFETY: after fetching n_lands, we need 4+ lands on BF
+                # for next upkeep's {2}{G}{G} payment (in case deploy uses Pact)
+                if n_lotus_lib >= 1 and n_lands >= 4:
+                    if gs.cast_spell(c):
+                        gs._log(f"  Scapeshift ramp (no Titan): sac {n_lands} lands → find threat")
+                        sac_ids = {id(sl) for sl in bf_lands}
+                        for sl in bf_lands:
+                            gs.zones.graveyard.append(sl)
+                            self._track_land_to_gy(sl.name)
+                        gs.zones.battlefield = [x for x in gs.zones.battlefield if id(x) not in sac_ids]
+                        # Fetch Lotus + bounces for mana
+                        self._skip_lotus_sac = True
+                        fetched = 0
+                        for target in [LOTUS, LOTUS, GRUUL_TURF, SIMIC_CHAMBER, VESTIGE, HANWEIR]:
+                            if fetched >= n_lands: break
+                            if self._fetch_land_to_bf(target, gs):
+                                fetched += 1
+                        self._skip_lotus_sac = False
+                        # Now try to find and deploy Titan
+                        self._try_deploy_titan(gs)
+                        return True
+
         return False
 
     # ══════════════════════════════════════════════════════════════════

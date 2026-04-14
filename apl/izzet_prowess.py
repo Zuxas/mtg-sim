@@ -159,36 +159,33 @@ class IzzetProwessAPL(BaseAPL):
         # 1. Land
         self._play_land_if_able(gs)
 
-        # 2. Deploy threats — haste creatures first (attack this turn)
-        for name in (SWIFTSPEAR, SLICKSHOT, DRC, CORI):
+        # 2. Deploy haste threats FIRST (attack this turn)
+        for name in (SWIFTSPEAR, SLICKSHOT):
             for card in list(gs.hand()):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
-                    break
 
-        # 3. Free spells (trigger prowess before combat)
+        # 3. Free spells — cast ALL copies (trigger prowess for each!)
         # Mutagenic Growth — pay 2 life, +2/+2 + prowess trigger
         for card in list(gs.hand()):
             if card.name == MUTAGENIC:
                 self._cast_free_spell(gs, card)
-                break
 
         # Bauble — 0 mana, draw + prowess
         for card in list(gs.hand()):
             if card.name == BAUBLE:
                 self._cast_free_spell(gs, card)
-                break
 
-        # 4. Lava Dart face (from hand)
+        # 4. ALL Lava Darts face (from hand)
         for card in list(gs.hand()):
             if card.name == LAVA_DART:
                 self._cast_free_spell(gs, card)
-                break
 
-        # 5. Lava Dart flashback from GY
-        self._flashback_lava_dart(gs)
+        # 5. ALL Lava Dart flashbacks from GY
+        while self._flashback_lava_dart(gs):
+            pass
 
-        # 6. Lightning Bolt face — biggest prowess trigger + 3 damage
+        # 6. ALL Lightning Bolts face
         for card in list(gs.hand()):
             if card.name == BOLT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.mana_pool.pay(card.mana_cost, card.cmc)
@@ -197,26 +194,29 @@ class IzzetProwessAPL(BaseAPL):
                 gs.damage_dealt += 3
                 self._trigger_prowess(gs, BOLT)
                 gs._log(f"  Bolt face: 3 dmg ({gs.damage_dealt} total)")
-                break
 
-        # 7. Cantrips (prowess trigger + dig)
+        # 7. Deploy remaining creatures (DRC, Cori — no haste, but build board)
+        for name in (DRC, CORI):
+            for card in list(gs.hand()):
+                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+
+        # 8. Cantrips (prowess trigger + dig) — cast ALL
         for card in list(gs.hand()):
             if card.name in (PREORDAIN, ITERATION) and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
                 gs.zones.draw(1)  # simplified cantrip draw
                 self._trigger_prowess(gs, card.name)
-                break
 
     def main_phase2(self, gs: GameState):
-        """Post-combat: cast remaining creatures, clean up prowess boosts."""
-        # Cast any remaining threats (summoning sick, but ready next turn)
+        """Post-combat: cast remaining creatures and burn spells."""
+        # Cast any remaining threats
         for name in (SWIFTSPEAR, DRC, CORI, SLICKSHOT):
             for card in list(gs.hand()):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
-                    break
 
-        # Second bolt if available
+        # ALL remaining bolts
         for card in list(gs.hand()):
             if card.name == BOLT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.mana_pool.pay(card.mana_cost, card.cmc)
@@ -224,7 +224,10 @@ class IzzetProwessAPL(BaseAPL):
                 gs.zones.graveyard.append(card)
                 gs.damage_dealt += 3
                 gs._log(f"  Bolt face: 3 dmg ({gs.damage_dealt} total)")
-                break
+
+        # Flashback any remaining Lava Darts
+        while self._flashback_lava_dart(gs):
+            pass
 
         # Remove prowess boosts at end of turn
         for c in self._prowess_boosts:

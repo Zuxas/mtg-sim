@@ -2174,7 +2174,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     print(f"  *** Won on turn {gs.turn} ({gs.damage_dealt} damage) ***")
                 break
 
-            # Combat
+            # Combat — update Colossus P/T first (lands entered during main phase)
+            self._update_construct_power(gs)
             gs.run_combat()
 
             if gs.has_won(self.win_condition_damage):

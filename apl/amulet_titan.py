@@ -2552,6 +2552,49 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if not self._titan_on_bf:
             self._try_deploy_titan(gs)
 
+        # Bible: "2nd Titan from mp2" — cast another Titan, legendary rule kills old,
+        # NEW Titan's ETB fetches 2 more lands → potentially assembles loop
+        if (self._titan_on_bf and gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2
+                and gs.damage_dealt < 20):
+            for c in list(gs.zones.hand):
+                if c.name == TITAN:
+                    if gs.cast_spell(c):
+                        gs._log("  2nd Titan from mp2! (legend kills old, ETB fires)")
+                        self._skip_lotus_sac = True
+                        self._titan_etb(gs, during_combat=True)
+                        self._skip_lotus_sac = False
+                        gs._log("  Legendary rule: token Titan sacrificed (original stays)")
+                        self._check_analyst_loop_win(gs)
+                        if gs.damage_dealt >= 20: return
+                    break
+            # Pact → 2nd Titan in mp2 (Pact is free, need 6 mana for Titan)
+            if (gs.damage_dealt < 20 and not self._pact_owed
+                    and any(h.name == PACT for h in gs.zones.hand)):
+                # Predictive safety: even with _skip_lotus_sac, deferred sacs
+                # can fire after the flag resets. Need 6+ lands to be safe.
+                bf_lands = len([x for x in gs.zones.battlefield if x.is_land()])
+                if bf_lands >= 6:
+                    titan_in_lib = next((x for x in gs.zones.library if x.name == TITAN), None)
+                    if titan_in_lib:
+                        # Fire Pact
+                        pact_card = next(h for h in gs.zones.hand if h.name == PACT)
+                        gs.zones.hand.remove(pact_card)
+                        gs.zones.graveyard.append(pact_card)
+                        gs.zones.library.remove(titan_in_lib)
+                        gs.zones.hand.append(titan_in_lib)
+                        self._pact_owed = True
+                        self._pact_turn_cast = gs.turn
+                        gs._log("  mp2 Pact → Titan for 2nd deploy!")
+                        if gs.mana_pool.total() >= 6 and gs.mana_pool.G >= 2:
+                            if gs.cast_spell(titan_in_lib):
+                                gs._log("  2nd Titan from mp2 (via Pact)!")
+                                self._skip_lotus_sac = True
+                                self._titan_etb(gs, during_combat=True)
+                                self._skip_lotus_sac = False
+                                gs._log("  Legendary rule: old Titan sacrificed")
+                                self._check_analyst_loop_win(gs)
+                                if gs.damage_dealt >= 20: return
+
         # Rumble FIRST to dig for combo pieces (Analyst, Scapeshift)
         if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
             self._try_cast_rumble(gs)

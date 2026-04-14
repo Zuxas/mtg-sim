@@ -146,3 +146,55 @@ Grazer → Vestige (G)"
 
 **APL Status:** Need to verify Grazer → Vestige sequence generates G from
 Vestige ETB (choose G) to pay for Grazer cost.
+
+## ENGINE-LEVEL BUGS FOUND (Not APL logic — affects ALL decks)
+
+### ⚠️ FIXED: Deck Loader Shared Card Objects (data/deck.py line 163)
+`cards.extend([card] * qty)` created qty REFERENCES to the SAME Card object.
+ALL copies of every card shared identical Python objects in memory.
+- Tapping one land tapped ALL copies across ALL zones (70% of games!)
+- 4.6 mana LOST per game average from phantom tapped lands
+- Summoning sickness, tags, counters all leaked between copies
+- BF land count inflated (Colossus P/T wrong 178 times)
+**Fix:** `copy.deepcopy(card)` for each decklist entry.
+**Impact:** WR 97.7% → 98.9% (+1.2%)
+
+### ❌ UNFIXED: Cross-Game Card Object Reuse (run_simulation / take_opening_hand)
+The same 60 Card objects persist across ALL 20,000 simulation games.
+`run_simulation` never deepcopies the deck between games.
+- After game 1: 12 cards tapped, 21 cards have stale turn_entered
+- By game 5: 35 of 60 cards have stale state from previous games
+- Saga chapter tracking uses turn_entered → chapters miscalculated in 99.99% of games
+- `.tags`, `.turn_entered`, `.counters`, `.power`/`.toughness` all persist
+- `_untap()` only resets `.tapped` and `.summoning_sickness`
+**Fix needed:** `copy.deepcopy(deck)` at start of each game in run_simulation
+or in take_opening_hand before shuffling.
+
+### 🟡 MINOR: Boseiju Double-Added to Graveyard
+Boseiju appears 2x in GY in ~1% of games. Lotus sac adds it to GY AND
+`_track_land_to_gy` also adds it. Doesn't affect gameplay, just bookkeeping.
+
+## BIBLE SCENARIO FAILURES (APL Logic — to fix after engine is solid)
+
+### ❌ Bounce Loop Trap (Scenario 4)
+When bf_land_count ≤ 1 and Amulet is active, Grazer puts bounce land
+(priority 90) over permanent land like Vestige (priority 70). The bounce
+eats the only permanent land, leaving 0 permanent + 1 bounce. Stuck in
+infinite bounce cycle generating mana but never accumulating lands.
+**Fix:** When bf_count ≤ 1, prefer permanent lands over bounces for Grazer.
+
+### ❌ Scapeshift Timing at 4 Lands (Scenario 3)
+`_try_scapeshift` doesn't fire at priority 0.3 when Amulet + 4 lands are
+available. Instead the APL deploys Titan (priority higher). For hands with
+Scapeshift but no Titan, Scapeshift should fire earlier.
+
+### ❌ Gardens T1 Priority (Scenario 2)
+With Gardens + Amulet in hand T1, APL plays Forest instead of Gardens.
+Gardens T1 enables: T2 play bounce → Gardens copies Amulet → double Amulet
+→ massive mana burst. Forest T1 is slower.
+
+### ❌ Pact Upkeep Tap Fixed, But Philosophy Wrong
+Fixed: Pact upkeep now taps Hanweir for mana (no haste reservation during upkeep).
+But the REAL fix should be: only tap the MINIMUM lands needed for {2}{G}{G},
+leaving extras untapped for main phase. Currently taps all → untaps all → net
+same, but misses instant-speed opportunities.

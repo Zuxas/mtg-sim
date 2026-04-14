@@ -2595,6 +2595,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                                 self._check_analyst_loop_win(gs)
                                 if gs.damage_dealt >= 20: return
 
+        # Scapeshift in mp2 — can ramp or assemble loop after combat
+        if gs.mana_pool.total() >= 4 and gs.damage_dealt < 20:
+            self._try_scapeshift(gs)
+            if gs.damage_dealt >= 20: return
+
         # Rumble FIRST to dig for combo pieces (Analyst, Scapeshift)
         if gs.mana_pool.total() >= 2 and gs.mana_pool.G >= 1:
             self._try_cast_rumble(gs)

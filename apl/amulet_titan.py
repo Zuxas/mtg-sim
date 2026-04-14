@@ -149,6 +149,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         self._land_drops_used = 0     # total land drops this turn (including replays)
         self._max_land_drops  = 1     # base: 1 land drop per turn
 
+    def _has_land_drop(self) -> bool:
+        """Check if any land drops remain this turn."""
+        return self._land_drops_used < self._max_land_drops
+
+    def _use_land_drop(self):
+        """Consume one land drop."""
+        self._land_drops_used += 1
+
+    def _grant_land_drop(self):
+        """Grant an extra land drop (from Grazer, Spelunking Explore, etc)."""
+        self._max_land_drops += 1
+
     # ══════════════════════════════════════════════════════════════════
     # CORE ENGINE: Amulet untap + mana generation
     # ══════════════════════════════════════════════════════════════════
@@ -262,12 +274,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         """
         bf_lands = [c for c in gs.zones.battlefield if c.is_land()]
         
-        # Check extra land drops
-        has_extra_drops = (
-            not gs.land_played
-            or self._icetill_on_bf
-            or (not self._extra_land_used and self._icetill_on_bf)
-        )
+        # Check if we have remaining land drops for self-return replay
+        has_extra_drops = self._has_land_drop()
         # RULES: Grazer in hand does NOT grant extra land drops until CAST
         # Only actual remaining drops count for self-return eligibility
         
@@ -297,11 +305,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     rid = id(to_return)
                     gs.zones.battlefield = [c for c in gs.zones.battlefield if id(c) != rid]
                     gs.zones.hand.append(to_return)
-                    # DON'T reset land_played — self-return uses the same drop
-                    # Actually the rules say: playing the land again uses a NEW drop
-                    # But the _play_land function checks land_played which was just set
-                    # The self-return un-counting in _play_land handles this
-                    gs.land_played = False
+                    # Self-return: bounce goes back to hand. Playing it again
+                    # consumes a real land drop. DO NOT grant an extra — the chain
+                    # is limited by available drops (base + Grazer + Spelunking).
+                    # gs.land_played stays True — next _play_land checks _has_land_drop()
                     gs._log(f"  Bounce SELF-RETURN: {bounce_name} → hand (will replay)")
                     return
         
@@ -621,18 +628,14 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
     def _play_land(self, gs: GameState) -> bool:
         """Play the best land from hand."""
-        if gs.land_played:
+        if not self._has_land_drop():
             return False
         land = self._best_land_to_play(gs)
         if not land:
             return False
-        gs.land_played = True
-        self._land_drops_used += 1
+        self._use_land_drop()
+        gs.land_played = True  # keep engine in sync
         self._place_land_on_bf(land, gs, from_hand=True)
-        # If self-return happened (land_played reset to False),
-        # un-count the land drop since the same land will replay
-        if not gs.land_played:
-            self._land_drops_used -= 1
         return True
 
     # ══════════════════════════════════════════════════════════════════
@@ -965,12 +968,11 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 # ETB: put a land
                 land = self._best_land_to_play(gs)
                 if land:
+                    # Grazer grants +1 land drop, then uses it immediately
+                    self._grant_land_drop()  # _max_land_drops += 1
+                    self._use_land_drop()    # _land_drops_used += 1
                     self._place_land_on_bf(land, gs, from_hand=True)
-                    # Grazer ETB is an EXTRA land drop (doesn't use normal drop)
-                    # But it does count as a drop for chain-limiting purposes
-                    self._max_land_drops += 1
-                    self._land_drops_used += 1
-                    gs.land_played = False  # normal land drop still available
+                    # Normal land drop still available: _has_land_drop() checks used < max
                 gs._log("  Grazer: 0/3 + extra land")
                 return True
         return False
@@ -1961,7 +1963,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
 
     def _try_play_land_from_gy(self, gs: GameState) -> bool:
         """Icetill: play a land from GY (uses a land drop)."""
-        if not self._icetill_on_bf or gs.land_played:
+        if not self._icetill_on_bf or not self._has_land_drop():
             return False
         gy_lands = [c for c in gs.zones.graveyard if c.is_land()]
         if not gy_lands:
@@ -1976,7 +1978,8 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         gs.zones.graveyard.remove(best)
         if best.name in self._lands_in_gy:
             self._lands_in_gy.remove(best.name)
-        gs.land_played = True
+        self._use_land_drop()
+        gs.land_played = True  # keep engine in sync
         self._place_land_on_bf(best, gs, from_hand=False)
         gs._log(f"  Icetill: played {best.name} from GY")
         # Landfall: mill 1
@@ -2272,15 +2275,15 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                             continue
 
             # ── 0.5 PLAY HANWEIR BEFORE TITAN (haste setup) ──
-            if (not gs.land_played and not self._titan_on_bf
+            if (self._has_land_drop() and not self._titan_on_bf
                     and not self._hanweir_on_bf
                     and any(h.name == HANWEIR for h in gs.zones.hand)
                     and gs.mana_pool.total() + self._spawn_count >= 6
                     and any(h.name in {TITAN, ZENITH, PACT} for h in gs.zones.hand)):
                 # Play Hanweir BEFORE casting Titan so ETB can activate haste
                 hanweir = next(h for h in gs.zones.hand if h.name == HANWEIR)
-                gs.land_played = True
-                self._land_drops_used += 1
+                self._use_land_drop()
+                gs.land_played = True  # keep engine in sync
                 self._place_land_on_bf(hanweir, gs, from_hand=True)
                 did = True; actions += 1
                 continue
@@ -2317,9 +2320,10 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         self._try_cast_rumble(gs)
 
                     # Play remaining lands (generates mana for main_phase2)
-                    if not gs.land_played:
+                    if self._has_land_drop():
                         best = self._best_land_to_play(gs)
                         if best:
+                            self._use_land_drop()
                             gs.land_played = True
                             self._place_land_on_bf(best, gs, from_hand=True)
 
@@ -2329,12 +2333,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 return
 
             # ── 2. PLAY LAND ──
-            if not gs.land_played:
+            if self._has_land_drop():
                 if self._play_land(gs):
                     did = True; actions += 1
                     # Icetill: extra land drop
                     if self._icetill_on_bf and not self._extra_land_used:
-                        gs.land_played = False
+                        self._grant_land_drop()
                         self._extra_land_used = True
                     continue
 
@@ -2496,7 +2500,7 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     did = True; actions += 1; continue
 
             # ── 12.5 PLAY FROM GY (Icetill) ──
-            if self._icetill_on_bf and not gs.land_played:
+            if self._icetill_on_bf and self._has_land_drop():
                 if self._try_play_land_from_gy(gs):
                     did = True; actions += 1; continue
 
@@ -2611,23 +2615,18 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
             self._try_cast_rumble(gs)
 
         # Play hand lands using available land drops
-        # RULES: Bounce self-return chains reset gs.land_played, enabling
-        # legal replay: play bounce → Amulet tap → self-return → land_played=False → replay
-        # Non-self-return plays consume the land drop normally.
-        for _ in range(10):  # safety limit for self-return chains
-            if gs.land_played:
-                break  # no drops available
+        # Each land play from hand consumes a drop. Self-returns go to hand
+        # but replaying consumes another drop.
+        for _ in range(10):  # safety limit
+            if not self._has_land_drop():
+                break
             hand_lands = [h for h in gs.zones.hand if h.is_land()]
             if not hand_lands: break
             best = max(hand_lands, key=lambda l: self._land_play_value(l, gs))
             if self._land_play_value(best, gs) <= 0: break
-            gs.land_played = True
+            self._use_land_drop()
+            gs.land_played = True  # keep engine in sync
             self._place_land_on_bf(best, gs, from_hand=True)
-            # _apply_bounce_return may reset gs.land_played for self-returns
-            # Icetill extra drop
-            if gs.land_played and self._icetill_on_bf and not self._extra_land_used:
-                gs.land_played = False
-                self._extra_land_used = True
 
         # Try Scapeshift OHKO with all available mana
         if gs.mana_pool.total() >= 4:
@@ -2662,16 +2661,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                     break
 
         # Play lands from hand (must respect land drop limit)
-        # RULES: 1 land per turn + extras from Grazer/Icetill/Spelunking
-        if not gs.land_played:
+        if self._has_land_drop():
             best = self._best_land_to_play(gs)
             if best:
-                gs.land_played = True
+                self._use_land_drop()
+                gs.land_played = True  # keep engine in sync
                 self._place_land_on_bf(best, gs, from_hand=True)
-                # Icetill extra drop
-                if self._icetill_on_bf and not self._extra_land_used:
-                    gs.land_played = False
-                    self._extra_land_used = True
 
         # Final Analyst loop check
         self._check_analyst_loop_win(gs)

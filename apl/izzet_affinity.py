@@ -104,7 +104,7 @@ FREE_ARTIFACTS = {MOX_OPAL, TORMOD, BAUBLE, WELDING_JAR, CLAWS_OF_GIX}
 # Cheap 1-drop artifacts worth casting early
 ONE_DROP_ARTIFACTS = {EE, AETHER_BOMB, SKATEBOARD, PITHING_NEEDLE, SHADOWSPEAR}
 # Spells that are dead in goldfish and should be bottomed
-DEAD_IN_GOLDFISH = {METALLIC_REBUKE, AETHER_BOMB, TORMOD}
+DEAD_IN_GOLDFISH = {METALLIC_REBUKE}  # Only Rebuke is truly dead; Tormod/Aether are free artifact triggers
 
 
 class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
@@ -235,19 +235,23 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
             return False
 
         # Need real artifact density to function
-        if total_artifacts < 2 and mulligans < 2:
+        if total_artifacts < 1 and mulligans < 2:
             return False
 
         # Urza's Saga acts as land + payoff: great keep with any artifacts
-        if sagas and total_artifacts >= 2:
+        if sagas and total_artifacts >= 1:
             return True
 
         # Payoff + artifacts + mana = keep
-        if payoffs and total_artifacts >= 2 and (lands or free_art):
+        if payoffs and total_artifacts >= 1 and (lands or free_art):
             return True
 
         # Pure artifact density with land: acceptable
-        if total_artifacts >= 4 and lands:
+        if total_artifacts >= 3 and lands:
+            return True
+
+        # Fallback: any hand with land + nonland is keepable on 6 or fewer
+        if lands and (free_art or one_drop or payoffs) and len(hand) <= 6:
             return True
 
         return mulligans >= 2
@@ -408,6 +412,12 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
                     self._weapons_mfg_up = True
                     gs._log("  Weapons Manufacturing: online — all nontoken artifacts now create Munitions")
                     break
+        # After Weapons comes online, dump any remaining 0-drops (NOW they create Munitions!)
+        if self._weapons_mfg_up:
+            for card in list(gs.hand()):
+                if card.name in FREE_ARTIFACTS and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    self._cast_free_artifact(card, gs)
+                    self._apply_mox_mana(gs)
 
         # ── Step 3: Pinnacle Emissary ({1}{U}{R}) ──────────────────────
         # Casting it triggers its own ability → 1 Drone token.
@@ -616,7 +626,7 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
         ]
         ee_in_hand = [c for c in gs.hand() if c.name == EE]
 
-        if self._weapons_mfg_up and self._munitions_count >= 3:
+        if self._weapons_mfg_up and self._munitions_count >= 1:
             # Check if we can pay {2} for EE activation
             if ee_on_bf and gs.mana_pool.total() >= 2:
                 gs.mana_pool.flex -= 2
@@ -637,7 +647,7 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
                     self._on_artifact_spell_cast(card, gs)
                     self._on_artifact_etb(card, is_token=False, gs=gs)
                     # Now immediately sacrifice EE for burst
-                    if self._munitions_count >= 3 and gs.mana_pool.total() >= 2:
+                    if self._munitions_count >= 1 and gs.mana_pool.total() >= 2:
                         burst_damage = self._munitions_count * 2
                         gs.damage_dealt += burst_damage
                         gs._log(f"  EE BURST: {self._munitions_count} Munitions × 2 = {burst_damage} dmg ({gs.damage_dealt} total)")
@@ -664,6 +674,18 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
                     spent += 1
                 if spent:
                     gs._log(f"  Claws of Gix: sacrificed {spent} Munitions → {spent*2} damage ({gs.damage_dealt} total)")
+
+        # ── 5.5. Sacrifice Baubles for card draw ──────────────────────
+        # Bauble: {T}, Sacrifice → draw a card next upkeep (model as draw now)
+        for card in list(gs.zones.battlefield):
+            if card.name == BAUBLE:
+                gs.zones.battlefield.remove(card)
+                gs.zones.graveyard.append(card)
+                self._gy_artifacts.append(card.name)
+                if gs.zones.library:
+                    drawn = gs.zones.library.pop(0)
+                    gs.zones.hand.append(drawn)
+                    gs._log(f"  Bauble sac: draw {drawn.name}")
 
         # ── 6. Urza's Saga chapters ────────────────────────────────────
         # Saga gets a lore counter at beginning of each turn.
@@ -747,7 +769,7 @@ class IzzetAffinityAPL(SBPlanMixin, BaseAPL):
                 gs.cast_spell(card)
                 gs.damage_dealt += dmg
                 gs._log(f"  Galvanic Blast: {dmg} damage (Metalcraft: {self._metalcraft(gs)})")
-                break
+                # No break — cast ALL Galvanic Blasts
 
         # ── 10. Creatures in hand (not already handled) ─────────────────
         self._cast_all_castable(gs, Tag.CREATURE)

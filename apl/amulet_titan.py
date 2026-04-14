@@ -1859,8 +1859,9 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 # Check: will the ramp actually get us to 6+ mana?
                 # n_lands lands sacced → fetch Lotus(3) + bounces(2 each)
                 # With Amulet: Lotus untaps=3, bounce untaps=2 = at least 5+ mana
-                # PACT SAFETY: after fetching n_lands, we need 4+ lands on BF
-                # for next upkeep's {2}{G}{G} payment (in case deploy uses Pact)
+                # PACT SAFETY: after fetching n_lands, need enough mana next turn
+                # for {2}{G}{G}. With 4+ lands we always have enough after Lotus sac.
+                # 3 lands is risky — Lotus sac can eat the other 2, leaving 1 land.
                 if n_lotus_lib >= 1 and n_lands >= 4:
                     if gs.cast_spell(c):
                         gs._log(f"  Scapeshift ramp (no Titan): sac {n_lands} lands → find threat")

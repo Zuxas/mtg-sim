@@ -161,7 +161,13 @@ def _build_cards(entries, scryfall_data: dict) -> list:
             scryfall_id=data.get("scryfall_id", ""),
         )
         tag_keywords(card)
-        cards.extend([card] * qty)
+        # CRITICAL: Each copy must be a SEPARATE object with independent state!
+        # [card] * qty creates references to the SAME object — tapping one
+        # taps ALL copies across ALL zones (hand, library, battlefield, GY).
+        # deepcopy ensures tags (set), counters, etc are also independent.
+        import copy
+        for _ in range(qty):
+            cards.append(copy.deepcopy(card))
     return cards
 
 

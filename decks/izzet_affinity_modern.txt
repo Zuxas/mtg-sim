@@ -20,6 +20,7 @@
 1 Island
 2 Steam Vents
 1 Shivan Reef
+3 Sink into Stupor // Soporific Springs
 
 Sideboard
 3 Damping Sphere

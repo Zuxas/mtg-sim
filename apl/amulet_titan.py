@@ -554,6 +554,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                 if n in BOUNCE_LANDS:    return 10  # tapped, no engine
                 if n == SAGA:            return 70  # lower if we already have Amulet
 
+        # ═══ SHIFTING WOODLAND: loop piece — slight priority boost ═══
+        if n == SHIFTING and (am > 0 or repl):
+            has_lotus_bf = any(c.name == LOTUS for c in gs.zones.battlefield)
+            if has_lotus_bf:
+                return 55  # Slightly above generic untapped — don't steal from bounces
+
         # ═══ Engine active ═══
         if repl or am > 0:
             bf_land_count = len([x for x in gs.zones.battlefield if x.is_land()])

@@ -61,8 +61,8 @@ APL_REGISTRY = {
     "affinity":        ("apl.izzet_affinity",   "IzzetAffinityAPL",  "decks/izzet_affinity_modern.txt"),
     "izzetphoenix":    ("apl.izzet_phoenix",    "IzzetPhoenixAPL",   None),
     "phoenix":         ("apl.izzet_phoenix",    "IzzetPhoenixAPL",   None),
-    "murktide":        ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_murktide_modern.txt"),
-    "dimirmurktide":   ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_murktide_modern.txt"),
+    "murktide":        ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_oculus_modern.txt"),
+    "dimirmurktide":   ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_oculus_modern.txt"),
 
     # ── Modern (match-aware) ──
     "uwblink":         ("apl.uw_blink",         "UWBlinkAPL",        "uw_blink"),

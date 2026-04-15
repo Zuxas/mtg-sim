@@ -314,7 +314,7 @@ class BorosEnergyAPL(BaseAPL):
         # 6. Guide of Souls attack trigger — pay 3E for +2/+2 flying
         self._simulate_guide_attack_trigger(gs)
 
-        # 7. Galvanic Discharge — cast for +3 energy
+        # 7. Galvanic Discharge — cast ALL for +3 energy each
         for card in list(gs.hand()):
             if card.name == GALVANIC and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 creatures = gs.zones.creatures_on_battlefield()
@@ -322,7 +322,6 @@ class BorosEnergyAPL(BaseAPL):
                     gs.energy += 3
                     gs.cast_spell(card)
                     gs._log(f"  Galvanic: +3 energy ({gs.energy}), 0 dmg to own creature")
-                break
 
     def main_phase2(self, gs: GameState):
         """Post-combat: simulate combat triggers, cast remaining, end step tokens."""
@@ -443,13 +442,12 @@ class BorosEnergyAPL(BaseAPL):
                 gs.energy += guides
                 self._gained_life_this_turn = True
 
-        # Lightning Bolt face
+        # Lightning Bolt face — cast ALL with remaining mana
         for card in list(gs.hand()):
             if card.name == LIGHTNING_BOLT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
                 gs.damage_dealt += 3
                 gs._log(f"  Bolt face: 3 dmg ({gs.damage_dealt} total)")
-                break
 
         # End step: Ocelot Pride tokens if we gained life
         self._simulate_end_step(gs)

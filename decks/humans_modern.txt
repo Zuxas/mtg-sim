@@ -10,6 +10,8 @@
 2 Mantis Rider
 2 Adeline, Resplendent Cathar
 1 Mockingbird
+2 Esper Sentinel
+2 Phantasmal Image
 4 Aether Vial
 4 Cavern of Souls
 4 Secluded Courtyard

@@ -23,6 +23,7 @@
 1 Boseiju, Who Endures
 1 Forest
 1 Island
+4 Chancellor of the Tangle
 
 Sideboard
 4 Mystical Dispute

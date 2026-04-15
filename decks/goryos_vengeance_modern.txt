@@ -19,6 +19,9 @@
 1 Hallowed Fountain
 1 Meticulous Archive
 1 Undercity Sewers
+4 Consider
+2 Unearth
+1 Plains
 
 Sideboard
 2 Subtlety

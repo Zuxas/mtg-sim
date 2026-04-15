@@ -25,6 +25,8 @@ APL_REGISTRY = {
     # ── Legacy ──
     "legacyhumans":    ("apl.humans",          "HumansAPL",         "decks/humans_legacy.txt"),
     "humans":          ("apl.humans",           "HumansAPL",         "decks/humans_legacy.txt"),
+    "5chumans":        ("apl.humans",           "HumansAPL",         "decks/humans_modern.txt"),
+    "modernhumans":    ("apl.humans",           "HumansAPL",         "decks/humans_modern.txt"),
     "elves":           ("apl.elves",            "ElvesAPL",          None),
     "delver":          ("apl.delver",           "DelverAPL",         None),
     "urdelver":        ("apl.delver",           "DelverAPL",         None),

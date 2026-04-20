@@ -1,0 +1,36 @@
+// Izzet Spellementals - #6 at 30/03/26 (None)
+// Event: MTGO Challenge 64
+6 Island
+4 Burst Lightning
+4 Eddymurk Crab
+4 Hearth Elemental
+4 Opt
+4 Riverpyre Verge
+4 Sleight of Hand
+4 Spirebluff Canal
+4 Steam Vents
+4 Sunderflock
+3 Abandon Attachments
+3 Winternight Stories
+2 Multiversal Passage
+2 Spell Snare
+1 Abrade
+1 Bounce Off
+1 Glacial Dragonhunt
+1 Into the Flood Maw
+1 Spell Pierce
+1 Spider-Sense
+1 Stock Up
+1 Three Steps Ahead
+
+Sideboard
+2 Annul
+2 Disdainful Stroke
+2 Fire Magic
+2 Hydro-Man, Fluid Felon
+2 The Legend of Kuruk
+1 Abrade
+1 Broadside Barrage
+1 Ghost Vacuum
+1 Soul-Guide Lantern
+1 Spell Pierce

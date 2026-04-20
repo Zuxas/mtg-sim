@@ -1,0 +1,28 @@
+// Azorius Control - #4 at 31/08/25 (paper)
+// Event: Edge of Eternities Store Championship
+19 Plains
+4 Cosmogrand Zenith
+4 Enduring Innocence
+4 Novice Inspector
+4 Seam Rip
+4 Voice of Victory
+3 Elspeth, Storm Slayer
+3 Get Lost
+3 Starfield Shepherd
+2 Fountainport
+2 Nurturing Pixie
+2 Shardmage's Rescue
+2 Soulstone Sanctuary
+2 Splitskin Doll
+1 Cavern of Souls
+1 Zack Fair
+
+Sideboard
+3 Ghost Vacuum
+2 Authority of the Consuls
+2 Beza, the Bounding Spring
+2 Day of Judgment
+2 Devout Decree
+2 Requisition Raid
+1 Dauntless Scrapbot
+1 Exorcise

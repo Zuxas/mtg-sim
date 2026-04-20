@@ -44,3 +44,6 @@ apl/*_2026-*.py
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated plot outputs
+reports/*.png

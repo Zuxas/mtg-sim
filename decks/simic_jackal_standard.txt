@@ -1,0 +1,29 @@
+// Simic Jackal - #3 at 31/08/25 (mtgo_league)
+// Event: MTGO League
+7 Forest
+4 Botanical Sanctum
+4 Breeding Pool
+4 Floodpits Drowner
+4 Genemorph Imago
+4 Llanowar Elves
+4 Ouroboroid
+4 Pawpatch Recruit
+4 Sentinel of the Nameless City
+4 Spyglass Siren
+4 Willowrush Verge
+3 Into the Flood Maw
+3 Island
+2 Enduring Curiosity
+2 Royal Treatment
+2 Soulstone Sanctuary
+1 Surrak, Elusive Hunter
+
+Sideboard
+3 Flashfreeze
+3 Unable to Scream
+2 Annul
+2 Heritage Reclamation
+2 Mold Adder
+1 Ghost Vacuum
+1 Scrapshooter
+1 Surrak, Elusive Hunter

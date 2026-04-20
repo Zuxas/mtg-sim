@@ -1,12 +1,12 @@
-"""CLAUDE PROCESSES AUTHORIZED — MTG Sim runner wrapper.
+"""CLAUDE PROCESSES AUTHORIZED - MTG Sim runner wrapper.
 All sim scripts should be run through this wrapper so they're identifiable.
-Usage: python E:\vscode ai project\mtg-sim\claude_run.py your_script.py
+Usage: python claude_run.py your_script.py
 """
 import sys, os, ctypes
 
 # Set console window title so process is identifiable
 if sys.platform == 'win32':
-    ctypes.windll.kernel32.SetConsoleTitleW("CLAUDE PROCESSES AUTHORIZED — MTG Sim")
+    ctypes.windll.kernel32.SetConsoleTitleW("CLAUDE PROCESSES AUTHORIZED - MTG Sim")
 
 # Set process priority to below-normal so it doesn't hog CPU
 if sys.platform == 'win32':

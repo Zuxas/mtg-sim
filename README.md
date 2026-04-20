@@ -1,33 +1,136 @@
-# MTG Simulator
+# mtg-sim
 
-A Modern-format-aware deck simulator inspired by SimulationCraft.
-Goldfish simulator → archetype APL → Monte Carlo runner → Claude-powered analysis.
+A Magic: The Gathering simulator for competitive deck analysis: goldfish kill-clocks, archetype action priority lists (APLs), Monte Carlo matchup runs, and AI-assisted tuning.
 
-## Structure
+Built to answer questions like *"if I mulligan to six with this hand on the play against Boros Energy, what's my turn-7 win probability?"* — with enough fidelity that the answer is actionable at a tournament.
+
+## What it does
+
+```
+  deck list (.txt)               APL (archetype logic)
+        |                                |
+        v                                v
+  +-----------------------------------------------+
+  |           match_engine (Bo1 / Bo3)            |
+  |  game_state, mana, combat, stack, keywords    |
+  +-----------------------------------------------+
+        |
+        v
+  per-turn actions + win/loss + kill turn
+        |
+        +---> goldfish: pure speed against 20 life
+        +---> match: vs another deck+APL (gauntlet)
+        +---> calibrate: compare sim WR to real MTGA logs
+```
+
+Three main workflows:
+
+1. **Goldfish a deck** — `python sim.py <deck>` runs N games against a dummy opponent at 20 life. Outputs win rate, average kill turn, kill-turn histogram.
+2. **Matchup gauntlet** — `python bo3_gauntlet.py <deck>` runs Bo3 against every other deck in the field. Outputs a matchup matrix weighted by meta share.
+3. **APL tuning loop** — integrates with the harness-side tuner to propose card swaps, re-sim, and report win-rate deltas.
+
+## Quick start
+
+```bash
+# 1. Clone alongside mtg-meta-analyzer (required — see "Cross-project dependency" below)
+cd /path/to/your-dev-dir
+git clone https://github.com/Zuxas/mtg-meta-analyzer.git
+git clone https://github.com/Zuxas/mtg-sim.git
+cd mtg-sim
+
+# 2. Python 3.12+ and the runtime deps
+pip install -r requirements.txt
+
+# 3. Fetch the WotC Comprehensive Rules (not committed; ~1 MB)
+./scripts/fetch_rules.sh
+
+# 4. Smoke test
+python tests/test_match_engine.py
+# Expect: "Phase 3A smoke test complete!" + a kill-turn histogram
+```
+
+## Cross-project dependency
+
+`mtg-sim` imports `from scrapers.scryfall import get_cards_data` which lives in the sibling repo [mtg-meta-analyzer](https://github.com/Zuxas/mtg-meta-analyzer). Both repos must be checked out as siblings:
+
+```
+your-dev-dir/
+├── mtg-sim/                     <- this repo
+└── mtg-meta-analyzer/           <- required sibling
+```
+
+This is the only cross-repo import and it is narrow (one function: `get_cards_data(names) -> dict`). Decoupling — either by extracting `scrapers/` to its own package or by inlining the Scryfall calls — is tracked as an open issue on this repo.
+
+Additionally, `mtg-meta-analyzer` needs its SQLite card database populated before `get_cards_data` can return useful data. See `mtg-meta-analyzer/README.md` for bootstrap instructions.
+
+## Repository layout
 
 ```
 mtg-sim/
-├── data/         # Card objects, Scryfall ingestion, deck loader
-├── engine/       # Game state, turn structure, zone manager, mana pool
-├── apl/          # Action priority lists per archetype
-├── output/       # Stat aggregation, deck diff, Claude API integration
+├── apl/             Action priority lists, one file per archetype
+│   └── experimental/  Auto-generated APLs (mixed quality; see README inside)
+├── data/            Card model, deck loader, matchup job specs
+├── decks/           Deck text lists (card name + quantity)
+├── docs/            Oracle text dumps, rules audits, workflow docs
+├── engine/          Game state, mana, combat, keywords, match runner
+├── ml/              Experimental ML pipeline (win-prob modeling, RL)
+├── reports/         Generated outputs (gauntlet matrices, kill curves)
+├── scripts/         Utilities: diagnostics, build tools, fetch_rules.sh
+├── tests/           Test scripts (run directly: python tests/<name>.py)
+└── <root .py>       Driver entrypoints: sim.py, run_matchup.py, etc.
 ```
 
-## Phase 1 — Data Layer (current)
-- `data/card.py`     Card object model + tag system
-- `data/scryfall.py` Scryfall API fetcher
-- `data/deck.py`     Deck loader (text list → Card objects)
+## APL format
 
-## Phase 2 — Game State Engine
-- `engine/game_state.py`
-- `engine/zones.py`
-- `engine/mana.py`
+An APL is a Python subclass of `BaseAPL` or `MatchAPL` that decides which card to play each priority window. APLs live in `apl/` — one file per archetype. The file's module docstring should describe the deck's game plan in turn-by-turn terms, and card names are declared as module-level constants to avoid string drift:
 
-## Phase 3 — APL + Monte Carlo
-- `apl/base_apl.py`
-- `apl/humans.py`
-- `engine/runner.py`
+```python
+"""
+apl/boros_aggro.py — Boros Aggro APL
 
-## Phase 4 — Output + Claude Integration
-- `output/stats.py`
-- `output/claude_analysis.py`
+Plan: T1 Kumano/Swiftspear, T2 Charming Scoundrel, T3 Goddric/Squee,
+T4-6 close with Lightning Strike / Monstrous Rage pump.
+"""
+
+KUMANO    = "Kumano Faces Kakkazan"
+SWIFTSPEAR = "Monastery Swiftspear"
+...
+
+class BorosAggroAPL(BaseAPL):
+    def priority(self, gs: GameState) -> Action:
+        ...
+```
+
+See `apl/boros_aggro_standard_match.py` or `apl/domain_ramp_standard_match.py` for full examples.
+
+## Experimental APLs
+
+`apl/experimental/` holds match APLs auto-generated by a local-model code generator (Gemma via Ollama, wired up in the harness ecosystem). Quality varies — see [`apl/experimental/README.md`](./apl/experimental/README.md). Drivers like `sim.py` should point at hand-tuned APLs in `apl/`, not `apl/experimental/`, for anything you want to trust.
+
+## Conventions
+
+See [CONVENTIONS.md](./CONVENTIONS.md). Short version: ASCII-only terminal output, idempotent scripts, dual-platform parity where applicable, pinned Python dependencies.
+
+## Running tests
+
+Tests are stand-alone scripts, not pytest. Run any one directly:
+
+```bash
+python tests/test_match_engine.py
+python tests/test_standard_apls.py
+# ...etc
+```
+
+Each test sets `sys.path` up to the repo root before importing, so any cwd works.
+
+CI runs `tests/test_match_engine.py` on push (see `.github/workflows/tests.yml`).
+
+## Status
+
+Active development. Built for the author's own deck-prep workflow but published in case the pattern is useful. The core engine (game state, mana, combat, keywords) is solid; APL coverage is heaviest for Modern and in-progress for Standard and Pioneer. See `ROADMAP.md` for the longer arc.
+
+Issues and PRs welcome; not all will be merged.
+
+## License
+
+MIT. See [LICENSE](./LICENSE).

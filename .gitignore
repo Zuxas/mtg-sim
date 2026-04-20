@@ -33,6 +33,12 @@ logs/
 # Dev scratch — experimental one-offs not meant for the repo
 scripts/scratch/
 
+# Dated APL snapshots from the tuning loop — not promoted to canonical.
+# Per-experiment copies of canonical APLs produced by the tuner; if a change
+# is worth keeping it lands in the canonical APL, not a dated sibling.
+apl/*_grind_*.py
+apl/*_2026-*.py
+
 # OS
 .DS_Store
 Thumbs.db

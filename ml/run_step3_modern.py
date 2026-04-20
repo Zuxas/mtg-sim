@@ -1,6 +1,6 @@
 """Step 3: Train Modern Boros Energy model (format transfer demo)."""
-import sys
-sys.path.insert(0, r'E:\vscode ai project\mtg-sim')
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ml.format_transfer import train_and_save_format_model
 
 model, path = train_and_save_format_model(

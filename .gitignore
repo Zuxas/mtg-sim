@@ -21,6 +21,8 @@ env/
 # Runtime artifacts
 *.log
 *.err
+ml/step*_log.txt
+ml/step*_err.txt
 
 # Project-specific caches / derived outputs
 data/playbook_cache.json

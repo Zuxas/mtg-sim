@@ -1,5 +1,5 @@
 import os, sys
-sys.path.insert(0,'.')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sim_bridge import _infer_archetype_key
 
 apl_files = [f for f in os.listdir('apl') if f.endswith('.py')

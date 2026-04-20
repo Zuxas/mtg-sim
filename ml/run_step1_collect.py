@@ -1,6 +1,6 @@
 """Step 1: Collect v3 training data with richer features."""
-import sys, json
-sys.path.insert(0, r'E:\vscode ai project\mtg-sim')
+import sys, os, json
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ml.win_prob_model import collect_training_data, train_model, save_model
 
 print('=== Collecting v3 training data (20k games, richer features) ===')

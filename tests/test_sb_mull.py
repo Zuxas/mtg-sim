@@ -1,5 +1,5 @@
-import sys, random, copy, inspect
-sys.path.insert(0,'.')
+import sys, os, random, copy, inspect
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from generate_matchup_data import load_deck_and_apl
 
 # Test 1: keep_vs fires correctly for Humans vs Reanimator

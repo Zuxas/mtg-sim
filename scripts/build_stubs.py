@@ -2,9 +2,10 @@
 build_stubs.py — Generate stub_decks.py with real decklists + hardcoded Standard/Pioneer stubs.
 """
 import sys, os, json, re, sqlite3
-sys.path.insert(0, '.')
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _ROOT)
 
-DB = os.path.join('..', 'mtg-meta-analyzer', 'data', 'mtg_meta.db')
+DB = os.path.join(_ROOT, '..', 'mtg-meta-analyzer', 'data', 'mtg_meta.db')
 conn = sqlite3.connect(DB)
 cur  = conn.cursor()
 cur.execute("SELECT id, name, format, archetype, mainboard FROM saved_decks ORDER BY id")

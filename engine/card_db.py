@@ -2,7 +2,8 @@
 engine/card_db.py — Local card database from Scryfall oracle cards + rulings
 
 Replaces all Scryfall API calls with local lookups from:
-  E:/vscode ai project/mtg-meta-analyzer/data/rules_reference/
+  ../mtg-meta-analyzer/data/rules_reference/
+(relative to this repo; mtg-meta-analyzer is expected as a sibling clone)
 
 Three data sources:
   - scryfall_oracle_cards.json  — 37k cards, full oracle text, CMC, types

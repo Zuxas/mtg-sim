@@ -1,5 +1,5 @@
 import sys, os
-sys.path.insert(0, '.')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from generate_matchup_data import load_deck_and_apl
 
 tests = [

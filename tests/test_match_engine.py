@@ -4,7 +4,7 @@ test_match_engine.py — Smoke test for Phase 3A match engine
 Loads two decks, wraps their APLs in GoldfishAdapter, runs matches.
 """
 import sys, os, time
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.deck import load_deck_from_file as load_deck
 from apl.match_apl import GoldfishAdapter, GenericMatchAPL

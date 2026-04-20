@@ -34,10 +34,10 @@
 I need you to extract strategic content from an MTG playbook HTML file
 for my simulator's APL development.
 
-Read the file at: E:\vscode ai project\My-Website\modern\{DECK}-playbook.html
+Read the file at: <your-playbook-dir>\modern\{DECK}-playbook.html
 
 Extract into a structured markdown document at:
-E:\vscode ai project\mtg-sim\docs\{DECK}_playbook_extract.md
+docs\{DECK}_playbook_extract.md
 
 Include these sections:
 1. ENGINES — copy each engine's Setup/Execution/Result verbatim
@@ -52,7 +52,7 @@ Include these sections:
 10. SB CARD-BY-CARD — each SB card's role and which matchups it comes in
 
 Also run this oracle text pull:
-cd E:\vscode ai project\mtg-sim
+cd <repo-root>
 python docs/pull_oracle.py {DECK}
 (if script doesn't exist, write one that loads the deck and dumps oracle text)
 
@@ -71,14 +71,14 @@ Output files:
 # PROMPT (paste into Opus):
 """
 I'm building a match-aware APL for {DECK} in my MTG Modern simulator.
-The APL file goes at: E:\vscode ai project\mtg-sim\apl\{DECK}_match.py
+The APL file goes at: apl\{DECK}_match.py
 
 Read these two files I prepared:
-1. E:\vscode ai project\mtg-sim\docs\{DECK}_playbook_extract.md (strategy)
-2. E:\vscode ai project\mtg-sim\docs\{DECK}_oracle.txt (oracle text)
+1. docs\{DECK}_playbook_extract.md (strategy)
+2. docs\{DECK}_oracle.txt (oracle text)
 
 If an existing APL exists, also read:
-3. E:\vscode ai project\mtg-sim\apl\{DECK}_match.py
+3. apl\{DECK}_match.py
 
 Then produce:
 
@@ -101,7 +101,7 @@ C. APL DESIGN SPEC — architecture for the APL:
 
 D. CODE ISSUES — if existing APL exists, list every gap vs the design spec
 
-Write output to: E:\vscode ai project\mtg-sim\docs\{DECK}_audit.md
+Write output to: docs\{DECK}_audit.md
 
 IMPORTANT CONTEXT:
 - The sim engine uses: GameState, Card (with Tag.CREATURE), safe_power(), safe_toughness()
@@ -122,11 +122,11 @@ IMPORTANT CONTEXT:
 """
 Write the complete APL file for {DECK} in my MTG simulator.
 
-Read the design spec: E:\vscode ai project\mtg-sim\docs\{DECK}_audit.md
-Read oracle text: E:\vscode ai project\mtg-sim\docs\{DECK}_oracle.txt
-Read the deck list: E:\vscode ai project\mtg-sim\decks\{DECK}_modern.txt
+Read the design spec: docs\{DECK}_audit.md
+Read oracle text: docs\{DECK}_oracle.txt
+Read the deck list: decks\{DECK}_modern.txt
 
-Write the full APL to: E:\vscode ai project\mtg-sim\apl\{DECK}_match.py
+Write the full APL to: apl\{DECK}_match.py
 
 Requirements:
 - Follow the design spec's method list and architecture exactly
@@ -141,7 +141,7 @@ Requirements:
 - All cast triggers vs ETB triggers correct per oracle
 - Track relevant state (energy, tokens, counters, domain count, etc.)
 
-Reference for style/structure: E:\vscode ai project\mtg-sim\apl\izzet_prowess_match.py
+Reference for style/structure: apl\izzet_prowess_match.py
 """
 
 #═══════════════════════════════════════════════════════════════
@@ -154,8 +154,8 @@ Reference for style/structure: E:\vscode ai project\mtg-sim\apl\izzet_prowess_ma
 """
 Test and tune the {DECK} APL in my MTG simulator.
 
-The APL is at: E:\vscode ai project\mtg-sim\apl\{DECK}_match.py
-The project is at: E:\vscode ai project\mtg-sim
+The APL is at: apl\{DECK}_match.py
+The project is at: <repo-root>
 
 Run these matchup tests (1000 games each):
 ```python
@@ -193,7 +193,7 @@ ALWAYS kill Python processes after: Get-Process python* | Stop-Process -Force
 
 # PROMPT (paste into Sonnet):
 """
-Run the full Bo3 gauntlet for {DECK} in my MTG simulator at E:\vscode ai project\mtg-sim
+Run the full Bo3 gauntlet for {DECK} in my MTG simulator at <repo-root>
 
 Write and run this gauntlet script with 24 CPU cores:
 [standard gauntlet script from previous sessions]

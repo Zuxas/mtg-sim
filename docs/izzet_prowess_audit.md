@@ -264,7 +264,7 @@ If exiled card is a spell: extra prowess trigger + effect.
 
 ## PLAYBOOK-SOURCED INTERACTION SWEEP (Deep Dive #3)
 
-Source: E:\vscode ai project\My-Website\modern\prowess-playbook.html
+Source: <your-playbook-dir>\modern\prowess-playbook.html
 Sections read: Engines (3), Lines & Tricks, Edge Cases, Matchup vs Boros, SB Guide
 
 ### FIXES APPLIED:

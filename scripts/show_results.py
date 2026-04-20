@@ -1,7 +1,8 @@
-import json, glob, sys
-sys.path.insert(0,'.')
+import json, glob, os, sys
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _ROOT)
 
-files = sorted(glob.glob('data/parallel_results_*.json'))[-4:]
+files = sorted(glob.glob(os.path.join(_ROOT, 'data/parallel_results_*.json')))[-4:]
 for f in files:
     with open(f) as fh: d = json.load(fh)
     deck = d.get('our_deck','?')

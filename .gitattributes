@@ -1,0 +1,32 @@
+# Default: let git decide, normalize to LF in the repo
+* text=auto eol=lf
+
+# Shell scripts: POSIX, always LF
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Git hooks: always LF (run under bash even on Windows)
+pre-push text eol=lf
+pre-commit text eol=lf
+post-commit text eol=lf
+
+# Markdown: LF for portability
+*.md text eol=lf
+
+# Python: LF (cross-platform — most editors handle both, LF is the PEP default)
+*.py text eol=lf
+
+# Text data (decks, rules): LF
+*.txt text eol=lf
+*.json text eol=lf
+
+# Binary — never touch
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.db binary
+*.sqlite binary

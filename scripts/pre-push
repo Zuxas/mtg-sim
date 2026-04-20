@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# ────────────────────────────────────────────────────────────────────
+# pre-push hook — scan staged push for sensitive content
+#
+# Install:  cp pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+# Bypass:   git push --no-verify   (only when you know what you're doing)
+#
+# Customize the PERSONAL pattern below for your project. Everything else
+# should be left alone unless you know you need it.
+# ────────────────────────────────────────────────────────────────────
+set -u
+
+# ── Patterns ────────────────────────────────────────────────────────
+
+# Personal identifiers — CUSTOMIZE for your project
+# Include: real name(s), handles, teammate names you mention in notes,
+# family-member first names, pet names used in examples
+PERSONAL='jermey|zuxas|jerme|caleb|troubleshot|tien|urbae|foxy|rehgar'
+
+# Secrets & credentials — generic, don't edit
+SECRETS='sk-[a-zA-Z0-9]{20,}'
+SECRETS="${SECRETS}|sk-ant-[a-zA-Z0-9_-]{20,}"
+SECRETS="${SECRETS}|(ANTHROPIC|OPENAI|DISCORD|GITHUB|HUGGINGFACE|SLACK)_(API_KEY|TOKEN)[[:space:]]*=[[:space:]]*[^\$\{[:space:]]"
+SECRETS="${SECRETS}|Bearer[[:space:]]+[a-zA-Z0-9_-]{20,}"
+SECRETS="${SECRETS}|Authorization:[[:space:]]*Bearer"
+SECRETS="${SECRETS}|ya29\.[a-zA-Z0-9_-]+"
+SECRETS="${SECRETS}|ghp_[a-zA-Z0-9]{30,}"
+SECRETS="${SECRETS}|gho_[a-zA-Z0-9]{30,}"
+SECRETS="${SECRETS}|AKIA[0-9A-Z]{16}"
+SECRETS="${SECRETS}|-----BEGIN (RSA|OPENSSH|EC|DSA|PRIVATE) "
+
+# Session cookies / browser session artifacts
+COOKIES='cookies\.txt|__Secure-1PSID|__Secure-3PSID|SAPISID|APISID|SSID|HSID'
+
+# User-specific paths — CUSTOMIZE
+# Your machine-specific paths that shouldn't leak into public code
+PATHS='C:\\\\Users\\\\jerme'
+PATHS="${PATHS}|E:\\\\vscode ai project"
+PATHS="${PATHS}|/home/[a-z]+/\.ssh/id_"
+
+# Combined
+PATTERN="${PERSONAL}|${SECRETS}|${COOKIES}|${PATHS}"
+
+# ── Push-range detection ────────────────────────────────────────────
+
+z40=0000000000000000000000000000000000000000
+exit_code=0
+flagged_files=""
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    # Skip deletions
+    [ "$local_sha" = "$z40" ] && continue
+
+    # New branch: check everything reachable from local_sha that isn't already remote
+    # Existing branch: check the new commits only
+    if [ "$remote_sha" = "$z40" ]; then
+        range="$local_sha"
+        files=$(git ls-tree -r --name-only "$local_sha" 2>/dev/null)
+    else
+        range="$remote_sha..$local_sha"
+        files=$(git diff --name-only "$range" 2>/dev/null)
+    fi
+
+    [ -z "$files" ] && continue
+
+    # ── Per-file scan ───────────────────────────────────────────────
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        [ ! -f "$f" ] && continue
+
+        # Skip binaries and generated lockfiles
+        case "$f" in
+            *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.pdf)        continue ;;
+            *.zip|*.tar|*.tar.gz|*.tgz|*.xz|*.7z)               continue ;;
+            *.exe|*.dll|*.so|*.dylib|*.bin|*.class|*.o)         continue ;;
+            *Cargo.lock|*package-lock.json|*yarn.lock|*Pipfile.lock|*poetry.lock) continue ;;
+            *.mp4|*.mov|*.mp3|*.wav|*.flac)                     continue ;;
+        esac
+
+        # Skip the hook itself — it contains the pattern list by design
+        case "$f" in
+            *pre-push) continue ;;
+        esac
+
+        # Match — capture line numbers
+        if matches=$(grep -niE "$PATTERN" "$f" 2>/dev/null); then
+            if [ -n "$matches" ]; then
+                exit_code=1
+                flagged_files="${flagged_files}${f}\n"
+                printf '\n❌  %s\n' "$f"
+                printf '%s\n' "$matches" | head -5 | sed 's/^/    /'
+                count=$(printf '%s\n' "$matches" | wc -l | tr -d ' ')
+                if [ "$count" -gt 5 ]; then
+                    printf '    ... and %d more matches\n' "$((count - 5))"
+                fi
+            fi
+        fi
+    done <<< "$files"
+done
+
+# ── Result ──────────────────────────────────────────────────────────
+
+if [ "$exit_code" -ne 0 ]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════"
+    echo " Push blocked: potential sensitive content detected."
+    echo ""
+    echo " For each match above, either:"
+    echo "   1. Scrub the content and amend your commit, or"
+    echo "   2. Move the file to a private repo, or"
+    echo "   3. Confirm it's intentional and re-run with --no-verify"
+    echo ""
+    echo " If the pattern list is flagging something that's actually safe,"
+    echo " tune PERSONAL and PATHS at the top of .git/hooks/pre-push."
+    echo "═══════════════════════════════════════════════════════════════"
+    exit 1
+fi
+
+exit 0

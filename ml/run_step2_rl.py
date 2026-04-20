@@ -1,6 +1,6 @@
 """Step 2: Run RL training loop - 3 iterations of epsilon-greedy exploration."""
-import sys
-sys.path.insert(0, r'E:\vscode ai project\mtg-sim')
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ml.rl_trainer import rl_training_loop
 
 rl_training_loop(

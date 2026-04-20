@@ -1,5 +1,5 @@
 # JESKAI BLINK — APL AUDIT NOTES (PRELIMINARY)
-# Source: E:\vscode ai project\My-Website\modern\jeskai-blink-playbook.html
+# Source: <your-playbook-dir>\modern\jeskai-blink-playbook.html
 
 ## CURRENT APL STATUS: 286 lines, basic deployment + removal only
 

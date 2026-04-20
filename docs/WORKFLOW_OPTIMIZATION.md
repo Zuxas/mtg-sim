@@ -15,7 +15,7 @@ Only ~20% needs deep reasoning (interaction discovery, strategic design).
 
 Prompt template:
 ```
-Read E:\vscode ai project\My-Website\modern\{deck}-playbook.html
+Read <your-playbook-dir>\modern\{deck}-playbook.html
 Extract and organize into a markdown document:
 1. All 3 engines (setup/execution/result for each)
 2. Role assignments per matchup
@@ -25,7 +25,7 @@ Extract and organize into a markdown document:
 6. All edge cases from the edges section
 7. Speed math / kill clocks
 8. Lines & Tricks
-Save to: E:\vscode ai project\mtg-sim\docs\{deck}_playbook_extract.md
+Save to: docs\{deck}_playbook_extract.md
 ```
 
 Also in this phase:
@@ -86,7 +86,7 @@ Requirements:
 - Phlage escape if in deck
 - All cast triggers vs ETB triggers correct per oracle
 
-Write to: E:\vscode ai project\mtg-sim\apl\{deck}_match.py
+Write to: apl\{deck}_match.py
 ```
 
 ~50K tokens, 5 minutes. Sonnet Extended is perfect — mechanical code from a clear spec.
@@ -157,7 +157,7 @@ With this split, you can run multiple phases simultaneously:
 
 ## SETUP: CLAUDE.md UPDATE
 
-Add to E:\vscode ai project\mtg-sim\claude.md:
+Add to claude.md:
 ```
 ## APL Audit Workflow (5 phases)
 Phase 1: Data extraction (Sonnet) — read playbook, extract strategy, pull oracle

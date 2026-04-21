@@ -17,7 +17,6 @@ import argparse
 
 # --- Path setup ---
 sys.path.insert(0, os.path.dirname(__file__))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mtg-meta-analyzer"))
 
 from data.deck import load_deck_from_file
 from apl.humans import HumansAPL

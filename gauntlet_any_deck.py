@@ -1,7 +1,6 @@
 """Quick wrapper to run any playbook deck through the Bo3 gauntlet."""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'mtg-meta-analyzer'))
 
 import argparse
 from apl.playbook_parser import load_all_playbooks, load_all_tac_guides, find_playbook

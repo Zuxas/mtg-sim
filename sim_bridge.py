@@ -22,7 +22,6 @@ import shutil
 from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mtg-meta-analyzer"))
 
 ARCHETYPE_CLOCKS = {
     "humans":           {4: 0.5, 5: 21.9, 6: 38.5, 7: 28.2, 8: 7.8, 9: 2.1, 10: 0.5, 11: 0.4, 12: 0.1},

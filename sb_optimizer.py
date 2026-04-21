@@ -19,7 +19,6 @@ Usage:
 
 import argparse, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'mtg-meta-analyzer'))
 
 from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key, race_win_pct, avg_kill_turn
 from engine.bo3 import compute_match_win_pct, _adjust_opp_clock

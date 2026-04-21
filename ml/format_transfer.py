@@ -48,7 +48,6 @@ def collect_format_data(
     # Get format field
     try:
         from meta_bridge import MetaBridge
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'mtg-meta-analyzer'))
         bridge = MetaBridge(format_name=format_name, min_matches=10)
         field  = bridge.field_shares(top_n=top_n)
         print(f"Field: top {top_n} {format_name.upper()} archetypes")

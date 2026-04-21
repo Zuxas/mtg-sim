@@ -7,7 +7,6 @@ ml/run_pipeline.py — Full ML pipeline runner
 """
 import sys, os, json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'mtg-meta-analyzer'))
 
 STEP = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 

@@ -16,7 +16,6 @@ Usage:
 
 import sys, os, json, argparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'mtg-meta-analyzer'))
 
 from engine.match_runner import run_match_set, MatchSetResults
 from sim_bridge import _infer_archetype_key, avg_kill_turn

@@ -13,7 +13,6 @@ Usage:
 
 import argparse, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'mtg-meta-analyzer'))
 
 
 def load_deck_from_playbook(pb):

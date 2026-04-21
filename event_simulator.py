@@ -16,7 +16,6 @@ Usage:
 import argparse, sys, os, random, math
 from collections import defaultdict
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'mtg-meta-analyzer'))
 
 from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key
 from sb_optimizer import compute_matchup_with_sb, SB_CARD_EFFECTS

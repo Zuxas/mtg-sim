@@ -1,7 +1,6 @@
 import sys, os
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
-sys.path.insert(0, os.path.join(_ROOT, '..', 'mtg-meta-analyzer'))
 from data.deck import load_deck_from_file
 from apl.humans import HumansAPL
 from engine.runner import run_simulation

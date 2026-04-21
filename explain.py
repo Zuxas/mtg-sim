@@ -19,7 +19,6 @@ import copy
 import random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "mtg-meta-analyzer"))
 
 from data.card import Card, Tag
 from data.deck import load_deck_from_file, load_deck_from_text

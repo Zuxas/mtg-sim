@@ -148,6 +148,10 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     mull_a = _do_mulligan(apl_a, mgs.gs_a, mgs.rng)
     mull_b = _do_mulligan(apl_b, mgs.gs_b, mgs.rng)
 
+    # Snapshot kept opening hands (card names) for downstream aggregation.
+    hand_a_names = [c.name for c in mgs.gs_a.zones.hand]
+    hand_b_names = [c.name for c in mgs.gs_b.zones.hand]
+
     # --- Game loop ---
     for turn_num in range(1, max_turns + 1):
         mgs.turn = turn_num
@@ -196,6 +200,8 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 result = mgs.to_match_result()
                 result.mulligans_a = mull_a
                 result.mulligans_b = mull_b
+                result.hand_a = hand_a_names
+                result.hand_b = hand_b_names
                 result._on_play = on_play
                 return result
 
@@ -236,6 +242,8 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 result = mgs.to_match_result()
                 result.mulligans_a = mull_a
                 result.mulligans_b = mull_b
+                result.hand_a = hand_a_names
+                result.hand_b = hand_b_names
                 result._on_play = on_play
                 return result
 
@@ -259,6 +267,8 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     result = mgs.to_match_result()
     result.mulligans_a = mull_a
     result.mulligans_b = mull_b
+    result.hand_a = hand_a_names
+    result.hand_b = hand_b_names
     result._on_play = on_play
     return result
 

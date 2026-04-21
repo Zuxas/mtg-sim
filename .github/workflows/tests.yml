@@ -15,10 +15,7 @@ jobs:
           path: mtg-sim
 
       - name: Checkout mtg-meta-analyzer (sibling dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: Zuxas/mtg-meta-analyzer
-          path: mtg-meta-analyzer
+        run: git clone --depth 1 https://github.com/Zuxas/mtg-meta-analyzer.git mtg-meta-analyzer
 
       - name: Set up Python
         uses: actions/setup-python@v5

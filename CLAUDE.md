@@ -22,17 +22,12 @@ When given a task, load context in this order:
 4. `apl/<deck>.py` for the archetype being discussed
 5. `engine/<module>.py` only if the task touches the engine itself
 
-## Cross-project dependency (important)
+## Standalone repo
 
-mtg-sim imports `from scrapers.scryfall import get_cards_data` from the sibling repo `mtg-meta-analyzer`. For code to run, both must be checked out as siblings:
-
-```
-dev-dir/
-├── mtg-sim/
-└── mtg-meta-analyzer/
-```
-
-This is the only cross-repo import. Decoupling is tracked as an open issue.
+mtg-sim has no cross-repo Python dependencies. Card data is resolved from
+this repo's own `data/rules_reference/scryfall_oracle_cards.json`,
+populated by `scripts/fetch_scryfall_bulk.sh`. The decouple landed in
+commit 7155b3c (closed issue #1).
 
 ## Conventions you must follow
 

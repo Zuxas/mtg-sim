@@ -32,16 +32,15 @@ Three main workflows:
 ## Quick start
 
 ```bash
-# 1. Clone alongside mtg-meta-analyzer (required — see "Cross-project dependency" below)
-cd /path/to/your-dev-dir
-git clone https://github.com/Zuxas/mtg-meta-analyzer.git
+# 1. Clone and install
 git clone https://github.com/Zuxas/mtg-sim.git
 cd mtg-sim
-
-# 2. Python 3.12+ and the runtime deps
 pip install -r requirements.txt
 
-# 3. Fetch the WotC Comprehensive Rules (not committed; ~1 MB)
+# 2. Fetch Scryfall bulk card data (~200 MB, one-time)
+./scripts/fetch_scryfall_bulk.sh
+
+# 3. (Optional) Fetch the WotC Comprehensive Rules (~1 MB)
 ./scripts/fetch_rules.sh
 
 # 4. Smoke test
@@ -49,19 +48,7 @@ python tests/test_match_engine.py
 # Expect: "Phase 3A smoke test complete!" + a kill-turn histogram
 ```
 
-## Cross-project dependency
-
-`mtg-sim` imports `from scrapers.scryfall import get_cards_data` which lives in the sibling repo [mtg-meta-analyzer](https://github.com/Zuxas/mtg-meta-analyzer). Both repos must be checked out as siblings:
-
-```
-your-dev-dir/
-├── mtg-sim/                     <- this repo
-└── mtg-meta-analyzer/           <- required sibling
-```
-
-This is the only cross-repo import and it is narrow (one function: `get_cards_data(names) -> dict`). Decoupling — either by extracting `scrapers/` to its own package or by inlining the Scryfall calls — is tracked as an open issue on this repo.
-
-Additionally, `mtg-meta-analyzer` needs its SQLite card database populated before `get_cards_data` can return useful data. See `mtg-meta-analyzer/README.md` for bootstrap instructions.
+Card data courtesy of [Scryfall](https://scryfall.com). Magic: The Gathering is © Wizards of the Coast.
 
 ## Repository layout
 

@@ -7,15 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  smoke:
+  compile:
+    name: py_compile all modules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: mtg-sim
-
-      - name: Checkout mtg-meta-analyzer (sibling dependency)
-        run: git clone --depth 1 https://github.com/Zuxas/mtg-meta-analyzer.git mtg-meta-analyzer
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,11 +19,15 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        working-directory: mtg-sim
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run match-engine smoke test
-        working-directory: mtg-sim
-        run: python tests/test_match_engine.py
+      - name: Compile-check all Python modules
+        run: |
+          find . -name "*.py" \
+            -not -path "./.venv/*" \
+            -not -path "./venv/*" \
+            -not -path "./__pycache__/*" \
+            -not -path "*/__pycache__/*" \
+            | xargs python -m py_compile

@@ -32,6 +32,9 @@ class MatchResult:
     damage_by_a:   int   = 0
     damage_by_b:   int   = 0
     win_method:    str   = ''       # 'combat', 'combo', 'timeout'
+    # Opening hands (card names) snapshotted after mulligans. Set by run_match.
+    hand_a:        list  = field(default_factory=list)
+    hand_b:        list  = field(default_factory=list)
 
 
 @dataclass

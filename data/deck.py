@@ -15,16 +15,7 @@ Decklist format (MTGA/MTGO export, also Moxfield/Goldfish copy-paste):
     2 Path to Exile
 """
 
-import sys
-import os
-
-_META_ANALYZER_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "mtg-meta-analyzer"
-)
-if _META_ANALYZER_PATH not in sys.path:
-    sys.path.insert(0, os.path.abspath(_META_ANALYZER_PATH))
-
-from scrapers.scryfall import get_cards_data
+from data.scryfall_client import get_cards_data
 from data.card import Card, Tag
 from engine.keywords import tag_keywords
 
@@ -128,7 +119,7 @@ def _get_cards_local(names: list[str]) -> dict:
 
         if missing:
             print(f"  [{len(missing)} cards not in local DB, fetching from Scryfall: {missing[:3]}...]")
-            from scrapers.scryfall import get_cards_data
+            from data.scryfall_client import get_cards_data
             api_data = get_cards_data(missing)
             result.update(api_data)
         else:

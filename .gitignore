@@ -32,6 +32,11 @@ data/matchup_run*.err
 graphify-out/
 logs/
 
+# Scryfall bulk data (fetched on demand via scripts/fetch_scryfall_bulk.sh)
+data/rules_reference/scryfall_oracle_cards.json
+data/rules_reference/scryfall_rulings.json
+data/rules_reference/MagicCompRules.txt
+
 # Dev scratch — experimental one-offs not meant for the repo
 scripts/scratch/
 

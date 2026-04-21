@@ -2,8 +2,10 @@
 engine/card_db.py — Local card database from Scryfall oracle cards + rulings
 
 Replaces all Scryfall API calls with local lookups from:
-  ../mtg-meta-analyzer/data/rules_reference/
-(relative to this repo; mtg-meta-analyzer is expected as a sibling clone)
+  ./data/rules_reference/   (in this repo)
+
+Populate this directory by running:
+  ./scripts/fetch_scryfall_bulk.sh
 
 Three data sources:
   - scryfall_oracle_cards.json  — 37k cards, full oracle text, CMC, types
@@ -26,8 +28,9 @@ import re
 from pathlib import Path
 from typing import Optional
 
-# Path to the meta-analyzer's rules_reference directory
-_RULES_DIR = Path(__file__).parent.parent.parent / "mtg-meta-analyzer" / "data" / "rules_reference"
+# Path to this repo's own rules_reference directory
+# (populate via scripts/fetch_scryfall_bulk.sh)
+_RULES_DIR = Path(__file__).parent.parent / "data" / "rules_reference"
 
 # Singleton cache
 _db_instance = None

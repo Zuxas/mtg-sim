@@ -26,6 +26,49 @@ from engine.mana import ManaPool
 from engine.zones import Zones
 
 
+# Per-card cost-reduction rules. Each entry: (card_name, reducer_fn(card, gs))
+# returns the number of generic mana to subtract from card.cmc.
+def _gy_instant_sorcery_count(gs) -> int:
+    return sum(
+        1 for c in gs.zones.graveyard
+        if "instant" in (c.type_line or "").lower()
+        or "sorcery" in (c.type_line or "").lower()
+    )
+
+
+def _biggest_elemental_cmc_on_board(gs) -> int:
+    best = 0
+    for c in gs.zones.battlefield:
+        if "elemental" in (c.type_line or "").lower() and c.cmc and c.cmc > best:
+            best = int(c.cmc)
+    return best
+
+
+_COST_REDUCTIONS = {
+    # 'Hearth Elemental': costs {X} less per instant/sorcery in your GY
+    "Hearth Elemental": _gy_instant_sorcery_count,
+    # 'Eddymurk Crab': costs {1} less per instant/sorcery in your GY
+    "Eddymurk Crab":    _gy_instant_sorcery_count,
+    # 'Sunderflock': costs {X} less where X = greatest mana value
+    # among Elementals you control
+    "Sunderflock":      _biggest_elemental_cmc_on_board,
+}
+
+
+def _effective_cmc(card, gs) -> int:
+    """Return card.cmc minus any per-card generic-mana reduction."""
+    base = card.cmc or 0
+    reducer = _COST_REDUCTIONS.get(card.name)
+    if reducer is None:
+        return base
+    try:
+        reduction = reducer(gs)
+    except Exception:
+        return base
+    # Never reduce below 1 (colored-mana floor approximation)
+    return max(1, base - reduction)
+
+
 class Phase(str, Enum):
     UNTAP   = "untap"
     UPKEEP  = "upkeep"
@@ -861,9 +904,12 @@ class GameState:
         from engine.keywords import KWTag
         if card not in self.zones.hand or card.is_land():
             return False
-        if not self.mana_pool.can_cast(card.mana_cost, card.cmc):
+        # Effective cost after any per-card reductions ('this spell
+        # costs {X} less' — Hearth Elemental, Eddymurk Crab, etc.)
+        effective_cmc = _effective_cmc(card, self)
+        if not self.mana_pool.can_cast(card.mana_cost, effective_cmc):
             return False
-        self.mana_pool.pay(card.mana_cost, card.cmc)
+        self.mana_pool.pay(card.mana_cost, effective_cmc)
         if card.has(Tag.INSTANT) or card.has(Tag.SORCERY):
             self.zones.cast_to_graveyard(card)
             self.noncreature_spells_this_turn += 1

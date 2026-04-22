@@ -241,7 +241,10 @@ class ControlAPL(SBPlanMixin, BaseAPL):
             for card in list(gs.hand()):
                 if card.name != name:
                     continue
-                threat_cmc = getattr(card, "cmc", 0) or 0
+                # Use effective cmc so cost-reductions (GY-scaling
+                # Elementals etc.) are visible to the reserve check.
+                from engine.game_state import _effective_cmc
+                threat_cmc = _effective_cmc(card, gs)
                 if not gs.mana_pool.can_cast(card.mana_cost, threat_cmc):
                     continue
                 # Would this tap us below the reactive reserve?

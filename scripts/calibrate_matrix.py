@@ -33,6 +33,7 @@ DECKS = [
     ("Spell",     "apl.izzet_spellementals_standard_match", "IzzetSpellementalsStandardMatchAPL", "decks/izzet_spellementals_standard.txt"),
     ("Doomsday",  "apl.superior_doomsday_standard_match",   "SuperiorDoomsdayStandardMatchAPL",   "decks/superior_doomsday_standard.txt"),
     ("Domain",    "apl.domain_ramp_standard_match",         "DomainRampStandardMatchAPL",         "decks/domain_ramp_standard.txt"),
+    ("Jeskai",    "apl.jeskai_control_standard_match",      "JeskaiControlStandardMatchAPL",      "decks/jeskai_control_standard.txt"),
 ]
 
 

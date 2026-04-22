@@ -191,6 +191,38 @@ def _bounce_off(gs, card):
     pass
 
 
+def _lightning_helix(gs, card):
+    """Lightning Helix — 3 damage + 3 life. Goldfish: face damage +
+    defensive life (matters in match mode, not goldfish WR)."""
+    gs.damage_dealt += 3
+    gs.life += 3
+    gs._log(f"  Lightning Helix: 3 dmg + 3 life "
+            f"({gs.damage_dealt} dmg, {gs.life} life)")
+
+
+def _consult_star_charts(gs, card):
+    """Consult the Star Charts — look at top X cards (X = lands in
+    play), keep one. Goldfish: draw 1 (simplification)."""
+    gs.zones.draw(1)
+
+
+def _jeskai_revelation(gs, card):
+    """Jeskai Revelation — big kitchen-sink 7-cmc. 4 damage face
+    (from the 'any target'), draw 2, gain 4, make two 1/1 Monk
+    tokens with prowess. Bounce mode skipped (no target in goldfish)."""
+    gs.damage_dealt += 4
+    gs.zones.draw(2)
+    gs.life += 4
+    # Tokens: use make_token
+    from engine.keywords import KWTag
+    for _ in range(2):
+        tok = gs._make_token("Monk Token", "1", "1",
+                              "Token Creature — Monk")
+        tok.tags.add(KWTag.PROWESS)
+    gs._log(f"  Jeskai Revelation: 4 dmg, 2 draw, 4 life, +2 Monks "
+            f"({gs.damage_dealt} dmg)")
+
+
 SPELL_EFFECTS = {
     "Abandon Attachments":  _abandon_attachments,
     "Accumulate Wisdom":    _accumulate_wisdom,
@@ -203,6 +235,9 @@ SPELL_EFFECTS = {
     "Sleight of Hand":      _sleight_of_hand,
     "Stock Up":             _stock_up,
     "Bounce Off":           _bounce_off,
+    "Lightning Helix":      _lightning_helix,
+    "Consult the Star Charts": _consult_star_charts,
+    "Jeskai Revelation":    _jeskai_revelation,
     # Burst Lightning face damage handled by AggroAPL's BURN_SPELLS —
     # registering here would double-count.
 }

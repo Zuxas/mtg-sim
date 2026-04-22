@@ -1,36 +1,39 @@
-// Jeskai Control - #3 at 31/08/25 (paper)
-// Event: Sunday ReCQ 12:00 pm
+// Jeskai Control - blahh8000 (2026-04-19)
+// Current Standard control deck with real counters
 4 Consult the Star Charts
-4 Get Lost
-4 Inevitable Defeat
-4 Lightning Helix
-4 No More Lies
-4 Riverpyre Verge
-4 Watery Grave
-3 Floodfarm Verge
-3 Jeskai Revelation
-3 Thundering Falls
+1 Cori Mountain Monastery
 2 Day of Judgment
-2 Godless Shrine
-2 Shadowy Backstreet
-2 Stock Up
+1 Elegant Parlor
+1 Fire Magic
+4 Floodfarm Verge
+4 Get Lost
+3 Hallowed Fountain
+1 Island
+2 Jeskai Revelation
+4 Lightning Helix
+2 Meticulous Archive
+2 Mistrise Village
+4 No More Lies
+2 North Wind Avatar
+1 Plains
+1 Restless Anchorage
+2 Riverpyre Verge
+3 Sacred Foundry
+2 Seam Rip
+1 Shiko, Paragon of the Way
+1 Steam Vents
+4 Stock Up
 2 Sunbillow Verge
 2 Three Steps Ahead
-2 Ultima
-1 Abrade
-1 Cori Mountain Monastery
-1 Gloomlake Verge
-1 Marang River Regent
-1 Mistrise Village
-1 Mountain
-1 Plains
-1 Sacred Foundry
-1 Undercity Sewers
+2 Thundering Falls
+1 Ultima
+1 Wan Shi Tong, Librarian
 
 Sideboard
-3 Authority of the Consuls
-3 Decadent Dragon
-3 Kefka, Court Mage
-3 Rest in Peace
-2 High Noon
-1 Day of Judgment
+2 Abrade
+2 Disdainful Stroke
+2 Exorcise
+2 Get Out
+2 Kinetic Hellion
+2 Soul-Guide Lantern
+3 Torch the Tower

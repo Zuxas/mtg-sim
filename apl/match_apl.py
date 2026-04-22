@@ -32,9 +32,12 @@ class MatchAPL(BaseAPL):
     def main_phase_match(self, gs: GameState, opponent: GameState):
         """
         Main phase with opponent awareness.
-        Default: falls back to goldfish main_phase.
-        Override in hand-tuned match APLs for opponent-aware play.
+        Default: falls back to goldfish main_phase but stashes the
+        opponent GS on self so ControlAPL hooks like _should_wipe
+        can consult the opp board when deciding whether to wipe,
+        counter, or hold back threats.
         """
+        self._opp_gs = opponent
         self.main_phase(gs)
 
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list[Card]:

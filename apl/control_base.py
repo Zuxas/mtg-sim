@@ -260,9 +260,22 @@ class ControlAPL(SBPlanMixin, BaseAPL):
 
     def _should_wipe(self, gs: GameState) -> bool:
         """Return True if we should cast a boardwipe this turn.
-        Default: False (goldfish has no opp board to wipe). Subclasses
-        override when they know about opp state (match play)."""
-        return False
+
+        Default logic:
+          - Goldfish (no opp): never wipe.
+          - Match mode: wipe if opp has 3+ creatures on the board and
+            we have a wipe we can afford. Checked via self._opp_gs
+            which MatchAPL stashes during main_phase_match.
+        """
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return False
+        from data.card import Tag
+        opp_creature_count = sum(
+            1 for c in opp.zones.battlefield
+            if c.has(Tag.CREATURE)
+        )
+        return opp_creature_count >= 3
 
     def _after_threat_cast(self, gs: GameState, name: str, card):
         """Called after a threat resolves — override for ward mana

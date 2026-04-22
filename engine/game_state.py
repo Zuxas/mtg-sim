@@ -191,6 +191,13 @@ class GameState:
         self.phase = Phase.UPKEEP
         from engine.keywords import KWTag
         from engine.sagas import is_saga, tick_saga
+        from engine.card_effects import reset_per_turn_effects
+
+        # Reset per-turn card effect counters (Monument to Endurance
+        # mode tracker, Kumano bonus flag, etc.)
+        reset_per_turn_effects(self)
+        if hasattr(self, "_pending_kumano_bonus"):
+            self._pending_kumano_bonus = False
 
         # Iterate over a snapshot — sagas can remove themselves from
         # battlefield during their final chapter.
@@ -775,6 +782,12 @@ class GameState:
         if card.has(Tag.INSTANT) or card.has(Tag.SORCERY):
             self.zones.cast_to_graveyard(card)
             self.noncreature_spells_this_turn += 1
+            # Per-card spell resolve (Abandon Attachments etc.) +
+            # Class on-cast triggers (Artist's Talent, Stormchaser's).
+            from engine.card_effects import on_spell_resolve
+            from engine.classes import class_on_spell_cast
+            on_spell_resolve(self, card)
+            class_on_spell_cast(card, self)
         else:
             self.zones.play_from_hand(card)
             card.turn_entered = self.turn
@@ -865,6 +878,8 @@ class GameState:
     def _apply_entering_etb(self, entered: Card, _depth: int = 0):
         """The entering card fires its own ETB effects."""
         from engine.sagas import is_saga, tick_saga
+        from engine.classes import is_class, class_etb
+        from engine.card_effects import on_etb
         n = entered.name
         bf = self.zones.battlefield
 
@@ -875,6 +890,14 @@ class GameState:
             tick_saga(entered, self)
             # Saga chapter I may reference the battlefield state — fall
             # through so other static abilities still apply.
+
+        # Class enchantments enter at level 1 and run their ETB ability.
+        if is_class(entered):
+            class_etb(entered, self)
+
+        # Per-card ETB dispatch (covers unique cards without hard-coded
+        # branches in game_state).
+        on_etb(self, entered)
 
         # Phantasmal Image: copy the highest-power creature in play
         if n == "Phantasmal Image":

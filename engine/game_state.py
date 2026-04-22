@@ -190,6 +190,16 @@ class GameState:
     def _upkeep(self):
         self.phase = Phase.UPKEEP
         from engine.keywords import KWTag
+        from engine.sagas import is_saga, tick_saga
+
+        # Iterate over a snapshot — sagas can remove themselves from
+        # battlefield during their final chapter.
+        for card in list(self.zones.battlefield):
+            # Saga chapter tick — fires before per-card upkeep handlers
+            # so chapter effects land on the same turn they become due.
+            if is_saga(card):
+                tick_saga(card, self)
+                continue
 
         for card in self.zones.battlefield:
             # Aether Vial: +1 counter each upkeep
@@ -774,6 +784,14 @@ class GameState:
                 # Noncreature permanent (enchantment, artifact, planeswalker)
                 if not card.has(Tag.CREATURE):
                     self.noncreature_spells_this_turn += 1
+            # Kumano Faces Kakkazan chapter II: the next creature spell
+            # this turn enters with an extra +1/+1 counter. Consume the
+            # flag when a creature actually lands.
+            if (card.has(Tag.CREATURE)
+                    and getattr(self, "_pending_kumano_bonus", False)):
+                card.counters += 1
+                self._pending_kumano_bonus = False
+                self._log(f"    Kumano II bonus: +1/+1 on {card.name}")
             self._fire_etb_triggers(card)
         self._log(f"  Cast: {card.name} (CMC {card.cmc:.0f}, pool left: {self.mana_pool.total()})")
         self.check_state_based_actions()
@@ -846,8 +864,17 @@ class GameState:
 
     def _apply_entering_etb(self, entered: Card, _depth: int = 0):
         """The entering card fires its own ETB effects."""
+        from engine.sagas import is_saga, tick_saga
         n = entered.name
         bf = self.zones.battlefield
+
+        # Sagas enter with one lore counter and immediately fire their
+        # chapter I ability. The counter is modeled via card.counters
+        # (0 → 1 on ETB), with subsequent upkeep ticks advancing it.
+        if is_saga(entered):
+            tick_saga(entered, self)
+            # Saga chapter I may reference the battlefield state — fall
+            # through so other static abilities still apply.
 
         # Phantasmal Image: copy the highest-power creature in play
         if n == "Phantasmal Image":

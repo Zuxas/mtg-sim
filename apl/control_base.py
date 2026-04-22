@@ -282,42 +282,15 @@ class ControlAPL(SBPlanMixin, BaseAPL):
         return False
 
     # ------------------------------------------------------------------
-    # Opponent-state helpers (available on any ControlAPL subclass when
-    # running in match mode; goldfish returns 0 / empty from all of
-    # these because _opp_gs is None).
+    # Own-side helpers — stay here since they read gs (our own state).
+    # Opp-side helpers now live on MatchAPL so every base class sees
+    # them (_opp_creature_count, _opp_hand_size, _opp_untapped_lands,
+    # _opp_likely_has_counter, _opp_damage_dealt).
     # ------------------------------------------------------------------
 
     def _my_creature_count(self, gs: GameState) -> int:
         from data.card import Tag
         return sum(1 for c in gs.zones.battlefield if c.has(Tag.CREATURE))
-
-    def _opp_creature_count(self) -> int:
-        opp = getattr(self, "_opp_gs", None)
-        if opp is None:
-            return 0
-        from data.card import Tag
-        return sum(1 for c in opp.zones.battlefield if c.has(Tag.CREATURE))
-
-    def _opp_hand_size(self) -> int:
-        opp = getattr(self, "_opp_gs", None)
-        if opp is None:
-            return 0
-        return len(opp.zones.hand)
-
-    def _opp_untapped_lands(self) -> int:
-        opp = getattr(self, "_opp_gs", None)
-        if opp is None:
-            return 0
-        return sum(1 for c in opp.zones.battlefield
-                   if c.is_land() and not getattr(c, "tapped", False))
-
-    def _opp_likely_has_counter(self) -> bool:
-        """Real-Magic heuristic: opp probably has a counterspell up
-        if they have cards in hand AND 2+ untapped lands including
-        a blue source. Used to decide whether to hold a threat."""
-        if self._opp_hand_size() == 0:
-            return False
-        return self._opp_untapped_lands() >= 2
 
     def _after_threat_cast(self, gs: GameState, name: str, card):
         """Called after a threat resolves — override for ward mana

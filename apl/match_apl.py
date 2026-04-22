@@ -33,12 +33,49 @@ class MatchAPL(BaseAPL):
         """
         Main phase with opponent awareness.
         Default: falls back to goldfish main_phase but stashes the
-        opponent GS on self so ControlAPL hooks like _should_wipe
-        can consult the opp board when deciding whether to wipe,
-        counter, or hold back threats.
+        opponent GS on self so base-class hooks (ControlAPL's
+        _should_wipe, AggroAPL's _should_hold_threat, etc.) can
+        consult the opp board when deciding plays.
         """
         self._opp_gs = opponent
         self.main_phase(gs)
+
+    # ------------------------------------------------------------------
+    # Opp-state helpers — available to every composed APL in match
+    # mode. Goldfish (no _opp_gs) returns 0 / empty from all of these,
+    # which reduces to 'play proactively' for every caller.
+    # ------------------------------------------------------------------
+
+    def _opp_creature_count(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return sum(1 for c in opp.zones.battlefield if c.has(Tag.CREATURE))
+
+    def _opp_hand_size(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return len(opp.zones.hand)
+
+    def _opp_untapped_lands(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return sum(1 for c in opp.zones.battlefield
+                   if c.is_land() and not getattr(c, "tapped", False))
+
+    def _opp_likely_has_counter(self) -> bool:
+        """True when opp has cards in hand AND >=2 untapped lands —
+        classic counterspell representation."""
+        return self._opp_hand_size() >= 1 and self._opp_untapped_lands() >= 2
+
+    def _opp_damage_dealt(self) -> int:
+        """How much damage the opp has accrued against us."""
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return getattr(opp, "damage_dealt", 0)
 
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list[Card]:
         """

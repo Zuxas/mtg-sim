@@ -17,6 +17,7 @@ os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 
 from engine.match_engine import run_match
+from engine.bo3_match import run_bo3
 from data.deck import load_deck_from_file
 
 
@@ -36,41 +37,51 @@ DECKS = [
 
 
 def main():
-    games_per_pair = int(sys.argv[1]) if len(sys.argv) > 1 else 6
+    pairs = int(sys.argv[1]) if len(sys.argv) > 1 else 6
+    mode = sys.argv[2] if len(sys.argv) > 2 else "game"   # 'game' or 'bo3'
 
     loaded = []
     for short, mod_name, cls_name, deck_path in DECKS:
         try:
             mod = importlib.import_module(mod_name)
             cls = getattr(mod, cls_name)
-            deck, _ = load_deck_from_file(deck_path)
-            loaded.append((short, cls, deck))
+            deck, side = load_deck_from_file(deck_path)
+            # Build sideboard dict (name -> Card) for bo3 plan application
+            sb_dict = {c.name: c for c in side} if side else {}
+            loaded.append((short, cls, deck, sb_dict))
         except Exception as exc:
             print(f"  FAIL loading {short}: {exc}")
 
+    print(f"Mode: {mode} × {pairs} pairs per matchup")
     hdr = " " * 10 + " ".join(f"{l[0]:>7s}" for l in loaded)
     print(hdr)
     totals = {}
-    for short_a, cls_a, deck_a in loaded:
+    for short_a, cls_a, deck_a, sb_a in loaded:
         line = f"{short_a:10s}"
         wins_total = 0
         games_total = 0
         crashes = 0
-        for short_b, cls_b, deck_b in loaded:
+        for short_b, cls_b, deck_b, sb_b in loaded:
             if short_a == short_b:
                 line += f"  {'--':>5s}"
                 continue
             wins = 0
-            for g in range(games_per_pair):
+            for g in range(pairs):
                 try:
-                    r = run_match(cls_a(), deck_a, cls_b(), deck_b, seed=g)
+                    if mode == "bo3":
+                        r = run_bo3(cls_a(), deck_a, sb_a,
+                                     cls_b(), deck_b, sb_b,
+                                     sb_plan_a=None, sb_plan_b=None,
+                                     a_on_play_g1=(g % 2 == 0), seed=g)
+                    else:
+                        r = run_match(cls_a(), deck_a, cls_b(), deck_b, seed=g)
                     if r.winner == "a":
                         wins += 1
                 except Exception:
                     crashes += 1
-            line += f"  {wins:>2d}/{games_per_pair}"
+            line += f"  {wins:>2d}/{pairs}"
             wins_total += wins
-            games_total += games_per_pair
+            games_total += pairs
         pct = 100.0 * wins_total / games_total if games_total else 0
         totals[short_a] = pct
         crash_tag = f" x{crashes}" if crashes else ""

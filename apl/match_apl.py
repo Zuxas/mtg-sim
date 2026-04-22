@@ -18,7 +18,7 @@ from typing import Optional
 from apl.base_apl import BaseAPL
 from engine.game_state import GameState
 from engine.match_state import (
-    MatchGameState, optimal_blocking, safe_power, has_keyword
+    MatchGameState, optimal_blocking, safe_power, safe_toughness, has_keyword
 )
 from data.card import Card, Tag
 
@@ -80,13 +80,99 @@ class MatchAPL(BaseAPL):
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list[Card]:
         """
         Choose which creatures attack.
-        Default: attack with everything that can (aggressive).
-        Override for decks that want to hold back blockers.
+
+        Real-Magic heuristic:
+          - Always attack with creatures opp can't block (evasion:
+            flying vs no-flying-blockers, or nothing at all on opp's
+            side). These trade up / hit face for free.
+          - Attack with creatures that WILL die to blocks ONLY when
+            the race math says yes (we're ahead on damage OR opp's
+            next draw can kill us — we need to push through).
+          - Otherwise hold back small creatures against bigger
+            blockers.
+
+        Subclasses can override for deck-specific logic (go-wide
+        decks want everyone swinging even into unfavorable blocks
+        because of Lord pumps / token synergies).
         """
-        return [c for c in gs.zones.battlefield
-                if not c.is_land()
-                and not getattr(c, 'summoning_sickness', False)
-                and not getattr(c, 'tapped', False)]
+        from engine.keywords import KWTag
+        eligible = [c for c in gs.zones.battlefield
+                    if not c.is_land()
+                    and not getattr(c, 'summoning_sickness', False)
+                    and not getattr(c, 'tapped', False)]
+        if not eligible:
+            return []
+
+        # Blockers opp has on the table
+        opp_blockers = [c for c in opponent.zones.battlefield
+                        if not c.is_land()
+                        and not getattr(c, 'tapped', False)]
+
+        # If opp has no blockers, attack with everything — free damage.
+        if not opp_blockers:
+            return eligible
+
+        # Race math: our damage so far + likely future = opp's life-ish.
+        # If we're ahead on damage OR nearly lethal, push — even into
+        # unfavorable trades. Threshold: opp_damage < my_damage or
+        # my_damage >= 14 (close enough to lethal to justify risk).
+        my_dmg = getattr(gs, "damage_dealt", 0)
+        opp_dmg = self._opp_damage_dealt()
+        push_through = (my_dmg > opp_dmg) or (my_dmg >= 14)
+
+        # Count how many more cards we have in hand that could pump
+        # attackers (prowess trigger from noncreature spells, etc.).
+        # If we've got 2+ spells sitting in hand, our creatures will
+        # hit harder during damage step than they look right now.
+        pump_potential = sum(
+            1 for c in gs.hand()
+            if not c.is_land() and not c.has(Tag.CREATURE)
+        )
+
+        attackers = []
+        for atk in eligible:
+            atk_power = safe_power(atk)
+            atk_tough = safe_toughness(atk)
+            has_prowess = KWTag.PROWESS in atk.tags
+
+            # Evasion: flying hits face if no flying/reach blocker
+            atk_flying = KWTag.FLYING in atk.tags
+            flying_blockers_exist = any(
+                KWTag.FLYING in b.tags or KWTag.REACH in b.tags
+                for b in opp_blockers
+            )
+            if atk_flying and not flying_blockers_exist:
+                attackers.append(atk)
+                continue
+
+            # Prowess creatures effectively get +pump_potential/+0 this
+            # turn from their controller's noncreature spells. Bake
+            # that into the trade math.
+            effective_power = atk_power + (pump_potential if has_prowess else 0)
+            effective_tough = atk_tough + (pump_potential if has_prowess else 0)
+
+            # Find the smallest blocker that could kill this attacker
+            # (power >= atk_tough after pump). If all blockers would
+            # die in the trade or the attacker survives, attack.
+            trades_well = False
+            dies_alone = False
+            for blk in opp_blockers:
+                blk_power = safe_power(blk)
+                blk_tough = safe_toughness(blk)
+                if blk_power >= effective_tough:
+                    if effective_power >= blk_tough:
+                        trades_well = True
+                    else:
+                        dies_alone = True
+                    break
+
+            if trades_well or push_through:
+                attackers.append(atk)
+                continue
+            if not dies_alone:
+                attackers.append(atk)
+
+        return attackers
 
     def declare_blockers(self, gs: GameState, opponent: GameState,
                           attackers: list[Card]) -> dict:

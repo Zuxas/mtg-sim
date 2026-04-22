@@ -316,6 +316,25 @@ class GameState:
                 self._log(f"  Guide of Souls: spent 3 energy → +2/+2 "
                           f"(energy now: {self.energy})")
 
+        # ── Gran-Gran attack trigger: whenever Gran-Gran becomes tapped,
+        # draw a card, then discard a card. Discard fires any on-discard
+        # triggers (e.g. Monument to Endurance drain).
+        gran_grans = [c for c in attackers if c.name == "Gran-Gran"]
+        for gg in gran_grans:
+            if not self.zones.library:
+                continue
+            self.zones.draw(1)
+            if not self.zones.hand:
+                continue
+            # Discard preference: excess lands first, then lowest-impact
+            lands = [c for c in self.zones.hand if c.is_land()]
+            victim = lands[-1] if lands else self.zones.hand[-1]
+            self.zones.hand.remove(victim)
+            self.zones.graveyard.append(victim)
+            self._log(f"  Gran-Gran taps: draw 1, discard {victim.name}")
+            from engine.card_effects import on_discard_event
+            on_discard_event(self, victim)
+
         # ── Kytheon: flip when HE attacks + 2 other creatures also attack ─
         kytheon = next((c for c in self.zones.battlefield
                         if c.name == "Kytheon, Hero of Akros"

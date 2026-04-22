@@ -43,10 +43,18 @@ def _invasion_of_zendikar_etb(gs, card):
     gs._log("  Invasion of Zendikar: +2 mana (ramped 2 basics)")
 
 
+def _silvergill_mentor_etb(gs, card):
+    """Silvergill Mentor ETB: create a 1/1 W/U Merfolk token."""
+    token = gs._make_token("Merfolk Token", "1", "1",
+                            "Token Creature — Merfolk")
+    gs._log("  Silvergill Mentor: +1/1 Merfolk token")
+
+
 ETB_EFFECTS = {
     "Gran-Gran": _gran_gran_etb,
     "Courier's Briefcase": _couriers_briefcase_etb,
     "Invasion of Zendikar": _invasion_of_zendikar_etb,
+    "Silvergill Mentor": _silvergill_mentor_etb,
 }
 
 

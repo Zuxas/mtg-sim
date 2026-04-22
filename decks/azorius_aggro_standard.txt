@@ -1,0 +1,27 @@
+// Azorius Merfolk Aggro - brian cusick (2026-02-22)
+// Current #5 Standard (9.5% meta)
+2 Abandoned Air Temple
+4 Cavern of Souls
+4 Deepchannel Duelist
+4 Deepway Navigator
+4 Disruptor of Currents
+4 Floodfarm Verge
+4 Floodpits Drowner
+4 Hallowed Fountain
+6 Island
+4 Mindspring Merfolk
+3 Plains
+4 Silvergill Mentor
+4 Sygg's Command
+1 Three Steps Ahead
+4 Tishana's Tidebinder
+4 Wanderbrine Trapper
+
+Sideboard
+2 Abrupt Inquiry
+2 Get Lost
+2 Negate
+3 Soul-Guide Lantern
+2 Spell Pierce
+2 Temporary Lockdown
+2 Tishana's Tidebinder

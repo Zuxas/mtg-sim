@@ -69,6 +69,18 @@ def _effective_cmc(card, gs) -> int:
     return max(1, base - reduction)
 
 
+# Lord-effect registry: name -> (tribe_lowercased, +power, +toughness).
+# 'tribe' is matched via substring on type_line so 'merfolk' hits
+# 'Creature — Merfolk Wizard', 'Token Creature — Merfolk', etc.
+# Only self-excluding Lords — the card itself doesn't buff itself (real
+# MTG rule: these cards say "OTHER creatures").
+_LORD_EFFECTS: dict = {
+    "Deepchannel Duelist": ("merfolk", 1, 1),
+    # Future tribes slot in here. Example:
+    # "Thalia's Lieutenant": ("human", 1, 1),
+}
+
+
 class Phase(str, Enum):
     UNTAP   = "untap"
     UPKEEP  = "upkeep"
@@ -610,6 +622,11 @@ class GameState:
           power  = number of creatures you control (dynamic)
           toughness = 4 (fixed — she is NOT */* )
         The deck has ways to add counters but that's external to her text.
+
+        Lord effects: 'Other creatures of type X get +1/+1'. Registered
+        below, applied to matching tribe members via _lord_power_bonus /
+        _lord_toughness_bonus attributes (consumed by
+        Card.effective_power / effective_toughness).
         """
         bf = self.zones.battlefield
         creature_count = sum(1 for c in bf if c.has(Tag.CREATURE))
@@ -617,6 +634,24 @@ class GameState:
             if card.name == "Adeline, Resplendent Cathar":
                 card.power     = str(max(1, creature_count))
                 card.toughness = "4"   # fixed toughness
+
+        # Reset Lord bonuses, then re-apply from scratch.
+        for c in bf:
+            c._lord_power_bonus = 0
+            c._lord_toughness_bonus = 0
+        for lord in bf:
+            lord_def = _LORD_EFFECTS.get(lord.name)
+            if lord_def is None:
+                continue
+            tribe_lower, p_bonus, t_bonus = lord_def
+            for c in bf:
+                if c is lord:
+                    continue   # "Other" — Lord doesn't buff itself
+                if not c.has(Tag.CREATURE):
+                    continue
+                if tribe_lower in (c.type_line or "").lower():
+                    c._lord_power_bonus += p_bonus
+                    c._lord_toughness_bonus += t_bonus
 
     def check_state_based_actions(self):
         """

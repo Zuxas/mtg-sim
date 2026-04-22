@@ -128,18 +128,20 @@ class Card:
         return pool.can_pay(self.mana_cost, self.cmc)
 
     def effective_power(self) -> int:
-        """Base power + +1/+1 counters."""
+        """Base power + +1/+1 counters + Lord/static bonuses."""
+        lord_bonus = getattr(self, "_lord_power_bonus", 0)
         try:
-            return int(self.power or 0) + self.counters
+            return int(self.power or 0) + self.counters + lord_bonus
         except ValueError:
-            return self.counters
+            return self.counters + lord_bonus
 
     def effective_toughness(self) -> int:
-        """Base toughness + +1/+1 counters."""
+        """Base toughness + +1/+1 counters + Lord/static bonuses."""
+        lord_bonus = getattr(self, "_lord_toughness_bonus", 0)
         try:
-            return int(self.toughness or 0) + self.counters
+            return int(self.toughness or 0) + self.counters + lord_bonus
         except ValueError:
-            return self.counters
+            return self.counters + lord_bonus
 
     def __repr__(self):
         return f"Card({self.name!r}, cmc={self.cmc}, tags={self.tags})"

@@ -261,21 +261,63 @@ class ControlAPL(SBPlanMixin, BaseAPL):
     def _should_wipe(self, gs: GameState) -> bool:
         """Return True if we should cast a boardwipe this turn.
 
-        Default logic:
-          - Goldfish (no opp): never wipe.
-          - Match mode: wipe if opp has 3+ creatures on the board and
-            we have a wipe we can afford. Checked via self._opp_gs
-            which MatchAPL stashes during main_phase_match.
+        Real-Magic logic: wipe when the board asymmetry favors opp
+        (they have more creatures than we do, especially when we're
+        behind on life / damage race). Refuses to wipe when our own
+        threats are on the board and doing work.
+
+        Goldfish (no opp_gs): never wipe.
         """
         opp = getattr(self, "_opp_gs", None)
         if opp is None:
             return False
+        my_creatures = self._my_creature_count(gs)
+        opp_creatures = self._opp_creature_count()
+        # Core heuristic: opp_creatures exceeds mine by at least 2,
+        # OR opp has 4+ and we have 1 or 0.
+        if opp_creatures - my_creatures >= 2:
+            return True
+        if opp_creatures >= 4 and my_creatures <= 1:
+            return True
+        return False
+
+    # ------------------------------------------------------------------
+    # Opponent-state helpers (available on any ControlAPL subclass when
+    # running in match mode; goldfish returns 0 / empty from all of
+    # these because _opp_gs is None).
+    # ------------------------------------------------------------------
+
+    def _my_creature_count(self, gs: GameState) -> int:
         from data.card import Tag
-        opp_creature_count = sum(
-            1 for c in opp.zones.battlefield
-            if c.has(Tag.CREATURE)
-        )
-        return opp_creature_count >= 3
+        return sum(1 for c in gs.zones.battlefield if c.has(Tag.CREATURE))
+
+    def _opp_creature_count(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        from data.card import Tag
+        return sum(1 for c in opp.zones.battlefield if c.has(Tag.CREATURE))
+
+    def _opp_hand_size(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return len(opp.zones.hand)
+
+    def _opp_untapped_lands(self) -> int:
+        opp = getattr(self, "_opp_gs", None)
+        if opp is None:
+            return 0
+        return sum(1 for c in opp.zones.battlefield
+                   if c.is_land() and not getattr(c, "tapped", False))
+
+    def _opp_likely_has_counter(self) -> bool:
+        """Real-Magic heuristic: opp probably has a counterspell up
+        if they have cards in hand AND 2+ untapped lands including
+        a blue source. Used to decide whether to hold a threat."""
+        if self._opp_hand_size() == 0:
+            return False
+        return self._opp_untapped_lands() >= 2
 
     def _after_threat_cast(self, gs: GameState, name: str, card):
         """Called after a threat resolves — override for ward mana

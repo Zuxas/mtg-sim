@@ -201,9 +201,29 @@ def _lightning_helix(gs, card):
 
 
 def _consult_star_charts(gs, card):
-    """Consult the Star Charts — look at top X cards (X = lands in
-    play), keep one. Goldfish: draw 1 (simplification)."""
-    gs.zones.draw(1)
+    """Consult the Star Charts — 'Look at top X cards of your library,
+    where X is the number of lands you control. Put one into your
+    hand. Kicker {1}{U}: put all X into your hand instead.'
+
+    Goldfish shortcut: kick whenever we had spare mana at cast time
+    (mana_pool.total() >= 4 pre-pay). We can't know the pool state
+    here (already paid), so infer from lands_in_play:
+      - 4+ lands and the card wasn't literally the only spell we
+        could cast this turn → we probably had the kicker mana →
+        draw min(X, 4) cards
+      - Otherwise draw 1.
+    """
+    lands_in_play = sum(1 for c in gs.zones.battlefield if c.is_land())
+    # Simple heuristic: assume kicked when we have 5+ lands (base
+    # cost {1}{U} = 2, kicker adds {1}{U} = 4 total, so we need at
+    # least 4 mana capacity; 5 lands gives headroom for other plays).
+    if lands_in_play >= 5:
+        draw_count = min(lands_in_play, len(gs.zones.library))
+        gs.zones.draw(draw_count)
+        gs._log(f"  Consult the Star Charts (kicked): draw {draw_count}")
+    else:
+        gs.zones.draw(1)
+        gs._log("  Consult the Star Charts: draw 1")
 
 
 def _jeskai_revelation(gs, card):

@@ -65,16 +65,19 @@ class DomainRampAPL(RampAPL):
     # ------------------------------------------------------------------
 
     def _after_ramp_cast(self, gs: GameState, name: str, card):
-        """Topiary Stomper and Invasion of Zendikar put lands directly
-        into play. Model the second land drop by adding +1 to the flex
-        mana pool (approximating a tapped land available next turn)."""
-        if name in (TOPIARY, INVASION, MIGRATION):
-            # These fetch/play lands that enter tapped — next turn we
-            # effectively have +1 permanent land. Goldfish approx:
-            # bump the pool so later spells in the same turn can use
-            # any extra mana these effects generated.
+        """Topiary Stomper puts a land into play on ETB.
+        Invasion of Zendikar now handled by engine/card_effects.py's
+        ETB hook. Topiary keeps the APL-side flex bump for now —
+        it's a creature not an artifact, so its ETB doesn't fit the
+        ETB_EFFECTS dispatch cleanly yet."""
+        if name == TOPIARY:
             gs.mana_pool.flex += 1
-            gs._log(f"  {name}: +1 land (tapped) for next turn")
+            gs._log(f"  {name}: +1 mana (land enters tapped next turn)")
+        elif name == MIGRATION:
+            # Herd Migration fetches 2 basics + creates tokens. Approx:
+            # +2 flex for the ramp and rely on token-creation absence.
+            gs.mana_pool.flex += 2
+            gs._log(f"  {name}: +2 mana (2 basics into play)")
 
     def _after_payoff_cast(self, gs: GameState, name: str, card):
         """Atraxa is 7/7 flying lifelink — count it as 7 damage next

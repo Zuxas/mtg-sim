@@ -27,8 +27,26 @@ def _gran_gran_etb(gs, card):
     pass  # no ETB
 
 
+def _couriers_briefcase_etb(gs, card):
+    """Courier's Briefcase (Standard / Streets of New Capenna) creates
+    a Treasure token when it enters. Its +1 ability to gather info is
+    a repeatable activation we simplify to 'free draw every turn'
+    handled via the upkeep path (not modeled here — just the ETB)."""
+    gs.make_treasure_token()
+
+
+def _invasion_of_zendikar_etb(gs, card):
+    """Invasion of Zendikar is a Battle; in Standard Domain Ramp it
+    triggers 'search your library for up to 2 basic lands, put them
+    tapped, shuffle'. Goldfish approx: +2 to flex and log the ramp."""
+    gs.mana_pool.flex += 2
+    gs._log("  Invasion of Zendikar: +2 mana (ramped 2 basics)")
+
+
 ETB_EFFECTS = {
     "Gran-Gran": _gran_gran_etb,
+    "Courier's Briefcase": _couriers_briefcase_etb,
+    "Invasion of Zendikar": _invasion_of_zendikar_etb,
 }
 
 
@@ -63,9 +81,8 @@ def _monument_to_endurance_on_discard(gs, discarded, mon):
         gs._log("  Monument to Endurance: draw 1")
         return
     if not (used_this_turn & 0b010):
-        gs.mana_pool.flex += 1
+        gs.make_treasure_token()
         mon._monument_used_modes = used_this_turn | 0b010
-        gs._log("  Monument to Endurance: treasure (+1 mana next tap)")
 
 
 def on_discard_event(gs, discarded):

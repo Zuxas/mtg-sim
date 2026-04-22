@@ -199,6 +199,10 @@ class GameState:
         if hasattr(self, "_pending_kumano_bonus"):
             self._pending_kumano_bonus = False
 
+        # Auto-sacrifice Treasure tokens for mana. Goldfish shortcut:
+        # we never hold treasures for later — tap them all at upkeep.
+        self.sacrifice_all_treasures()
+
         # Iterate over a snapshot — sagas can remove themselves from
         # battlefield during their final chapter.
         for card in list(self.zones.battlefield):
@@ -472,6 +476,35 @@ class GameState:
         self.zones.battlefield.append(token)
         self._fire_etb_triggers(token)
         return token
+
+    def make_treasure_token(self) -> Card:
+        """Create a Treasure artifact token. Tap + sacrifice: add one
+        mana of any color. Auto-sacrificed during _upkeep for +1 flex
+        each — goldfish always wants the mana."""
+        token = Card(
+            name="Treasure Token", mana_cost="", cmc=0,
+            type_line="Token Artifact — Treasure", oracle_text="",
+            power="", toughness="", colors=[],
+        )
+        token.turn_entered = self.turn
+        self.zones.battlefield.append(token)
+        self._log("  Treasure: token created")
+        return token
+
+    def sacrifice_all_treasures(self) -> int:
+        """Sacrifice every Treasure on the battlefield; add that many
+        flex mana to the pool. Returns the count sacrificed."""
+        count = 0
+        for token in list(self.zones.battlefield):
+            if token.name == "Treasure Token":
+                self.zones.battlefield.remove(token)
+                self.zones.graveyard.append(token)
+                count += 1
+        if count:
+            self.mana_pool.flex += count
+            self._log(f"  Sacrificed {count} Treasure(s) → +{count} mana "
+                      f"(pool: {self.mana_pool.total()})")
+        return count
 
     def _apply_static_abilities(self):
         """

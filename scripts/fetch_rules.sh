@@ -14,27 +14,34 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/data/comp_rules.txt"
 mkdir -p "$(dirname "$OUT")"
 
-# Known-good base and fallback URLs. Update CURRENT_URL when a new release
-# makes the prior one 404.
-CURRENT_URL="https://media.wizards.com/2025/downloads/MagicCompRules.txt"
-FALLBACK_RULES_PAGE="https://magic.wizards.com/en/rules"
+# WotC rotates the URL every release (it's date-stamped, e.g.
+# MagicCompRules 20260417.txt). We scrape the canonical rules
+# page to find the current .txt link automatically.
+RULES_PAGE="https://magic.wizards.com/en/rules"
+PROBE="/tmp/comp_rules_probe.html"
 
-echo "Fetching Comprehensive Rules to $OUT ..."
-if curl -fsSL -o "$OUT" "$CURRENT_URL"; then
+echo "Scraping current Comp Rules URL from $RULES_PAGE ..."
+if ! curl -fsS -o "$PROBE" "$RULES_PAGE"; then
+    echo "ERROR: failed to fetch $RULES_PAGE" >&2
+    exit 1
+fi
+URL=$(grep -oE 'https://[^"]+MagicCompRules[^"]+\.txt' "$PROBE" | head -n1)
+if [ -z "$URL" ]; then
+    echo "ERROR: could not locate a .txt link on $RULES_PAGE" >&2
+    echo "Visit the page manually and curl the link." >&2
+    exit 1
+fi
+
+echo "Current URL: $URL"
+# URL has a space in it — curl needs it percent-encoded
+ENCODED_URL=$(printf %s "$URL" | sed 's/ /%20/g')
+if curl -fsSL -o "$OUT" "$ENCODED_URL"; then
     size=$(wc -c < "$OUT")
-    echo "Downloaded $size bytes from $CURRENT_URL"
+    effective=$(head -3 "$OUT" | tail -n1 | tr -d '\r')
+    echo "Downloaded $size bytes"
+    echo "Effective date: $effective"
     exit 0
 fi
 
-cat <<EOF >&2
-
-ERROR: could not download from $CURRENT_URL
-
-WotC changes this URL each release. Steps:
-  1. Visit $FALLBACK_RULES_PAGE
-  2. Find the current "Comprehensive Rules" .txt download link
-  3. Re-run: curl -fsSL -o "$OUT" "<that URL>"
-
-Alternatively, edit this script's CURRENT_URL and open a PR.
-EOF
+echo "ERROR: download failed from $URL" >&2
 exit 1

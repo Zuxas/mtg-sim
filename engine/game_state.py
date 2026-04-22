@@ -388,12 +388,45 @@ class GameState:
                 self._log(f"  Prowess: +{self.noncreature_spells_this_turn}/+0 to "
                           f"{len(prowess_boosted)} creature(s)")
 
-        # ── 5. Combat damage ───────────────────────────────────────────────
-        damage = sum(c.effective_power() for c in attackers)
+        # ── 5. Combat damage — two steps for first strike / double strike ─
+        # First strike damage step: any creature with FIRST_STRIKE or
+        # DOUBLE_STRIKE deals damage now. Regular-strike creatures wait.
+        first_strikers = [
+            c for c in attackers
+            if KWTag.FIRST_STRIKE in c.tags or KWTag.DOUBLE_STRIKE in c.tags
+        ]
+        # Regular damage step: any creature without FIRST_STRIKE deals
+        # damage now. Double-strikers (which have both tags effectively)
+        # deal damage AGAIN here.
+        regular_strikers = [
+            c for c in attackers
+            if KWTag.FIRST_STRIKE not in c.tags or KWTag.DOUBLE_STRIKE in c.tags
+        ]
+
+        fs_damage = sum(c.effective_power() for c in first_strikers)
+        reg_damage = sum(c.effective_power() for c in regular_strikers)
+        damage = fs_damage + reg_damage
+
+        # Lifelink: each damaging creature with LIFELINK gains life
+        # equal to the damage it dealt (applied as life in goldfish
+        # even though we count damage_dealt for wins — keeps combat
+        # consistent with match mode).
+        lifelink_gain = 0
+        for c in first_strikers + regular_strikers:
+            if KWTag.LIFELINK in c.tags:
+                lifelink_gain += c.effective_power()
+        if lifelink_gain:
+            self.life += lifelink_gain
+
         if damage:
             self.damage_dealt += damage
+            strike_note = ""
+            if first_strikers:
+                strike_note = f" (FS: {fs_damage}, REG: {reg_damage})"
             self._log(f"  Attack: {damage} dmg ({self.damage_dealt} total) "
-                      f"[{len(attackers)} attackers]")
+                      f"[{len(attackers)} attackers]{strike_note}")
+            if lifelink_gain:
+                self._log(f"  Lifelink: +{lifelink_gain} life ({self.life})")
 
         # ── Post-damage cleanup ────────────────────────────────────────────
         # Remove prowess bonus (temporary until EOT, but counters is permanent in our model)

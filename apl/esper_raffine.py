@@ -1,73 +1,60 @@
 """apl/esper_raffine.py -- Esper Raffine APL (Standard)
-Midrange value shell anchored by Raffine + Liliana disruption.
-Kill clock: T5-6 grindy, wins through card advantage + ward creatures.
+
+Disruption-heavy midrange anchored by Raffine + Liliana. Wins via
+value creatures (Faerie Mastermind, Raffine) swinging while removal
+clears the way.
+
+Composes ControlAPL. No archetype-specific hooks needed — the value
+engine is just 'cast spells'.
 """
-from apl.base_apl import BaseAPL
-from apl.sb_mixin import SBPlanMixin
-from engine.game_state import GameState
+from apl.control_base import ControlAPL
 
-# Disruption / removal
-CUT_DOWN     = "Cut Down"
-THROAT       = "Go for the Throat"
-LILIANA      = "Liliana of the Veil"
-ANOINT       = "Anoint with Affliction"
+# ── Disruption ──────────────────────────────────────────────────────
+CUT_DOWN     = "Cut Down"                 # {B}: kill small
+THROAT       = "Go for the Throat"        # {1}{B}: kill non-artifact
+ANOINT       = "Anoint with Affliction"   # {2}{B}: destroy + mill
+LILIANA      = "Liliana of the Veil"      # {1}{B}{B}: edict + loyalty
 
-# Threats
-FAERIE       = "Faerie Mastermind"
-RAFFINE      = "Raffine, Scheming Seer"
-LOCH_WHALE   = "Horned Loch-Whale"
-ARCHFIEND    = "Archfiend of the Dross"
-JACE         = "Jace, the Perfected Mind"
-EXCRUCIATOR  = "Doomsday Excruciator"
+# ── Threats ─────────────────────────────────────────────────────────
+FAERIE       = "Faerie Mastermind"        # {1}{U}: flash flier
+RAFFINE      = "Raffine, Scheming Seer"   # {W}{U}{B}: ward, connive
+LOCH_WHALE   = "Horned Loch-Whale"        # {4}{U}: ward, big flier
+JACE         = "Jace, the Perfected Mind" # {2}{U}: mill PW
+ARCHFIEND    = "Archfiend of the Dross"   # {3}{B}{B}: oil threat
+EXCRUCIATOR  = "Doomsday Excruciator"     # {5}{B}{B}: huge beater
 
-# Value
-CRYPTIC_COAT = "Cryptic Coat"
-NEGOTIATION  = "Binding Negotiation"
-COVER_UP     = "Deadly Cover-Up"
-
-_PRIO_DISRUPT = (CUT_DOWN, THROAT, LILIANA, ANOINT)
-_PRIO_THREATS = (FAERIE, RAFFINE, LOCH_WHALE, JACE, ARCHFIEND, EXCRUCIATOR)
-_PRIO_VALUE   = (NEGOTIATION, CRYPTIC_COAT, COVER_UP)
+# ── Value / setup ───────────────────────────────────────────────────
+CRYPTIC_COAT = "Cryptic Coat"             # {1}{U}: manifest
+NEGOTIATION  = "Binding Negotiation"      # sorcery treasure/draw
+COVER_UP     = "Deadly Cover-Up"          # {3}{B}{B}: wipe
 
 
-class EsperRaffineAPL(SBPlanMixin, BaseAPL):
+class EsperRaffineAPL(ControlAPL):
     name = "Esper Raffine"
-    win_condition_damage = 20
     max_turns = 14
 
-    def keep(self, hand, mulligans, on_play):
-        if len(hand) <= 4:
-            return True
-        lands = sum(1 for c in hand if c.is_land())
-        disrupt = sum(1 for c in hand if c.name in _PRIO_DISRUPT)
-        threats = sum(1 for c in hand if c.name in _PRIO_THREATS)
-        if lands < 2 or lands >= 6:
-            return False
-        if 2 <= lands <= 4 and (disrupt + threats >= 2):
-            return True
-        return mulligans >= 2
+    DISRUPTION = (
+        CUT_DOWN,     # {B}
+        THROAT,       # {1}{B}
+        ANOINT,       # {2}{B}
+        LILIANA,      # {1}{B}{B}
+        COVER_UP,     # {3}{B}{B}: wipe
+    )
 
-    def bottom(self, hand, n):
-        lands = [c for c in hand if c.is_land()]
-        return lands[3:][:n]
+    THREATS = (
+        FAERIE,       # {1}{U}
+        RAFFINE,      # {W}{U}{B}
+        JACE,         # {2}{U}
+        LOCH_WHALE,   # {4}{U}
+        ARCHFIEND,    # {3}{B}{B}
+        EXCRUCIATOR,  # {5}{B}{B}
+    )
 
-    def main_phase(self, gs: GameState):
-        self._play_land_if_able(gs)
-        # Strip hand / clear board before deploying
-        for name in _PRIO_DISRUPT:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
-        # Deploy threats cheapest-first
-        for name in _PRIO_THREATS:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
-        # Value cards if mana left
-        for name in _PRIO_VALUE:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
+    VALUE_SPELLS = (
+        CRYPTIC_COAT,
+        NEGOTIATION,
+    )
+
+    # 3-color deck — mulligan for fixing + 2 relevant cards
+    MULL_MIN_LANDS = 2
+    MULL_MAX_LANDS = 5

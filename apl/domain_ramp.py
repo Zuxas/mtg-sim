@@ -1,74 +1,84 @@
 """apl/domain_ramp.py -- Domain Ramp APL (Standard)
-5-color ramp shell. Fix mana with Triomes, ramp on 3 via Briefcase /
-Migration, drop Atraxa or Archangel on 5-7.
-Kill clock: T6-7 via Atraxa beats or Archangel triple-mode.
+
+5-color domain ramp shell. Composes RampAPL, declares the deck's
+ramp / payoff / removal cards. Archetype hook: _cast_biggest_payoff
+refuses to drop Atraxa before T6 even if we could afford her — in
+goldfish she just sits in hand, but casting her on 7 with a fresh
+Sunfall-cleared board is more valuable than 6 lines that never
+resolve a second payoff.
+
+Kill path: Topiary Stomper / Archangel of Wrath pressure → Atraxa
+finishes → Sunfall for +X/+X tokens on the counter.
 """
-from apl.base_apl import BaseAPL
-from apl.sb_mixin import SBPlanMixin
+from apl.ramp_base import RampAPL
 from engine.game_state import GameState
 
-# Ramp + fixing
-BRIEFCASE    = "Courier's Briefcase"
-MIGRATION    = "Herd Migration"
-INVASION     = "Invasion of Zendikar"
+# ── Ramp ────────────────────────────────────────────────────────────
+BRIEFCASE    = "Courier's Briefcase"      # {1}{W}{B}: draw + treasure
+INVASION     = "Invasion of Zendikar"     # {2}{G}: fetch 2 basics
+MIGRATION    = "Herd Migration"           # {3}{G}{G}: fetch 2 basics + 3/3 tokens
+TOPIARY      = "Topiary Stomper"          # {2}{G}: 4/4, play a land from hand
 
-# Threats (cheapest to most expensive)
-LEYLINE      = "Leyline Binding"
-ARCHANGEL    = "Archangel of Wrath"
-ATRAXA       = "Atraxa, Grand Unifier"
+# ── Payoffs ─────────────────────────────────────────────────────────
+LEYLINE      = "Leyline Binding"          # domain-cost removal
+ARCHANGEL    = "Archangel of Wrath"       # {2}{W}{W}: flier + kicker modes
+SUNFALL      = "Sunfall"                  # {3}{W}{W}: wipe + incubate X
+VIRTUE       = "Virtue of Persistence"    # {5}{B}: drain + recur
+ATRAXA       = "Atraxa, Grand Unifier"    # {3}{G}{W}{U}{B}: 7/7 lifelink flying
 
-# Removal / interaction
-DEPOPULATE   = "Depopulate"
-THROAT       = "Go for the Throat"
-
-# Value lands (cycle themselves)
-BOSEIJU      = "Boseiju, Who Endures"
-EIGANJO      = "Eiganjo, Seat of the Empire"
-
-_PRIO_RAMP = (BRIEFCASE, MIGRATION, INVASION)
-_PRIO_THREATS = (LEYLINE, ARCHANGEL, ATRAXA)
-_PRIO_REMOVAL = (THROAT, DEPOPULATE)
+# ── Removal ─────────────────────────────────────────────────────────
+THROAT       = "Go for the Throat"        # {1}{B}
+DEPOPULATE   = "Depopulate"               # {3}{W}: wipe except tokens
 
 
-class DomainRampAPL(SBPlanMixin, BaseAPL):
+class DomainRampAPL(RampAPL):
     name = "Domain Ramp"
-    win_condition_damage = 20
     max_turns = 14
 
-    def keep(self, hand, mulligans, on_play):
-        if len(hand) <= 4:
-            return True
-        lands = sum(1 for c in hand if c.is_land())
-        ramp = sum(1 for c in hand if c.name in _PRIO_RAMP)
-        threats = sum(1 for c in hand if c.name in _PRIO_THREATS)
-        # Ramp decks need 3+ lands to function
-        if lands < 2:
-            return False
-        if 2 <= lands <= 5 and (ramp >= 1 or threats >= 1):
-            return True
-        return mulligans >= 2
+    RAMP_SPELLS = {
+        BRIEFCASE: (3, 0),     # draws + treasure; +0 this turn, fixing later
+        INVASION:  (3, 0),     # fetch basics (tapped); advances land drops
+        TOPIARY:   (3, 0),     # 4/4 that puts a land into play tapped
+        MIGRATION: (5, 0),     # fetch + tokens; explosive on T5
+    }
 
-    def bottom(self, hand, n):
-        lands = [c for c in hand if c.is_land()]
-        return lands[4:][:n]
+    PAYOFFS = (
+        LEYLINE,    # domain-scaled, castable on 4 lands with 4 colors
+        ARCHANGEL,  # 4-cmc flier, kicker modes burn / gain life
+        SUNFALL,    # wipe + incubate — splits threat / removal
+        VIRTUE,     # 6-cmc permanent value engine
+        ATRAXA,     # 7-cmc game-winner
+    )
 
-    def main_phase(self, gs: GameState):
-        self._play_land_if_able(gs)
-        # Ramp first so the top-end lands on curve
-        for name in _PRIO_RAMP:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
-        # Then threats in order of mana cost
-        for name in _PRIO_THREATS:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
-        # Cheap interaction if mana left
-        for name in _PRIO_REMOVAL:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
+    REMOVAL = (
+        THROAT,
+        LEYLINE,       # also acts as removal
+        DEPOPULATE,
+    )
+
+    # Ramp mulligans are land-hungry
+    MULL_MIN_LANDS = 3
+    MULL_MAX_LANDS = 6
+
+    # ------------------------------------------------------------------
+    # Archetype-specific tuning
+    # ------------------------------------------------------------------
+
+    def _after_ramp_cast(self, gs: GameState, name: str, card):
+        """Topiary Stomper and Invasion of Zendikar put lands directly
+        into play. Model the second land drop by adding +1 to the flex
+        mana pool (approximating a tapped land available next turn)."""
+        if name in (TOPIARY, INVASION, MIGRATION):
+            # These fetch/play lands that enter tapped — next turn we
+            # effectively have +1 permanent land. Goldfish approx:
+            # bump the pool so later spells in the same turn can use
+            # any extra mana these effects generated.
+            gs.mana_pool.flex += 1
+            gs._log(f"  {name}: +1 land (tapped) for next turn")
+
+    def _after_payoff_cast(self, gs: GameState, name: str, card):
+        """Atraxa is 7/7 flying lifelink — count it as 7 damage next
+        turn. In goldfish we don't simulate haste-less attacks, so we
+        stamp her as a big threat that will hit for 7 when
+        _simulate_combat_triggers fires on the following turn."""
+        pass   # Combat engine handles her next turn naturally

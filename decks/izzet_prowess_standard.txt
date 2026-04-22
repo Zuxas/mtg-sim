@@ -1,35 +1,29 @@
-// Izzet Prowess - Morioka Ryota (31/05/25)
-// Event: Tarkir dragonstorm Store Championship, Place: 3
-1 Abrade
-1 Burst Lightning
-4 Cori-Steel Cutter
-2 Drake Hatcher
-4 Into the Flood Maw
-5 Island
-3 Monstrous Rage
-4 Mountain
+// Izzet Prowess - rpa (top 4, 2026-04-20)
+// Current #1 Standard archetype, 946 decks in 2026
+4 Boomerang Basics
+2 Bounce Off
+4 Burst Lightning
+2 Eddymurk Crab
+4 Elusive Otter
+7 Island
+2 Multiversal Passage
+1 Octopus Form
 4 Opt
 4 Riverpyre Verge
-4 Shivan Reef
 4 Sleight of Hand
 4 Slickshot Show-Off
-1 Spell Pierce
 4 Spirebluff Canal
+4 Steam Vents
 4 Stock Up
 4 Stormchaser's Talent
-3 Torch the Tower
+2 Wild Ride
 
 Sideboard
-1 Abrade
-1 Disdainful Stroke
-1 Drake Hatcher
-1 Enduring Curiosity
-1 Fiery Annihilation
-1 Ghost Vacuum
-2 Lithomantic Barrage
-1 Negate
-1 Obliterating Bolt
-2 Ral, Crackling Wit
-1 Spell Pierce
-1 This Town Ain't Big Enough
-1 Unable to Scream
+2 Eddymurk Crab
+1 Fire Magic
+2 Get Out
+3 Ral, Crackling Wit
+2 Sear
+1 Slagstorm
+2 Soul-Guide Lantern
+2 Spell Pierce

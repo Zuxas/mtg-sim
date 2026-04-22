@@ -162,6 +162,27 @@ def _quench_ya(gs, card):
     gs._log("  It'll Quench Ya!: nothing to counter (goldfish)")
 
 
+def _opt(gs, card):
+    """Opt — scry 1, draw 1. Goldfish: just draw 1."""
+    gs.zones.draw(1)
+
+
+def _sleight_of_hand(gs, card):
+    """Sleight of Hand — look at top 2, pick 1. Goldfish: draw 1."""
+    gs.zones.draw(1)
+
+
+def _stock_up(gs, card):
+    """Stock Up — look at top 5, put 2 in hand. Goldfish: draw 2."""
+    gs.zones.draw(2)
+
+
+def _bounce_off(gs, card):
+    """Bounce Off — return creature to hand. No target in goldfish;
+    the cast still fires prowess and feeds the graveyard."""
+    pass
+
+
 SPELL_EFFECTS = {
     "Abandon Attachments":  _abandon_attachments,
     "Accumulate Wisdom":    _accumulate_wisdom,
@@ -170,6 +191,12 @@ SPELL_EFFECTS = {
     "Combustion Technique": _combustion_technique,
     "Firebending Lesson":   _firebending_lesson,
     "It'll Quench Ya!":     _quench_ya,
+    "Opt":                  _opt,
+    "Sleight of Hand":      _sleight_of_hand,
+    "Stock Up":             _stock_up,
+    "Bounce Off":           _bounce_off,
+    # Burst Lightning face damage handled by AggroAPL's BURN_SPELLS —
+    # registering here would double-count.
 }
 
 

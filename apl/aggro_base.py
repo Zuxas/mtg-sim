@@ -60,6 +60,11 @@ class AggroAPL(SBPlanMixin, BaseAPL):
     # cleared + KWTag.HASTE applied on cast).
     HASTE_CREATURES: set = frozenset()
 
+    # Cantrips / draw spells cast pre-combat for prowess triggers.
+    # Their card-specific draw effect fires via engine/card_effects.py
+    # SPELL_EFFECTS registry; this tuple just orders the casts.
+    CANTRIP_SPELLS: tuple = ()
+
     # ── Mulligan thresholds (subclass can tune) ────────────────────
     MULL_MIN_LANDS = 2         # fewer = mulligan
     MULL_MAX_LANDS = 4         # more = mulligan
@@ -138,7 +143,11 @@ class AggroAPL(SBPlanMixin, BaseAPL):
                 self._after_creature_etb(gs, name, card)
                 break
 
-        # 3. Pre-combat burn — pumps prowess + damage face
+        # 3a. Cantrips — cast before burn so draws find more burn.
+        # Each noncreature cast pumps prowess via the engine.
+        self._cast_cantrips(gs)
+
+        # 3b. Pre-combat burn — pumps prowess + damage face
         self._cast_burn(gs, pre_combat=True)
 
         # 4. Pump spell on biggest attacker
@@ -175,6 +184,25 @@ class AggroAPL(SBPlanMixin, BaseAPL):
     # ------------------------------------------------------------------
     # Burn / pump helpers
     # ------------------------------------------------------------------
+
+    def _cast_cantrips(self, gs: GameState):
+        """Cast every CANTRIP_SPELL we can afford. Their draw/filter
+        effects resolve via card_effects.SPELL_EFFECTS; the cast itself
+        pumps prowess for same-turn combat attackers."""
+        changed = True
+        while changed:
+            changed = False
+            for name in self.CANTRIP_SPELLS:
+                for card in list(gs.hand()):
+                    if card.name != name:
+                        continue
+                    if not gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        continue
+                    gs.cast_spell(card)
+                    changed = True
+                    break
+                if changed:
+                    break
 
     def _cast_burn(self, gs: GameState, pre_combat: bool):
         """Cast burn spells from BURN_SPELLS until we can't afford any.

@@ -1,0 +1,30 @@
+// Superior Doomsday - adrien potheau (top 4, 2026-03-01)
+// #2 current Standard archetype (15.5% meta share)
+1 Archenemy's Charm
+3 Bitter Triumph
+3 Deadly Cover-Up
+4 Deceit
+3 Doomsday Excruciator
+4 Gloomlake Verge
+1 Harvester of Misery
+3 Insatiable Avarice
+2 Intimidation Tactics
+1 Malboro
+1 Quantum Riddler
+4 Requiting Hex
+4 Restless Reef
+3 Stock Up
+4 Superior Spider-Man
+11 Swamp
+2 Undercity Sewers
+4 Watery Grave
+2 Winternight Stories
+
+Sideboard
+2 Duress
+2 Exorcise
+2 Get Lost
+2 Pyroclasm
+3 Soul-Guide Lantern
+2 Spell Pierce
+2 Tishana's Tidebinder

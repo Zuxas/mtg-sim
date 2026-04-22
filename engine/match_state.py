@@ -224,6 +224,17 @@ def has_keyword(card: Card, keyword: str) -> bool:
     return keyword.lower() in oracle.lower()
 
 
+# Conditional evasion registry. Key = attacker card name; value = a
+# predicate (attacker, blocker) -> bool that returns True when the
+# blocker is legal against this specific attacker's evasion rule.
+# Checked AFTER the generic flying filter in optimal_blocking.
+_CONDITIONAL_EVASION = {
+    # Elusive Otter: "Creatures with power less than this creature's
+    # power can't block it." — blocker must have power >= attacker.
+    "Elusive Otter": lambda atk, blk: safe_power(blk) >= safe_power(atk),
+}
+
+
 # ---------------------------------------------------------------------------
 # Combat Resolution — Phase 3A upgrade with keyword support
 # ---------------------------------------------------------------------------
@@ -387,11 +398,18 @@ def optimal_blocking(blockers: list[Card], attackers: list[Card],
         atk_tou = safe_toughness(atk)
         atk_flying = has_keyword(atk, 'flying')
 
-        # Filter: can this be blocked? (flying check)
+        # Filter: can this be blocked? (flying check + per-card
+        # conditional evasion)
         valid_blockers = [b for b in available_blockers
                           if not atk_flying
                           or has_keyword(b, 'flying')
                           or has_keyword(b, 'reach')]
+        # Conditional evasion registry: attacker-name -> predicate that
+        # returns True when a given blocker CAN block the attacker.
+        evasion_ok = _CONDITIONAL_EVASION.get(atk.name)
+        if evasion_ok:
+            valid_blockers = [b for b in valid_blockers
+                              if evasion_ok(atk, b)]
         if not valid_blockers:
             continue
 

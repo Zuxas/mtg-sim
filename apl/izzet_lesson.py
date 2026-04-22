@@ -90,3 +90,23 @@ class IzzetLessonAPL(ControlAPL):
     # Izzet mulligans looser than esper — 2 colors, 20 mana sources
     MULL_MIN_LANDS = 2
     MULL_MAX_LANDS = 5
+
+    # ------------------------------------------------------------------
+    # Archetype hooks — level up Classes when mana permits
+    # ------------------------------------------------------------------
+
+    def _custom_precombat(self, gs):
+        """After threats are deployed, pour leftover mana into Class
+        level-ups. Priority: Stormchaser's Talent Level 3 (token per
+        instant/sorcery = scaling pressure). Artist's Talent Level 3
+        (noncombat damage +2) is less relevant in goldfish since we
+        rarely deal noncombat damage through spells."""
+        from engine.classes import level_up, CLASS_DEFS
+        for perm in list(gs.zones.battlefield):
+            if perm.name not in CLASS_DEFS:
+                continue
+            # Try leveling up until mana runs out. The level_up call
+            # handles the cost check and returns False when can't
+            # advance further, breaking the while.
+            while level_up(perm, gs):
+                pass

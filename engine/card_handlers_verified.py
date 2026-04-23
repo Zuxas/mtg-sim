@@ -26119,6 +26119,56 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M12 — Deceit
+# ═══════════════════════════════════════════════════════════════════
+
+def _deceit_etb(gs, card):
+    """Deceit — {4}{U/B}{U/B} 3/3 Elemental Incarnation.
+    'When this creature enters, if {U}{U} was spent to cast it,
+     return up to one other target nonland permanent to its owner's
+     hand.
+     When this creature enters, if {B}{B} was spent to cast it,
+     target opponent reveals their hand. You choose a nonland card
+     from it. That player discards that card.
+     Evoke {U/B}{U/B}'
+
+    Split ETB keyed on hybrid mana spent. Goldfish has no mana-color
+    memory, so pick the mode with impact: if opp has a nonland
+    permanent, do the UU bounce on the biggest one (Grief/Subtlety
+    target-selection pattern); otherwise do the BB discard on the
+    highest-CMC nonland card in opp's hand (Grief pattern). If neither
+    has anything, nothing fires. The Evoke alt-cost is a cast-side
+    concern handled by the cost path, not an ETB effect."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    nonland_perms = [c for c in opp.zones.battlefield if not c.is_land()]
+    if nonland_perms:
+        t = max(nonland_perms,
+                key=lambda c: safe_power(c) if c.has(Tag.CREATURE)
+                else getattr(c, 'cmc', 0))
+        opp.zones.battlefield.remove(t)
+        opp.zones.hand.append(t)
+        gs._log(f"  Deceit (UU mode): bounce {t.name}")
+        return
+    nonland_hand = [c for c in opp.zones.hand if not c.is_land()]
+    if nonland_hand:
+        t = max(nonland_hand, key=lambda c: getattr(c, 'cmc', 0))
+        opp.zones.hand.remove(t)
+        opp.zones.graveyard.append(t)
+        gs._log(f"  Deceit (BB mode): discard {t.name}")
+        return
+    gs._log("  Deceit: no legal target (neither mode)")
+
+
+_ETB_HANDLERS.update({
+    "Deceit": _deceit_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

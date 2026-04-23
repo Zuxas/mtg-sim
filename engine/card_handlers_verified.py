@@ -26446,6 +26446,35 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Abandon Attachments
+# ═══════════════════════════════════════════════════════════════════
+
+def _abandon_attachments_spell(gs, card):
+    """Abandon Attachments — {1}{U/R} Instant — Lesson.
+    'You may discard a card. If you do, draw two cards.'
+
+    Classic looter. In goldfish, always pay the optional discard —
+    1-for-2 card advantage is strictly good. Prefer a land if we
+    already have plays covered, else the highest-CMC stranded card.
+    Mirrors the Faithless Looting discard-pick heuristic."""
+    if not gs.zones.hand:
+        gs._log("  Abandon Attachments: empty hand, no discard/no draw")
+        return
+    lands = [c for c in gs.zones.hand if c.is_land()]
+    victim = lands[-1] if lands else max(
+        gs.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
+    gs.zones.hand.remove(victim)
+    gs.zones.graveyard.append(victim)
+    gs.zones.draw(2)
+    gs._log(f"  Abandon Attachments: discard {victim.name}, draw 2")
+
+
+_SPELL_HANDLERS.update({
+    "Abandon Attachments": _abandon_attachments_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

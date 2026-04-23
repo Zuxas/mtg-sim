@@ -25763,6 +25763,57 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M02 — Dead / Gone + skip notes
+# ═══════════════════════════════════════════════════════════════════
+# Deferred (need non-ETB/non-cast handler paths — do NOT write
+# log-only stubs):
+#   - "Memnite"                   vanilla {0} 1/1 artifact creature.
+#   - "Wall of Roots"             activated mana ability.
+#   - "Twilight Mire"             filter land, tap-for-mana only.
+#   - "Grove of the Burnwillows"  tap-for-mana dual (pain-gain).
+#   - "Mutavault"                 creature-land, activated animate.
+#   - "Wrenn and Six"             planeswalker; needs loyalty path.
+#   - "Inkmoth Nexus"             creature-land, activated animate.
+#   - "Ornithopter"               vanilla 0/2 flier.
+# Basic-land-like (no handler needed):
+#   - "Snow-Covered Wastes"
+
+def _dead_gone_spell(gs, card):
+    """Dead / Gone — {R} // {2}{R} Instant // Instant.
+    'Dead: deals 2 damage to target creature.
+     Gone: return target creature you don't control to its owner's hand.'
+
+    Pick Dead when an opp creature has toughness <= 2 (burn kills it),
+    otherwise Gone bounces their biggest. Goldfish (no opp): no-op."""
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    creatures = [c for c in opp.zones.battlefield
+                 if not c.is_land() and c.has(Tag.CREATURE)]
+    if not creatures:
+        gs._log("  Dead / Gone: no creature target")
+        return
+    burnable = [c for c in creatures if safe_toughness(c) <= 2]
+    if burnable:
+        t = max(burnable, key=lambda c: safe_power(c))
+        opp.zones.battlefield.remove(t)
+        opp.zones.graveyard.append(t)
+        gs._log(f"  Dead / Gone: Dead — 2 dmg kills {t.name}")
+    else:
+        t = max(creatures, key=lambda c: safe_power(c))
+        opp.zones.battlefield.remove(t)
+        opp.zones.hand.append(t)
+        gs._log(f"  Dead / Gone: Gone — bounce {t.name}")
+
+
+_SPELL_HANDLERS.update({
+    "Dead / Gone": _dead_gone_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

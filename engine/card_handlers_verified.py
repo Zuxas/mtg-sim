@@ -25963,6 +25963,59 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# STATIC-PATH TRIAGE (2026-04-23) — higher-frequency Modern cards
+# whose only abilities are static, activated, or mana-producing. They
+# need handling via the static-ability / activated-ability path, not
+# an ETB/cast stub. Noted here so /next-card runs skip them cleanly:
+#   Wall of Roots          — activated mana ({0}: -0/-1 counter, +G)
+#   Twilight Mire          — filter land ({T}: add CC)
+#   Mutavault              — animation ({1}: becomes 2/2 creature)
+#   Grove of the Burnwillows — mana with opp life-gain rider
+#   Wrenn and Six          — planeswalker loyalty abilities
+#   Inkmoth Nexus          — animation + infect
+#   Sunhome, Fortress of the Legion — activated +3/+0 pump
+# Vanilla bodies (Memnite, Ornithopter) and basic snow lands
+# (Snow-Covered Wastes) need no handler — base engine covers them.
+# ═══════════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M08 — Not Dead After All
+# ═══════════════════════════════════════════════════════════════════
+
+def _not_dead_after_all_spell(gs, card):
+    """Not Dead After All — {B} Instant.
+    'Until end of turn, target creature you control gains "When this
+     creature dies, return it to the battlefield tapped under its
+     owner's control, then create a Wicked Role token attached to it."
+     (Enchanted creature gets +1/+1. When this token is put into a
+     graveyard, each opponent loses 1 life.)'
+
+    Proxy the grant-death-return with has_undying on the target (the
+    closest existing one-shot return flag). The EOT limitation, the
+    tapped-on-return clause, the Wicked Role +1/+1 anthem, and the
+    Wicked-Role-dies drain trigger are not modeled — they need the
+    granted-ability / aura-token path, which isn't an ETB or cast
+    trigger. Pick the biggest controlled creature as the target."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    my_cr = [c for c in gs.zones.battlefield
+             if not c.is_land() and c.has(Tag.CREATURE)]
+    if not my_cr:
+        gs._log("  Not Dead After All: no legal target")
+        return
+    t = max(my_cr, key=lambda c: safe_power(c))
+    t.has_undying = True
+    gs._log(f"  Not Dead After All: {t.name} gains death-return proxy "
+            f"(Wicked Role anthem/drain not modeled)")
+
+
+_SPELL_HANDLERS.update({
+    "Not Dead After All": _not_dead_after_all_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

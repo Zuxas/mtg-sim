@@ -26016,6 +26016,33 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M09 — Phlage, Titan of Fire's Fury
+# ═══════════════════════════════════════════════════════════════════
+
+def _phlage_titan_etb(gs, card):
+    """Phlage, Titan of Fire's Fury — {1}{R}{W} 6/6 Elder Giant.
+    'When Phlage enters, sacrifice it unless it escaped.
+     Whenever Phlage enters or attacks, it deals 3 damage to any
+     target and you gain 3 life.
+     Escape—{R}{R}{W}{W}, Exile five other cards from your graveyard.'
+
+    Model the enter/attack trigger on ETB: 3 damage via the standard
+    any-target helper (kills a killable opp creature else faces) plus
+    3 life to us. The sacrifice-unless-escaped clause and the recurring
+    attack trigger are not modeled here — they need cast-source
+    tracking and a combat hook respectively. Escape is an alternate
+    cast cost handled by the cost path, not an ETB effect."""
+    _damage_any_helper(gs, 3)
+    gs.life += 3
+    gs._log("  Phlage ETB: 3 dmg + 3 life (attack trigger not wired)")
+
+
+_ETB_HANDLERS.update({
+    "Phlage, Titan of Fire's Fury": _phlage_titan_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

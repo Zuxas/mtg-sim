@@ -25743,6 +25743,26 @@ _ETB_HANDLERS.update({
 })
 
 
+def _crashing_footfalls_spell(gs, card):
+    """Crashing Footfalls — {0} Sorcery (Suspend 4—{G}).
+    'Create two 4/4 green Rhino creature tokens with trample.'
+
+    In Modern this is cast almost exclusively via cascade (Shardless
+    Agent, Violent Outburst) or off suspend. Either way the resolve
+    effect is the same: two 4/4 Rhino tokens with trample."""
+    from engine.keywords import KWTag
+    for _ in range(2):
+        tok = gs._make_token("Rhino", "4", "4",
+                             "Token Creature — Rhino")
+        tok.tags.add(KWTag.TRAMPLE)
+    gs._log("  Crashing Footfalls: +2 4/4 Rhino tokens with trample")
+
+
+_SPELL_HANDLERS.update({
+    "Crashing Footfalls": _crashing_footfalls_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

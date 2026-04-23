@@ -27240,6 +27240,49 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch - Ego Drain (discard / hand-attack spell)
+# ═══════════════════════════════════════════════════════════════════
+
+def _ego_drain_spell(gs, card):
+    """Ego Drain — {B} Sorcery.
+    'Target opponent reveals their hand. You choose a nonland card
+     from it. That player discards that card. If you don't control
+     a Faerie, exile a card from your hand.'
+
+    Thoughtseize-shaped discard with a self-exile rider: pick opp's
+    highest-cmc nonland to discard; if we don't control a Faerie,
+    exile our lowest-cmc card (minimise our own loss)."""
+    from data.card import Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Ego Drain: no opp (goldfish)")
+        return
+    nonland = [c for c in opp.zones.hand if not c.is_land()]
+    if nonland:
+        victim = max(nonland, key=lambda c: getattr(c, 'cmc', 0))
+        opp.zones.hand.remove(victim)
+        opp.zones.graveyard.append(victim)
+        gs._log(f"  Ego Drain: discard {victim.name}")
+    else:
+        gs._log("  Ego Drain: opp hand has no nonland")
+    has_faerie = any(
+        "Faerie" in (c.type_line or "")
+        for c in gs.zones.battlefield
+        if c.has(Tag.CREATURE)
+    )
+    if not has_faerie and gs.zones.hand:
+        cost = min(gs.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
+        gs.zones.hand.remove(cost)
+        gs.zones.exile.append(cost)
+        gs._log(f"  Ego Drain: exile our {cost.name} (no Faerie)")
+
+
+_SPELL_HANDLERS.update({
+    "Ego Drain": _ego_drain_spell,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -27270,6 +27313,9 @@ _ETB_HANDLERS.update({
 #                             death-trigger path)
 #   - Phyrexian Arena        (upkeep trigger: draw 1 + lose 1; needs
 #                             upkeep-trigger path; static-path)
+#   - Freestrider Lookout    (Reach static + "whenever you commit a crime"
+#                             state trigger for land ramp; needs
+#                             commit-crime / state-triggered path)
 
 
 # Install — hand-written always beats auto-parser

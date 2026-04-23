@@ -26795,6 +26795,23 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — It'll Quench Ya!
+# ═══════════════════════════════════════════════════════════════════
+
+def _itll_quench_ya(gs, card):
+    """It'll Quench Ya! — {1}{U} Instant — Lesson.
+    'Counter target spell unless its controller pays {2}.'
+    Goldfish no-op (no opposing stack to counter); Lesson subtype
+    matters for Learn/graveyard-count interactions handled elsewhere."""
+    gs._log("  It'll Quench Ya!: counter unless {2} (goldfish no-op)")
+
+
+_SPELL_HANDLERS.update({
+    "It'll Quench Ya!": _itll_quench_ya,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

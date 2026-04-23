@@ -26086,6 +26086,39 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M11 — Battlefield Improvisation
+# ═══════════════════════════════════════════════════════════════════
+
+def _battlefield_improvisation_spell(gs, card):
+    """Battlefield Improvisation — {1}{W} Instant.
+    'Target creature gets +2/+2 until end of turn. If that creature
+     is attacking, you may attach any number of Equipment you control
+     to it.'
+
+    Pump family — pick our biggest creature and proxy +2/+2 via the
+    counters += 2 channel used by Bridgeworks Battle / Monstrous Rage.
+    The conditional equipment re-attach is an in-combat utility
+    effect with no standalone impact on goldfish damage: the equipped
+    creatures already contribute their combined stats, so re-routing
+    them to one body is net-neutral for kill-turn math. Skip it."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    my_cr = [c for c in gs.zones.battlefield
+             if not c.is_land() and c.has(Tag.CREATURE)]
+    if not my_cr:
+        gs._log("  Battlefield Improvisation: no legal target")
+        return
+    t = max(my_cr, key=lambda c: safe_power(c))
+    t.counters = (t.counters or 0) + 2
+    gs._log(f"  Battlefield Improvisation: +2/+2 on {t.name}")
+
+
+_SPELL_HANDLERS.update({
+    "Battlefield Improvisation": _battlefield_improvisation_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

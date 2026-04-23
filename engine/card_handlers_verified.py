@@ -26574,6 +26574,65 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Fugitive Codebreaker (skip-note)
+# ═══════════════════════════════════════════════════════════════════
+
+# Skip-note: Fugitive Codebreaker ({1}{R} Goblin Rogue 2/1) — the
+# whole card is keyword-ability / static territory: Prowess and haste
+# are static, Disguise is a cast-from-exile replacement, and the only
+# non-keyword trigger fires "when this creature is turned face up"
+# (the disguise flip), not on ETB or on cast. That belongs to the
+# morph/disguise path, not ETB_EFFECTS. Left unregistered intentionally.
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Worldsoul's Rage
+# ═══════════════════════════════════════════════════════════════════
+
+def _worldsouls_rage_spell(gs, card):
+    """Worldsoul's Rage — {X}{R}{G} Sorcery.
+    'Worldsoul's Rage deals X damage to any target. Put up to X land
+     cards from your hand and/or graveyard onto the battlefield
+     tapped.'
+
+    Goldfish: X=3 default (typical 5-mana finisher window). Damage
+    uses the shared any-target helper. For the ramp half, prefer
+    graveyard lands first (recycles otherwise-dead cards) then hand
+    lands, up to X total, each entering tapped."""
+    x = 3
+    _damage_any_helper(gs, x)
+    placed = 0
+    # Graveyard lands first
+    gy_lands = [c for c in gs.zones.graveyard if c.is_land()]
+    for land in gy_lands:
+        if placed >= x:
+            break
+        gs.zones.graveyard.remove(land)
+        gs.zones.battlefield.append(land)
+        land.tapped = True
+        land.turn_entered = gs.turn
+        gs.mana_pool.flex += 1
+        placed += 1
+    # Then hand lands
+    while placed < x:
+        land = next((c for c in gs.zones.hand if c.is_land()), None)
+        if land is None:
+            break
+        gs.zones.hand.remove(land)
+        gs.zones.battlefield.append(land)
+        land.tapped = True
+        land.turn_entered = gs.turn
+        gs.mana_pool.flex += 1
+        placed += 1
+    gs._log(f"  Worldsoul's Rage (X={x}): {x} dmg + {placed} lands tapped")
+
+
+_SPELL_HANDLERS.update({
+    "Worldsoul's Rage": _worldsouls_rage_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

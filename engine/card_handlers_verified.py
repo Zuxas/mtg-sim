@@ -27010,6 +27010,41 @@ _SPELL_HANDLERS.update({
 })
 
 
+def _blossoming_tortoise_etb(gs, card):
+    """Blossoming Tortoise - {2}{G}{G} 3/3 Creature - Turtle.
+    'Whenever this creature enters or attacks, mill three cards, then
+     return a land card from your graveyard to the battlefield tapped.
+     Activated abilities of lands you control cost {1} less to
+     activate.
+     Land creatures you control get +1/+1.'
+
+    Goldfish ETB: mill 3, then scan GY for any land and reanimate it
+    tapped (following the Arboreal Grazer shape: flex +1 since the
+    returned land is an additional ramp source). The attack-trigger
+    half, the land-activation discount, and the land-creature buff
+    are static/attack paths and not wired here."""
+    for _ in range(3):
+        if gs.zones.library:
+            c = gs.zones.library.pop(0)
+            gs.zones.graveyard.append(c)
+    lands_in_gy = [c for c in gs.zones.graveyard if c.is_land()]
+    if lands_in_gy:
+        land = lands_in_gy[-1]
+        gs.zones.graveyard.remove(land)
+        gs.zones.battlefield.append(land)
+        land.tapped = True
+        land.turn_entered = gs.turn
+        gs.mana_pool.flex += 1
+        gs._log(f"  Blossoming Tortoise ETB: mill 3, return {land.name} tapped")
+    else:
+        gs._log("  Blossoming Tortoise ETB: mill 3 (no land in GY)")
+
+
+_ETB_HANDLERS.update({
+    "Blossoming Tortoise": _blossoming_tortoise_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -27020,7 +27055,6 @@ _SPELL_HANDLERS.update({
 #                             targeted-exile family lands)
 #   - The Unagi of Kyoshi    (opponent-draw trigger; static-path)
 #   - The Unagi of Kyoshi Island (Flash/Ward static + opp-draw trigger; static-path)
-#   - Blossoming Tortoise    (mill + land-recursion ETB/attack; needs GY scan)
 #   - Tiger-Seal             (upkeep tap + draw-2 untap trigger; static-path)
 #   - Gran-Gran              (tap-trigger loot + static cost-reduction; static-path)
 #   - Superior Spider-Man    (enter-as-copy replacement; needs copy-from-GY path)

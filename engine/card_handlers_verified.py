@@ -26539,6 +26539,24 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Bounce Off
+# ═══════════════════════════════════════════════════════════════════
+
+def _bounce_off_spell(gs, card):
+    """Bounce Off — {U} Instant.
+    'Return target creature or Vehicle to its owner's hand.'
+
+    Goldfish: no opponent permanents to target, so this is a no-op
+    log entry. Mirrors the Unsummon pattern already in this file."""
+    gs._log("  Bounce Off: bounce creature/Vehicle (goldfish no-op)")
+
+
+_SPELL_HANDLERS.update({
+    "Bounce Off": _bounce_off_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

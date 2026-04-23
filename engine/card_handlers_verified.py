@@ -25936,6 +25936,33 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M07 — Badgermole Cub
+# ═══════════════════════════════════════════════════════════════════
+
+def _badgermole_cub_etb(gs, card):
+    """Badgermole Cub — {1}{G} 2/2 Creature — Badger Mole.
+    'When this creature enters, earthbend 1. (Target land you control
+     becomes a 0/0 creature with haste that's still a land. Put a +1/+1
+     counter on it. When it dies or is exiled, return it to the
+     battlefield tapped.)
+     Whenever you tap a creature for mana, add an additional {G}.'
+
+    Only the ETB earthbend-1 trigger is modeled here. Earthbend matches
+    the existing earthbend family (see _earthbender_ascension_etb,
+    _earthen_ally_etb): proxy the animated 0/0 + counter as +1 damage
+    on the next attack step. The 'tap creature for mana → +G' trigger
+    is a passive mana-producing ability that needs a separate hook
+    (mana-pool side); it is not an ETB or cast trigger."""
+    gs.damage_dealt += 1  # earthbend 1 = animated 0/0 + 1 counter proxy
+    gs._log("  Badgermole Cub ETB: earthbend 1 (+1 dmg proxy)")
+
+
+_ETB_HANDLERS.update({
+    "Badgermole Cub": _badgermole_cub_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

@@ -26043,6 +26043,49 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M10 — Tear Asunder
+# ═══════════════════════════════════════════════════════════════════
+
+def _tear_asunder(gs, card):
+    """Tear Asunder — {1}{G} Instant.
+    'Kicker {1}{B}.
+     Exile target artifact or enchantment. If this spell was kicked,
+     exile target nonland permanent instead.'
+
+    Goldfish kicker heuristic (matches Burst Lightning style): if we
+    have 4+ lands in play, assume we paid the {1}{B} kicker (total
+    cost 4) and exile the best nonland permanent; otherwise exile
+    the best artifact/enchantment."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    lands = sum(1 for c in gs.zones.battlefield if c.is_land())
+    kicked = lands >= 4
+    nonland = [c for c in opp.zones.battlefield if not c.is_land()]
+    if kicked:
+        pool = nonland
+    else:
+        pool = [c for c in nonland
+                if c.has(Tag.ARTIFACT) or c.has(Tag.ENCHANTMENT)]
+    if not pool:
+        gs._log("  Tear Asunder: no valid target")
+        return
+    t = max(pool, key=lambda c: safe_power(c)
+            if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
+    opp.zones.battlefield.remove(t)
+    opp.zones.exile.append(t)
+    mode = "kicked" if kicked else "base"
+    gs._log(f"  Tear Asunder ({mode}): exile {t.name}")
+
+
+_SPELL_HANDLERS.update({
+    "Tear Asunder": _tear_asunder,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

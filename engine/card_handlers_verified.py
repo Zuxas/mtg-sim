@@ -26268,8 +26268,118 @@ _SPELL_HANDLERS.update({
 # Valiant (target trigger) and a dies trigger. Needs the static/dies
 # triggered path, not an ETB stub.
 
+# NOTE: Adarkar Wastes (painland) is a land with only mana-activated tap
+# abilities ("{T}: Add {C}." / "{T}: Add {W} or {U}. This land deals 1
+# damage to you."). Belongs in the mana system, not an ETB/spell handler.
+
+# NOTE: Mirrex (Sphere land) has only activated abilities ("{T}: Add
+# {C}." / "{T}: Add any color if entered this turn." / "{3}{T}: create
+# a 1/1 Phyrexian Mite token with toxic 1"). Needs the activated-ability
+# path, not an ETB stub.
+
 _SPELL_HANDLERS.update({
     "Make Disappear": _counter_noop,
+})
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Gix's Command
+# ═══════════════════════════════════════════════════════════════════
+
+def _gixs_command_spell(gs, card):
+    """Gix's Command — {3}{B}{B} Sorcery.
+    'Choose two —
+      • Put two +1/+1 counters on up to one creature. It gains
+        lifelink until end of turn.
+      • Destroy each creature with power 2 or less.
+      • Return up to two creature cards from your graveyard to your
+        hand.
+      • Each opponent sacrifices a creature with the greatest power
+        among creatures they control.'
+
+    4x2 modal sorcery — classic Dimir/Mono-B midrange value piece.
+    Dynamic mode selection, preferring pure-value modes:
+      - Mode 3 (recur 2 from GY) if we have creatures in GY.
+      - Mode 2 (sweep power<=2) if opp has small creatures.
+      - Mode 4 (opp sac biggest) if opp has creatures.
+      - Mode 1 (+1/+1 x2 + lifelink EOT) as fallback pump.
+    Mirrors the dynamic-mode pattern used by Archenemy's Charm."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+
+    gy_cr = [c for c in gs.zones.graveyard if c.has(Tag.CREATURE)]
+    opp_creatures = []
+    if opp is not None:
+        opp_creatures = [c for c in opp.zones.battlefield
+                         if c.has(Tag.CREATURE) and not c.is_land()]
+    opp_small = [c for c in opp_creatures if safe_power(c) <= 2]
+    my_cr = [c for c in gs.zones.battlefield
+             if c.has(Tag.CREATURE) and not c.is_land()]
+
+    modes = []
+    if gy_cr:
+        modes.append(3)
+    if opp_small:
+        modes.append(2)
+    if opp_creatures and 4 not in modes:
+        modes.append(4)
+    if my_cr and len(modes) < 2:
+        modes.append(1)
+    modes = modes[:2]
+
+    if not modes:
+        gs._log("  Gix's Command: no valid modes (goldfish no-op)")
+        return
+
+    notes = []
+    if 3 in modes:
+        gy_cr.sort(key=lambda c: -getattr(c, 'cmc', 0))
+        picked = gy_cr[:2]
+        for c in picked:
+            gs.zones.graveyard.remove(c)
+            gs.zones.hand.append(c)
+        notes.append(f"return {', '.join(c.name for c in picked)}")
+
+    if 2 in modes:
+        killed_opp = 0
+        if opp is not None:
+            for c in list(opp.zones.battlefield):
+                if c.has(Tag.CREATURE) and not c.is_land() \
+                        and safe_power(c) <= 2:
+                    opp.zones.battlefield.remove(c)
+                    opp.zones.graveyard.append(c)
+                    killed_opp += 1
+        killed_self = 0
+        for c in list(gs.zones.battlefield):
+            if c.has(Tag.CREATURE) and not c.is_land() \
+                    and safe_power(c) <= 2:
+                gs.zones.battlefield.remove(c)
+                gs.zones.graveyard.append(c)
+                killed_self += 1
+        notes.append(f"sweep power<=2 ({killed_opp} opp/{killed_self} self)")
+
+    if 4 in modes and opp is not None and opp_creatures:
+        live = [c for c in opp.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()]
+        if live:
+            big = max(live, key=lambda c: safe_power(c))
+            opp.zones.battlefield.remove(big)
+            opp.zones.graveyard.append(big)
+            notes.append(f"opp sac {big.name}")
+
+    if 1 in modes and my_cr:
+        live = [c for c in my_cr if c in gs.zones.battlefield]
+        if live:
+            t = max(live, key=lambda c: safe_power(c))
+            t.counters = (t.counters or 0) + 2
+            notes.append(f"+1/+1 x2 on {t.name} (lifelink EOT not modeled)")
+
+    gs._log(f"  Gix's Command: {'; '.join(notes)}")
+
+
+_SPELL_HANDLERS.update({
+    "Gix's Command": _gixs_command_spell,
 })
 
 

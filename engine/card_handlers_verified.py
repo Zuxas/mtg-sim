@@ -26965,6 +26965,57 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Starfield Shepherd
+# ═══════════════════════════════════════════════════════════════════
+
+def _starfield_shepherd_etb(gs, card):
+    """Starfield Shepherd — {3}{W}{W} 3/2 Creature — Angel.
+    'Flying
+     When this creature enters, search your library for a basic
+     Plains card or a creature card with mana value 1 or less,
+     reveal it, put it into your hand, then shuffle.
+     Warp {1}{W}.'
+
+    ETB is a modal tutor to hand. Prefer a 1-drop creature (tempo /
+    pressure); fall back to a basic Plains (ramp-to-hand). If neither
+    exists, log the miss. The Warp alt-cast path routes through the
+    same ETB via the warp cast pipeline."""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    card.tags.add(KWTag.FLYING)
+
+    lib = gs.zones.library
+    # Prefer a creature card with mana value 1 or less — highest-power
+    # among ties so we tutor the best pressure piece.
+    from engine.match_state import safe_power
+    one_drops = [c for c in lib
+                 if c.has(Tag.CREATURE) and not c.is_land()
+                 and getattr(c, 'cmc', 0) <= 1]
+    if one_drops:
+        target = max(one_drops, key=lambda c: safe_power(c))
+        lib.remove(target)
+        gs.zones.hand.append(target)
+        gs._log(f"  Starfield Shepherd ETB: flying 3/2, "
+                f"tutor creature {target.name} (CMC<=1)")
+        return
+    # Fall back to a basic Plains.
+    plains = next((c for c in lib
+                   if c.has(Tag.BASIC_LAND) and c.name == "Plains"),
+                  None)
+    if plains is not None:
+        lib.remove(plains)
+        gs.zones.hand.append(plains)
+        gs._log("  Starfield Shepherd ETB: flying 3/2, tutor basic Plains")
+        return
+    gs._log("  Starfield Shepherd ETB: flying 3/2 (no tutor target)")
+
+
+_ETB_HANDLERS.update({
+    "Starfield Shepherd": _starfield_shepherd_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -26981,6 +27032,9 @@ _ETB_HANDLERS.update({
 #   - Superior Spider-Man    (enter-as-copy replacement; needs copy-from-GY path)
 #   - Enduring Innocence     (lifelink static + others-ETB state trigger + death
 #                             trigger; needs state-triggered + death paths)
+#   - Cosmogrand Zenith      ("whenever you cast your second spell each turn"
+#                             state trigger on permanent; needs cast-count/
+#                             state-triggered path)
 
 
 # Install — hand-written always beats auto-parser

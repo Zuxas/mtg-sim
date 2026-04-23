@@ -26169,6 +26169,37 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Stormchaser's Talent
+# ═══════════════════════════════════════════════════════════════════
+
+def _stormchasers_talent_etb(gs, card):
+    """Stormchaser's Talent — {U} Enchantment — Class.
+    '(Gain the next level as a sorcery to add its ability.)
+     When this Class enters, create a 1/1 blue and red Otter
+     creature token with prowess.
+     {3}{U}: Level 2
+     When this Class becomes level 2, return target instant or
+     sorcery card from your graveyard to your hand.
+     {5}{U}: Level 3
+     Whenever you cast an instant or sorcery spell, create a 1/1
+     blue and red Otter creature token with prowess.'
+
+    ETB mode only: drop the 1/1 prowess Otter. The {3}{U}/{5}{U}
+    level-up activations and the cast-trigger at level 3 are
+    activated/triggered abilities outside the ETB path and are not
+    modeled here. Mirrors Ral, Crackling Wit's +1 Otter pattern."""
+    from engine.keywords import KWTag
+    tok = gs._make_token("Otter", "1", "1", "Token Creature — Otter")
+    tok.tags.add(KWTag.PROWESS)
+    gs._log("  Stormchaser's Talent ETB: +1 Otter w/ prowess")
+
+
+_ETB_HANDLERS.update({
+    "Stormchaser's Talent": _stormchasers_talent_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

@@ -26720,6 +26720,42 @@ _ETB_HANDLERS.update({
 })
 
 
+def _combustion_technique(gs, card):
+    """Combustion Technique — {1}{R} Instant — Lesson.
+    'Combustion Technique deals damage equal to 2 plus the number of
+     Lesson cards in your graveyard to target creature. If that
+     creature would die this turn, exile it instead.'"""
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    lessons_in_gy = sum(
+        1 for c in gs.zones.graveyard
+        if "lesson" in (c.type_line or "").lower()
+    )
+    dmg = 2 + lessons_in_gy
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log(f"  Combustion Technique: {dmg} dmg "
+                f"({lessons_in_gy} Lessons in GY, no opp modeled)")
+        return
+    killable = [c for c in opp.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()
+                and safe_toughness(c) <= dmg]
+    if killable:
+        t = max(killable, key=lambda c: safe_power(c))
+        opp.zones.battlefield.remove(t)
+        opp.zones.exile.append(t)  # "exile it instead" replacement
+        gs._log(f"  Combustion Technique: {dmg} dmg exiles {t.name} "
+                f"({lessons_in_gy} Lessons in GY)")
+    else:
+        gs._log(f"  Combustion Technique: {dmg} dmg "
+                f"(no legal kill, {lessons_in_gy} Lessons in GY)")
+
+
+_SPELL_HANDLERS.update({
+    "Combustion Technique": _combustion_technique,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

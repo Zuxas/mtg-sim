@@ -25909,6 +25909,33 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M06 — Surge of Salvation
+# ═══════════════════════════════════════════════════════════════════
+
+def _surge_of_salvation_spell(gs, card):
+    """Surge of Salvation — {W} Instant.
+    'You and permanents you control gain hexproof until end of turn.
+     Prevent all damage that black and/or red sources would deal to
+     creatures you control this turn.'
+
+    Uses the hexproof-self family (Heroic Intervention, Dawn's Truce,
+    The One Ring). gs._hexproof_self = True shields you and your
+    permanents from targeted removal for the turn. The B/R damage-
+    prevention rider is a strict add-on vs Rakdos/Mono-B/Mono-R
+    combat; goldfish has no opp so the rider is a no-op, and in
+    matchup mode this engine does not filter damage by source color,
+    so the rider is collapsed into the one-turn hexproof shield."""
+    gs._hexproof_self = True
+    gs._log("  Surge of Salvation: hexproof EOT (B/R damage "
+            "prevention subsumed by hexproof proxy)")
+
+
+_SPELL_HANDLERS.update({
+    "Surge of Salvation": _surge_of_salvation_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

@@ -26254,6 +26254,25 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# STANDARD — counterspells (reactive only)
+# ═══════════════════════════════════════════════════════════════════
+
+# NOTE: Faerie Mastermind ({1}{U}) is high-frequency in Standard but has
+# no ETB or cast trigger — only Flash, Flying, a battlefield-resident
+# triggered ability ("Whenever an opponent draws their second card each
+# turn, you draw a card") and an activated ability ({3}{U}: each player
+# draws). Needs the static/triggered-ability path, not an ETB stub.
+
+# NOTE: Heartfire Hero ({R}) likewise has no ETB/cast trigger — only
+# Valiant (target trigger) and a dies trigger. Needs the static/dies
+# triggered path, not an ETB stub.
+
+_SPELL_HANDLERS.update({
+    "Make Disappear": _counter_noop,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

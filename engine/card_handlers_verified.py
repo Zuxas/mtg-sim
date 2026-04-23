@@ -26234,6 +26234,26 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Opt
+# ═══════════════════════════════════════════════════════════════════
+
+def _opt_spell(gs, card):
+    """Opt - {U} Instant.
+    'Scry 1. Draw a card.'
+
+    Classic cantrip. Goldfish has no scry-ordering model, so proxy
+    with a plain draw-1, mirroring the Preordain / Sleight of Hand
+    pattern already in this file."""
+    gs.zones.draw(1)
+    gs._log("  Opt: draw 1 (scry 1 approximated)")
+
+
+_SPELL_HANDLERS.update({
+    "Opt": _opt_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

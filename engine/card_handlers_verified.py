@@ -26633,6 +26633,50 @@ _SPELL_HANDLERS.update({
 })
 
 
+# SKIP: Gran-Gran ({U} Legendary Creature) — needs static-ability +
+# tap-trigger paths, not ETB/spell. "Whenever Gran-Gran becomes
+# tapped, draw a card, then discard a card." is a tap trigger and
+# "Noncreature spells you cast cost {1} less..." is a static cost
+# reduction gated on Lesson count in graveyard. Requires static
+# ability handling, not a log-only stub.
+
+
+def _firebending_lesson(gs, card):
+    """Firebending Lesson — {R} Instant — Lesson.
+    'Kicker {4} (You may pay an additional {4} as you cast this
+     spell.) Firebending Lesson deals 2 damage to target creature.
+     If this spell was kicked, it deals 5 damage to that creature
+     instead.'
+
+    Goldfish kicker heuristic: same as Burst Lightning — if we have
+    5+ lands in play, assume we paid the kicker (total cost 5).
+    Targets creature only, so mirror Torch the Tower's target-a-
+    creature kill path."""
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    lands = sum(1 for c in gs.zones.battlefield if c.is_land())
+    dmg = 5 if lands >= 5 else 2
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log(f"  Firebending Lesson: {dmg} dmg (no opp modeled)")
+        return
+    killable = [c for c in opp.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()
+                and safe_toughness(c) <= dmg]
+    if killable:
+        t = max(killable, key=lambda c: safe_power(c))
+        opp.zones.battlefield.remove(t)
+        opp.zones.graveyard.append(t)
+        gs._log(f"  Firebending Lesson: {dmg} dmg kills {t.name}")
+    else:
+        gs._log(f"  Firebending Lesson: {dmg} dmg (no legal kill)")
+
+
+_SPELL_HANDLERS.update({
+    "Firebending Lesson": _firebending_lesson,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

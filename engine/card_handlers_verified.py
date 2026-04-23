@@ -26756,6 +26756,45 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Overlord of the Hauntwoods
+# ═══════════════════════════════════════════════════════════════════
+
+def _overlord_of_the_hauntwoods_etb(gs, card):
+    """Overlord of the Hauntwoods — {3}{G}{G} Enchantment Creature
+    — Avatar Horror (6/5). Impending 4—{1}{G}{G}.
+    'Whenever this permanent enters or attacks, create a tapped
+     colorless land token named Everywhere that is every basic
+     land type.'
+
+    ETB mode: drop a tapped all-basic-types land token. The attack
+    half of the 'enters or attacks' trigger is outside the ETB path
+    and not modeled here (same convention used for other split
+    triggers in this file). Impending hard-cast path also routes
+    through this ETB — see GameState.cast_spell_impending."""
+    from data.card import Card
+    tok = Card(
+        name="Everywhere",
+        mana_cost="",
+        cmc=0,
+        type_line="Token Land — Plains Island Swamp Mountain Forest",
+        oracle_text="",
+        power=None,
+        toughness=None,
+        colors=[],
+    )
+    tok.tapped = True
+    tok.turn_entered = gs.turn
+    gs.zones.battlefield.append(tok)
+    gs._log("  Overlord of the Hauntwoods ETB: +1 Everywhere land "
+            "(tapped, all basic types)")
+
+
+_ETB_HANDLERS.update({
+    "Overlord of the Hauntwoods": _overlord_of_the_hauntwoods_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

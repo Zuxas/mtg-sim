@@ -27098,6 +27098,32 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Overlord of the Boilerbilges
+# ═══════════════════════════════════════════════════════════════════
+
+def _overlord_of_the_boilerbilges_etb(gs, card):
+    """Overlord of the Boilerbilges — {4}{R}{R} Enchantment Creature
+    — Avatar Horror (5/5). Impending 4—{2}{R}{R}.
+    'Whenever this permanent enters or attacks, it deals 4 damage to
+     any target.'
+
+    ETB mode: 4 damage to any target via the standard burn helper
+    (kills the biggest killable opp creature, else face). The attack
+    half of the 'enters or attacks' trigger is outside the ETB path
+    and not modeled here (same convention used for other Overlords).
+    Impending hard-cast path also routes through this ETB — see
+    GameState.cast_spell_impending."""
+    _damage_any_helper(gs, 4)
+    gs._log(f"  Overlord of the Boilerbilges ETB: 4 dmg "
+            f"({gs.damage_dealt} total)")
+
+
+_ETB_HANDLERS.update({
+    "Overlord of the Boilerbilges": _overlord_of_the_boilerbilges_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)

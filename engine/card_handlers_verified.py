@@ -25712,6 +25712,37 @@ _SPELL_HANDLERS.update({
 })
 
 
+def _overlord_balemurk_etb(gs, card):
+    """Overlord of the Balemurk — {3}{B}{B} 5/5 Avatar Horror.
+    'Impending 5—{1}{B}.
+     Whenever this permanent enters or attacks, mill four cards,
+     then you may return a non-Avatar creature card or a planeswalker
+     card from your graveyard to your hand.'
+
+    ETB: self-mill 4, then fish a non-Avatar creature/PW out of the
+    graveyard to hand (prefer highest-cmc target). The attack-trigger
+    clone is not modeled here; the ETB path captures the first fire."""
+    from data.card import Tag
+    top4 = gs.zones.library[:4]
+    gs.zones.library = gs.zones.library[4:]
+    gs.zones.graveyard.extend(top4)
+    candidates = [c for c in gs.zones.graveyard
+                  if (c.has(Tag.CREATURE) or c.has(Tag.PLANESWALKER))
+                  and "Avatar" not in (c.type_line or "")]
+    if candidates:
+        target = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        gs.zones.graveyard.remove(target)
+        gs.zones.hand.append(target)
+        gs._log(f"  Overlord of the Balemurk ETB: mill 4, return {target.name} to hand")
+    else:
+        gs._log("  Overlord of the Balemurk ETB: mill 4 (no return target)")
+
+
+_ETB_HANDLERS.update({
+    "Overlord of the Balemurk": _overlord_balemurk_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

@@ -27125,6 +27125,45 @@ _ETB_HANDLERS.update({
 
 
 # ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Malboro
+# ═══════════════════════════════════════════════════════════════════
+
+def _malboro_etb(gs, card):
+    """Malboro — {4}{B}{B} Creature — Plant Horror.
+    'Bad Breath — When this creature enters, each opponent discards a
+     card, loses 2 life, and exiles the top three cards of their
+     library.
+     Swampcycling {2}.'
+
+    Single-opp goldfish: opp discards highest-cmc card, loses 2 life,
+    top 3 of opp library to exile."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Malboro ETB: no opp")
+        return
+    discarded = None
+    if opp.zones.hand:
+        victim = max(opp.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
+        opp.zones.hand.remove(victim)
+        opp.zones.graveyard.append(victim)
+        discarded = victim.name
+    opp.life -= 2
+    exiled = 0
+    for _ in range(3):
+        if opp.zones.library:
+            c = opp.zones.library.pop(0)
+            opp.zones.exile.append(c)
+            exiled += 1
+    gs._log(f"  Malboro ETB: opp discards {discarded}, -2 life, "
+            f"exile top {exiled}")
+
+
+_ETB_HANDLERS.update({
+    "Malboro": _malboro_etb,
+})
+
+
+# ═══════════════════════════════════════════════════════════════════
 # Standard Batch — Squirming Emergence
 # ═══════════════════════════════════════════════════════════════════
 
@@ -27200,6 +27239,8 @@ _SPELL_HANDLERS.update({
 #                             unlock costs; static-path)
 #   - Infestation Sage       (death trigger → 1/1 flying Insect token; needs
 #                             death-trigger path)
+#   - Phyrexian Arena        (upkeep trigger: draw 1 + lose 1; needs
+#                             upkeep-trigger path; static-path)
 
 
 # Install — hand-written always beats auto-parser

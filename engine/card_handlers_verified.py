@@ -26677,6 +26677,49 @@ _SPELL_HANDLERS.update({
 })
 
 
+def _harvester_of_misery_etb(gs, card):
+    """Harvester of Misery — {3}{B}{B} 5/4 Spirit.
+    'Menace. When this creature enters, other creatures get -2/-2
+     until end of turn. {1}{B}, Discard: target creature -2/-2 EOT.'"""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    card.tags.add(KWTag.MENACE)
+
+    opp = getattr(gs, "_match_opp", None)
+    sides = [gs.zones.battlefield]
+    if opp is not None:
+        sides.append(opp.zones.battlefield)
+
+    own_deaths = 0
+    opp_deaths = 0
+    survivors = []
+    for bf in sides:
+        for c in list(bf):
+            if c is card or c.is_land() or not c.has(Tag.CREATURE):
+                continue
+            c.counters = (c.counters or 0) - 2
+            if c.effective_toughness() <= 0:
+                bf.remove(c)
+                if bf is gs.zones.battlefield:
+                    gs.zones.graveyard.append(c)
+                    own_deaths += 1
+                else:
+                    opp.zones.graveyard.append(c)
+                    opp_deaths += 1
+            else:
+                survivors.append(c)
+    # Revert counters on survivors (EOT simulation, matches Massacre Wurm pattern)
+    for c in survivors:
+        c.counters = (c.counters or 0) + 2
+    gs._log(f"  Harvester of Misery ETB: -2/-2 sweep "
+            f"({own_deaths} own, {opp_deaths} opp)")
+
+
+_ETB_HANDLERS.update({
+    "Harvester of Misery": _harvester_of_misery_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

@@ -27283,6 +27283,21 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch - Tranquil Cove (TDM gainland cycle)
+# ═══════════════════════════════════════════════════════════════════
+
+def _tranquil_cove_etb(gs, card):
+    """Tranquil Cove — Land (enters tapped). ETB: +1 life. {T}: W or U."""
+    gs.life += 1
+    gs._log("  Tranquil Cove ETB: WU tapped, +1 life")
+
+
+_ETB_HANDLERS.update({
+    "Tranquil Cove": _tranquil_cove_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)

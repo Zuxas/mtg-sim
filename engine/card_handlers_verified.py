@@ -26923,6 +26923,48 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Doomsday Excruciator
+# ═══════════════════════════════════════════════════════════════════
+
+def _doomsday_excruciator_etb(gs, card):
+    """Doomsday Excruciator — {B}{B}{B}{B}{B}{B} Creature — Demon.
+    'Flying
+     When this creature enters, if it was cast, each player exiles
+     all but the bottom six cards of their library face down.
+     At the beginning of your upkeep, draw a card.'
+
+    ETB only. Reduce each library to its bottom six cards; the
+    excess goes to exile (face-down flag isn't tracked by the sim
+    — exile pile is sufficient). Upkeep draw is a beginning-of-turn
+    trigger handled outside the ETB registry.
+
+    The 'if it was cast' clause is assumed satisfied here — the sim
+    reaches this handler via the normal cast-then-ETB pipeline."""
+    keep = 6
+    self_excess = max(0, len(gs.zones.library) - keep)
+    if self_excess:
+        exiled = gs.zones.library[:-keep]
+        gs.zones.library = gs.zones.library[-keep:]
+        gs.zones.exile.extend(exiled)
+        gs._log(f"  Doomsday Excruciator ETB: exile {self_excess} from own "
+                f"library (bottom {keep} remain)")
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        opp_excess = max(0, len(opp.zones.library) - keep)
+        if opp_excess:
+            exiled = opp.zones.library[:-keep]
+            opp.zones.library = opp.zones.library[-keep:]
+            opp.zones.exile.extend(exiled)
+            gs._log(f"  Doomsday Excruciator ETB: exile {opp_excess} from opp "
+                    f"library (bottom {keep} remain)")
+
+
+_ETB_HANDLERS.update({
+    "Doomsday Excruciator": _doomsday_excruciator_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -26932,8 +26974,13 @@ _ETB_HANDLERS.update({
 #   - Werefox Bodyguard      (ETB exile-other is targeted removal; skip until
 #                             targeted-exile family lands)
 #   - The Unagi of Kyoshi    (opponent-draw trigger; static-path)
+#   - The Unagi of Kyoshi Island (Flash/Ward static + opp-draw trigger; static-path)
 #   - Blossoming Tortoise    (mill + land-recursion ETB/attack; needs GY scan)
 #   - Tiger-Seal             (upkeep tap + draw-2 untap trigger; static-path)
+#   - Gran-Gran              (tap-trigger loot + static cost-reduction; static-path)
+#   - Superior Spider-Man    (enter-as-copy replacement; needs copy-from-GY path)
+#   - Enduring Innocence     (lifelink static + others-ETB state trigger + death
+#                             trigger; needs state-triggered + death paths)
 
 
 # Install — hand-written always beats auto-parser

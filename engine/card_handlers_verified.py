@@ -25849,6 +25849,32 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M04 — Architects of Will
+# ═══════════════════════════════════════════════════════════════════
+
+def _architects_of_will_etb(gs, card):
+    """Architects of Will — {2}{U}{B} 3/3 Artifact Creature — Human Wizard.
+    'When this creature enters, look at the top three cards of target
+     player's library, then put them back in any order.
+     Cycling {U/B}.'
+
+    In Modern this sees play almost entirely as a cycle-for-cascade
+    body (Living End / Glimpse of Tomorrow shells). The ETB peek is
+    situational. Goldfish has no opp; peeking our own top 3 and
+    reordering is information-only and does not change the abstracted
+    draw stream. In a 1v1 match the reorder would disrupt opp draws,
+    which this engine does not model. Log only — the 3/3 body and
+    cycling value are captured elsewhere (cast cost and cycling path)."""
+    gs._log("  Architects of Will ETB: peek top 3 (reorder has no"
+            " goldfish impact)")
+
+
+_ETB_HANDLERS.update({
+    "Architects of Will": _architects_of_will_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

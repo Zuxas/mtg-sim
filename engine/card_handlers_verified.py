@@ -26854,6 +26854,51 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Iroh's Demonstration
+# ═══════════════════════════════════════════════════════════════════
+
+def _irohs_demonstration_spell(gs, card):
+    """Iroh's Demonstration — {1}{R} Sorcery — Lesson.
+    'Choose one —
+      • Iroh's Demonstration deals 1 damage to each creature your
+        opponents control.
+      • Iroh's Demonstration deals 4 damage to target creature.'
+
+    Pick mode 1 (sweep) if it kills 2+ opposing creatures (1-toughness
+    go-wide); otherwise mode 2 (4 dmg removal) on the biggest killable
+    creature. Mirrors Flame Slash for mode 2."""
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    opp_creatures = [c for c in opp.zones.battlefield
+                     if c.has(Tag.CREATURE) and not c.is_land()]
+    would_die_to_sweep = [c for c in opp_creatures
+                          if safe_toughness(c) <= 1]
+    if len(would_die_to_sweep) >= 2:
+        for t in list(would_die_to_sweep):
+            opp.zones.battlefield.remove(t)
+            opp.zones.graveyard.append(t)
+        gs._log(f"  Iroh's Demonstration: 1 dmg sweep kills "
+                f"{len(would_die_to_sweep)} opp creatures")
+        return
+    killable = [c for c in opp_creatures if safe_toughness(c) <= 4]
+    if not killable:
+        gs._log("  Iroh's Demonstration: no 4-dmg target available")
+        return
+    t = max(killable, key=lambda c: safe_power(c))
+    opp.zones.battlefield.remove(t)
+    opp.zones.graveyard.append(t)
+    gs._log(f"  Iroh's Demonstration: 4 dmg kills {t.name}")
+
+
+_SPELL_HANDLERS.update({
+    "Iroh's Demonstration": _irohs_demonstration_spell,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)

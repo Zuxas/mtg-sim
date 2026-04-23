@@ -25875,6 +25875,40 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M05 — The One Ring
+# ═══════════════════════════════════════════════════════════════════
+
+def _the_one_ring_etb(gs, card):
+    """The One Ring — {4} Legendary Artifact.
+    'Indestructible.
+     When The One Ring enters, if you cast it, you gain protection
+     from everything until your next turn.
+     At the beginning of your upkeep, you lose 1 life for each
+     burden counter on The One Ring.
+     {T}: Put a burden counter on The One Ring, then draw a card
+     for each burden counter on The One Ring.'
+
+    Only the ETB trigger is modeled here. The burden-counter tap
+    draw engine is an activated ability and the upkeep life-loss
+    is a beginning-of-upkeep trigger; neither fires through this
+    hook and both need separate handling paths.
+
+    "Protection from everything until your next turn" is approximated
+    with `gs._hexproof_self`, matching how Heroic Intervention and
+    Flare of Fortitude model one-turn shield effects in this engine.
+    The "if you cast it" clause is assumed true — the goldfish/match
+    sim casts permanents rather than cheating them into play."""
+    gs._hexproof_self = True
+    gs._log("  The One Ring ETB: protection from everything until "
+            "next turn (hexproof-self approx)")
+
+
+_ETB_HANDLERS.update({
+    "The One Ring": _the_one_ring_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

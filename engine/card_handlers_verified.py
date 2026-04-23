@@ -27209,14 +27209,43 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch - Werefox Bodyguard (etb_targeted_effects family)
+# ═══════════════════════════════════════════════════════════════════
+
+def _werefox_bodyguard_etb(gs, card):
+    """Werefox Bodyguard - {1}{W}{W} 2/2 Elf Fox Knight (Flash).
+    'ETB: exile up to one other target non-Fox creature until
+     Werefox Bodyguard leaves the battlefield.'
+    Goldfish: pick opp's strongest non-Fox creature and exile.
+    Leave-return is not modeled, matching Skyclave Apparition."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    targets = [c for c in opp.zones.battlefield
+               if c.has(Tag.CREATURE) and not c.is_land()
+               and "Fox" not in (c.type_line or "")]
+    if not targets:
+        return
+    t = max(targets, key=lambda c: safe_power(c))
+    opp.zones.battlefield.remove(t)
+    opp.zones.exile.append(t)
+    gs._log(f"  Werefox Bodyguard: exile {t.name}")
+
+
+_ETB_HANDLERS.update({
+    "Werefox Bodyguard": _werefox_bodyguard_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
 #   - Virtue of Strength     (static mana doubling enchantment)
 #   - Entity Tracker         (Eerie trigger on enchantment-ETB / Room unlock)
 #   - Tolarian Terror        (static cost reduction + Ward)
-#   - Werefox Bodyguard      (ETB exile-other is targeted removal; skip until
-#                             targeted-exile family lands)
 #   - The Unagi of Kyoshi    (opponent-draw trigger; static-path)
 #   - The Unagi of Kyoshi Island (Flash/Ward static + opp-draw trigger; static-path)
 #   - Tiger-Seal             (upkeep tap + draw-2 untap trigger; static-path)

@@ -26955,6 +26955,61 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Jeskai Revelation
+# ═══════════════════════════════════════════════════════════════════
+
+def _jeskai_revelation_spell(gs, card):
+    """Jeskai Revelation — {4}{U}{R}{W} Instant.
+    'Return target spell or permanent to its owner's hand.
+     Jeskai Revelation deals 4 damage to any target.
+     Create two 1/1 white Monk creature tokens with prowess.
+     Draw two cards.
+     You gain 4 life.'
+
+    Kitchen-sink spell — all five effects are mandatory. Goldfish
+    order follows the oracle: bounce biggest opp nonland permanent
+    (we don't model the stack, so "target spell" collapses to the
+    permanent clause), then 4 damage to any target via the shared
+    helper, then two Monks with prowess, then draw 2, then gain 4."""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    from engine.match_state import safe_power
+
+    # 1) Return target nonland permanent to owner's hand.
+    opp = getattr(gs, "_match_opp", None)
+    bounced = None
+    if opp is not None:
+        targets = [c for c in opp.zones.battlefield if not c.is_land()]
+        if targets:
+            bounced = max(targets, key=lambda c: safe_power(c))
+            opp.zones.battlefield.remove(bounced)
+            opp.zones.hand.append(bounced)
+
+    # 2) 4 damage to any target.
+    _damage_any_helper(gs, 4)
+
+    # 3) Two 1/1 white Monk tokens with prowess.
+    for _ in range(2):
+        tok = gs._make_token("Monk", "1", "1", "Token Creature — Monk")
+        tok.tags.add(KWTag.PROWESS)
+
+    # 4) Draw two.
+    gs.zones.draw(2)
+
+    # 5) Gain 4 life.
+    gs.life += 4
+
+    bounce_note = f"bounce {bounced.name}, " if bounced is not None else ""
+    gs._log(f"  Jeskai Revelation: {bounce_note}4 dmg, "
+            f"+2 Monk prowess, draw 2, +4 life")
+
+
+_SPELL_HANDLERS.update({
+    "Jeskai Revelation": _jeskai_revelation_spell,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)

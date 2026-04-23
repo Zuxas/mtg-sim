@@ -25768,16 +25768,33 @@ _SPELL_HANDLERS.update({
 # ═══════════════════════════════════════════════════════════════════
 # Deferred (need non-ETB/non-cast handler paths — do NOT write
 # log-only stubs):
-#   - "Memnite"                   vanilla {0} 1/1 artifact creature.
-#   - "Wall of Roots"             activated mana ability.
-#   - "Twilight Mire"             filter land, tap-for-mana only.
-#   - "Grove of the Burnwillows"  tap-for-mana dual (pain-gain).
-#   - "Mutavault"                 creature-land, activated animate.
-#   - "Wrenn and Six"             planeswalker; needs loyalty path.
-#   - "Inkmoth Nexus"             creature-land, activated animate.
-#   - "Ornithopter"               vanilla 0/2 flier.
-# Basic-land-like (no handler needed):
+#   - "Memnite"                         vanilla {0} 1/1 artifact creature.
+#   - "Wall of Roots"                   activated mana ability.
+#   - "Twilight Mire"                   filter land, tap-for-mana only.
+#   - "Grove of the Burnwillows"        tap-for-mana dual (pain-gain).
+#   - "Mutavault"                       creature-land, activated animate.
+#   - "Wrenn and Six"                   planeswalker; needs loyalty path.
+#   - "Inkmoth Nexus"                   creature-land, activated animate.
+#   - "Ornithopter"                     vanilla 0/2 flier.
+#   - "The One Ring"                    tap-activated draw engine +
+#                                       upkeep trigger; ETB protection
+#                                       is not hexproof — skip stub.
+#   - "Sunhome, Fortress of the Legion" activated utility land
+#                                       (double strike).
+#   - "Slayers' Stronghold"             activated utility land
+#                                       (+2/+0 vigilance haste).
+#   - "Blackcleave Cliffs"              enters-tapped-unless dual;
+#                                       engine land-drop path, not ETB.
+#   - "Flooded Grove"                   filter land, tap-for-mana only.
+#   - "Not Dead After All"              grants a complex death-return /
+#                                       Wicked Role trigger on a target;
+#                                       engine lacks the hooks.
+# Basic-land-like (tap-only mana ability, no handler needed):
 #   - "Snow-Covered Wastes"
+#   - "Snow-Covered Island"
+#   - "Snow-Covered Plains"
+#   - "Snow-Covered Mountain"
+#   - "Wastes"
 
 def _dead_gone_spell(gs, card):
     """Dead / Gone — {R} // {2}{R} Instant // Instant.
@@ -25811,6 +25828,24 @@ def _dead_gone_spell(gs, card):
 
 _SPELL_HANDLERS.update({
     "Dead / Gone": _dead_gone_spell,
+})
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Modern Batch M03 — Terminate
+# ═══════════════════════════════════════════════════════════════════
+
+def _terminate_spell(gs, card):
+    """Terminate — {B}{R} Instant.
+    'Destroy target creature. It can't be regenerated.'
+
+    Regeneration is not modeled in this engine, so the rider is a
+    no-op. Picks the opponent's biggest creature."""
+    _destroy_biggest_creature(gs, card)
+
+
+_SPELL_HANDLERS.update({
+    "Terminate": _terminate_spell,
 })
 
 

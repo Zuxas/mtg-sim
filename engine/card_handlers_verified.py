@@ -26505,6 +26505,40 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Chart a Course
+# ═══════════════════════════════════════════════════════════════════
+
+# Skip-note: Caustic Bronco ({1}{B} Snake Horse Mount) — primary effect
+# is an attack trigger (reveal top, put in hand, life loss gated on
+# saddled). Attack triggers and the Saddle keyword are not ETB or cast
+# triggers, so this card needs the triggered-ability / keyword-ability
+# path, not a log-only ETB stub. Left unregistered intentionally.
+
+
+def _chart_a_course_spell(gs, card):
+    """Chart a Course — {1}{U} Sorcery.
+    'Draw two cards. Then discard a card unless you attacked this
+     turn.'
+
+    Goldfish: no combat tracking at cast time, so model the
+    conservative branch — draw 2, then discard 1 (prefer an extra
+    land, else the worst card in hand). Net +1 card, mirroring the
+    Faithless Looting discard-pick heuristic."""
+    gs.zones.draw(2)
+    if gs.zones.hand:
+        lands = [c for c in gs.zones.hand if c.is_land()]
+        v = lands[-1] if lands else gs.zones.hand[-1]
+        gs.zones.hand.remove(v)
+        gs.zones.graveyard.append(v)
+    gs._log("  Chart a Course: draw 2, discard 1")
+
+
+_SPELL_HANDLERS.update({
+    "Chart a Course": _chart_a_course_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

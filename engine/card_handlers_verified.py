@@ -26899,6 +26899,30 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Heaped Harvest
+# ═══════════════════════════════════════════════════════════════════
+
+def _heaped_harvest_etb(gs, card):
+    """Heaped Harvest — {2}{G} Artifact — Food.
+    'When this artifact enters and when you sacrifice it, you may
+     search your library for a basic land card, put it onto the
+     battlefield tapped, then shuffle.
+     {2}, {T}, Sacrifice this artifact: You gain 3 life.'
+
+    ETB mode: ramp one basic (same +1 flex proxy used by Earthbender
+    Ascension and other basic-land search ETBs). The sacrifice half
+    of the trigger and the life-gain activation run through the
+    sac/activation paths, not the ETB registry."""
+    gs.mana_pool.flex += 1  # search basic land proxy (enters tapped)
+    gs._log("  Heaped Harvest ETB: ramp basic land (+1 mana)")
+
+
+_ETB_HANDLERS.update({
+    "Heaped Harvest": _heaped_harvest_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -26909,6 +26933,7 @@ _SPELL_HANDLERS.update({
 #                             targeted-exile family lands)
 #   - The Unagi of Kyoshi    (opponent-draw trigger; static-path)
 #   - Blossoming Tortoise    (mill + land-recursion ETB/attack; needs GY scan)
+#   - Tiger-Seal             (upkeep tap + draw-2 untap trigger; static-path)
 
 
 # Install — hand-written always beats auto-parser

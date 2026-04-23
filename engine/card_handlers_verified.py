@@ -26812,6 +26812,27 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Spiteful Hexmage
+# ═══════════════════════════════════════════════════════════════════
+
+def _spiteful_hexmage_etb(gs, card):
+    """Spiteful Hexmage — {B} 3/2 Human Warlock.
+    'When this creature enters, create a Cursed Role token attached
+     to target creature you control. (Enchanted creature is 1/1.)'
+
+    Cursed Role is a self-inflicted downside; the Role/Aura layer
+    isn't wired into the engine (same treatment as Spellbook Vendor
+    and other Role-token creators in this file)."""
+    gs._log("  Spiteful Hexmage ETB: +1 Cursed Role on friendly "
+            "(Role token effect not wired)")
+
+
+_ETB_HANDLERS.update({
+    "Spiteful Hexmage": _spiteful_hexmage_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

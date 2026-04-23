@@ -27045,6 +27045,59 @@ _ETB_HANDLERS.update({
 })
 
 
+def _bringer_of_the_last_gift_etb(gs, card):
+    """Bringer of the Last Gift - {6}{B}{B} 7/7 Vampire Demon.
+    'Flying. When this creature enters, if you cast it, each player
+     sacrifices all other creatures they control. Then each player
+     returns all creature cards from their graveyard that weren't put
+     there this way to the battlefield.'
+
+    Cast-conditional mass sac + mass reanimate. Assume cast-from-hand
+    (sim doesn't cheat this in). Set flying; for each side, sac all
+    other creatures (tracking them by id so they don't come back),
+    then return remaining creature cards from graveyard to battlefield
+    with summoning sickness. Legendary check not required."""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    card.tags.add(KWTag.FLYING)
+
+    def _sac_others(g, exclude=None):
+        victims = [c for c in list(g.zones.battlefield)
+                   if not c.is_land() and c.has(Tag.CREATURE)
+                   and c is not exclude]
+        for v in victims:
+            g.zones.battlefield.remove(v)
+            g.zones.graveyard.append(v)
+        return {id(v) for v in victims}
+
+    def _reanimate_rest(g, just_sacked):
+        returning = [c for c in list(g.zones.graveyard)
+                     if c.has(Tag.CREATURE)
+                     and id(c) not in just_sacked]
+        for c in returning:
+            g.zones.graveyard.remove(c)
+            g.zones.battlefield.append(c)
+            c.turn_entered = gs.turn
+            c.summoning_sickness = True
+        return len(returning)
+
+    my_sac = _sac_others(gs, exclude=card)
+    opp = getattr(gs, "_match_opp", None)
+    op_sac = _sac_others(opp) if opp else set()
+
+    my_re = _reanimate_rest(gs, my_sac)
+    op_re = _reanimate_rest(opp, op_sac) if opp else 0
+
+    gs._log(f"  Bringer of the Last Gift ETB: sac others "
+            f"({len(my_sac)}/{len(op_sac)}), reanimate "
+            f"({my_re}/{op_re})")
+
+
+_ETB_HANDLERS.update({
+    "Bringer of the Last Gift": _bringer_of_the_last_gift_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)

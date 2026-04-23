@@ -27124,6 +27124,52 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Squirming Emergence
+# ═══════════════════════════════════════════════════════════════════
+
+def _squirming_emergence(gs, card):
+    """Squirming Emergence — {1}{B}{G} Sorcery.
+    'Fathomless descent — Return to the battlefield target nonland
+     permanent card in your graveyard with mana value less than or
+     equal to the number of permanent cards in your graveyard.'
+
+    Goldfish: count permanent cards in GY (creature, land, artifact,
+    enchantment, planeswalker, battle — anything that is not
+    instant/sorcery), then reanimate the highest-MV nonland permanent
+    card in GY that fits the MV threshold."""
+    from data.card import Tag
+
+    def _is_permanent_card(c):
+        tl = c.type_line or ""
+        return (c.has(Tag.CREATURE)
+                or c.is_land()
+                or "Artifact" in tl
+                or "Enchantment" in tl
+                or "Planeswalker" in tl
+                or "Battle" in tl)
+
+    perm_in_gy = sum(1 for c in gs.zones.graveyard if _is_permanent_card(c))
+    candidates = [c for c in gs.zones.graveyard
+                  if not c.is_land()
+                  and _is_permanent_card(c)
+                  and getattr(c, 'cmc', 99) <= perm_in_gy]
+    if candidates:
+        tgt = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        gs.zones.graveyard.remove(tgt)
+        gs.zones.battlefield.append(tgt)
+        gs._log(f"  Squirming Emergence: reanimate {tgt.name} "
+                f"(mv<={perm_in_gy})")
+    else:
+        gs._log(f"  Squirming Emergence: no target "
+                f"(perm_in_gy={perm_in_gy})")
+
+
+_SPELL_HANDLERS.update({
+    "Squirming Emergence": _squirming_emergence,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -27142,6 +27188,18 @@ _ETB_HANDLERS.update({
 #   - Cosmogrand Zenith      ("whenever you cast your second spell each turn"
 #                             state trigger on permanent; needs cast-count/
 #                             state-triggered path)
+#   - Ethereal Armor         (aura; static +1/+1 per enchantment + first strike)
+#   - Picnic Ruiner          (attack trigger + Adventure side not tracked)
+#   - Zhao, the Moon Slayer  (menace static + nonbasic-lands-ETT static +
+#                             conqueror-counter type-change static; static-path)
+#   - Eclipsed Realms        (land with choose-a-type mana-spend restriction; no
+#                             ETB state change beyond type selection; static-path)
+#   - The Legend of Kuruk    (Saga — lore counters, scry, draw, transform into
+#                             Avatar Kuruk; needs Saga chapter path)
+#   - Inquisitive Glimmer    (static cost reduction on enchantment spells +
+#                             unlock costs; static-path)
+#   - Infestation Sage       (death trigger → 1/1 flying Insect token; needs
+#                             death-trigger path)
 
 
 # Install — hand-written always beats auto-parser

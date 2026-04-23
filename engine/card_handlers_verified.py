@@ -26833,6 +26833,39 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Geological Appraiser
+# ═══════════════════════════════════════════════════════════════════
+
+def _geological_appraiser_etb(gs, card):
+    """Geological Appraiser — {2}{R}{R} Human Artificer (3/2).
+    'When this creature enters, if you cast it, discover 3.'
+
+    Same discover-3 proxy as Etali's Favor: +1 card. The
+    "if you cast it" clause is assumed true — the goldfish/match
+    sim casts permanents rather than cheating them into play."""
+    if gs.zones.library:
+        gs.zones.draw(1)
+    gs._log("  Geological Appraiser ETB: discover 3 (+1 card proxy)")
+
+
+_ETB_HANDLERS.update({
+    "Geological Appraiser": _geological_appraiser_etb,
+})
+
+
+# Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
+#   - Caustic Bronco         (attack trigger + Saddle activated)
+#   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
+#   - Virtue of Strength     (static mana doubling enchantment)
+#   - Entity Tracker         (Eerie trigger on enchantment-ETB / Room unlock)
+#   - Tolarian Terror        (static cost reduction + Ward)
+#   - Werefox Bodyguard      (ETB exile-other is targeted removal; skip until
+#                             targeted-exile family lands)
+#   - The Unagi of Kyoshi    (opponent-draw trigger; static-path)
+#   - Blossoming Tortoise    (mill + land-recursion ETB/attack; needs GY scan)
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

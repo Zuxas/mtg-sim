@@ -26383,6 +26383,51 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Boomerang Basics
+# ═══════════════════════════════════════════════════════════════════
+
+def _boomerang_basics_spell(gs, card):
+    """Boomerang Basics — {U} Sorcery — Lesson.
+    'Return target nonland permanent to its owner's hand. If you
+     controlled that permanent, draw a card.'
+
+    Priority: bounce opp's biggest nonland permanent (best tempo).
+    If no opp target exists, self-bounce a creature we control and
+    draw 1 (the "replay-for-value" cantrip mode). Mirrors the Into
+    the Flood Maw bounce pattern already in this file."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+
+    opp_targets = []
+    if opp is not None:
+        opp_targets = [c for c in opp.zones.battlefield if not c.is_land()]
+    if opp_targets:
+        t = max(opp_targets, key=lambda c: safe_power(c))
+        opp.zones.battlefield.remove(t)
+        opp.zones.hand.append(t)
+        gs._log(f"  Boomerang Basics: bounce {t.name}")
+        return
+
+    my_targets = [c for c in gs.zones.battlefield
+                  if not c.is_land() and c.has(Tag.CREATURE)]
+    if my_targets:
+        t = min(my_targets, key=lambda c: safe_power(c))
+        gs.zones.battlefield.remove(t)
+        gs.zones.hand.append(t)
+        gs.zones.draw(1)
+        gs._log(f"  Boomerang Basics: self-bounce {t.name}, draw 1")
+        return
+
+    gs._log("  Boomerang Basics: no legal target (goldfish no-op)")
+
+
+_SPELL_HANDLERS.update({
+    "Boomerang Basics": _boomerang_basics_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

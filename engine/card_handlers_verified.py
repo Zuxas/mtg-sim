@@ -27298,6 +27298,66 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch - Superior Spider-Man (SPM)
+# ═══════════════════════════════════════════════════════════════════
+
+def _superior_spider_man_etb(gs, card):
+    """Superior Spider-Man — {2}{U}{B} Legendary Creature — Spider Human Hero (4/4).
+    'Mind Swap — You may have Superior Spider-Man enter as a copy of
+     any creature card in a graveyard, except his name is Superior
+     Spider-Man and he's a 4/4 Spider Human Hero in addition to his
+     other types. When you do, exile that card.'
+
+    Enter-as-copy replacement sourced from graveyards. Stats stay 4/4,
+    but keyword abilities of the target are inherited. Picks strongest
+    creature across both graveyards. Exiles that card on success."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    from engine.keywords import KWTag
+
+    pools = [("us", gs.zones.graveyard)]
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        pools.append(("opp", opp.zones.graveyard))
+
+    candidates = []
+    for owner, zone in pools:
+        for c in zone:
+            if c.has(Tag.CREATURE) and not c.is_land():
+                candidates.append((owner, zone, c))
+
+    if not candidates:
+        gs._log("  Superior Spider-Man ETB: 4/4 (no GY creature to copy)")
+        return
+
+    owner, zone, target = max(candidates, key=lambda t: safe_power(t[2]))
+
+    inheritable = (
+        KWTag.FLYING, KWTag.REACH, KWTag.MENACE, KWTag.TRAMPLE,
+        KWTag.FIRST_STRIKE, KWTag.DOUBLE_STRIKE, KWTag.DEATHTOUCH,
+        KWTag.LIFELINK, KWTag.VIGILANCE, KWTag.HASTE,
+        KWTag.INDESTRUCTIBLE, KWTag.HEXPROOF, KWTag.WARD,
+    )
+    inherited = [kw for kw in inheritable if kw in target.tags]
+    for kw in inherited:
+        card.tags.add(kw)
+
+    zone.remove(target)
+    if owner == "us":
+        gs.zones.exile.append(target)
+    else:
+        opp.zones.exile.append(target)
+
+    kw_str = ",".join(inherited) if inherited else "vanilla"
+    gs._log(f"  Superior Spider-Man ETB: copied {target.name} from {owner} GY ({kw_str}), 4/4")
+
+
+_ETB_HANDLERS.update({
+    "Superior Spider-Man": _superior_spider_man_etb,
+})
+
+
 # Non-ETB / non-cast cards deferred for static-ability or combat-trigger paths:
 #   - Caustic Bronco         (attack trigger + Saddle activated)
 #   - Fugitive Codebreaker   (Prowess/haste static + Disguise + face-up trigger)
@@ -27308,7 +27368,6 @@ _ETB_HANDLERS.update({
 #   - The Unagi of Kyoshi Island (Flash/Ward static + opp-draw trigger; static-path)
 #   - Tiger-Seal             (upkeep tap + draw-2 untap trigger; static-path)
 #   - Gran-Gran              (tap-trigger loot + static cost-reduction; static-path)
-#   - Superior Spider-Man    (enter-as-copy replacement; needs copy-from-GY path)
 #   - Enduring Innocence     (lifelink static + others-ETB state trigger + death
 #                             trigger; needs state-triggered + death paths)
 #   - Cosmogrand Zenith      ("whenever you cast your second spell each turn"

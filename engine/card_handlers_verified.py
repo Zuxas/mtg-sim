@@ -25689,8 +25689,26 @@ def _fire_ice_spell(gs, card):
     gs._log("  Fire/Ice: Ice mode — draw 1 (goldfish)")
 
 
+def _consult_the_star_charts(gs, card):
+    """Consult the Star Charts — {1}{U} Instant (Kicker {1}{U}).
+    'Look at the top X cards of your library, where X is the number
+     of lands you control. Put one of those cards into your hand.
+     If this spell was kicked, put two of those cards into your hand
+     instead. Put the rest on the bottom in a random order.'
+
+    Kicker heuristic: base cost 2, kicked cost 4 — if 4+ lands are in
+    play assume we paid the kicker and draw 2, else draw 1. X (the
+    look depth) is informational in goldfish since we abstract the
+    top-of-library pick as a draw."""
+    lands = sum(1 for c in gs.zones.battlefield if c.is_land())
+    drew = 2 if lands >= 4 else 1
+    gs.zones.draw(min(drew, len(gs.zones.library)))
+    gs._log(f"  Consult the Star Charts: draw {drew} (X={lands} lands)")
+
+
 _SPELL_HANDLERS.update({
     "Fire / Ice": _fire_ice_spell,
+    "Consult the Star Charts": _consult_the_star_charts,
 })
 
 

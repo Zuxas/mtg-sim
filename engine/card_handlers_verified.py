@@ -26206,6 +26206,34 @@ _ETB_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Sleight of Hand + skip notes
+# ═══════════════════════════════════════════════════════════════════
+# Deferred (need non-ETB/non-cast handler paths — do NOT write
+# log-only stubs):
+#   - "Adarkar Wastes"                  painland; tap-for-mana
+#                                       activated abilities only.
+#   - "Mirrex"                          utility land; tap-for-mana
+#                                       plus {3},{T} Mite token
+#                                       activated ability.
+
+def _sleight_of_hand_spell(gs, card):
+    """Sleight of Hand — {U} Sorcery.
+    'Look at the top two cards of your library. Put one of them into
+     your hand and the other on the bottom of your library.'
+
+    Filtered cantrip: always yields exactly one card to hand. Proxy
+    with a plain draw-1. Mirrors the Anticipate / Serum Visions /
+    Preordain pattern already used in the file."""
+    gs.zones.draw(1)
+    gs._log("  Sleight of Hand: draw 1 (best of top 2)")
+
+
+_SPELL_HANDLERS.update({
+    "Sleight of Hand": _sleight_of_hand_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

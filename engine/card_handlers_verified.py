@@ -26557,6 +26557,23 @@ _SPELL_HANDLERS.update({
 })
 
 
+# ═══════════════════════════════════════════════════════════════════
+# Standard Batch — Lightning Helix
+# ═══════════════════════════════════════════════════════════════════
+
+def _lightning_helix_spell(gs, card):
+    """Lightning Helix — {R}{W} Instant.
+    'Lightning Helix deals 3 damage to any target and you gain 3 life.'"""
+    _damage_any_helper(gs, 3)
+    gs.life += 3
+    gs._log(f"  Lightning Helix: 3 dmg + 3 life ({gs.damage_dealt} total)")
+
+
+_SPELL_HANDLERS.update({
+    "Lightning Helix": _lightning_helix_spell,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

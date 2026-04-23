@@ -26428,6 +26428,24 @@ _SPELL_HANDLERS.update({
 })
 
 
+def _novice_inspector_etb(gs, card):
+    """Novice Inspector - {W} 1/2 Human Detective.
+    'When this creature enters, investigate. (Create a Clue token.
+     It's an artifact with "{2}, Sacrifice this token: Draw a card.")'
+
+    Goldfish proxy: investigate = +1 card (the Clue will be cracked
+    on a later turn for its card-equivalent value). Matches the
+    Clue-proxy idiom used elsewhere in this file."""
+    if gs.zones.library:
+        gs.zones.draw(1)
+    gs._log("  Novice Inspector ETB: investigate (+1 Clue card)")
+
+
+_ETB_HANDLERS.update({
+    "Novice Inspector": _novice_inspector_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

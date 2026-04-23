@@ -17120,6 +17120,11 @@ def _shivan_reef_etb(gs, card):
     gs._log("  Shivan Reef: pain")
 
 
+def _underground_river_etb(gs, card):
+    _pain_land_etb(gs, card)
+    gs._log("  Underground River: pain")
+
+
 def _cavern_of_souls_etb(gs, card):
     """Cavern of Souls — As enters, choose a creature type.
     Taps for any color for that type, uncounterable."""
@@ -17493,6 +17498,7 @@ _ETB_HANDLERS.update({
     "Llanowar Wastes":        _llanowar_wastes_etb,
     "Caves of Koilos":        _caves_of_koilos_etb,
     "Shivan Reef":            _shivan_reef_etb,
+    "Underground River":      _underground_river_etb,
     "Cavern of Souls":        _cavern_of_souls_etb,
     "Castle Locthwain":       _castle_locthwain_etb,
     "Bleachbone Verge":       _bleachbone_verge_etb,

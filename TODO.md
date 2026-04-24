@@ -1,0 +1,104 @@
+# mtg-sim TODO
+
+## Tomorrow's work — sim framework MVP fix (surfaced 2026-04-23 overnight)
+
+- **`engine/match_runner.py:_simple_play_turn` does not invoke APLs.**
+  Accepts an `apl` parameter, never references it. Same function is
+  used by Path A (Bo3 via `run_bo3_set` → `run_match`) and Path B
+  (heuristic `run_match_set`). Every matchup sim ever run has played
+  "one land + cheapest creatures" for both sides, ignoring APL logic
+  and the 2,009-handler registry entirely.
+
+- **MVP diff: ~40 lines to wire APL into `_simple_play_turn`.**
+  Build a GameState view over TwoPlayerGameState's per-player flat
+  fields (hand/bf/gy/lib lists alias directly — mutations propagate),
+  populate view.mana_pool from lands-in-play (colorless approximation),
+  call `apl.main_phase(view)` + `apl.main_phase2(view)`. Sync back
+  land_played flag.
+
+- **Verified: registry will fire once MVP lands.** Chain is
+  `main_phase` → `_cast_all_castable` → `gs.cast_spell` → branches to
+  `on_spell_resolve` (hits `SPELL_EFFECTS.get`) for spells or
+  `_fire_etb_triggers` (hits `ETB_EFFECTS`) for permanents. Both
+  confirmed in `engine/card_effects.py:736` and `game_state.py`.
+
+- **Error handling: warn+continue by default, raise on `SIM_DEBUG=1`.**
+  No silent-pass. Loud warnings during MVP stabilization.
+
+- **Gated validation sequence:**
+  1. 1 game with full logging — confirm APL runs, spells cast,
+     game reaches > 3 turns
+  2. 100 games with turn-count distribution — confirm median turn > 3,
+     no turn-1 bailouts
+  3. 5k-per-matchup narrow gauntlet — compare FWR to tournament 49.5%
+     ballpark for Izzet Lessons
+  4. 25k-per-matchup — only after step 3 looks sane
+
+- **Known MVP limits (accept for initial validation):**
+  - Colorless-mana approximation — color-requiring spells may cast
+    when they shouldn't. Separate 15-30 line diff after MVP works.
+  - Uses `main_phase(gs)` (goldfish) not `main_phase_match(gs, opp)`
+    (opp-aware). APL plays without reacting to opponent. Upgrade
+    requires opponent GameState to be accessible — another 30-50 lines.
+
+- **Scope revised from "multi-day project → defer to post-RC" to
+  "~1 day MVP, bounded risk."** Still makes RC-prep calculus:
+  if MVP + Gate C produce sane FWR, sim validates sideboard work;
+  if MVP fails or Gates stay red, fall back to tournament-data-only
+  RC prep with no time lost vs prior plan.
+
+## RC prep (active — May 29 Standard RC)
+
+- **Tomorrow (2026-04-24): APL stubs for 3 Strixhaven brews.**
+  Decks: Izzet Control, Roaming Elementals, Mono Green Aggro.
+  None have decklists or APLs. Scrape representative decklists from
+  mtg_meta.db deck_cards rows (filter by archetype + last 30 days,
+  pick a high-placement sample). Create `apl/<slug>.py` as
+  `GenericAPL` shims, register in `APL_REGISTRY`. Expected effort:
+  ~90-135 min for all 3.
+
+- **After stubs: narrow gauntlet.** Izzet Lessons (locked deck) vs
+  the 5 Strixhaven brews at 25k games per matchup. 2 brews (Superior
+  Doomsday, Azorius Aggro) already have APL+decklist ready. Gauntlet
+  covers the 25% of post-Strixhaven meta that tournament-data can't
+  reach yet (no samples because too new). Expected ~1-2 hours.
+
+- **Priors file.** User's tier-feel for each of the 5 original
+  candidates goes in `docs/priors-2026-04-23.md` when pasted. Compare
+  against the real-world FWR data when re-evaluating after the
+  May 15-17 RC meta shift.
+
+- **Decision anchor (for May 13 deck-lock).** Izzet Lessons chosen
+  based on matchup_matrix data: 49.5% FWR, 4.0% stddev, no scary
+  matchups in covered 75% of meta, 7,182 matches of evidence. The
+  4% stddev is the meta-shift-resilience property that justifies
+  committing before May 15-17 reshuffles the field.
+
+## Metrics to build
+
+- **Cast-weighted coverage for current-Standard.** One-off script that,
+  given the handler file and mtg_meta.db, reports "X% of Standard
+  deck-slots in the last N weeks are covered by registered handlers."
+  Meta-share-weighted, not card-count-weighted. The card-count number
+  (now 2004 of 2172 played-and-legal Standard cards, ~92%) doesn't
+  tell you when the sim is ready for the RC — the weighted number does.
+  If a given wave pushes weighted coverage from 85%→95%, the loop is
+  still paying; once it plateaus near 98% and starts rising in 0.1%
+  increments the loop has hit diminishing returns and the next move is
+  telemetry/validation work, not more handlers. Not urgent — not
+  blocking Wave 2 or 3 — but worth building before a "is Standard done"
+  decision comes up.
+
+## Reporting bugs (not blocking)
+
+- **Handler-coverage AST scanner misses direct-assignment registrations.**
+  `scripts/build_priority_queue.py` and the Step 1 validator in
+  `.claude/commands/validate-and-run.md` both walk the AST for
+  `_SPELL_HANDLERS` / `_ETB_HANDLERS` dict literals only. They do not
+  catch handlers registered via `ETB_EFFECTS[name] = fn` or
+  `SPELL_EFFECTS[name] = fn` direct assignments (loop-style). Live-import
+  count is 1986; AST union is 1956 — 30 handlers hidden from the scanner.
+  Fix: extend the walker to also collect `ast.Assign` where target is
+  `ast.Subscript` with value `ETB_EFFECTS` or `SPELL_EFFECTS` and slice
+  is a string constant. Reporting bug only — the handlers work at runtime.
+  Surfaced 2026-04-22 during first `/validate-and-run` dry run.

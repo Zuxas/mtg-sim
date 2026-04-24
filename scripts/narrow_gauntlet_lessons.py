@@ -17,6 +17,11 @@ import os
 import sys
 from pathlib import Path
 
+# Force UTF-8 stdout — parallel_launcher prints box-drawing chars
+# that break cp1252 when stdout is redirected to a file on Windows.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 os.chdir(REPO_ROOT)
 sys.path.insert(0, str(REPO_ROOT))

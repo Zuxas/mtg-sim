@@ -136,10 +136,84 @@ class TwoPlayerGameState:
 
 def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
     """
-    Simple turn simulator for a player.
-    If they have an APL, use it via a stub GameState.
-    Otherwise, use the generic heuristic (play cheapest creature first).
+    Turn simulator for a player.
+
+    If `apl` is provided, build a single-player `GameState` view over
+    TwoPlayerGameState's per-player fields and delegate the precombat
+    turn to `apl.main_phase(view)` + `apl.main_phase2(view)` if it
+    exists. Zone lists are aliased between view and TwoPlayerGameState,
+    so mutations (casts, plays, triggers) propagate.
+
+    If `apl` is None (or the APL path raises an unhandled exception
+    without SIM_DEBUG set), fall through to the legacy heuristic:
+    play one land + cheapest-CMC nonland spells from hand. The legacy
+    heuristic ignores APL entirely and is only here as a safety net;
+    it was the sole code path from this file's creation until the
+    APL wiring landed 2026-04-24 (see
+    harness/knowledge/tech/match-runner-bug-2026-04-23.md).
     """
+    if apl is not None:
+        import os, sys
+        from engine.game_state import GameState
+
+        if player == "a":
+            view_on_play    = gs.on_play
+            hand_ref        = gs.hand_a
+            bf_ref          = gs.bf_a
+            gy_ref          = gs.gy_a
+            lib_ref         = gs.lib_a
+            life_val        = gs.life_a
+            land_played_val = gs.land_played_a
+        else:
+            view_on_play    = not gs.on_play
+            hand_ref        = gs.hand_b
+            bf_ref          = gs.bf_b
+            gy_ref          = gs.gy_b
+            lib_ref         = gs.lib_b
+            life_val        = gs.life_b
+            land_played_val = gs.land_played_b
+
+        view = GameState(mainboard=[], on_play=view_on_play)
+        view.turn              = gs.turn
+        view.zones.hand        = hand_ref   # list aliased
+        view.zones.battlefield = bf_ref
+        view.zones.graveyard   = gy_ref
+        view.zones.library     = lib_ref
+        view.life              = life_val
+        view.land_played       = land_played_val
+
+        # Color-aware mana via ManaPool.add_land — handles basics,
+        # duals, fetchlands (flex), Wasteland (colorless), etc.
+        for c in view.zones.battlefield:
+            if c.is_land():
+                try:
+                    view.mana_pool.add_land(
+                        c.type_line or "", c.name or ""
+                    )
+                except Exception:
+                    view.mana_pool.add("C", 1)
+
+        try:
+            apl.main_phase(view)
+            if hasattr(apl, "main_phase2"):
+                apl.main_phase2(view)
+        except Exception as e:
+            if os.environ.get("SIM_DEBUG"):
+                raise
+            print(
+                f"  [WARN _simple_play_turn APL exec failed for "
+                f"{type(apl).__name__} player={player} turn={gs.turn}: {e}]",
+                file=sys.stderr,
+            )
+
+        # Sync back — APL may have played a land this turn
+        if player == "a":
+            gs.land_played_a = view.land_played
+        else:
+            gs.land_played_b = view.land_played
+        return
+
+    # -------- Legacy heuristic fallback (apl is None) --------
     if player == "a":
         hand    = gs.hand_a
         bf      = gs.bf_a

@@ -155,48 +155,47 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
     if apl is not None:
         import os, sys
         from engine.game_state import GameState
+        from apl.match_apl import MatchAPL, RemovalAwareGoldfishAdapter
 
-        if player == "a":
-            view_on_play    = gs.on_play
-            hand_ref        = gs.hand_a
-            bf_ref          = gs.bf_a
-            gy_ref          = gs.gy_a
-            lib_ref         = gs.lib_a
-            life_val        = gs.life_a
-            land_played_val = gs.land_played_a
-        else:
-            view_on_play    = not gs.on_play
-            hand_ref        = gs.hand_b
-            bf_ref          = gs.bf_b
-            gy_ref          = gs.gy_b
-            lib_ref         = gs.lib_b
-            life_val        = gs.life_b
-            land_played_val = gs.land_played_b
+        def _build_view(for_player):
+            """Construct a single-player GameState aliasing the
+            appropriate per-player fields of the shared TwoPlayerGameState."""
+            if for_player == "a":
+                on_play = gs.on_play
+                hand, bf, gy, lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
+                life, land_played = gs.life_a, gs.land_played_a
+            else:
+                on_play = not gs.on_play
+                hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
+                life, land_played = gs.life_b, gs.land_played_b
+            v = GameState(mainboard=[], on_play=on_play)
+            v.turn              = gs.turn
+            v.zones.hand        = hand   # list aliased — mutations propagate
+            v.zones.battlefield = bf
+            v.zones.graveyard   = gy
+            v.zones.library     = lib
+            v.life              = life
+            v.land_played       = land_played
+            # Color-aware mana via ManaPool.add_land — handles basics,
+            # duals, fetchlands (flex), Wasteland (colorless), etc.
+            for c in v.zones.battlefield:
+                if c.is_land():
+                    try:
+                        v.mana_pool.add_land(c.type_line or "", c.name or "")
+                    except Exception:
+                        v.mana_pool.add("C", 1)
+            return v
 
-        view = GameState(mainboard=[], on_play=view_on_play)
-        view.turn              = gs.turn
-        view.zones.hand        = hand_ref   # list aliased
-        view.zones.battlefield = bf_ref
-        view.zones.graveyard   = gy_ref
-        view.zones.library     = lib_ref
-        view.life              = life_val
-        view.land_played       = land_played_val
+        view     = _build_view(player)
+        opp      = "b" if player == "a" else "a"
+        opp_view = _build_view(opp)
 
-        # Color-aware mana via ManaPool.add_land — handles basics,
-        # duals, fetchlands (flex), Wasteland (colorless), etc.
-        for c in view.zones.battlefield:
-            if c.is_land():
-                try:
-                    view.mana_pool.add_land(
-                        c.type_line or "", c.name or ""
-                    )
-                except Exception:
-                    view.mana_pool.add("C", 1)
+        # Auto-upgrade goldfish APLs to opp-aware removal play.
+        # Hand-tuned MatchAPLs (BorosEnergyMatchAPL etc.) keep their own logic.
+        match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
 
         try:
-            apl.main_phase(view)
-            if hasattr(apl, "main_phase2"):
-                apl.main_phase2(view)
+            match_apl.main_phase_match(view, opp_view)
         except Exception as e:
             if os.environ.get("SIM_DEBUG"):
                 raise

@@ -29,6 +29,180 @@ class MatchAPL(BaseAPL):
     Inherits keep/bottom from BaseAPL, adds opponent-aware methods.
     """
 
+    # Deck-level override: set True for tribal / token / go-wide
+    # decks whose plan is 'attack with everyone' regardless of trade
+    # math. Lord pumps (Merfolk, Slivers, Humans), anthem effects
+    # (Intangible Virtue), and token generators (Bitterblossom
+    # archetypes) benefit — their creatures trade or chip through
+    # collectively even when individual attacks look bad.
+    ATTACK_ALL_IN = False
+
+    # Archetype category for sideboard-plan matching. One of:
+    #   'aggro', 'midrange', 'control', 'combo', 'ramp', 'tempo'.
+    # Used as a key into the opponent's SB_PLANS dict.
+    ARCHETYPE = "midrange"
+
+    # Sideboard plans keyed by opponent ARCHETYPE string. Each value
+    # is a (sb_in_lines, sb_out_lines) tuple of Arena-format strings
+    # understood by engine.sideboard.apply_sideboard_plan:
+    #   'N Card Name'
+    # An empty or missing entry means no sideboarding for that matchup.
+    #
+    # Example (Jeskai Control vs Aggro):
+    #   SB_PLANS = {
+    #       'aggro': (
+    #           ['2 Torch the Tower', '2 Abrade'],
+    #           ['2 Three Steps Ahead', '2 Stock Up'],
+    #       ),
+    #   }
+    SB_PLANS: dict = {}
+
+    def sb_plan_for(self, opp_archetype: str):
+        """Return (sb_in_raw, sb_out_raw) tuple or None. Consumed by
+        engine.bo3_match.run_bo3 before game 2 / 3."""
+        plan = self.SB_PLANS.get(opp_archetype)
+        if not plan:
+            return None
+        sb_in, sb_out = plan
+        return (list(sb_in), list(sb_out))
+
+    # Removal spells that actually kill a creature in match mode.
+    # Keyed by card name → (cmc_cost, kills_any_tougher_than). The
+    # second value is the maximum toughness the spell can handle
+    # (None = unconditional). Overrides the goldfish SPELL_EFFECTS
+    # path which only adds face damage.
+    MATCH_REMOVAL = {
+        # Jeskai
+        "Lightning Helix":  (2, 3),    # 3 dmg → kills toughness ≤ 3
+        "Get Lost":         (2, None), # exile any nonland permanent
+        # Seam Rip exiles ENCHANTMENT only — not a creature answer,
+        # intentionally omitted. Same for Abandon Attachments.
+        "Fire Magic":       (1, 2),    # 1-mode deals 2 dmg
+        # Dimir / black
+        "Bitter Triumph":   (2, None), # any creature/planeswalker
+        "Shoot the Sheriff":(2, 3),
+        "Long Goodbye":     (2, None), # any non-legendary
+        "Go for the Throat":(2, None), # non-artifact creature
+        "Requiting Hex":    (1, 2),    # destroy creature CMC ≤ 2
+        "Deadly Cover-Up":  (5, None), # wrath, evidence=6 names a card
+        "Archenemy's Charm":(3, None), # exile creature/PW mode
+        # Azorius / white
+        "Day of Judgment":  (4, None), # board wipe
+        "Depopulate":       (4, None),
+        "Sunfall":          (5, None),
+        "Farewell":         (6, None),
+        "Temporary Lockdown":(3, 2),
+        # Standard burn
+        "Lightning Strike": (2, 3),
+        "Burst Lightning":  (1, 2),
+        "Shock":            (1, 2),
+        "Torch the Tower":  (1, 2),
+        "Obliterating Bolt":(3, 3),
+        "Abrade":           (2, 3),
+        "Witchstalker Frenzy":(2, 4),
+        # Other
+        "Exorcise":         (3, None), # exile tapped creature/PW
+        "Stab":             (1, 2),    # -2/-2
+        # Izzet Lesson / Spellementals creature answers
+        # Intentionally NOT listed here:
+        #   - Firebending Lesson (saga making 1/1 tokens, not reliable
+        #     removal; the level-3 chapter can damage but we already
+        #     handle its cast via SAGA_EFFECTS)
+        #   - It'll Quench Ya (card draw, not removal)
+        #   - Abandon Attachments (artifact/enchant hate, not creature)
+        "Combustion Technique":(2, 2), # deal 2 to creature/PW
+        "Iroh's Demonstration":(3, 3), # -3/-3 creature debuff
+        "Sear":             (2, 3),    # 3 dmg bolt
+        "Pyroclasm":        (2, 2),    # 2 dmg to each
+        "Slagstorm":        (3, 3),    # 3 dmg each (or player)
+        # Gruul / prowess
+        "Scorching Shot":   (2, 4),
+        # Ramp extras
+        "Destroy Evil":     (2, None),
+        "Path of Peril":    (3, 2),    # 2 dmg each (tiered)
+        "The Cruelty of Gix":(5, None),
+        # Dimir extras
+        "Faebloom Trick":   (3, 3),    # exile face-up creature
+        "Annul":            (1, None), # counter artifact/enchant
+        "Strategic Betrayal":(3, None),
+    }
+
+    # Spells that are AoE wipes (affect whole board, not just target).
+    MATCH_WIPES = {"Day of Judgment", "Depopulate", "Sunfall",
+                   "Farewell", "Temporary Lockdown", "Pyroclasm",
+                   "Slagstorm", "Path of Peril", "Deadly Cover-Up"}
+    MATCH_EXILE = {"Sunfall", "Farewell", "Get Lost", "Seam Rip",
+                   "Exorcise", "Faebloom Trick"}
+
+    def _match_cast_removal(self, gs: GameState, opponent: GameState):
+        """Before anything else, if we have a removal spell in hand and
+        opp has a threatening creature, kill it. Fires at the top of
+        main_phase_match so reactive removal doesn't rot when the APL
+        calls main_phase2 and dumps leftovers at opp's face."""
+        if opponent is None:
+            return
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
+        if not opp_creatures:
+            return
+        # Sort biggest first — we want to answer the real threat
+        targets = sorted(opp_creatures,
+                         key=lambda c: -safe_power(c))
+        for target in targets:
+            if safe_power(target) < 1:
+                continue
+            cast_any = False
+            for card in list(gs.zones.hand):
+                spec = self.MATCH_REMOVAL.get(card.name)
+                if not spec:
+                    continue
+                _cost, max_tgh = spec
+                if not gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    continue
+                # Can this spell actually kill the target?
+                if max_tgh is not None and safe_toughness(target) > max_tgh:
+                    continue
+                # Pay and resolve — skip SPELL_EFFECTS face-damage path.
+                gs.mana_pool.pay(card.mana_cost, card.cmc)
+                gs.zones.hand.remove(card)
+                gs.zones.graveyard.append(card)
+                gs.noncreature_spells_this_turn += 1
+                # Wipes affect the whole board. AoE wipes (Pyroclasm,
+                # Slagstorm, Path of Peril) only kill creatures with
+                # toughness ≤ the damage dealt — max_tgh already
+                # captures that threshold.
+                if card.name in self.MATCH_WIPES:
+                    exile_mode = card.name in self.MATCH_EXILE
+                    killed = 0
+                    for cr in list(opponent.zones.battlefield):
+                        if not (cr.has(Tag.CREATURE) and not cr.is_land()):
+                            continue
+                        if max_tgh is not None and safe_toughness(cr) > max_tgh:
+                            continue
+                        opponent.zones.battlefield.remove(cr)
+                        if exile_mode:
+                            opponent.zones.exile.append(cr)
+                        else:
+                            opponent.zones.graveyard.append(cr)
+                        killed += 1
+                    gs._log(f"  {card.name}: kill {killed} opp creatures")
+                    return  # wipe resolves whole board, stop
+                else:
+                    # Spot removal
+                    opponent.zones.battlefield.remove(target)
+                    if card.name in self.MATCH_EXILE:
+                        opponent.zones.exile.append(target)
+                    else:
+                        opponent.zones.graveyard.append(target)
+                    gs._log(f"  {card.name} -> kill {target.name}")
+                cast_any = True
+                break
+            if cast_any:
+                # Only one removal per turn from this helper — main
+                # loop still has main_phase2 for leftover reactive
+                # spells (they'll go face per SPELL_EFFECTS).
+                return
+
     def main_phase_match(self, gs: GameState, opponent: GameState):
         """
         Main phase with opponent awareness.
@@ -36,9 +210,26 @@ class MatchAPL(BaseAPL):
         opponent GS on self so base-class hooks (ControlAPL's
         _should_wipe, AggroAPL's _should_hold_threat, etc.) can
         consult the opp board when deciding plays.
+
+        Composed control/ramp APLs split decisions across main_phase
+        (pre-combat, reserves reactive mana) and main_phase2 (releases
+        unused reactive mana into removal / second threats / wipes).
+        Match mode has a single combat step before end-of-turn, so we
+        run both halves here to give control decks their full mana.
+
+        Order:
+          1. _match_cast_removal (kill a threat if possible)
+          2. main_phase (goldfish proactive plays)
+          3. main_phase2 (goldfish reactive dump)
         """
         self._opp_gs = opponent
+        self._match_cast_removal(gs, opponent)
         self.main_phase(gs)
+        if hasattr(self, "main_phase2"):
+            try:
+                self.main_phase2(gs)
+            except Exception:
+                pass
 
     # ------------------------------------------------------------------
     # Opp-state helpers — available to every composed APL in match
@@ -102,6 +293,10 @@ class MatchAPL(BaseAPL):
                     and not getattr(c, 'tapped', False)]
         if not eligible:
             return []
+
+        # Go-wide opt-in: tribal / token / Lord decks just attack.
+        if self.ATTACK_ALL_IN:
+            return eligible
 
         # Blockers opp has on the table
         opp_blockers = [c for c in opponent.zones.battlefield
@@ -273,6 +468,50 @@ class GoldfishAdapter(MatchAPL):
     def main_phase_match(self, gs: GameState, opponent: GameState):
         """Goldfish APLs ignore the opponent — just play their game."""
         self.inner.main_phase(gs)
+
+
+class RemovalAwareGoldfishAdapter(MatchAPL):
+    """
+    Wraps a goldfish BaseAPL so that MatchAPL._match_cast_removal fires
+    at the opponent's creatures BEFORE the inner goldfish main_phase
+    runs. Unlike the basic GoldfishAdapter which short-circuits past
+    the removal path entirely, this adapter invokes MatchAPL's real
+    sequence: _match_cast_removal → inner.main_phase → inner.main_phase2.
+
+    Used by match_runner._simple_play_turn to auto-upgrade any
+    registered goldfish APL to opponent-aware removal play without
+    forcing every deck to have a hand-tuned MatchAPL subclass. Landed
+    2026-04-24 after Gate B showed goldfish-only main_phase scored
+    control decks at 0% vs aggro because removal never fired.
+
+    Known limitations (below the MVP's accepted line):
+    - Combat is still heuristic (handled by match_runner._resolve_combat)
+    - declare_attackers / declare_blockers not invoked
+    - counters, combat tricks, EOT actions not invoked
+    """
+
+    def __init__(self, inner: BaseAPL):
+        self.inner = inner
+        self.name = getattr(inner, "name", inner.__class__.__name__)
+
+    def keep(self, hand, mulligans, on_play) -> bool:
+        return self.inner.keep(hand, mulligans, on_play)
+
+    def bottom(self, hand, n) -> list:
+        return self.inner.bottom(hand, n)
+
+    def main_phase(self, gs: GameState):
+        self.inner.main_phase(gs)
+
+    def main_phase2(self, gs: GameState):
+        if hasattr(self.inner, "main_phase2"):
+            self.inner.main_phase2(gs)
+
+    # main_phase_match is inherited from MatchAPL. It calls:
+    #   self._opp_gs = opponent
+    #   self._match_cast_removal(gs, opponent)  # uses MATCH_REMOVAL dict
+    #   self.main_phase(gs)                     # delegates to inner
+    #   self.main_phase2(gs)                    # delegates
 
 
 class GenericMatchAPL(MatchAPL):

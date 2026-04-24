@@ -83,6 +83,11 @@ APL_REGISTRY = {
     "standardaggro":   ("apl.standard_aggro",   "StandardAggroAPL",  None),
     "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
     "rakdos":          ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
+
+    # ── Standard Strixhaven brews (GenericAPL shims, 2026-04-23) ──
+    "izzetcontrol":       ("apl.izzet_control_standard",      "IzzetControlAPL",      "decks/izzet_control_standard.txt"),
+    "roamingelementals":  ("apl.roaming_elementals_standard", "RoamingElementalsAPL", "decks/roaming_elementals_standard.txt"),
+    "monogreenaggro":     ("apl.mono_green_aggro_standard",   "MonoGreenAggroAPL",    "decks/mono_green_aggro_standard.txt"),
 }
 
 

@@ -1,99 +1,124 @@
 ---
 title: Narrow Gauntlet — Izzet Lessons vs 5 Strixhaven Brews
 date: 2026-04-23
-task_id: bst9aitvr
-status: ran_to_completion_but_results_diverge_from_reality
+task_ids: bst9aitvr (pre-fix), b2jtfo2gv (post-fix)
+status: root_cause_found_SIM_FRAMEWORK_BROKEN
 ---
 
 # Narrow Gauntlet Results — Izzet Lessons
 
-## Headline
+## Headline — revised after code inspection
 
-**Field-weighted match WR: 8.2%.** Tournament matchup_matrix says Izzet
-Lessons is a 49.5% FWR deck. **The sim is 41 percentage points off.**
+**Root cause: `engine/match_runner.py:137 _simple_play_turn()`
+accepts an `apl` parameter and never uses it.** Both Path A (Bo3
+via `run_bo3_set` → `run_match` → `_simple_play_turn`) and Path B
+(heuristic `run_match_set` → same chain) ignore APLs entirely.
 
-| Opp | Share | G1 | G2 | Match | Path |
-|---|---|---|---|---|---|
-| Superior Doomsday | 7.3% | 1.8% | 7.8% | **0.7%** | G1 sim + heuristic SB (no Bo3 plan) |
-| Izzet Control | 5.0% | 36.2% | 40.4% | **32.7%** | Real Bo3, both sides SB'd |
-| Roaming Elementals | 4.5% | 0.1% | 6.1% | **0.4%** | G1 sim + heuristic SB |
-| Azorius Aggro | 3.6% | 8.4% | 10.1% | **2.4%** | Real Bo3, our-side SB only |
-| Mono Green Aggro | 3.6% | 12.1% | 14.8% | **5.0%** | Real Bo3, our-side SB only |
+The two-player sim framework plays one land per turn + cheapest-CMC
+creatures from hand, for both players, regardless of what APL is
+passed in. Spells are NEVER cast in the sim. Triggers never fire.
+The handler registry (2,009 entries) is entirely unreached during
+matchup simulation.
 
-Only the Izzet Control mirror-ish matchup shows a number that's even
-in the right tier. Every other matchup is catastrophically worse than
-reality.
+**The 99.32% cast-weighted coverage milestone was against
+card-handler registration, not sim usage.** Handlers are
+correctly written but never invoked.
 
-## What went right
+## Raw results (both runs)
 
-- All 5 matchups ran (zero errors)
-- 125,000 total games in ~6 minutes wall time
-- Commits clean, per-task discipline held
-- Registry gap closed (3 pre-existing decks silently un-registered — Izzet Lessons, Superior Doomsday, Azorius Aggro)
+| Opp | Pre-fix Match | Post-fix Match (fresh decklist) |
+|---|---|---|
+| Superior Doomsday | 0.7% | 0.7% |
+| Izzet Control | 32.7% | 17.0% |
+| Roaming Elementals | 0.4% | 0.4% |
+| Azorius Aggro | 2.4% | 0.3% |
+| Mono Green Aggro | 5.0% | 1.2% |
+| **FWR** | **8.2%** | **4.1%** |
 
-## What the results tell us
+The decklist fix made it marginally worse, not better — consistent
+with the new kobayui list being more spell-heavy than the stale
+2025-12-30 list. More spells in a sim that can't cast spells =
+more dead cards in hand = fewer creatures = more losses.
 
-The 99.32% cast-weighted handler coverage did not translate to sim
-calibration. The gauntlet is answering "how does the sim's Izzet Lessons
-play against the sim's opponents" — and the answer is "terribly."
-That's a sim-quality problem, not a handler-coverage problem.
+## Why this explains everything we saw
 
-## Root causes to investigate tomorrow, in priority order
+- **Control decks (Izzet Lessons) lose 95%+:** they have 4-5
+  creatures in 60 cards and win via spells. The sim never casts
+  spells, so Lessons just plays 4 small creatures across 15 turns
+  while opponents swarm with aggro creatures.
+- **Aggro decks win hard:** they have 20+ creatures, the sim plays
+  creatures, everything works out for aggro.
+- **GenericAPL stubs performed "fine":** they're creature-curve
+  decks (Roaming Elementals Elemental tribal, Mono Green Aggro
+  Llanowar-Elves curve). The sim's generic creature-play heuristic
+  happens to approximate their actual plan.
+- **Izzet Control matchup was least-bad (17% / 32.7%):** both decks
+  are spell-heavy so both equally "lose" access to their gameplan.
+  The one with slightly more on-curve creatures wins. Relative
+  performance here is noise, not signal.
 
-### 1. Izzet Lessons decklist is 58 cards, 4 months old (pre-Strixhaven)
+## What the matchup_matrix data tells us
 
-`decks/izzet_lesson_standard.txt` header says "Sakano Rei, 2nd place,
-2025-12-30." Counts 58 mainboard cards, not 60. Predates Strixhaven
-entirely. A current tournament Lessons list scraped from mtg_meta.db
-would be both legal (60) and current (post-Strixhaven cards like
-Strixhaven Stadium / whatever the new Lesson support is).
+6,338 tournament matches still stand. **Izzet Lessons at 49.5%
+FWR is real-world truth, not sim output.** The deck choice for
+May 29 RC remains locked on that basis.
 
-**Action:** scrape a current Izzet Lessons decklist the same way the
-3 brew decklists were scraped tonight.
+## Tomorrow's work — scope completely changed
 
-### 2. IzzetLessonAPL behavior vs opponents
+**Don't touch the sim framework under the 3-week RC timeline.**
+Wiring APLs into `_simple_play_turn` is at minimum a multi-day
+engineering project:
+- Define what "APL plays a turn" means as an interface
+- Adapt BaseAPL + MatchAPL signatures (designed for single-player
+  goldfish) to two-player game state
+- Thread decisions (main phase, priority windows, responses) through
+  the turn cycle
+- Validate against at least one hand-tuned matchup before trusting
+  the output
 
-Even against GenericAPL-shim opponents (Roaming Elementals, Mono Green
-Aggro) IL posts <15% G1. GenericAPL should be a weak baseline.
-Something about `IzzetLessonAPL(ControlAPL)` is losing G1 play
-sequencing — possibly mulligan logic rejecting hands too aggressively,
-possibly not casting its win conditions.
+That's a February-through-March project, not an April overnight.
+It also might not be justified given what RC-prep actually needs:
+the tournament matchup_matrix already answers "which deck plays
+best in the field."
 
-**Action:** manual game-trace of IL vs Mono Green Aggro (should be
-the cleanest matchup to debug — generic vs real control, no combo
-weirdness). Inspect why Lessons is losing G1 at 88%.
+### Actual revised RC-prep plan
 
-### 3. SB plans missing for 2 of 5 opponents
+1. **Commit to Izzet Lessons on May 13** per tournament data. Sim
+   cannot validate; doesn't need to.
+2. **Sideboard work:** per-matchup SB plans for Lessons against the
+   top 8 covered-by-data archetypes (Izzet Prowess, Mono Green
+   Landfall, Izzet Spellementals, Simic Rhythm, Izzet Lessons
+   mirror, plus any fresh post-May-15 entrants). Research via
+   tournament-deck inspection + competitive content; validate by
+   paper testing. This is how sideboarding has always been done
+   pre-sim.
+3. **Post May-15-17 RC:** re-run cast-weighted coverage and
+   matchup_matrix queries to detect meta shifts from that event.
+   Update SB plans accordingly.
+4. **Paper-test deadline May 13** as originally planned. 4% stddev
+   across matchups in the matchup_matrix data is the property that
+   justifies committing this early.
 
-Superior Doomsday and Roaming Elementals fell through to heuristic
-G1 sim because no IL sideboard plan exists for those matchups in
-`engine/sideboard.py`. Even with a calibrated IL, those matchups
-would run without real sideboarding.
+## Overnight inventory (commits on main)
 
-**Action:** add SB plans for Izzet Lessons vs each of the 5 brews
-once IL's deck and APL are fixed.
-
-## What the data does NOT change
-
-The tournament matchup_matrix data from 6,338 recent matches still
-stands: Izzet Lessons at 49.5% FWR / 4.0% stddev over 75% of the
-meta. That's real-world truth and it's why Lessons is the locked
-deck choice. **The gauntlet disagreeing with reality is the gauntlet
-being wrong, not the deck choice being wrong.**
-
-## Overnight inventory of work completed
-
-- 3 GenericAPL-shim stubs for previously-uncovered Strixhaven brews
-  (Izzet Control, Roaming Elementals, Mono Green Aggro) + their
-  scraped decklists (placement-1 recent tournament samples)
-- 3 pre-existing APL registrations that had been silently missing
-  (Izzet Lessons, Superior Doomsday, Azorius Aggro)
-- UTF-8 stdout fix for Windows redirect
-- Narrow gauntlet launcher script
-- This report
-
-Commits (this task):
 - `7fcecf6` stubs: 3 Strixhaven brews (GenericAPL shims)
 - `603a6aa` narrow gauntlet: Izzet Lessons vs 5 post-Strixhaven brews
 - `5279c2e` fix: utf-8 stdout for narrow gauntlet launcher
 - `a91733b` registry: add missing Standard entries (Lessons, Doomsday, Azorius Aggro)
+- `c734973` initial morning report (now superseded by this revision)
+- `4da45e7` decks: current Izzet Lessons (post-Strixhaven)
+
+## Recommendations
+
+1. **Do not spend RC prep time fixing the sim.** It's a bigger
+   project than the RC window. The sim's current state is useful
+   for goldfish/APL-tuning single-deck questions (where the APL IS
+   invoked via other code paths) but not for matchup simulation.
+2. **File `engine/match_runner.py:_simple_play_turn` APL wiring as
+   Known Major Issue.** Future work, not blocker.
+3. **For any future claims that "the sim says X about matchup Y,"
+   verify what path produced the claim.** Any path that calls
+   `run_match` or `run_match_set` gives output unrelated to APLs.
+   Goldfish paths (single-deck `sim.py`, `gauntlet_any_deck.py`
+   goldfishing) may still be valid since they likely run the APL
+   against an empty opponent.

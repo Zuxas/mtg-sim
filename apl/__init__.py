@@ -88,6 +88,16 @@ APL_REGISTRY = {
     "izzetcontrol":       ("apl.izzet_control_standard",      "IzzetControlAPL",      "decks/izzet_control_standard.txt"),
     "roamingelementals":  ("apl.roaming_elementals_standard", "RoamingElementalsAPL", "decks/roaming_elementals_standard.txt"),
     "monogreenaggro":     ("apl.mono_green_aggro_standard",   "MonoGreenAggroAPL",    "decks/mono_green_aggro_standard.txt"),
+
+    # ── Standard existing APLs not previously registered (2026-04-23) ──
+    # APL files and decklists have existed in the repo but were never wired
+    # into APL_REGISTRY, which meant any gauntlet against them silently
+    # failed with "Could not load deck." Surfaced during narrow-gauntlet run.
+    "izzetlesson":        ("apl.izzet_lesson",                "IzzetLessonAPL",       "decks/izzet_lesson_standard.txt"),
+    "izzetlessons":       ("apl.izzet_lesson",                "IzzetLessonAPL",       "decks/izzet_lesson_standard.txt"),
+    "superiordoomsday":   ("apl.superior_doomsday_standard",  "SuperiorDoomsdayAPL",  "decks/superior_doomsday_standard.txt"),
+    "doomsday":           ("apl.superior_doomsday_standard",  "SuperiorDoomsdayAPL",  "decks/superior_doomsday_standard.txt"),
+    "azoriusaggro":       ("apl.azorius_aggro_standard",      "AzoriusAggroAPL",      "decks/azorius_aggro_standard.txt"),
 }
 
 

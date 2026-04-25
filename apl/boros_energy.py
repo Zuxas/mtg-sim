@@ -66,6 +66,35 @@ class BorosEnergyAPL(BaseAPL):
     # Cards with very limited goldfish value (creature-only removal, no face)
     LOW_VALUE_GOLDFISH = {THRABEN_CHARM, GALVANIC}
 
+    # ── Role-detection scaffolding (Phase 1 refactor 2026-04-25, stage 2) ──
+    # See harness/knowledge/tech/apl-role-refactor-2026-04-25.md for the
+    # full architectural spec. Currently scaffolding only -- methods exist
+    # but are NOT called from the turn loop yet (stage 2 = no behavior
+    # change). Stages 3-5 migrate keep/bottom/main_phase/main_phase2 to
+    # query role buckets instead of hardcoded card-name constants.
+    _roles_computed = False
+
+    # Cards with mechanics too unique to capture via oracle-text patterns.
+    # Each entry maps card name -> (has_flag_attr, handler_method_name).
+    # Handlers fire only if the corresponding has_<card> flag is True
+    # (set during _compute_roles).
+    SPECIAL_MECHANICS = {
+        "Phlage, Titan of Fire's Fury":
+            ("has_phlage", "_handle_phlage"),
+        "Ajani, Nacatl Pariah":
+            ("has_ajani", "_handle_ajani_etb"),
+        "Ocelot Pride":
+            ("has_ocelot", "_handle_ocelot_end_step"),
+        "Guide of Souls":
+            ("has_guide", "_handle_guide_attack_pump"),
+        "Arena of Glory":
+            ("has_arena_of_glory", "_handle_arena_exert_haste"),
+        "Goblin Bombardment":
+            ("has_bombardment", "_handle_bombardment_finish"),
+        "Seasoned Pyromancer":
+            ("has_pyromancer", "_handle_pyromancer_loot"),
+    }
+
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
         lands = [c for c in hand if c.is_land()]
         creatures = [c for c in hand if c.has(Tag.CREATURE)]
@@ -457,3 +486,129 @@ class BorosEnergyAPL(BaseAPL):
 
         # Bombardment: try to sac for lethal
         self._bombardment_finish(gs)
+
+    # ────────────────────────────────────────────────────────────────
+    # Phase 1 role-refactor scaffolding (2026-04-25, stage 2)
+    # ────────────────────────────────────────────────────────────────
+    # See harness/knowledge/tech/apl-role-refactor-2026-04-25.md for
+    # the full architectural spec. Stage 2: methods exist but NOT
+    # called from the turn loop (no behavior change). Stages 3-5
+    # migrate keep/bottom/main_phase/main_phase2 to use them.
+
+    def _compute_roles(self, deck_cards):
+        """Scan the loaded 75 once, bucket each card by inferred role.
+        After this runs, the turn loop queries roles, not names."""
+        from engine.keywords import KWTag
+        deck_names = {c.name for c in deck_cards}
+
+        def _otext(c):
+            return (c.oracle_text or "").lower()
+
+        # Haste threats: creatures MV <= 2 with haste
+        # (Ragavan, Screaming Nemesis, Monastery Swiftspear, etc.)
+        self.haste_threats = {
+            c.name for c in deck_cards
+            if c.has(Tag.CREATURE) and c.cmc <= 2
+            and (KWTag.HASTE in c.tags or "haste" in _otext(c))
+        }
+
+        # Lifegain sources (Ocelot lifelink, Phlage gain 3, Helix, Guide)
+        self.lifegain_sources = {
+            c.name for c in deck_cards
+            if KWTag.LIFELINK in c.tags
+            or any(p in _otext(c) for p in ("you gain", "gain life", "gains life"))
+        }
+
+        # Token producers (Ajani, Pyromancer when discarding, Voice of Victory)
+        self.token_producers = {
+            c.name for c in deck_cards
+            if "create" in _otext(c) and "token" in _otext(c)
+        }
+
+        # Energy sources (Guide of Souls, Galvanic Discharge, Static Prison)
+        self.energy_sources = {
+            c.name for c in deck_cards
+            if "{e}" in _otext(c) or "energy" in _otext(c)
+        }
+
+        # Sac outlets (Goblin Bombardment, anything similar)
+        self.sac_outlets = {
+            c.name for c in deck_cards
+            if "sacrifice a creature" in _otext(c) and ":" in _otext(c)
+        }
+
+        # Face burn -- instants/sorceries that "deal X damage to any target"
+        # NOTE: Phlage NOT in here (it's a creature, routed through has_phlage)
+        self.face_burn = {
+            c.name for c in deck_cards
+            if (c.has(Tag.INSTANT) or c.has(Tag.SORCERY))
+            and "damage to any target" in _otext(c)
+        }
+
+        # All creatures sorted by CMC ascending, name as tiebreak.
+        # Used by stage-5 main_phase2 fill-curve loop (cheapest-first).
+        cmc_by_name = {c.name: c.cmc for c in deck_cards}
+        self.creatures_by_cmc = sorted(
+            {c.name for c in deck_cards if c.has(Tag.CREATURE)},
+            key=lambda n: (cmc_by_name[n], n),
+        )
+
+        # Special-mechanic flags -- each gates a SPECIAL_MECHANICS handler
+        self.has_phlage          = "Phlage, Titan of Fire's Fury" in deck_names
+        self.has_ajani           = "Ajani, Nacatl Pariah" in deck_names
+        self.has_ocelot          = "Ocelot Pride" in deck_names
+        self.has_guide           = "Guide of Souls" in deck_names
+        self.has_arena_of_glory  = "Arena of Glory" in deck_names
+        self.has_bombardment     = "Goblin Bombardment" in deck_names
+        self.has_pyromancer      = "Seasoned Pyromancer" in deck_names
+
+        self._roles_computed = True
+
+    def _ensure_roles(self, gs):
+        """Lazy-compute role buckets on first turn-loop call.
+        Sources deck cards from gs.zones (library + hand + bf + GY)."""
+        if self._roles_computed:
+            return
+        deck_cards = (list(gs.zones.library) + list(gs.zones.hand)
+                      + list(gs.zones.battlefield) + list(gs.zones.graveyard))
+        self._compute_roles(deck_cards)
+
+    def _run_special_mechanics(self, gs, phase):
+        """Dispatch each registered SPECIAL_MECHANICS handler whose
+        corresponding has_<card> flag is True. phase in
+        {'main', 'combat', 'main2', 'end'}."""
+        for card_name, (flag_attr, method_name) in self.SPECIAL_MECHANICS.items():
+            if getattr(self, flag_attr, False):
+                handler = getattr(self, method_name, None)
+                if handler is not None:
+                    handler(gs, phase)
+
+    # ── Handler stubs (stage 2: empty; stages 4-5 fill them in) ──
+
+    def _handle_phlage(self, gs, phase):
+        """Phlage hardcast + escape. Will preserve CMC=0 mana-pool kludge."""
+        pass  # stage 2 stub
+
+    def _handle_ajani_etb(self, gs, phase):
+        """Ajani ETB token + Cat-die transform tracking."""
+        pass  # stage 2 stub
+
+    def _handle_ocelot_end_step(self, gs, phase):
+        """Ocelot Pride end-step token if gained-life-this-turn."""
+        pass  # stage 2 stub
+
+    def _handle_guide_attack_pump(self, gs, phase):
+        """Guide of Souls attack trigger: pay 3E for +2/+2 flying."""
+        pass  # stage 2 stub
+
+    def _handle_arena_exert_haste(self, gs, phase):
+        """Arena of Glory exert: tap for RR, give haste to a creature."""
+        pass  # stage 2 stub
+
+    def _handle_bombardment_finish(self, gs, phase):
+        """Sac creatures to Bombardment for lethal."""
+        pass  # stage 2 stub
+
+    def _handle_pyromancer_loot(self, gs, phase):
+        """Seasoned Pyromancer loot 2-for-2 + Elemental tokens."""
+        pass  # stage 2 stub

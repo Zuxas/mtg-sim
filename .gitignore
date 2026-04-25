@@ -37,6 +37,24 @@ data/rules_reference/scryfall_oracle_cards.json
 data/rules_reference/scryfall_rulings.json
 data/rules_reference/MagicCompRules.txt
 
+# Sim run artifacts — timestamped or batch-numbered outputs from gauntlets,
+# parallel runs, A/B probes, and calibration sweeps. Regenerable; not canonical.
+# (Canonical inputs that live in data/ — sim_matchup_data.json, sim_matchup_matrix.json,
+# measured_clocks.json, ml_*.json/.pkl, win_prob_model*.pkl, priority_queue/severities.json
+# — are intentionally NOT ignored because source code reads them at runtime.)
+data/parallel_results_*.json
+data/batch*.json
+data/n500_*.json
+data/ab_*.json
+data/post_*_fix.json
+data/final_*.json
+data/sim_calibration_*.json
+data/telemetry/
+data/matchup_jobs/
+data/priority_queue/standard_matrix_queue.json
+data/priority_queue/standard_matrix_queue.csv
+tmp/
+
 # Dev scratch — experimental one-offs not meant for the repo
 scripts/scratch/
 

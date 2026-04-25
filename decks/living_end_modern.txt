@@ -1,3 +1,9 @@
+// audit:custom_variant — MB=61 (target 60), 1 over. Triage 2026-04-25.
+// Different cycling-creature mix from canonical Living End (deck#83317,
+// Bodziak 31/03/26 P1, 60 cards). 25 unique cards differ. Current uses
+// Carabid + Horror + Curator + Waker + Overlord of the Balemurk;
+// canonical uses different package (Generous Ent, etc.). 1 extra slot.
+// Treating as intentional pending source. See data/deck_triage_2026-04-25.md.
 4 Living End
 4 Violent Outburst
 3 Ardent Plea

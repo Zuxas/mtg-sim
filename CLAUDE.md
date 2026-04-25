@@ -90,3 +90,12 @@ card, grep `card_handlers_verified.py` (or check `ETB_EFFECTS` /
 self-documentation aid, NOT a registry of what's been tuned. The audit
 formalizes this: any candidate not in the audit's gap list is already
 covered.
+
+**Deck file markers (added 2026-04-25 triage):** decks with non-standard
+mainboard counts can be flagged in their header with `audit:intentional`
+(Yorion-mandated 80+, etc.) or `audit:custom_variant` (real list,
+documented diff from canonical, kept as-is). The full-audit script
+honors both markers as `ok (...)` instead of flagging as load issues.
+Per-file rationale lives in `data/deck_triage_2026-04-25.md`. Add the
+same marker to any new non-60 deck you commit, with a one-line
+explanation.

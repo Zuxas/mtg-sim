@@ -1,5 +1,11 @@
 // 5 Color Niv-Mizzet - musasabi (2026-04-05)
 // Event: MTGO Pioneer Challenge 32 #12838142, Place: 8
+// audit:intentional — 81-card MB required by Yorion, Sky Nomad in main
+// (line 53 below). Yorion's text: "starting deck contains at least 20
+// cards more than the minimum" (60+20=80). 81 is canonical for this
+// pilot's list. SB at 14 (one short of 15) is unusual but legal —
+// likely transcription error in source event, kept verbatim from
+// scraped data. Triage 2026-04-25, see data/deck_triage_2026-04-25.md.
 1 Abrupt Decay
 3 Ancient Cornucopia
 1 Bleachbone Verge

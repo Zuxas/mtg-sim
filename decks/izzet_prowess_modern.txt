@@ -1,3 +1,11 @@
+// audit:custom_variant — MB=61 (target 60), 1 over. Triage 2026-04-25.
+// Differs from canonical Izzet Prowess (deck#119672, arturcosta
+// 2026-04-20 P1, 60 cards) by 4 unique cards: + Murktide Regent x2,
+// Fiery Islet x2 / - Founding the Third Path, Stomping Ground.
+// Current is Murktide variant vs canonical's Founding splash. Plus
+// 1 extra slot (17 lands is low for Prowess; canonical has 18).
+// Treating as intentional pending source verification.
+// See data/deck_triage_2026-04-25.md.
 4 Dragon's Rage Channeler
 4 Monastery Swiftspear
 4 Slickshot Show-Off

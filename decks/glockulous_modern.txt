@@ -1,3 +1,10 @@
+// audit:custom_variant — MB=58 (target 60), short by 2. Triage 2026-04-25.
+// "Glockulous" archetype not in mtg_meta.db (60-day window). Closest
+// content match: Grixis Reanimator (111 lists). Canonical (deck#51246,
+// arturcosta 2026-02-01 P1) uses Ragavan/Bitter Triumph/Abhorrent Oculus
+// instead of this list's Frog+Persist+Archon engine. Likely missing 2
+// cards (extra GY enabler or removal); needs source attribution before
+// completing. See data/deck_triage_2026-04-25.md.
 4 Psychic Frog
 4 Emperor of Bones
 2 Harbinger of the Seas

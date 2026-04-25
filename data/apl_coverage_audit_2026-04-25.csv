@@ -8,23 +8,23 @@ domain_zoo_modern.txt,modern,domainzoo,yes,DomainZooAPL,apl.domain_zoo,HAND_TUNE
 eldrazi_ramp_modern.txt,modern,eldraziramp,yes,EldraziRampAPL,apl.eldrazi_ramp,HAND_TUNED,BaseAPL,5,yes,EldraziRampMatchAPL,HAND_TUNED,60,15,ok,
 eldrazi_tron_modern.txt,modern,eldrazitron,yes,EldraziTronAPL,apl.eldrazi_tron,HAND_TUNED,BaseAPL,20,yes,EldraziTronMatchAPL,HAND_TUNED,60,15,ok,
 esper_blink_modern.txt,modern,esperblink,yes,EsperBlinkAPL,apl.esper_blink,HAND_TUNED,BaseAPL,3,yes,EsperBlinkMatchAPL,HAND_TUNED,60,15,ok,
-glockulous_modern.txt,modern,glockulous,no,,,NOT_REGISTERED,,0,yes,GlockulousMatchAPL,HAND_TUNED,58,15,non-standard mainboard (58),no APL_REGISTRY entry
+glockulous_modern.txt,modern,glockulous,no,,,NOT_REGISTERED,,0,yes,GlockulousMatchAPL,HAND_TUNED,58,15,"ok (custom_variant triaged, mb=58 sb=15)",no APL_REGISTRY entry
 goryos_vengeance_modern.txt,modern,goryosvengeance,yes,GoryoVengeanceAPL,apl.goryo_vengeance,HAND_TUNED,BaseAPL,18,yes,GoryosMatchAPL,HAND_TUNED,60,15,ok,
 grinding_breach_modern.txt,modern,grindingbreach,yes,GrindingBreachAPL,apl.grinding_breach,HAND_TUNED,BaseAPL,5,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
 humans_modern.txt,modern,humans,yes,HumansAPL,apl.humans,HAND_TUNED,BaseAPL,14,yes,HumansMatchAPL,HAND_TUNED,60,15,ok,
 izzet_affinity_modern.txt,modern,izzetaffinity,yes,IzzetAffinityAPL,apl.izzet_affinity,HAND_TUNED,BaseAPL,17,yes,IzzetAffinityMatchAPL,HAND_TUNED,60,15,ok,
-izzet_prowess_modern.txt,modern,izzetprowess,yes,IzzetProwessAPL,apl.izzet_prowess,HAND_TUNED,BaseAPL,8,yes,IzzetProwessMatchAPL,HAND_TUNED,61,15,non-standard mainboard (61),
+izzet_prowess_modern.txt,modern,izzetprowess,yes,IzzetProwessAPL,apl.izzet_prowess,HAND_TUNED,BaseAPL,8,yes,IzzetProwessMatchAPL,HAND_TUNED,61,15,"ok (custom_variant triaged, mb=61 sb=15)",
 jeskai_blink_modern.txt,modern,jeskaiblink,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-living_end_modern.txt,modern,livingend,no,,,NOT_REGISTERED,,0,yes,LivingEndMatchAPL,HAND_TUNED,61,15,non-standard mainboard (61),no APL_REGISTRY entry
+living_end_modern.txt,modern,livingend,no,,,NOT_REGISTERED,,0,yes,LivingEndMatchAPL,HAND_TUNED,61,15,"ok (custom_variant triaged, mb=61 sb=15)",no APL_REGISTRY entry
 mono_red_aggro_modern.txt,modern,monoredaggro,yes,MonoRedAggroAPL,apl.mono_red_aggro,HAND_TUNED,BaseAPL,9,yes,MonoRedMatchAPL,HAND_TUNED,60,15,ok,
 neoform_modern.txt,modern,neoform,yes,NeoformComboAPL,apl.neoform_combo,HAND_TUNED,BaseAPL,18,yes,NeoformMatchAPL,HAND_TUNED,60,15,ok,
 orzhov_blink_modern.txt,modern,orzhovblink,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-ruby_storm_modern.txt,modern,rubystorm,yes,RubyStormAPL,apl.ruby_storm,HAND_TUNED,BaseAPL,11,yes,RubyStormMatchAPL,HAND_TUNED,54,15,non-standard mainboard (54),
+ruby_storm_modern.txt,modern,rubystorm,yes,RubyStormAPL,apl.ruby_storm,HAND_TUNED,BaseAPL,11,yes,RubyStormMatchAPL,HAND_TUNED,54,15,"ok (custom_variant triaged, mb=54 sb=15)",
 temur_breach_modern.txt,modern,temurbreach,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-uw_blink_modern.txt,modern,uwblink,yes,UWBlinkAPL,apl.uw_blink,HAND_TUNED,BaseAPL,3,yes,UWBlinkMatchAPL,HAND_TUNED,59,15,non-standard mainboard (59),
+uw_blink_modern.txt,modern,uwblink,yes,UWBlinkAPL,apl.uw_blink,HAND_TUNED,BaseAPL,3,yes,UWBlinkMatchAPL,HAND_TUNED,59,15,"ok (custom_variant triaged, mb=59 sb=15)",
 uw_control_modern.txt,modern,uwcontrol,no,,,NOT_REGISTERED,,0,yes,UWControlMatchAPL,HAND_TUNED,60,15,ok,no APL_REGISTRY entry
-yawgmoth_modern.txt,modern,yawgmoth,no,,,NOT_REGISTERED,,0,yes,YawgmothMatchAPL,HAND_TUNED,58,15,non-standard mainboard (58),no APL_REGISTRY entry
-5_color_niv_mizzet_pioneer.txt,pioneer,5colornivmizzet,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,81,14,non-standard mainboard (81),no APL_REGISTRY entry
+yawgmoth_modern.txt,modern,yawgmoth,no,,,NOT_REGISTERED,,0,yes,YawgmothMatchAPL,HAND_TUNED,58,15,"ok (custom_variant triaged, mb=58 sb=15)",no APL_REGISTRY entry
+5_color_niv_mizzet_pioneer.txt,pioneer,5colornivmizzet,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,81,14,"ok (intentional, mb=81 sb=14)",no APL_REGISTRY entry
 abzan_greasefang_pioneer.txt,pioneer,abzangreasefang,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 azorius_control_pioneer.txt,pioneer,azoriuscontrol,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 boros_convoke_pioneer.txt,pioneer,borosconvoke,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
@@ -42,7 +42,7 @@ selesnya_company_pioneer.txt,pioneer,selesnyacompany,no,,,NOT_REGISTERED,,0,no,,
 azorius_aggro_standard.txt,standard,azoriusaggro,yes,AzoriusAggroAPL,apl.azorius_aggro_standard,UNKNOWN_BASE,?,0,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
 azorius_control_standard.txt,standard,azoriuscontrol,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 boros_aggro_standard.txt,standard,borosaggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-dimir_aggro_standard.txt,standard,dimiraggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,62,15,non-standard mainboard (62),no APL_REGISTRY entry
+dimir_aggro_standard.txt,standard,dimiraggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,62,15,"ok (custom_variant triaged, mb=62 sb=15)",no APL_REGISTRY entry
 dimir_midrange_standard.txt,standard,dimirmidrange,yes,DimirMidrangeAPL,apl.dimir_midrange,HAND_TUNED,BaseAPL,3,yes,DimirOculusMatchAPL,HAND_TUNED,60,15,ok,
 domain_ramp_standard.txt,standard,domainramp,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 esper_pixie_standard.txt,standard,esperpixie,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry

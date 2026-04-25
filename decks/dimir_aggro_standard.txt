@@ -1,5 +1,14 @@
 // Dimir Aggro - Marjo Gabilo (31/10/24)
 // Event: HMSC Store Championship, Place: 3
+// audit:custom_variant — MB=62 (target 60), 2 over. Triage 2026-04-25.
+// FILENAME MISLEADING — list is BWG (Calix, Sheltered by Ghosts, Glissa,
+// Plains, Concealed Courtyard) not Dimir (UB). Despite the header, color
+// identity is Black-White-Green (Abzan-style Pixie aggro). Pre-rotation
+// 2024 list — no longer current Standard meta. 2 cards over 60.
+// FLAG FOR ARCHIVE: stale 2024 artifact, possibly should be renamed to
+// `bwg_pixie_standard_2024.txt` and moved to a historical-decks folder,
+// OR replaced with a current Standard Dimir Aggro list (DB has 633 lists).
+// See data/deck_triage_2026-04-25.md.
 2 Anoint with Affliction
 3 Blooming Marsh
 2 Calix, Guided by Fate

@@ -1,3 +1,11 @@
+// audit:custom_variant — MB=59 (target 60), short by 1. Triage 2026-04-25.
+// Differs from canonical Azorius Phelia (deck#61355, XboxGreg 23/03/26
+// P4, 60 cards) by 9 unique cards: + Mockingbird, Sanctifier en-Vec,
+// Rest in Peace, Prismatic Ending, Consign to Memory / - Haliya Guided
+// by Light, March of Otherworldly Light, Momo, Teferi Time Raveler.
+// Different Phelia variant. 1 missing slot — needs source attribution.
+// (Note: archetype is Azorius/UW Blink, not Jeskai — naming is correct.)
+// See data/deck_triage_2026-04-25.md.
 4 Guide of Souls
 4 Ocelot Pride
 4 Phelia, Exuberant Shepherd

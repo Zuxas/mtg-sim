@@ -1,3 +1,12 @@
+// audit:custom_variant — MB=54 (target 60), short by 6. Triage 2026-04-25.
+// 6 cards short of legal minimum. Different from canonical Ruby Storm
+// (deck#121971, merfolkgod 22/04/26 P1, 60 cards) by 10 unique cards:
+// + Strike It Rich, Glimpse the Impossible, Heroes' Hangout, Romantic
+// Rendezvous, Commercial District, Arid Mesa / - Pyromancer Ascension,
+// Ral Monsoon Mage, Urabrask, Valakut Awakening.
+// Likely a partial draft list. NEEDS COMPLETION — 6 missing is too
+// many for routine fix; requires meta decision. Should not be used
+// for sim runs until completed. See data/deck_triage_2026-04-25.md.
 4 Ruby Medallion
 4 Desperate Ritual
 4 Manamorphose

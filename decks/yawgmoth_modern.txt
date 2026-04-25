@@ -1,3 +1,11 @@
+// audit:custom_variant — MB=58 (target 60), short by 2. Triage 2026-04-25.
+// Different Yawgmoth build from canonical Golgari Yawgmoth (deck#58461,
+// themeatman 2026-03-22 P1, 60 cards). Current uses Collected Company
+// + Chord of Calling + Eldritch Evolution engine; canonical uses
+// Cauldron + Halflings + Dryad Arbor instead. 31 unique cards differ.
+// Old (pre-Cauldron) variant — likely needs 2 cards added but the
+// archetype has shifted significantly post-Cauldron. Consider replacing
+// with current canonical for sim relevance. See data/deck_triage_2026-04-25.md.
 3 Yawgmoth, Thran Physician
 2 Melira, Sylvok Outcast
 2 Blood Artist

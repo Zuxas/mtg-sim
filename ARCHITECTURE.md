@@ -114,4 +114,8 @@ NOT: combat → main1 → main2 (old broken order)
 - Legacy gauntlet: Humans 51.5% (15K games)
 - Standard gauntlet: Boros Aggro 45.5% (140K games)
 - Pioneer gauntlet: Izzet Prowess 50% (140K games, partial)
-- Boros Energy goldfish: 100% win, avg T4.92, 36% T4, 79% by T5
+- Boros Energy goldfish (2026-04-09 historical): 100% win, avg T4.92, 36% T4, 79% by T5
+- Boros Energy goldfish (2026-04-25 N=1000 seed=42, **current baseline**): 99.9% win, avg T4.59, 47% T4, 88% by T5
+  - Drift since 2026-04-09: avg kill 0.33 turn faster, T4 wins +11pp, by-T5 cumulative +9pp.
+    Engine WIP push (game_state.py / card_effects.py / match_engine.py edits) likely
+    accounts for the speedup. This is the comparison baseline for the role-refactor work.

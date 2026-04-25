@@ -1,0 +1,25 @@
+card,format,decks_present_in,total_copies,bucket,suggested_registry,oracle_summary
+Champion of the Parish,legacy,1,4,REGISTERED,ETB,
+Coppercoat Vanguard,legacy,1,4,REGISTERED,ETB,
+Esper Sentinel,legacy,1,4,REGISTERED,ETB,
+Guide of Souls,legacy,1,4,REGISTERED,ETB,
+Swords to Plowshares,legacy,1,4,HAS_EFFECTS,SPELL_EFFECTS,Exile target creature. Its controller gains life equal to its power.
+Thalia's Lieutenant,legacy,1,4,REGISTERED,ETB,
+"Thalia, Guardian of Thraben",legacy,1,4,REGISTERED,ETB,
+Valley of Gorgoroth,legacy,1,4,VANILLA,n/a,(no oracle text)
+Voice of Victory,legacy,1,4,REGISTERED,ETB,
+"Adeline, Resplendent Cathar",legacy,1,2,REGISTERED,ETB,
+Containment Priest,legacy,1,2,REGISTERED,ETB,
+Deafening Silence,legacy,1,2,REGISTERED,ETB,
+Faerie Macabre,legacy,1,2,REGISTERED,ETB,
+Grafdigger's Cage,legacy,1,2,REGISTERED,ETB,
+"Kytheon, Hero of Akros",legacy,1,2,HAS_EFFECTS,REVIEW (activated),"At end of combat, if Kytheon and at least two other creatures attacked this combat, exile Kytheon..."
+Stony Silence,legacy,1,2,REGISTERED,ETB,
+"Urdnan, Dromoka Warrior",legacy,1,2,HAS_EFFECTS,ETB_EFFECTS,"When Urdnan enters, put a +1/+1 counter on target creature. | Whenever you attack, target attacki..."
+Zack Fair,legacy,1,2,REGISTERED,ETB,
+Clarion Conqueror,legacy,1,1,REGISTERED,ETB,
+Path to Exile,legacy,1,1,REGISTERED,SPELL,
+Sanctifier en-Vec,legacy,1,1,REGISTERED,ETB,
+Sheltered by Ghosts,legacy,1,1,REGISTERED,SPELL,
+Witch Enchanter,legacy,1,1,REGISTERED,ETB,
+Wrath of the Skies,legacy,1,1,REGISTERED,SPELL,

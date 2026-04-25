@@ -63,3 +63,30 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
 ### Experimental (auto-generated, mixed quality)
 
 - `apl/experimental/` contains 9 Gemma-generated match APLs for Standard archetypes. Not hand-tuned. WRs range 16–48%. See `apl/experimental/README.md` for disposition guidance. **Do not** recommend these as canonical.
+
+## Coverage audit (2026-04-25)
+
+Full L1 card-handler + APL/MatchAPL coverage map across all four formats.
+Source of truth for "what's a real backlog item" vs "false-positive gap."
+
+- **Top-line:** Modern is L1-complete (292/292 handlers). Pioneer is the
+  big L1 backlog (57 gaps). Standard 3 gaps, Legacy 3 gaps.
+- **APL coverage:** 33 of 65 deck files have no APL_REGISTRY entry (the
+  sim can't run them at all). 11 decks have APL but no MatchAPL (fall
+  back to GoldfishAdapter).
+- **Data-quality flags surfaced:** 8 deck files have non-standard
+  mainboard counts (54, 58, 59, 61, 62, 81) — likely typos or sideboard-
+  guide bundling. Triage before trusting any field-weighted gauntlet
+  result that includes these decks.
+
+Artifacts:
+- `data/full_audit_2026-04-25.md` — combined report (all sections)
+- `data/<format>_l1_handler_audit_2026-04-25.csv` — per-format L1 detail
+- `data/apl_coverage_audit_2026-04-25.csv` — per-deck APL detail
+
+**Workflow rule for next-card picks:** before proposing handler work on a
+card, grep `card_handlers_verified.py` (or check `ETB_EFFECTS` /
+`SPELL_EFFECTS` keys) — the APL constants block is an author's
+self-documentation aid, NOT a registry of what's been tuned. The audit
+formalizes this: any candidate not in the audit's gap list is already
+covered.

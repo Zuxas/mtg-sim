@@ -1,0 +1,67 @@
+deck_file,format,expected_key,apl_found,apl_class,apl_module,apl_quality,apl_base_class,apl_def_count,match_apl_found,match_apl_class,match_apl_quality,mainboard_count,sideboard_count,load_status,notes
+humans_legacy.txt,legacy,humans,yes,HumansAPL,apl.humans,HAND_TUNED,BaseAPL,14,yes,HumansMatchAPL,HAND_TUNED,60,15,ok,
+amulet_titan_modern.txt,modern,amulettitan,yes,AmuletTitanAPL,apl.amulet_titan,HAND_TUNED,BaseAPL,56,yes,AmuletTitanMatchAPL,HAND_TUNED,60,15,ok,
+boros_energy_modern.txt,modern,borosenergy,yes,BorosEnergyAPL,apl.boros_energy,HAND_TUNED,BaseAPL,10,yes,BorosEnergyMatchAPL,HAND_TUNED,60,15,ok,
+dimir_murktide_modern.txt,modern,dimirmurktide,yes,MurktideAPL,apl.dimir_murktide,HAND_TUNED,BaseAPL,14,yes,MurktideMatchAPL,HAND_TUNED,60,15,ok,
+dimir_oculus_modern.txt,modern,dimiroculus,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+domain_zoo_modern.txt,modern,domainzoo,yes,DomainZooAPL,apl.domain_zoo,HAND_TUNED,BaseAPL,3,yes,DomainZooMatchAPL,HAND_TUNED,60,15,ok,
+eldrazi_ramp_modern.txt,modern,eldraziramp,yes,EldraziRampAPL,apl.eldrazi_ramp,HAND_TUNED,BaseAPL,5,yes,EldraziRampMatchAPL,HAND_TUNED,60,15,ok,
+eldrazi_tron_modern.txt,modern,eldrazitron,yes,EldraziTronAPL,apl.eldrazi_tron,HAND_TUNED,BaseAPL,20,yes,EldraziTronMatchAPL,HAND_TUNED,60,15,ok,
+esper_blink_modern.txt,modern,esperblink,yes,EsperBlinkAPL,apl.esper_blink,HAND_TUNED,BaseAPL,3,yes,EsperBlinkMatchAPL,HAND_TUNED,60,15,ok,
+glockulous_modern.txt,modern,glockulous,no,,,NOT_REGISTERED,,0,yes,GlockulousMatchAPL,HAND_TUNED,58,15,non-standard mainboard (58),no APL_REGISTRY entry
+goryos_vengeance_modern.txt,modern,goryosvengeance,yes,GoryoVengeanceAPL,apl.goryo_vengeance,HAND_TUNED,BaseAPL,18,yes,GoryosMatchAPL,HAND_TUNED,60,15,ok,
+grinding_breach_modern.txt,modern,grindingbreach,yes,GrindingBreachAPL,apl.grinding_breach,HAND_TUNED,BaseAPL,5,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+humans_modern.txt,modern,humans,yes,HumansAPL,apl.humans,HAND_TUNED,BaseAPL,14,yes,HumansMatchAPL,HAND_TUNED,60,15,ok,
+izzet_affinity_modern.txt,modern,izzetaffinity,yes,IzzetAffinityAPL,apl.izzet_affinity,HAND_TUNED,BaseAPL,17,yes,IzzetAffinityMatchAPL,HAND_TUNED,60,15,ok,
+izzet_prowess_modern.txt,modern,izzetprowess,yes,IzzetProwessAPL,apl.izzet_prowess,HAND_TUNED,BaseAPL,8,yes,IzzetProwessMatchAPL,HAND_TUNED,61,15,non-standard mainboard (61),
+jeskai_blink_modern.txt,modern,jeskaiblink,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+living_end_modern.txt,modern,livingend,no,,,NOT_REGISTERED,,0,yes,LivingEndMatchAPL,HAND_TUNED,61,15,non-standard mainboard (61),no APL_REGISTRY entry
+mono_red_aggro_modern.txt,modern,monoredaggro,yes,MonoRedAggroAPL,apl.mono_red_aggro,HAND_TUNED,BaseAPL,9,yes,MonoRedMatchAPL,HAND_TUNED,60,15,ok,
+neoform_modern.txt,modern,neoform,yes,NeoformComboAPL,apl.neoform_combo,HAND_TUNED,BaseAPL,18,yes,NeoformMatchAPL,HAND_TUNED,60,15,ok,
+orzhov_blink_modern.txt,modern,orzhovblink,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+ruby_storm_modern.txt,modern,rubystorm,yes,RubyStormAPL,apl.ruby_storm,HAND_TUNED,BaseAPL,11,yes,RubyStormMatchAPL,HAND_TUNED,54,15,non-standard mainboard (54),
+temur_breach_modern.txt,modern,temurbreach,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+uw_blink_modern.txt,modern,uwblink,yes,UWBlinkAPL,apl.uw_blink,HAND_TUNED,BaseAPL,3,yes,UWBlinkMatchAPL,HAND_TUNED,59,15,non-standard mainboard (59),
+uw_control_modern.txt,modern,uwcontrol,no,,,NOT_REGISTERED,,0,yes,UWControlMatchAPL,HAND_TUNED,60,15,ok,no APL_REGISTRY entry
+yawgmoth_modern.txt,modern,yawgmoth,no,,,NOT_REGISTERED,,0,yes,YawgmothMatchAPL,HAND_TUNED,58,15,non-standard mainboard (58),no APL_REGISTRY entry
+5_color_niv_mizzet_pioneer.txt,pioneer,5colornivmizzet,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,81,14,non-standard mainboard (81),no APL_REGISTRY entry
+abzan_greasefang_pioneer.txt,pioneer,abzangreasefang,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+azorius_control_pioneer.txt,pioneer,azoriuscontrol,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+boros_convoke_pioneer.txt,pioneer,borosconvoke,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+golgari_midrange_pioneer.txt,pioneer,golgarimidrange,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+green_devotion_pioneer.txt,pioneer,greendevotion,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+gruul_prowess_pioneer.txt,pioneer,gruulprowess,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+izzet_lessons_pioneer.txt,pioneer,izzetlessons,yes,IzzetLessonAPL,apl.izzet_lesson,UNKNOWN_BASE,?,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+izzet_phoenix_pioneer.txt,pioneer,izzetphoenix,yes,IzzetPhoenixAPL,apl.izzet_phoenix,HAND_TUNED,BaseAPL,4,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+izzet_prowess_pioneer.txt,pioneer,izzetprowess,yes,IzzetProwessAPL,apl.izzet_prowess,HAND_TUNED,BaseAPL,8,yes,IzzetProwessMatchAPL,HAND_TUNED,60,15,ok,
+lotus_combo_pioneer.txt,pioneer,lotuscombo,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+mono_red_aggro_pioneer.txt,pioneer,monoredaggro,yes,MonoRedAggroAPL,apl.mono_red_aggro,HAND_TUNED,BaseAPL,9,yes,MonoRedMatchAPL,HAND_TUNED,60,15,ok,
+orzhov_midrange_pioneer.txt,pioneer,orzhovmidrange,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+rakdos_demons_pioneer.txt,pioneer,rakdosdemons,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+selesnya_company_pioneer.txt,pioneer,selesnyacompany,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+azorius_aggro_standard.txt,standard,azoriusaggro,yes,AzoriusAggroAPL,apl.azorius_aggro_standard,UNKNOWN_BASE,?,0,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+azorius_control_standard.txt,standard,azoriuscontrol,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+boros_aggro_standard.txt,standard,borosaggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+dimir_aggro_standard.txt,standard,dimiraggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,62,15,non-standard mainboard (62),no APL_REGISTRY entry
+dimir_midrange_standard.txt,standard,dimirmidrange,yes,DimirMidrangeAPL,apl.dimir_midrange,HAND_TUNED,BaseAPL,3,yes,DimirOculusMatchAPL,HAND_TUNED,60,15,ok,
+domain_ramp_standard.txt,standard,domainramp,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+esper_pixie_standard.txt,standard,esperpixie,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+four_color_overlords_standard.txt,standard,fourcoloroverlords,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+grixis_discard_standard.txt,standard,grixisdiscard,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+gruul_aggro_standard.txt,standard,gruulaggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+izzet_cauldron_standard.txt,standard,izzetcauldron,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+izzet_control_standard.txt,standard,izzetcontrol,yes,IzzetControlAPL,apl.izzet_control_standard,STUB,GenericAPL,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter; GenericAPL stub
+izzet_lesson_standard.txt,standard,izzetlesson,yes,IzzetLessonAPL,apl.izzet_lesson,UNKNOWN_BASE,?,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+izzet_lessons_standard.txt,standard,izzetlessons,yes,IzzetLessonAPL,apl.izzet_lesson,UNKNOWN_BASE,?,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+izzet_prowess_standard.txt,standard,izzetprowess,yes,IzzetProwessAPL,apl.izzet_prowess,HAND_TUNED,BaseAPL,8,yes,IzzetProwessMatchAPL,HAND_TUNED,60,15,ok,
+izzet_spellementals_standard.txt,standard,izzetspellementals,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+jeskai_control_standard.txt,standard,jeskaicontrol,yes,JeskaiControlAPL,apl.jeskai_control,HAND_TUNED,BaseAPL,3,yes,JeskaiBlinkMatchAPL,HAND_TUNED,60,15,ok,
+mono_green_aggro_standard.txt,standard,monogreenaggro,yes,MonoGreenAggroAPL,apl.mono_green_aggro_standard,STUB,GenericAPL,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter; GenericAPL stub
+mono_green_landfall_standard.txt,standard,monogreenlandfall,yes,MonoGreenLandfallAPL,apl.mono_green_landfall,HAND_TUNED,BaseAPL,3,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+mono_red_aggro_standard.txt,standard,monoredaggro,yes,MonoRedAggroAPL,apl.mono_red_aggro,HAND_TUNED,BaseAPL,9,yes,MonoRedMatchAPL,HAND_TUNED,60,15,ok,
+roaming_elementals_standard.txt,standard,roamingelementals,yes,RoamingElementalsAPL,apl.roaming_elementals_standard,STUB,GenericAPL,1,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter; GenericAPL stub
+simic_cub_standard.txt,standard,simiccub,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+simic_jackal_standard.txt,standard,simicjackal,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+simic_rhythm_standard.txt,standard,simicrhythm,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
+superior_doomsday_standard.txt,standard,superiordoomsday,yes,SuperiorDoomsdayAPL,apl.superior_doomsday_standard,UNKNOWN_BASE,?,0,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
+humans_new.txt,unknown,humansnew,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry

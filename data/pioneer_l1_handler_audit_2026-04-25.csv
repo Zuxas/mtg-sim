@@ -1,0 +1,196 @@
+card,format,decks_present_in,total_copies,bucket,suggested_registry,oracle_summary
+Thoughtseize,pioneer,5,19,REGISTERED,SPELL,
+Abrade,pioneer,5,12,REGISTERED,SPELL,
+Fatal Push,pioneer,4,16,REGISTERED,SPELL,
+Cori-Steel Cutter,pioneer,4,15,REGISTERED,ETB,
+Duress,pioneer,4,12,REGISTERED,SPELL,
+Rest in Peace,pioneer,4,11,REGISTERED,ETB,
+Pyroclasm,pioneer,4,8,REGISTERED,SPELL,
+Unlicensed Hearse,pioneer,4,8,REGISTERED,ETB,
+Llanowar Elves,pioneer,3,12,REGISTERED,ETB,
+Monastery Swiftspear,pioneer,3,12,REGISTERED,ETB,
+Soul-Scar Mage,pioneer,3,12,HAS_EFFECTS,REVIEW,"Prowess | If a source you control would deal noncombat damage to a creature an opponent controls,..."
+Emberheart Challenger,pioneer,3,11,REGISTERED,ETB,
+Reckless Rage,pioneer,3,11,HAS_EFFECTS,SPELL_EFFECTS,Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature...
+Vanishing Verse,pioneer,3,10,REGISTERED,SPELL,
+High Noon,pioneer,3,9,REGISTERED,ETB,
+"Sheoldred, the Apocalypse",pioneer,3,9,REGISTERED,ETB,
+Culling Ritual,pioneer,3,8,REGISTERED,SPELL,
+Fiery Impulse,pioneer,3,8,HAS_EFFECTS,SPELL_EFFECTS,Fiery Impulse deals 2 damage to target creature. | Spell mastery — If there are two or more insta...
+Abrupt Decay,pioneer,3,7,REGISTERED,SPELL,
+"Beza, the Bounding Spring",pioneer,3,6,REGISTERED,ETB,
+Firebending Lesson,pioneer,3,6,REGISTERED,SPELL,
+Soul-Guide Lantern,pioneer,3,6,REGISTERED,ETB,
+Redcap Melee,pioneer,3,5,HAS_EFFECTS,SPELL_EFFECTS,Redcap Melee deals 4 damage to target creature or planeswalker. If a nonred permanent is dealt da...
+Spell Pierce,pioneer,3,5,REGISTERED,SPELL,
+Academic Dispute,pioneer,2,8,REGISTERED,SPELL,
+Badgermole Cub,pioneer,2,8,REGISTERED,ETB,
+Boomerang Basics,pioneer,2,8,REGISTERED,SPELL,
+Burst Lightning,pioneer,2,8,REGISTERED,SPELL,
+Elvish Mystic,pioneer,2,8,HAS_EFFECTS,REVIEW (activated),{T}: Add {G}.
+Kumano Faces Kakkazan,pioneer,2,8,HAS_EFFECTS,ETB_EFFECTS,"(As this Saga enters and after your draw step, add a lore counter.) | I — This Saga deals 1 damag..."
+Magebane Lizard,pioneer,2,8,REGISTERED,ETB,
+Preacher of the Schism,pioneer,2,8,REGISTERED,ETB,
+Stormchaser's Talent,pioneer,2,8,REGISTERED,ETB,
+Unholy Annex // Ritual Chamber,pioneer,2,8,VANILLA,n/a,(no oracle text)
+Aven Interrupter,pioneer,2,7,REGISTERED,ETB,
+Consider,pioneer,2,7,REGISTERED,SPELL,
+Divide by Zero,pioneer,2,7,HAS_EFFECTS,SPELL_EFFECTS,Return target spell or permanent with mana value 1 or greater to its owner's hand. | Learn. (You ...
+Sheltered by Ghosts,pioneer,2,7,REGISTERED,SPELL,
+Fable of the Mirror-Breaker,pioneer,2,6,REGISTERED,ETB+FAMILY,
+Get Lost,pioneer,2,6,REGISTERED,SPELL+FAMILY,
+Go Blank,pioneer,2,6,HAS_EFFECTS,SPELL_EFFECTS,Target player discards two cards. Then exile that player's graveyard.
+Screaming Nemesis,pioneer,2,6,REGISTERED,ETB,
+Combustion Technique,pioneer,2,5,REGISTERED,SPELL,
+Dovin's Veto,pioneer,2,5,REGISTERED,SPELL,
+Torch the Tower,pioneer,2,5,REGISTERED,SPELL+FAMILY,
+Abandon Attachments,pioneer,2,4,REGISTERED,SPELL,
+Clarion Conqueror,pioneer,2,4,REGISTERED,ETB,
+Pest Control,pioneer,2,4,REGISTERED,SPELL,
+Stock Up,pioneer,2,4,REGISTERED,SPELL,
+Tear Asunder,pioneer,2,4,REGISTERED,SPELL+FAMILY,
+Annul,pioneer,2,3,REGISTERED,SPELL,
+"Elspeth, Storm Slayer",pioneer,2,3,REGISTERED,ETB,
+It'll Quench Ya!,pioneer,2,3,REGISTERED,SPELL,
+Loran of the Third Path,pioneer,2,3,FAMILY_ONLY,FAMILY: etb_targeted_effects,
+Shadows' Verdict,pioneer,2,3,HAS_EFFECTS,SPELL_EFFECTS,Exile all creatures and planeswalkers with mana value 3 or less from the battlefield and all crea...
+Supreme Verdict,pioneer,2,3,REGISTERED,SPELL,
+Chandra's Defeat,pioneer,2,2,HAS_EFFECTS,SPELL_EFFECTS,Chandra's Defeat deals 5 damage to target red creature or red planeswalker. If that permanent is ...
+Iroh's Demonstration,pioneer,2,2,REGISTERED,SPELL,
+Accumulate Wisdom,pioneer,1,4,REGISTERED,SPELL,
+Arboreal Grazer,pioneer,1,4,REGISTERED,ETB,
+Archon of Emeria,pioneer,1,4,HAS_EFFECTS,REVIEW,Flying | Each player can't cast more than one spell each turn. | Nonbasic lands your opponents co...
+Arclight Phoenix,pioneer,1,4,REGISTERED,ETB,
+Bloodtithe Harvester,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, create a Blood token. (It's an artifact with ""{1}, {T}, Discard a card..."
+Bring to Light,pioneer,1,4,REGISTERED,SPELL,
+Cavalier of Thorns,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"Reach | When this creature enters, reveal the top five cards of your library. Put a land card fro..."
+Collected Company,pioneer,1,4,REGISTERED,SPELL,
+Consult the Star Charts,pioneer,1,4,REGISTERED,SPELL,
+Doorkeeper Thrull,pioneer,1,4,REGISTERED,ETB,
+Enduring Innocence,pioneer,1,4,REGISTERED,ETB,
+Formidable Speaker,pioneer,1,4,REGISTERED,ETB,
+Gifted Aetherborn,pioneer,1,4,VANILLA,n/a,"Deathtouch, lifelink"
+Gleeful Demolition,pioneer,1,4,HAS_EFFECTS,SPELL_EFFECTS,"Destroy target artifact. If you controlled that artifact, create three 1/1 red Phyrexian Goblin c..."
+Gran-Gran,pioneer,1,4,REGISTERED,ETB,
+"Greasefang, Okiba Boss",pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"At the beginning of combat on your turn, return target Vehicle card from your graveyard to the ba..."
+Guardian of New Benalia,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"Enlist (As this creature attacks, you may tap a nonattacking creature you control without summoni..."
+"Kiora, Behemoth Beckoner",pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"Whenever a creature you control with power 4 or greater enters, draw a card. | −1: Untap target p..."
+Knight-Errant of Eos,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"Convoke | When this creature enters, look at the top six cards of your library. You may reveal up..."
+Ledger Shredder,pioneer,1,4,REGISTERED,ETB,
+Leyline Binding,pioneer,1,4,REGISTERED,ETB,
+Leyline of Sanctity,pioneer,1,4,REGISTERED,ETB,
+Leyline of the Guildpact,pioneer,1,4,REGISTERED,ETB,
+Leyline of the Void,pioneer,1,4,REGISTERED,ETB,
+"Lumra, Bellow of the Woods",pioneer,1,4,REGISTERED,ETB,
+March of Otherworldly Light,pioneer,1,4,REGISTERED,SPELL,
+Monstrous Rage,pioneer,1,4,REGISTERED,SPELL+FAMILY,
+Monument to Endurance,pioneer,1,4,REGISTERED,ETB,
+No More Lies,pioneer,1,4,REGISTERED,SPELL,
+Novice Inspector,pioneer,1,4,REGISTERED,ETB,
+Old-Growth Troll,pioneer,1,4,REGISTERED,ETB,
+Opt,pioneer,1,4,REGISTERED,SPELL,
+Ornithopter,pioneer,1,4,VANILLA,n/a,Flying
+Outcaster Trailblazer,pioneer,1,4,REGISTERED,ETB,
+Parhelion II,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"Flying, first strike, vigilance | Whenever Parhelion II attacks, create two 4/4 white Angel creat..."
+Portable Hole,pioneer,1,4,REGISTERED,ETB,
+Questing Druid,pioneer,1,4,REGISTERED,ETB,
+Scapeshift,pioneer,1,4,REGISTERED,SPELL,
+Sentinel of the Nameless City,pioneer,1,4,REGISTERED,ETB,
+Skyclave Apparition,pioneer,1,4,REGISTERED,ETB+FAMILY,
+Sleight of Hand,pioneer,1,4,REGISTERED,SPELL,
+Spelunking,pioneer,1,4,REGISTERED,ETB,
+Storm the Festival,pioneer,1,4,HAS_EFFECTS,SPELL_EFFECTS,Look at the top five cards of your library. You may put up to two permanent cards with mana value...
+Sunspine Lynx,pioneer,1,4,REGISTERED,ETB,
+Sylvan Caryatid,pioneer,1,4,HAS_EFFECTS,REVIEW (activated),"Defender, hexproof | {T}: Add one mana of any color."
+Temporary Lockdown,pioneer,1,4,REGISTERED,ETB+FAMILY,
+The Wandering Minstrel,pioneer,1,4,REGISTERED,ETB,
+Thraben Inspector,pioneer,1,4,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, investigate. (Create a Clue token. It's an artifact with ""{2}, Sacrifi..."
+Treasure Cruise,pioneer,1,4,HAS_EFFECTS,SPELL_EFFECTS,Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) | Draw thr...
+Unholy Annex / Ritual Chamber,pioneer,1,4,REGISTERED,ETB,
+Up the Beanstalk,pioneer,1,4,REGISTERED,ETB,
+Warden of the Inner Sky,pioneer,1,4,REGISTERED,ETB,
+Aftermath Analyst,pioneer,1,3,REGISTERED,ETB,
+Ancient Cornucopia,pioneer,1,3,REGISTERED,ETB,
+Anoint with Affliction,pioneer,1,3,REGISTERED,SPELL+FAMILY,
+Cosmogrand Zenith,pioneer,1,3,REGISTERED,ETB,
+Experimental Synthesizer,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,"When this artifact enters or leaves the battlefield, exile the top card of your library. Until en..."
+Fleeting Spirit,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,"{W}, Exile three cards from your graveyard: This creature gains first strike until end of turn. |..."
+Hidetsugu Consumes All,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,"(As this Saga enters and after your draw step, add a lore counter.) | I — Destroy each nonland pe..."
+Lightning Axe,pioneer,1,3,REGISTERED,SPELL,
+Lightning Helix,pioneer,1,3,REGISTERED,SPELL,
+Monstrous Emergence,pioneer,1,3,REGISTERED,SPELL,
+Oath of Nissa,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,"When Oath of Nissa enters, look at the top three cards of your library. You may reveal a creature..."
+"Omnath, Locus of Creation",pioneer,1,3,REGISTERED,ETB,
+Picklock Prankster,pioneer,1,3,REGISTERED,ETB,
+Ray of Enfeeblement,pioneer,1,3,HAS_EFFECTS,SPELL_EFFECTS,"Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end ..."
+Seam Rip,pioneer,1,3,REGISTERED,ETB,
+"Thalia, Guardian of Thraben",pioneer,1,3,REGISTERED,ETB,
+The Wandering Emperor,pioneer,1,3,REGISTERED,ETB,
+Venerated Loxodon,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell ...
+Voldaren Epicure,pioneer,1,3,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, it deals 1 damage to each opponent. Create a Blood token. (It's an art..."
+Brazen Borrower,pioneer,1,2,REGISTERED,ETB,
+"Brimaz, King of Oreskos",pioneer,1,2,HAS_EFFECTS,ETB_EFFECTS,"Vigilance | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance..."
+Change the Equation,pioneer,1,2,REGISTERED,SPELL,
+Deafening Clarion,pioneer,1,2,HAS_EFFECTS,SPELL_EFFECTS,Choose one or both — | • Deafening Clarion deals 3 damage to each creature. | • Creatures you con...
+Fear of Missing Out,pioneer,1,2,REGISTERED,ETB,
+Go for the Throat,pioneer,1,2,REGISTERED,SPELL+FAMILY,
+Grafdigger's Cage,pioneer,1,2,REGISTERED,ETB,
+Graveyard Trespasser,pioneer,1,2,REGISTERED,ETB,
+Igneous Inspiration,pioneer,1,2,HAS_EFFECTS,SPELL_EFFECTS,Igneous Inspiration deals 3 damage to any target. | Learn. (You may reveal a Lesson card you own ...
+Into the Flood Maw,pioneer,1,2,REGISTERED,SPELL,
+Invoke Despair,pioneer,1,2,HAS_EFFECTS,SPELL_EFFECTS,"Target opponent sacrifices a creature of their choice. If they can't, they lose 2 life and you dr..."
+Iron-Shield Elf,pioneer,1,2,REGISTERED,ETB,
+Lightning Strike,pioneer,1,2,REGISTERED,SPELL+FAMILY,
+Michelangelo's Technique,pioneer,1,2,REGISTERED,SPELL,
+Niv-Mizzet Reborn,pioneer,1,2,HAS_EFFECTS,ETB_EFFECTS,"Flying | When Niv-Mizzet enters, reveal the top ten cards of your library. For each color pair, c..."
+Nylea's Disciple,pioneer,1,2,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, you gain life equal to your devotion to green. (Each {G} in the mana c..."
+Obstinate Baloth,pioneer,1,2,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, you gain 4 life. | If a spell or ability an opponent controls causes y..."
+Origin of Metalbending,pioneer,1,2,REGISTERED,SPELL,
+Ouroboroid,pioneer,1,2,REGISTERED,ETB,
+Pick Your Poison,pioneer,1,2,REGISTERED,SPELL,
+"Ral, Crackling Wit",pioneer,1,2,REGISTERED,ETB,
+Regal Caracal,pioneer,1,2,REGISTERED,ETB,
+Scorching Shot,pioneer,1,2,REGISTERED,SPELL,
+Seasoned Hallowblade,pioneer,1,2,HAS_EFFECTS,REVIEW,Discard a card: Tap this creature. It gains indestructible until end of turn. (Damage and effects...
+"Teferi, Hero of Dominaria",pioneer,1,2,REGISTERED,ETB,
+The Legend of Roku,pioneer,1,2,REGISTERED,ETB,
+The Stone Brain,pioneer,1,2,REGISTERED,ETB,
+Ulvenwald Oddity,pioneer,1,2,HAS_EFFECTS,REVIEW (activated),"Trample, haste | {5}{G}{G}: Transform this creature."
+Wild Ride,pioneer,1,2,REGISTERED,SPELL,
+Cityscape Leveler,pioneer,1,1,REGISTERED,ETB,
+Dromoka's Command,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,Choose two — | • Prevent all damage target instant or sorcery spell would deal this turn. | • Tar...
+"Elesh Norn, Mother of Machines",pioneer,1,1,REGISTERED,ETB,
+Farewell,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,Choose one or more — | • Exile all artifacts. | • Exile all creatures. | • Exile all enchantments...
+Fire Magic,pioneer,1,1,REGISTERED,SPELL,
+Ghost Vacuum,pioneer,1,1,REGISTERED,ETB,
+Glasspool Mimic,pioneer,1,1,REGISTERED,ETB,
+Invasion of Ixalan,pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's def..."
+"Kaervek, the Spiteful",pioneer,1,1,HAS_EFFECTS,REVIEW,Other creatures get -1/-1.
+"Kaheera, the Orphanguard",pioneer,1,1,REGISTERED,ETB,
+Knight of Autumn,pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, choose one — | • Put two +1/+1 counters on this creature. | • Destroy ..."
+Kolaghan's Command,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,Choose two — | • Return target creature card from your graveyard to your hand. | • Target player ...
+Kutzil's Flanker,pioneer,1,1,REGISTERED,ETB,
+Languish,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,All creatures get -4/-4 until end of turn.
+Lively Dirge,pioneer,1,1,REGISTERED,SPELL,
+Maelstrom Pulse,pioneer,1,1,REGISTERED,SPELL,
+Memory Deluge,pioneer,1,1,FAMILY_ONLY,FAMILY: card_draw,
+"Morlun, Devourer of Spiders",pioneer,1,1,REGISTERED,ETB,
+"Niv-Mizzet, Supreme",pioneer,1,1,HAS_EFFECTS,REVIEW,"Flying, hexproof from monocolored | Each instant and sorcery card in your graveyard that's exactl..."
+Octopus Form,pioneer,1,1,REGISTERED,SPELL,
+Pillage the Bog,pioneer,1,1,REGISTERED,SPELL,
+Proft's Eidetic Memory,pioneer,1,1,REGISTERED,ETB,
+Quantum Riddler,pioneer,1,1,REGISTERED,ETB,
+Reckoner Bankbuster,pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"This Vehicle enters with three charge counters on it. | {2}, {T}, Remove a charge counter from th..."
+Rending Volley,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,This spell can't be countered. | Rending Volley deals 4 damage to target white or blue creature.
+Seismic Sense,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,"Look at the top X cards of your library, where X is the number of lands you control. You may reve..."
+Teachings of the Archaics,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,"If an opponent has more cards in hand than you, draw two cards. Draw three cards instead if an op..."
+Test of Talents,pioneer,1,1,REGISTERED,SPELL,
+Three Steps Ahead,pioneer,1,1,REGISTERED,SPELL+FAMILY,
+Tishana's Tidebinder,pioneer,1,1,REGISTERED,ETB,
+"Tolsimir, Friend to Wolves",pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"When Tolsimir enters, create Voja, Friend to Elves, a legendary 3/3 green and white Wolf creature..."
+Tranquil Frillback,pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"When this creature enters, you may pay {G} up to three times. When you pay this cost one or more ..."
+Turntimber Symbiosis,pioneer,1,1,HAS_EFFECTS,SPELL_EFFECTS,Look at the top seven cards of your library. You may put a creature card from among them onto the...
+Unmoored Ego,pioneer,1,1,REGISTERED,SPELL,
+"Valki, God of Lies",pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"When Valki enters, each opponent reveals their hand. For each opponent, exile a creature card the..."
+Wandering Mind,pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,"Flying | When this creature enters, look at the top six cards of your library. You may reveal a n..."
+"Yorion, Sky Nomad",pioneer,1,1,HAS_EFFECTS,ETB_EFFECTS,Companion — Your starting deck contains at least twenty cards more than the minimum deck size. (I...

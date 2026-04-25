@@ -19,7 +19,7 @@ living_end_modern.txt,modern,livingend,no,,,NOT_REGISTERED,,0,yes,LivingEndMatch
 mono_red_aggro_modern.txt,modern,monoredaggro,yes,MonoRedAggroAPL,apl.mono_red_aggro,HAND_TUNED,BaseAPL,9,yes,MonoRedMatchAPL,HAND_TUNED,60,15,ok,
 neoform_modern.txt,modern,neoform,yes,NeoformComboAPL,apl.neoform_combo,HAND_TUNED,BaseAPL,18,yes,NeoformMatchAPL,HAND_TUNED,60,15,ok,
 orzhov_blink_modern.txt,modern,orzhovblink,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-ruby_storm_modern.txt,modern,rubystorm,yes,RubyStormAPL,apl.ruby_storm,HAND_TUNED,BaseAPL,11,yes,RubyStormMatchAPL,HAND_TUNED,54,15,"ok (custom_variant triaged, mb=54 sb=15)",
+ruby_storm_modern.txt,modern,rubystorm,yes,RubyStormAPL,apl.ruby_storm,HAND_TUNED,BaseAPL,11,yes,RubyStormMatchAPL,HAND_TUNED,60,15,ok,
 temur_breach_modern.txt,modern,temurbreach,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 uw_blink_modern.txt,modern,uwblink,yes,UWBlinkAPL,apl.uw_blink,HAND_TUNED,BaseAPL,3,yes,UWBlinkMatchAPL,HAND_TUNED,59,15,"ok (custom_variant triaged, mb=59 sb=15)",
 uw_control_modern.txt,modern,uwcontrol,no,,,NOT_REGISTERED,,0,yes,UWControlMatchAPL,HAND_TUNED,60,15,ok,no APL_REGISTRY entry
@@ -42,7 +42,7 @@ selesnya_company_pioneer.txt,pioneer,selesnyacompany,no,,,NOT_REGISTERED,,0,no,,
 azorius_aggro_standard.txt,standard,azoriusaggro,yes,AzoriusAggroAPL,apl.azorius_aggro_standard,UNKNOWN_BASE,?,0,no,,NOT_REGISTERED,60,15,ok,falls back to GoldfishAdapter
 azorius_control_standard.txt,standard,azoriuscontrol,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 boros_aggro_standard.txt,standard,borosaggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
-dimir_aggro_standard.txt,standard,dimiraggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,62,15,"ok (custom_variant triaged, mb=62 sb=15)",no APL_REGISTRY entry
+dimir_aggro_standard.txt,standard,dimiraggro,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 dimir_midrange_standard.txt,standard,dimirmidrange,yes,DimirMidrangeAPL,apl.dimir_midrange,HAND_TUNED,BaseAPL,3,yes,DimirOculusMatchAPL,HAND_TUNED,60,15,ok,
 domain_ramp_standard.txt,standard,domainramp,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry
 esper_pixie_standard.txt,standard,esperpixie,no,,,NOT_REGISTERED,,0,no,,NOT_REGISTERED,60,15,ok,no APL_REGISTRY entry

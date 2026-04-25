@@ -84,6 +84,10 @@ Artifacts:
 - `data/<format>_l1_handler_audit_2026-04-25.csv` — per-format L1 detail
 - `data/apl_coverage_audit_2026-04-25.csv` — per-deck APL detail
 
+Re-run: `python scripts/full_audit.py [--formats modern,standard,...] [--date YYYY-MM-DD]`.
+Defaults to all 4 formats and today's date. Use `--date 2026-04-25` to
+overwrite the existing snapshot, or omit for a fresh-dated run.
+
 **Workflow rule for next-card picks:** before proposing handler work on a
 card, grep `card_handlers_verified.py` (or check `ETB_EFFECTS` /
 `SPELL_EFFECTS` keys) — the APL constants block is an author's

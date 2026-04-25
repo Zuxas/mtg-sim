@@ -1,45 +1,42 @@
-// audit:custom_variant — MB=54 (target 60), short by 6. Triage 2026-04-25.
-// 6 cards short of legal minimum. Different from canonical Ruby Storm
-// (deck#121971, merfolkgod 22/04/26 P1, 60 cards) by 10 unique cards:
-// + Strike It Rich, Glimpse the Impossible, Heroes' Hangout, Romantic
-// Rendezvous, Commercial District, Arid Mesa / - Pyromancer Ascension,
-// Ral Monsoon Mage, Urabrask, Valakut Awakening.
-// Likely a partial draft list. NEEDS COMPLETION — 6 missing is too
-// many for routine fix; requires meta decision. Should not be used
-// for sim runs until completed. See data/deck_triage_2026-04-25.md.
-4 Ruby Medallion
+// Ruby Storm - merfolkgod (22/04/26)
+// Event: MTGO League, Place: 1
+// canonical: pulled from mtg_meta.db deck#121971 on 2026-04-25
+// Replaces previous decks/ruby_storm_modern.txt which was a partial
+// 54-card draft list (see triage doc data/deck_triage_2026-04-25.md).
+1 Artist's Talent
+3 Bloodstained Mire
 4 Desperate Ritual
-4 Manamorphose
-4 Pyretic Ritual
-4 Reckless Impulse
-4 Wrenn's Resolve
-1 Glimpse the Impossible
-3 Past in Flames
-2 Wish
-1 Grapeshot
-1 Strike It Rich
-2 Artist's Talent
-4 Mountain
-3 Arid Mesa
-2 Bloodstained Mire
-2 Scalding Tarn
-2 Wooded Foothills
-1 Commercial District
-1 Elegant Parlor
+2 Elegant Parlor
 1 Gemstone Caverns
-1 Heroes' Hangout
-1 Romantic Rendezvous
+2 Glimpse the Impossible
+1 Grapeshot
+4 Manamorphose
+5 Mountain
+3 Past in Flames
+4 Pyretic Ritual
+1 Pyromancer Ascension
+4 Ral, Monsoon Mage
+4 Reckless Impulse
+4 Ruby Medallion
 1 Sacred Foundry
-1 Sunbaked Canyon
+4 Scalding Tarn
+1 Urabrask
+2 Valakut Awakening
+3 Wish
+2 Wooded Foothills
+4 Wrenn's Resolve
 
 Sideboard
-3 Untimely Malfunction
-2 Orim's Chant
-1 Silence
-2 Wear // Tear
-1 Meltdown
-2 Grapeshot
+1 Alchemist's Gambit
+1 Brotherhood's End
 1 Empty the Warrens
-1 Past in Flames
+1 Grapeshot
 1 Hexing Squelcher
-1 Mine Collapse
+1 March of Otherworldly Light
+1 Orim's Chant
+1 Past in Flames
+2 Prismatic Ending
+1 Shattering Spree
+1 Stormscale Scion
+1 Untimely Malfunction
+2 Wear / Tear

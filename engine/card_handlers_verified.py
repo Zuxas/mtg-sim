@@ -13277,7 +13277,8 @@ def _ranger_captain_eos_etb(gs, card):
         t = eligible[0]
         gs.zones.library.remove(t)
         gs.zones.hand.append(t)
-        gs._log(f"  Ranger-Captain of Eos: tutor {t.name}")
+        gs.zones.shuffle()
+        gs._log(f"  Ranger-Captain of Eos: tutor {t.name}, shuffle")
 
 
 def _raph_mikey_etb(gs, card):

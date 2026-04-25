@@ -12,6 +12,8 @@ VERIFIED card interactions (from oracle text):
   - Goblin Bombardment: sac creature → 1 damage to any target.
   - Voice of Victory: Mobilize 2 (2x 1/1 tapped attacking Warriors, sac EOT).
   - Seasoned Pyromancer: ETB discard 2, draw 2. Per nonland discarded → 1/1 Elemental.
+  - Ranger-Captain of Eos: {1}{W}{W} 3/3. ETB tutors a creature with MV ≤ 1 to hand,
+    then shuffles. Sac ability (silence opp's noncreatures) is dead in goldfish.
   - Phlage: {1}{R}{W}. ETB/attack → 3 damage any target + gain 3 life.
     Sacrifice on ETB unless escaped. Escape {R}{R}{W}{W} + exile 5 from GY.
     Hard cast = 3-mana Lightning Helix that goes to GY for later escape.
@@ -39,6 +41,7 @@ GUIDE_OF_SOULS   = "Guide of Souls"
 GOBLIN_BOMBARD   = "Goblin Bombardment"
 VOICE_OF_VICTORY = "Voice of Victory"
 SEASONED_PYRO    = "Seasoned Pyromancer"
+RANGER_CAPTAIN   = "Ranger-Captain of Eos"
 PHLAGE           = "Phlage, Titan of Fire's Fury"
 SCREAMING_NEMESIS = "Screaming Nemesis"
 GALVANIC         = "Galvanic Discharge"

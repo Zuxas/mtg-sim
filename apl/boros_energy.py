@@ -96,11 +96,21 @@ class BorosEnergyAPL(BaseAPL):
     }
 
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
+        # Stage 3 of role refactor: replaced `if any(c.name == RAGAVAN ...)`
+        # with KWTag-based haste check. KWTag.HASTE is auto-populated by
+        # tag_keywords() during deck load -- works in keep() before
+        # _ensure_roles can run (keep() pre-dates GameState construction).
+        # Picks up Ragavan, Monastery Swiftspear, Screaming Nemesis, and
+        # any new haste 1- or 2-drop in a variant deck.
+        from engine.keywords import KWTag
         lands = [c for c in hand if c.is_land()]
         creatures = [c for c in hand if c.has(Tag.CREATURE)]
         dead = [c for c in hand if c.name in self.DEAD_IN_GOLDFISH]
         low = [c for c in hand if c.name in self.LOW_VALUE_GOLDFISH]
         ones = [c for c in hand if c.has(Tag.ONE_DROP) and not c.is_land()]
+        haste_threats = [c for c in hand
+                         if c.has(Tag.CREATURE) and c.cmc <= 2
+                         and KWTag.HASTE in c.tags]
         size = len(hand)
 
         if size <= 4: return True
@@ -111,7 +121,8 @@ class BorosEnergyAPL(BaseAPL):
         # Too many dead/low value = mull
         if len(dead) + len(low) >= 3 and mulligans < 2: return False
 
-        if any(c.name == RAGAVAN for c in hand) and len(lands) >= 1: return True
+        # Was: if any(c.name == RAGAVAN for c in hand) and len(lands) >= 1
+        if haste_threats and len(lands) >= 1: return True
         if len(lands) >= 2 and ones: return True
         if len(lands) >= 2 and len(creatures) >= 2: return True
         return mulligans >= 2

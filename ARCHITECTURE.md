@@ -183,6 +183,24 @@ NOT: combat → main1 → main2 (old broken order)
   canonical also slowed by +0.10 turn, so edge contracted from -0.29
   to -0.32 -- variant edge actually GREW slightly because canonical
   absorbed more of the Guide bug than variant).
+- Boros Energy Modern gauntlet (2026-04-26 morning N=1000 seed=42, post-Voice+Guide-fix HEAD 8fc9b82):
+  71.7% field-weighted (was 71.1% pre-fix at ea5e196). Surprising
+  +0.6pp upward shift -- the Voice+Guide ETB bug fixes were goldfish-
+  specific in impact and did NOT materially deflate gauntlet numbers
+  (likely because the engine's _make_token / _apply_existing_board_etb
+  paths fire in goldfish but not in the match-runner two-player sim).
+  Pre-fix 100k headline at 71.5% (commit 0bc20bf) is essentially
+  unchanged in current methodology -- stale only insofar as the
+  underlying engine has Stage 1.5 + 1.6 + foundation + bugfix layered
+  on, but the gauntlet measurement is robust to those changes.
+- Boros Energy variant Jermey gauntlet (2026-04-26 morning N=1000, post-Voice+Guide-fix):
+  83.1% field-weighted (was 82.5% post-Stage-1.6, +0.6pp uniform shift).
+  Variant edge over canonical: +11.4pp field-weighted -- EXACTLY held
+  through the bugfix (both decks shifted together). Methodology:
+  variant has no DB cache (sim-source for all 14 matchups); canonical
+  has DB cache for ~8 matchups + sim for ~6. Field-weighted comparison
+  is approximate apples-to-apples (same archetypes weighted by Modern
+  meta share) but absolute numbers reflect different g1_source mixes.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

@@ -65,11 +65,28 @@ APL_REGISTRY = {
     "phoenix":         ("apl.izzet_phoenix",    "IzzetPhoenixAPL",   None),
     "murktide":        ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_oculus_modern.txt"),
     "dimirmurktide":   ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_oculus_modern.txt"),
+    # 2026-04-26 Stage A BUCKET 1: dimir_oculus is a Murktide variant.
+    "dimiroculus":     ("apl.dimir_murktide",   "MurktideAPL",       "decks/dimir_oculus_modern.txt"),
+
+    # ── Modern goldfish stubs (2026-04-26 Stage A: GenericAPL shims for
+    #    Modern decks that have MatchAPL files but no goldfish APL. Each
+    #    stub registers with deck-specific name/role passed to GenericAPL.
+    #    Treat numbers from these as "registered, not validated" -- they
+    #    let gauntlets RUN but don't model deck-specific synergies.) ──
+    "glockulous":      ("apl.glockulous",       "GlockulousAPL",     "decks/glockulous_modern.txt"),
+    "jeskaiblink":     ("apl.jeskai_blink",     "JeskaiBlinkAPL",    "decks/jeskai_blink_modern.txt"),
+    "livingend":       ("apl.living_end",       "LivingEndAPL",      "decks/living_end_modern.txt"),
+    "temurbreach":     ("apl.temur_breach",     "TemurBreachAPL",    "decks/temur_breach_modern.txt"),
+    "uwcontrol":       ("apl.uw_control",       "UWControlAPL",      "decks/uw_control_modern.txt"),
+    "yawgmoth":        ("apl.yawgmoth",         "YawgmothAPL",       "decks/yawgmoth_modern.txt"),
 
     # ── Modern (match-aware) ──
     "uwblink":         ("apl.uw_blink",         "UWBlinkAPL",        "uw_blink"),
     "espermidrange":   ("apl.esper_midrange",   "EsperMidrangeAPL",  "esper_mid"),
     "esperblink":      ("apl.esper_blink",      "EsperBlinkAPL",     "esper_blink"),
+    # 2026-04-26 Stage A BUCKET 1: orzhov_blink_modern.txt is misnamed
+    # -- header reads "Esper Blink - botje_". Alias to EsperBlinkAPL.
+    "orzhovblink":     ("apl.esper_blink",      "EsperBlinkAPL",     "decks/orzhov_blink_modern.txt"),
     "goryosvengeance": ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),

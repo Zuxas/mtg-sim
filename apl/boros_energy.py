@@ -60,6 +60,13 @@ class BorosEnergyAPL(BaseAPL):
     _treasures = 0
     _gained_life_this_turn = False
     _tokens_entered_this_turn = 0
+    # T1.3 Stage 5: tracks whether a Cat creature died this turn for
+    # Ajani Pariah's transform trigger ("Whenever one or more other
+    # Cats you control die, you may exile Ajani, then return him to
+    # the battlefield transformed"). Set in _bombardment_finish and
+    # _handle_bombardment_finish T2.3 sac paths; checked in
+    # _handle_ajani_etb(phase='main2') and reset each turn in main_phase.
+    _cat_died_this_turn = False
 
     # Cards that literally cannot be cast in goldfish (no valid target)
     DEAD_IN_GOLDFISH = {STATIC_PRISON, "Exorcise"}
@@ -285,7 +292,9 @@ class BorosEnergyAPL(BaseAPL):
                 gs.zones.graveyard.append(creature)
                 gs.damage_dealt += 1
                 sacrificed += 1
-                # Cat dying may trigger Ajani transform
+                # T1.3 Stage 5: Cat-die tracker for Ajani transform.
+                if "cat" in (creature.type_line or "").lower():
+                    self._cat_died_this_turn = True
         if sacrificed:
             gs._log(f"  Bombardment: sac'd {sacrificed} ({gs.damage_dealt} total dmg)")
 
@@ -308,6 +317,7 @@ class BorosEnergyAPL(BaseAPL):
         # Reset per-turn tracking
         self._gained_life_this_turn = False
         self._tokens_entered_this_turn = 0
+        self._cat_died_this_turn = False  # T1.3 Stage 5
 
         # Treasure mana
         if self._treasures > 0:
@@ -446,6 +456,13 @@ class BorosEnergyAPL(BaseAPL):
         # Bombardment finish (SPECIAL_MECHANICS)
         if "Goblin Bombardment" in self._deck_names:
             self._handle_bombardment_finish(gs, 'main2')
+
+        # T1.3 Stage 5: Ajani transform + Avenger loyalty.
+        # MUST fire AFTER Bombardment finish so Cat-die events from
+        # bombardment sacs are visible to the transform check via
+        # self._cat_died_this_turn.
+        if AJANI in self._deck_names:
+            self._handle_ajani_etb(gs, 'main2')
 
     # ────────────────────────────────────────────────────────────────
     # Phase 1 role-refactor scaffolding (2026-04-25, stage 2)
@@ -695,17 +712,54 @@ class BorosEnergyAPL(BaseAPL):
                     f"+3 life, 6/6 stays")
 
     def _handle_ajani_etb(self, gs, phase):
-        """Pre-combat Ajani cast: 2/1 Cat Warrior token triggers Guide,
-        sets up bigger attack. Stage 4 fill-in: moved from main_phase
-        section 5 (was: `if card.name == AJANI ...`)."""
-        if phase != 'main':
+        """Multi-phase Ajani handler:
+
+          - phase='main':  pre-combat cast of front-face Ajani Pariah.
+                           ETB drops a 2/1 Cat Warrior token that
+                           triggers Guide. Stage 4 fill-in.
+
+          - phase='main2': T1.3 Stage 5 -- Cat-die transform check
+                           (front-face -> Avenger when a Cat died this
+                           turn) AND Avenger +2 loyalty activation
+                           (per-turn snowball: +1/+1 counter on each
+                           Cat). Both fire in main_phase2 after the
+                           Bombardment sac that typically kills the Cat.
+
+        Per Magic CR 302.1: the planeswalker side has no summoning
+        sickness post-transform (continuous control through the flip).
+        Per CR 606.3: one loyalty ability per planeswalker per turn,
+        enforced by activate_planeswalker_ability."""
+        if phase == 'main':
+            for card in list(gs.hand()):
+                if (card.name == AJANI
+                        and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                    gs.cast_spell(card)
+                    self._simulate_ajani_etb(gs)
+                    return
             return
-        for card in list(gs.hand()):
-            if (card.name == AJANI
-                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
-                gs.cast_spell(card)
-                self._simulate_ajani_etb(gs)
-                return
+
+        if phase != 'main2':
+            return
+
+        # T1.3 Stage 5: Cat-die transform + Avenger loyalty activation.
+        from engine.planeswalkers import activate_planeswalker_ability
+
+        # Transform check: if a Cat died this turn AND front-face Ajani
+        # is on bf, transform to Avenger. Per CR 701.32 the transformed
+        # planeswalker is the same permanent (continuous control), so
+        # Avenger can activate +2 the same turn it transforms.
+        if self._cat_died_this_turn:
+            for card in list(gs.zones.battlefield):
+                if (card.name == AJANI and not card.is_transformed):
+                    gs.transform(card)
+                    break  # one Ajani transform per turn (legendary)
+
+        # Avenger +2 each turn (snowball). Per-turn budget enforced by
+        # activate_planeswalker_ability via gs._pw_activated_this_turn.
+        for card in list(gs.zones.battlefield):
+            if card.name == "Ajani, Nacatl Avenger":
+                activate_planeswalker_ability(card, gs, 2)
+                break  # one Avenger per turn (legendary)
 
     def _handle_ocelot_end_step(self, gs, phase):
         """Ocelot Pride end-step Cat token if gained-life-this-turn.
@@ -812,6 +866,10 @@ class BorosEnergyAPL(BaseAPL):
                 gs.zones.graveyard.append(creature)
                 gs.damage_dealt += 1  # Bombardment: 1 dmg per sac
                 sacrificed += 1
+                # T1.3 Stage 5: Cat-die tracker for Ajani transform
+                # (Cat tokens get sac'd here when token-only filter matches).
+                if "cat" in (creature.type_line or "").lower():
+                    self._cat_died_this_turn = True
         if sacrificed:
             gs._log(f"  Bombardment pre-lethal sac for Phlage GY-fill: "
                     f"{sacrificed} token(s), +{sacrificed} dmg "

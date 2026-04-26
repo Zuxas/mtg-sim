@@ -40,8 +40,69 @@ from typing import Callable
 # adjustment is handled by activate_planeswalker_ability around the
 # handler call.
 
+def _ajani_avenger_plus_2(card, gs):
+    """Ajani, Nacatl Avenger +2: Put a +1/+1 counter on each Cat
+    you control. Cats include front-face Ajani Pariah (if not yet
+    transformed), Cat tokens (Ocelot Pride end-step Cat, Ajani Pariah
+    ETB Cat Warrior), and any other Cat-subtype creatures."""
+    cats = [
+        c for c in gs.zones.battlefield
+        if "cat" in (c.type_line or "").lower()
+        and "creature" in (c.type_line or "").lower()
+    ]
+    for cat in cats:
+        cat.counters += 1
+    gs._log(f"  Ajani Avenger +2: +1/+1 on {len(cats)} Cats")
+
+
+def _ajani_avenger_zero(card, gs):
+    """Ajani, Nacatl Avenger 0: Create a 2/1 white Cat Warrior token.
+    When you do, if you control a red permanent other than Ajani,
+    he deals damage equal to the number of creatures you control to
+    any target.
+
+    Goldfish modeling: damage goes to face. The "red permanent other
+    than Ajani" check matches Mountain (basic), Ragavan (red creature),
+    Phlage (R/W), Goblin Bombardment (red enchantment), Bolt/Galvanic
+    (red instants -- but instants aren't permanents). For BE the
+    condition is essentially always true post-T1 (Ragavan or Mountain
+    almost always present)."""
+    gs._make_token("Cat Warrior Token", "2", "1", "Creature — Cat Warrior")
+    has_red_other = any(
+        ("R" in (c.colors or []))
+        or "Mountain" in (c.type_line or "")
+        for c in gs.zones.battlefield
+        if c is not card
+    )
+    if has_red_other:
+        creatures = sum(
+            1 for c in gs.zones.battlefield
+            if "creature" in (c.type_line or "").lower()
+        )
+        gs.damage_dealt += creatures
+        gs._log(f"  Ajani Avenger 0: Cat Warrior token + {creatures} dmg "
+                f"({gs.damage_dealt} total)")
+    else:
+        gs._log(f"  Ajani Avenger 0: Cat Warrior token only "
+                f"(no red permanent)")
+
+
+def _ajani_avenger_minus_4(card, gs):
+    """Ajani, Nacatl Avenger -4: Each opponent chooses an artifact,
+    a creature, an enchantment, and a planeswalker from among the
+    nonland permanents they control, then sacrifices the rest.
+
+    Goldfish modeling: no opponent -> no-op. (Loyalty cost is still
+    paid by the dispatch wrapper before this fires.)"""
+    gs._log(f"  Ajani Avenger -4: no-op in goldfish (no opponent)")
+
+
 PLANESWALKER_ABILITIES: dict[str, dict[int, Callable]] = {
-    # Stage 5 will register: "Ajani, Nacatl Avenger": {2: ..., 0: ..., -4: ...}
+    "Ajani, Nacatl Avenger": {
+        2:  _ajani_avenger_plus_2,
+        0:  _ajani_avenger_zero,
+        -4: _ajani_avenger_minus_4,
+    },
 }
 
 

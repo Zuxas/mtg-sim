@@ -357,6 +357,18 @@ class BorosEnergyAPL(BaseAPL):
         if num_attackers > 0:
             self._simulate_combat_triggers(gs, num_attackers)
 
+        # T2.1 ATTEMPTED + REVERTED 2026-04-25 night: a Ranger-Captain
+        # priority-cast block on T3+ with scarce 1-drops was attempted
+        # in two forms (loose gate, then tighter "no better 3-drop"
+        # gate). Both forms drifted goldfish SLOWER (v1: T4.55 -> T4.63;
+        # v2: T4.55 -> T4.60). Tom's prediction of acceleration was
+        # incorrect: spending T3 mana on Ranger-Captain is consistently
+        # weaker than holding for natural fill-curve casts (Ajani / Phlage
+        # / Pyromancer / mana-efficient 1-drop deployment next turn).
+        # Conclusion: Ranger-Captain is correctly handled by the natural
+        # cheapest-first fill-curve below; no priority block helps.
+        # See harness/knowledge/tech/be-apl-content-gaps-2026-04-25.md T2.1.
+
         # Role-driven creature deployment -- was: explicit priority tuple
         # (OCELOT_PRIDE, GUIDE_OF_SOULS, AJANI, VOICE_OF_VICTORY, RAGAVAN).
         # Now: cheapest-first iteration over castable creatures in hand.

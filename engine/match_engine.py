@@ -168,6 +168,12 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             gs.turn = turn_num
             gs.land_played = False
             gs.noncreature_spells_this_turn = 0
+            gs.spells_cast_this_turn = 0
+            gs.innocence_drew_this_turn = False
+            # Stash opp GS on active gs so ETB handlers (Bringer's
+            # Living End mass-reanimate, etc.) can reach across.
+            gs._match_opp = opp_gs
+            opp_gs._match_opp = gs
 
             # Untap
             for card in gs.zones.battlefield:
@@ -206,8 +212,24 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 return result
 
             # --- COMBAT ---
+            # Activate Restless lands before declaring attackers so
+            # they become eligible (and their activation cost comes
+            # out of the main-phase mana pool, not combat mana).
+            gs.activate_restless_lands()
             attackers = apl.declare_attackers(gs, opp_gs)
+            prowess_boosted = []
             if attackers:
+                # Prowess: +1/+0 per noncreature spell cast this turn
+                # (rule 702.109). Applied to attackers before blocks so
+                # the reach threshold reflects the pumped power.
+                from engine.keywords import KWTag
+                if gs.noncreature_spells_this_turn > 0:
+                    for c in attackers:
+                        if KWTag.PROWESS in c.tags:
+                            bonus = gs.noncreature_spells_this_turn
+                            c.counters += bonus
+                            prowess_boosted.append((c, bonus))
+
                 # Defender declares blockers
                 blocker_assignments = opp_apl.declare_blockers(
                     opp_gs, gs, attackers)
@@ -236,6 +258,11 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                     if dead in opp_gs.zones.battlefield:
                         opp_gs.zones.battlefield.remove(dead)
                         opp_gs.zones.graveyard.append(dead)
+
+            # Prowess bonus is end-of-turn; strip before next phase so
+            # the counter stacking stays consistent across turns.
+            for card, bonus in prowess_boosted:
+                card.counters -= bonus
 
             # --- CHECK WIN ---
             if mgs.game_over:

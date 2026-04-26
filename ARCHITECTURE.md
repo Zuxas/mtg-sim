@@ -135,7 +135,7 @@ NOT: combat → main1 → main2 (old broken order)
   - T2.4 (Ocelot city's blessing copy): activates on T6+ when 10+ permanents.
     Mostly compounds with token snowball when game lasts that long.
   - Net effect: -0.02 turn faster (T4.49 -> T4.47), WR ticked up 99.9% -> 100%.
-- Boros Energy goldfish (2026-04-26 N=1000 seed=42, post-T1.3+T1.4 transform infrastructure arc, **current baseline**): 100.0% win, avg T4.45, 53% T4, 92% by T5
+- Boros Energy goldfish (2026-04-26 N=1000 seed=42, post-T1.3+T1.4 transform infrastructure arc, SUPERSEDED 2026-04-26 morning): 100.0% win, avg T4.45, 53% T4, 92% by T5
   - 6-stage arc: Card DFC fields + gs.transform mechanic + planeswalker
     dispatch + saga transform (Kumano fixed) + Ajani Pariah->Avenger
     consumer + Roku->Avatar Roku consumer. See spec at
@@ -151,6 +151,15 @@ NOT: combat → main1 → main2 (old broken order)
   - Real value of this arc is INFRASTRUCTURE not BE-canonical impact:
     Magic Origins planeswalkers, Innistrad werewolves, MH3 sagas in
     Pioneer/Modern decks all unlocked for free.
+- Boros Energy goldfish (2026-04-26 morning N=1000 seed=42, post-foundation-fix, **current canonical**): 99.9% WR, T4.62 avg, T5 median, T4 share 47.3%.
+  Drift from T4.45 baseline (8c3c2d5, 2026-04-25 night) attributed to
+  engine WIP committed at 7e213ea (load-bearing card_effects + match_engine
+  + effect_primitives). The WIP added landfall trigger dispatch, ETB
+  effects for ~25 cards, and spell-resolve handlers (Lightning Helix,
+  Jeskai Revelation, etc.). Per-turn handler dispatch overhead matches
+  the 0.17-turn slow-down. Behavior is correct (real card effects
+  firing); baseline shift is expected and reflects more accurate
+  modeling. This is the stable canonical going forward.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

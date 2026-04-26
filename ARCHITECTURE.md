@@ -119,8 +119,20 @@ NOT: combat → main1 → main2 (old broken order)
   - Drift since 2026-04-09: avg kill 0.33 turn faster, T4 wins +11pp, by-T5 cumulative +9pp.
     Engine WIP push (game_state.py / card_effects.py / match_engine.py edits) likely
     accounts for the speedup. Comparison baseline for the role-refactor work.
-- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-role-refactor + Phase 2 + T1.2 + T1.1, **current baseline**): 99.9% win, avg T4.49, 53% T4, 92% by T5
+- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-role-refactor + Phase 2 + T1.2 + T1.1): 99.9% win, avg T4.49, 53% T4, 92% by T5
   - Net drift vs pre-role-refactor: avg kill -0.10 turn faster (Phase 1 +Guide-self-trigger
     inflation accelerated to T4.48), then T1.1 corrected the Guide "another" oracle bug
     which added back 0.01 turn (now T4.49). Bug had been silently inflating sim WR vs
     real-BE play; correction is in the slower-direction by design.
+- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-T2 stack, **current baseline**): 100.0% win, avg T4.47, 53% T4, 93% by T5
+  - T2.1 (Ranger-Captain priority) attempted and REVERTED: negative finding,
+    displaces Ajani/Phlage from T3 cast slot.
+  - T2.2 (Pyromancer GY activation): real oracle is 5-mana cost (not 1 as
+    Tom's spec said); rarely fires in goldfish. Capability added.
+  - T2.3 (Bombardment GY-fill, tokens only): conjunction of conditions rare
+    in median-T4 goldfish; capability added for slower games.
+  - T2.4 (Ocelot city's blessing copy): activates on T6+ when 10+ permanents.
+    Mostly compounds with token snowball when game lasts that long.
+  - Net effect: -0.02 turn faster (T4.49 -> T4.47), WR ticked up 99.9% -> 100%.
+    Most T2 capabilities fire in late games that are already won; canonical
+    impact is small but real. Variants with longer game arcs would see more.

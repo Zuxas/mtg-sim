@@ -111,6 +111,7 @@ NOT: combat → main1 → main2 (old broken order)
 
 ## VALIDATED RESULTS (2026-04-09)
 - Modern 100k gauntlet: Boros Energy 65.3% field-weighted (1.4M games, 45s)
+  -- SUPERSEDED 2026-04-26 by 71.5% post-APL-arc (see entry below)
 - Legacy gauntlet: Humans 51.5% (15K games)
 - Standard gauntlet: Boros Aggro 45.5% (140K games)
 - Pioneer gauntlet: Izzet Prowess 50% (140K games, partial)
@@ -150,20 +151,28 @@ NOT: combat → main1 → main2 (old broken order)
   - Real value of this arc is INFRASTRUCTURE not BE-canonical impact:
     Magic Origins planeswalkers, Innistrad werewolves, MH3 sagas in
     Pioneer/Modern decks all unlocked for free.
-- Boros Energy Modern gauntlet (2026-04-26 N=1000/matchup seed=42, post-arc + Stage A registry):
-  71.1% field-weighted match win% (14,000 games, 32s, 14 matchups, 0 errors).
-  - Tier breakdown: 12 favored (>=60%), 2 even, 0 dog.
-  - Closest matchups: Eldrazi Ramp 49.2% M, Izzet Prowess 55.8% M.
-  - Strongest: Mono Red 99.9%, Izzet Affinity 99.1%, Domain Zoo 96.3%.
-  - **Sample-size caveat vs the 65.3% 2026-04-09 baseline:** baseline used
-    100k games/matchup (1.4M total), this run used 1k/matchup (14k total)
-    -- 100x smaller. The +5.8pp delta is suggestive but not a confirmed
-    lift. Re-run at 100k for confidence comparison if headline claim
-    matters. End-to-end signal: APL pipeline holds together, Stage A's
-    8 newly-registered decks resolve and execute, no crashes across full
-    Modern field.
-  - Pre-flight ASCII fixes: parallel_launcher.py and dashboard.py both
-    used Unicode box-drawing (`-`, `=`) in print statements, violating
-    repo's CONVENTIONS.md ASCII-only terminal rule. Replaced with `-`/`=`
-    so Windows cp1252 doesn't crash. Pre-existing bug, surfaced by
-    running the launcher; not part of the APL arc.
+- Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
+  **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
+  Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is
+  the new canonical Modern field-weighted number for BE.
+  - Tier breakdown: 12 favored (>=60%), 2 even (Eldrazi Ramp 49.2%,
+    Izzet Prowess 57.3%), 0 dog.
+  - Strongest: Mono Red 99.9%, Izzet Affinity 99.1%, Domain Zoo 96.5%.
+    Goldfish-on-goldfish artifact: when BE has the structurally faster
+    clock against an unmodeled opposing deck, match win pins near 100%.
+    The Eldrazi-Ramp / Izzet-Prowess numbers are the meaningful signal
+    -- those are the matchups where both decks are similarly fast and
+    structural assumptions don't dominate.
+  - Sample-size validation: same gauntlet at N=1k/matchup landed at
+    71.1% (within +/-0.4pp of the 100k truth). The 1k preview was
+    high-fidelity; sample-size discipline confirmed not violated.
+  - Long-tail observation: 8 of 14 matchups complete in ~10s (DB-cached
+    G1 lookups), the other 6 grind serially over the next 40 minutes
+    (Mono Red 180s, Izzet Affinity 1964s, Jeskai Blink 2418s).
+    Wall time = slowest matchup's wall, regardless of how many cores
+    are idle. Motivates within-matchup parallelism (see
+    harness/knowledge/tech/perf-within-matchup-parallelism-2026-04-26.md).
+  - Pre-flight ASCII fixes (committed ea5e196): parallel_launcher.py
+    and dashboard.py both used Unicode box-drawing in print statements,
+    violating repo's CONVENTIONS.md ASCII-only terminal rule.
+    Pre-existing bug, surfaced by running the launcher.

@@ -737,12 +737,60 @@ class BorosEnergyAPL(BaseAPL):
             self._fire_guide_etb_trigger(gs, best)
 
     def _handle_bombardment_finish(self, gs, phase):
-        """Sac creatures to Goblin Bombardment for lethal.
-        Stage 5 fill-in: delegates to existing _bombardment_finish
-        which has the lethal-check + sac-priority logic."""
+        """Goblin Bombardment dispatch:
+          - Lethal sac (existing _bombardment_finish): sacrifice
+            creatures to push damage to 20+ when game can be won.
+          - T2.2 NEW: pre-lethal sac of expendable TOKENS to fill GY
+            for Phlage escape one turn earlier.
+
+        Token-only sac filter (SAFE): never sacs real creatures (Ocelot
+        Pride, Ajani, Guide, etc.) for GY-fill -- their bf value
+        outweighs the marginal turn of Phlage acceleration. If the
+        canonical 75 has tokens on bf (Cat / Cat Warrior / Elemental /
+        Mobilize Warriors are not materialized), they're fair game.
+        """
         if phase != 'main2':
             return
         self._bombardment_finish(gs)
+
+        # T2.3: pre-lethal sac for Phlage GY-fill.
+        # Conditions for this branch to fire:
+        #   - Phlage is in the deck
+        #   - Phlage is in graveyard (escape target exists)
+        #   - Bombardment is on battlefield (sac outlet exists)
+        #   - GY has fewer than 5 OTHER cards (escape needs 5 to exile)
+        #   - We have expendable TOKENS on bf
+        if PHLAGE not in self._deck_names:
+            return
+        if not any(c.name == PHLAGE for c in gs.zones.graveyard):
+            return
+        if not any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield):
+            return
+        other_gy = sum(1 for c in gs.zones.graveyard if c.name != PHLAGE)
+        cards_needed = 5 - other_gy
+        if cards_needed <= 0:
+            return  # already enough for escape
+
+        # SAFE filter: tokens only. Never sac Ocelot/Ajani/Guide/etc.
+        expendable = [
+            c for c in gs.zones.creatures_on_battlefield()
+            if "Token" in c.name
+        ]
+        if not expendable:
+            return
+
+        # Cap at cards_needed -- don't over-sac
+        sacrificed = 0
+        for creature in expendable[:cards_needed]:
+            if creature in gs.zones.battlefield:
+                gs.zones.battlefield.remove(creature)
+                gs.zones.graveyard.append(creature)
+                gs.damage_dealt += 1  # Bombardment: 1 dmg per sac
+                sacrificed += 1
+        if sacrificed:
+            gs._log(f"  Bombardment pre-lethal sac for Phlage GY-fill: "
+                    f"{sacrificed} token(s), +{sacrificed} dmg "
+                    f"({gs.damage_dealt} total)")
 
     def _handle_pyromancer_loot(self, gs, phase):
         """Seasoned Pyromancer (multi-path handler):

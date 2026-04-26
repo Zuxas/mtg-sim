@@ -494,6 +494,53 @@ class BorosEnergyAPL(BaseAPL):
 
         self._roles_computed = True
 
+    def _fire_guide_etb_trigger(self, gs, card_just_cast, token_count=1):
+        """Fire Guide of Souls ETB trigger.
+
+        Oracle: "Whenever ANOTHER creature you control enters, you gain
+        1 life and get {E} (an energy counter)." The "another" clause
+        means Guide doesn't trigger on its own ETB.
+
+        T1.1 fix 2026-04-25 night -- replaces inline
+        `guides = sum(...); gs.life += guides; gs.energy += guides`
+        blocks scattered across the file. Pre-fix the inline blocks
+        spuriously counted the just-cast Guide, inflating energy/life.
+
+        Args:
+          gs: GameState
+          card_just_cast: the Card whose ETB is firing this trigger.
+            Pass None for token ETBs (tokens cannot be Guides, so the
+            "another" filter is moot).
+          token_count: number of tokens entering simultaneously (Voice
+            Mobilize creates 2 per attacking Voice). Default 1 for
+            single-card ETBs.
+
+        Audited call sites (apl/boros_energy.py, 2026-04-25):
+          1. _simulate_end_step (TOKEN, Ocelot Cat)
+          2. _simulate_ajani_etb (TOKEN, Ajani Cat Warrior)
+          3. main_phase2 fill-curve loop (CREATURE, pass `card`)
+          4. _handle_arena_exert_haste (CREATURE, pass `best`)
+          5. _handle_pyromancer_loot (TOKEN per-loop, default count=1)
+          6. _handle_voice (TOKEN batch, pass token_count=tokens)
+          7. _handle_phlage main2 path (CREATURE, pass `card`)  [NEW: T1.2 didn't add this]
+        """
+        if "Guide of Souls" not in self._deck_names:
+            return
+        guides_count = sum(
+            1 for c in gs.zones.battlefield
+            if c.name == GUIDE_OF_SOULS
+            and c is not card_just_cast  # "another" filter (identity, not equality)
+        )
+        if guides_count > 0:
+            gain = guides_count * token_count
+            gs.life += gain
+            gs.energy += gain
+            self._gained_life_this_turn = True
+            source = (card_just_cast.name if card_just_cast
+                      else f"{token_count} token(s)")
+            gs._log(f"  Guide trigger ({source} ETB): "
+                    f"+{gain} life, +{gain} energy")
+
     def _dispatch_special_mechanics(self, gs, phase):
         """Dispatch every registered SPECIAL_MECHANICS handler whose card
         is in the current deck. Handlers self-gate on `phase` arg.

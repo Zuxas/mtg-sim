@@ -97,9 +97,18 @@ class TwoPlayerGameState:
         self.land_played_b = False
         self.damage_to_a = 0   # damage B has dealt to A
 
-        # Shuffle and set up libraries
-        self.lib_a = list(deck_a)
-        self.lib_b = list(deck_b)
+        # Deep-copy decks to isolate per-game Card state.
+        # Pre-fix: shallow `list(deck)` shared Card refs across games,
+        # so mutations (summoning_sickness, lore_counters, is_transformed,
+        # +1/+1 counters, tap state) leaked between games and inflated
+        # win rates by ~3-5pp on aggressive matchups (BE vs Domain Zoo
+        # measured 98.5% pre-fix vs ~94% post-fix at n=200 seed=42).
+        # Partial fix: APL instance state ALSO leaks; full determinism
+        # requires Stage 1.6 fresh-session work. Surfaced 2026-04-26 by
+        # Stage 1 perf validation; see
+        # harness/knowledge/tech/perf-within-matchup-parallelism-2026-04-26.md
+        self.lib_a = [deepcopy(c) for c in deck_a]
+        self.lib_b = [deepcopy(c) for c in deck_b]
         self.rng.shuffle(self.lib_a)
         self.rng.shuffle(self.lib_b)
 

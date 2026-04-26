@@ -99,6 +99,7 @@ class BorosEnergyAPL(BaseAPL):
         "Goblin Bombardment":           "_handle_bombardment_finish",
         "Seasoned Pyromancer":          "_handle_pyromancer_loot",
         "Voice of Victory":             "_handle_voice",  # Phase 2 stage 2
+        "Avatar Roku":                  "_handle_avatar_roku",  # T1.4 Stage 6
     }
 
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
@@ -464,6 +465,18 @@ class BorosEnergyAPL(BaseAPL):
         if AJANI in self._deck_names:
             self._handle_ajani_etb(gs, 'main2')
 
+        # T1.4 Stage 6: cast sagas. 4-CMC sorcery-speed enchantments.
+        # Chapter I fires automatically via tick_saga at ETB
+        # (game_state.py:1322 inside _fire_etb_triggers); subsequent
+        # chapters tick on upkeep (game_state.py:300). Chapter III
+        # transforms via gs.transform() per Stage 4/6 pattern. One
+        # saga cast per turn (sorcery convention).
+        for card in list(gs.hand()):
+            if (card.name in self.sagas
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                gs.cast_spell(card)
+                break
+
     # ────────────────────────────────────────────────────────────────
     # Phase 1 role-refactor scaffolding (2026-04-25, stage 2)
     # ────────────────────────────────────────────────────────────────
@@ -534,6 +547,14 @@ class BorosEnergyAPL(BaseAPL):
         # has_<card> flags for SPECIAL_MECHANICS dispatch.
         self._deck_names = deck_names
 
+        # T1.4 Stage 6: sagas role bucket. Any card whose type_line
+        # contains "Saga" (Roku, Kumano, Kuruk, etc.). Used to drive
+        # the cast-sagas block in main_phase2.
+        self.sagas = {
+            c.name for c in deck_cards
+            if "Saga" in (c.type_line or "")
+        }
+
         self._roles_computed = True
 
     def _fire_guide_etb_trigger(self, gs, card_just_cast, token_count=1):
@@ -585,12 +606,22 @@ class BorosEnergyAPL(BaseAPL):
 
     def _dispatch_special_mechanics(self, gs, phase):
         """Dispatch every registered SPECIAL_MECHANICS handler whose card
-        is in the current deck. Handlers self-gate on `phase` arg.
-        Used for combat-phase dispatch (Voice Mobilize) where a single
-        dispatch loop fits naturally. main_phase / main_phase2 keep
-        individual handler call positions to preserve canonical ordering."""
+        is in the current deck OR appears as a transformed permanent on
+        the battlefield (T1.4 Stage 6 fix for back-face cards like
+        Avatar Roku that aren't in _deck_names but appear post-transform).
+
+        Handlers self-gate on `phase` arg. Used for combat-phase dispatch
+        (Voice Mobilize, Phlage attack trigger, Avatar Roku firebending)
+        where a single dispatch loop fits naturally. main_phase /
+        main_phase2 keep individual handler call positions to preserve
+        canonical ordering."""
         for card_name, handler_name in self.SPECIAL_MECHANICS.items():
-            if card_name in self._deck_names:
+            in_deck = card_name in self._deck_names
+            on_bf_transformed = any(
+                c.name == card_name and c.is_transformed
+                for c in gs.zones.battlefield
+            )
+            if in_deck or on_bf_transformed:
                 handler = getattr(self, handler_name, None)
                 if handler is not None:
                     handler(gs, phase)
@@ -971,6 +1002,41 @@ class BorosEnergyAPL(BaseAPL):
         gs._log(f"  Voice of Victory Mobilize: {voices_attacking} Voice(s) "
                 f"attacking -> {tokens} 1/1 Warrior tokens = {tokens} dmg "
                 f"({gs.damage_dealt} total)")
+
+    def _handle_avatar_roku(self, gs, phase):
+        """Avatar Roku attack trigger: firebending 4 -- "Whenever this
+        creature attacks, add {R}{R}{R}{R}. This mana lasts until end
+        of combat."
+
+        Goldfish modeling: mana goes into the pool. Body damage from
+        Avatar Roku's 4-power attack is handled by gs.run_combat()
+        (the engine's combat-damage step reads effective_power), not
+        added here -- this handler ONLY models the firebending mana
+        addition.
+
+        The 8-mana activated ability (4/4 Dragon token with flying
+        and firebending 4) is intentionally NOT modeled in goldfish:
+        8 mana is rare in BE (median kill T4), and the tokens enter
+        next turn with summoning sickness -- the value is bounded
+        and not worth the additional cast-tracking complexity.
+
+        T1.4 Stage 6: fires from _simulate_combat_triggers via
+        _dispatch_special_mechanics(gs, 'combat'). Reached because
+        Stage 6's dispatch fix recognizes Avatar Roku as a transformed
+        permanent on bf even though it's not in self._deck_names."""
+        if phase != 'combat':
+            return
+        from engine.keywords import KWTag
+        avatars = sum(
+            1 for c in gs.zones.creatures_on_battlefield()
+            if c.name == "Avatar Roku"
+            and (not c.summoning_sickness or KWTag.HASTE in c.tags)
+        )
+        if avatars > 0:
+            mana_added = 4 * avatars
+            gs.mana_pool.add("R", mana_added)
+            gs._log(f"  Avatar Roku firebending: +{mana_added}R mana "
+                    f"({avatars} attacking)")
 
     # ── Helper for face-burn role iteration ──
 

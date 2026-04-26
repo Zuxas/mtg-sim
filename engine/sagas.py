@@ -73,17 +73,61 @@ def _kumano_chapter_iii(card, gs):
 
 # ── Registry ────────────────────────────────────────────────────────
 
+def _roku_chapter_i(card, gs):
+    """The Legend of Roku I — Exile the top three cards of your library.
+    Until the end of your next turn, you may play those cards.
+
+    Goldfish approximation: the "may play exiled cards next turn"
+    mechanic requires an exile-with-playability zone tracker that
+    we don't model. The value floor of Chapter I is "look at top 3,
+    keep the best 1" -- modeled here as draw 1 card. The lost value
+    (looking at 2 additional cards + casting from exile) is real but
+    bounded; future iteration could add a play-from-exile zone."""
+    gs.zones.draw(1)
+    gs._log("  Roku (I): draw 1 (approximation of exile-top-3 may-play)")
+
+
+def _roku_chapter_ii(card, gs):
+    """The Legend of Roku II — Add one mana of any color.
+
+    Goldfish: BE always wants {R} for Phlage attack trigger or {W} for
+    the Phlage hardcast. Adding {R} is the safest default since the
+    Phlage hardcast costs {1}{R}{W} (the {W} is usually fixed by
+    Sacred Foundry / dual lands) and the loose {R} accelerates more
+    plays. Real "any color" flexibility doesn't matter for goldfish
+    where BE's curve only cares about R/W availability."""
+    gs.mana_pool.add("R", 1)
+    gs._log("  Roku (II): +1 R mana (any-color choice)")
+
+
+def _roku_chapter_iii(card, gs):
+    """The Legend of Roku III — Exile this Saga, then return it
+    transformed under your control as Avatar Roku (Legendary
+    Creature -- Avatar, 4/4 with firebending 4 attack trigger and
+    {8}: Dragon token activated ability).
+
+    Stage 6 of T1.3+T1.4 transform arc: same gs.transform() pattern
+    as Kumano chapter III (Stage 4)."""
+    gs.transform(card)
+
+
 SAGA_EFFECTS: dict[str, dict[int, Callable]] = {
     "Kumano Faces Kakkazan": {
         1: _kumano_chapter_i,
         2: _kumano_chapter_ii,
         3: _kumano_chapter_iii,
     },
+    "The Legend of Roku": {
+        1: _roku_chapter_i,
+        2: _roku_chapter_ii,
+        3: _roku_chapter_iii,
+    },
 }
 
 # Optional: per-card explicit final chapter. Defaults to max(chapters).
 SAGA_FINAL_CHAPTER: dict[str, int] = {
     "Kumano Faces Kakkazan": 3,
+    "The Legend of Roku":    3,
 }
 
 

@@ -32,10 +32,10 @@ def print_run(d: dict, verbose: bool = False):
     ok      = [r for r in results if not r.get('error')]
     errors  = [r for r in results if r.get('error')]
 
-    print(f"\n{'═'*68}")
-    print(f"  {deck}  ({fmt})  —  {fw:.1f}% field-weighted match win%  [{elapsed:.0f}s]")
+    print(f"\n{'='*68}")
+    print(f"  {deck}  ({fmt})  -  {fw:.1f}% field-weighted match win%  [{elapsed:.0f}s]")
     print(f"  {len(ok)} matchups  |  {len(errors)} errors  |  {sum(r.get('n',0) for r in ok):,} games")
-    print(f"{'═'*68}")
+    print(f"{'='*68}")
 
     # Sort by field share
     for r in sorted(ok, key=lambda x: -x.get('field_pct', 0)):
@@ -46,7 +46,7 @@ def print_run(d: dict, verbose: bool = False):
         match = r.get('match', 0)
         src   = r.get('g1_source', r.get('type', '?'))[:3].upper()
         # Color coding via ASCII
-        verdict = "✓" if match >= 55 else ("△" if match >= 45 else "✗")
+        verdict = "+" if match >= 55 else ("=" if match >= 45 else "-")
         print(f"  {verdict} {opp:<28} {fp:>5.1f}%  G1={g1:>5.1f}%  G2={g2:>5.1f}%  M={match:>5.1f}%  [{src}]")
 
     if errors and verbose:
@@ -59,8 +59,8 @@ def print_run(d: dict, verbose: bool = False):
     even    = [r for r in ok if 45 <= r.get('match',0) < 60]
     dogs    = [r for r in ok if r.get('match',0) < 45]
     fw_str  = f"{fw:.1f}%"
-    print(f"\n  Favored (≥60%): {len(strong)}  |  Even (45-60%): {len(even)}  |  Dog (<45%): {len(dogs)}")
-    print(f"  Field-weighted: {fw_str}  {'↑ POSITIVE EV' if fw >= 52 else ('→ BREAKEVEN' if fw >= 48 else '↓ NEGATIVE EV')}")
+    print(f"\n  Favored (>=60%): {len(strong)}  |  Even (45-60%): {len(even)}  |  Dog (<45%): {len(dogs)}")
+    print(f"  Field-weighted: {fw_str}  {'^ POSITIVE EV' if fw >= 52 else ('= BREAKEVEN' if fw >= 48 else 'v NEGATIVE EV')}")
 
 
 def main():

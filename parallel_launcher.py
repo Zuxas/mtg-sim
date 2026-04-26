@@ -36,7 +36,7 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
 
     print(f"\nParallel launcher: {our_deck} vs {format_name.upper()} field")
     print(f"Matchups: {total}  |  Games each: {n:,}  |  Cores: {n_cores}")
-    print(f"{'─'*65}")
+    print(f"{'-'*65}")
 
     t0      = time.time()
     running = {}
@@ -99,9 +99,9 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
     elapsed = time.time() - t0
 
     # Summary table
-    print(f"\n{'─'*70}")
+    print(f"\n{'-'*70}")
     print(f"{'Opponent':<28} {'Field%':>6}  {'G1':>6}  {'G2':>6}  {'Match':>7}  Type")
-    print(f"{'─'*70}")
+    print(f"{'-'*70}")
 
     total_w = weighted = 0
     for r in sorted(done, key=lambda x: -x.get("field_pct", 0)):
@@ -118,7 +118,7 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
         weighted += match * fp
         total_w  += fp
 
-    print(f"{'─'*70}")
+    print(f"{'-'*70}")
     fw = weighted / total_w if total_w else 0
     print(f"  Field-weighted match win%: {fw:.1f}%")
     print(f"  Total: {elapsed:.0f}s  |  {n * total:,} games  |  {n_cores} cores")

@@ -150,3 +150,20 @@ NOT: combat → main1 → main2 (old broken order)
   - Real value of this arc is INFRASTRUCTURE not BE-canonical impact:
     Magic Origins planeswalkers, Innistrad werewolves, MH3 sagas in
     Pioneer/Modern decks all unlocked for free.
+- Boros Energy Modern gauntlet (2026-04-26 N=1000/matchup seed=42, post-arc + Stage A registry):
+  71.1% field-weighted match win% (14,000 games, 32s, 14 matchups, 0 errors).
+  - Tier breakdown: 12 favored (>=60%), 2 even, 0 dog.
+  - Closest matchups: Eldrazi Ramp 49.2% M, Izzet Prowess 55.8% M.
+  - Strongest: Mono Red 99.9%, Izzet Affinity 99.1%, Domain Zoo 96.3%.
+  - **Sample-size caveat vs the 65.3% 2026-04-09 baseline:** baseline used
+    100k games/matchup (1.4M total), this run used 1k/matchup (14k total)
+    -- 100x smaller. The +5.8pp delta is suggestive but not a confirmed
+    lift. Re-run at 100k for confidence comparison if headline claim
+    matters. End-to-end signal: APL pipeline holds together, Stage A's
+    8 newly-registered decks resolve and execute, no crashes across full
+    Modern field.
+  - Pre-flight ASCII fixes: parallel_launcher.py and dashboard.py both
+    used Unicode box-drawing (`-`, `=`) in print statements, violating
+    repo's CONVENTIONS.md ASCII-only terminal rule. Replaced with `-`/`=`
+    so Windows cp1252 doesn't crash. Pre-existing bug, surfaced by
+    running the launcher; not part of the APL arc.

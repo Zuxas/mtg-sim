@@ -44,6 +44,14 @@ def _biggest_elemental_cmc_on_board(gs) -> int:
     return best
 
 
+def _artifact_count_on_board(gs) -> int:
+    """Affinity for artifacts: {1} less per artifact you control."""
+    return sum(
+        1 for c in gs.zones.battlefield
+        if "artifact" in (c.type_line or "").lower()
+    )
+
+
 _COST_REDUCTIONS = {
     # 'Hearth Elemental': costs {X} less per instant/sorcery in your GY
     "Hearth Elemental": _gy_instant_sorcery_count,
@@ -52,6 +60,25 @@ _COST_REDUCTIONS = {
     # 'Sunderflock': costs {X} less where X = greatest mana value
     # among Elementals you control
     "Sunderflock":      _biggest_elemental_cmc_on_board,
+    # Affinity for artifacts — {1} less per artifact you control.
+    # Colored-mana floor is handled by _effective_cmc (never below 1).
+    # NOTE: A/B-tested 2026-04-22 — these reducers produce zero WR
+    # Δ on the current Izzet Affinity decklist at N=500 because the
+    # APL's cast decisions don't route through _effective_cmc, and
+    # the deck lacks classic Affinity draw spells (Thoughtcast, etc.).
+    # Kept registered for future decklists that would exercise them.
+    "Thoughtcast":       _artifact_count_on_board,
+    "Thought Monitor":   _artifact_count_on_board,
+    "Frogmite":          _artifact_count_on_board,
+    "Myr Enforcer":      _artifact_count_on_board,
+    "Broadside Bombardiers": _artifact_count_on_board,
+    "Somber Hoverguard": _artifact_count_on_board,
+    "Cranial Plating":   _artifact_count_on_board,
+    "Emry, Lurker of the Loch": _artifact_count_on_board,
+    # Improvise — tap artifacts to pay generic; same net cost reduction.
+    "Kappa Cannoneer":   _artifact_count_on_board,
+    "Metallic Rebuke":   _artifact_count_on_board,
+    "Whir of Invention": _artifact_count_on_board,
 }
 
 
@@ -119,6 +146,8 @@ class GameState:
         self.energy       = 0
         self.life         = 20
         self.noncreature_spells_this_turn = 0  # for prowess
+        self.spells_cast_this_turn = 0  # total — for Cosmogrand Zenith
+        self.innocence_drew_this_turn = False  # Enduring Innocence 1/turn
         self._log_lines   = []
         self._verbose     = False
 
@@ -130,6 +159,8 @@ class GameState:
         self.energy       = 0
         self.life         = 20
         self.noncreature_spells_this_turn = 0
+        self.spells_cast_this_turn = 0
+        self.innocence_drew_this_turn = False
         self.mana_pool.empty()
         self._log_lines   = []
 
@@ -223,6 +254,8 @@ class GameState:
         decisions between phases."""
         self.turn += 1
         self.noncreature_spells_this_turn = 0
+        self.spells_cast_this_turn = 0
+        self.innocence_drew_this_turn = False
         self._untap()
         self._upkeep()
         self._draw()
@@ -450,6 +483,10 @@ class GameState:
             attackers.append(mutavault)
             self._log("  Mutavault: activated → 2/2, attacks (reverts to land at EOT)")
 
+        # ── Restless lands: activate them into attackers ─────────────────
+        restless = self.activate_restless_lands()
+        attackers.extend(restless)
+
         # ── Prowess: +1/+0 per noncreature spell cast this turn ──────
         prowess_boosted = []
         if self.noncreature_spells_this_turn > 0:
@@ -532,15 +569,26 @@ class GameState:
             self.zones.graveyard.append(card)
             self._log(f"  EOT: sacrificed {card.name} (Mobilize)")
 
-        # Revert Mutavault back to a land
+        # Revert Mutavault / Restless lands back to non-creature lands
         for card in self.zones.battlefield:
-            if card.name == "Mutavault" and getattr(card, "_revert_at_eot", False):
-                card.power      = None
-                card.toughness  = None
-                card.type_line  = "Token Land"
-                card.tags.discard(Tag.CREATURE)
-                card._revert_at_eot = False
-                self._log("  EOT: Mutavault reverts to land")
+            if not getattr(card, "_revert_at_eot", False):
+                continue
+            card.power      = None
+            card.toughness  = None
+            # Strip the appended " Creature" from type_line
+            card.type_line  = card.type_line.replace(" Creature", "")
+            card.tags.discard(Tag.CREATURE)
+            card.tags.discard(KWTag.DEATHTOUCH)
+            card.tags.discard(KWTag.FLYING)
+            card.tags.discard(KWTag.MENACE)
+            card.tags.discard(KWTag.TRAMPLE)
+            card._revert_at_eot = False
+            self._log(f"  EOT: {card.name} reverts to land")
+
+        # Impending: tick time counters on Overlord-cycle permanents
+        # cast for their impending cost. When counters hit 0, the
+        # permanent becomes a creature.
+        self._tick_impending()
 
 
     def _update_ml_trackers(self):
@@ -583,6 +631,116 @@ class GameState:
         self.zones.battlefield.append(token)
         self._fire_etb_triggers(token)
         return token
+
+    # Impending registry (Duskmourn Overlord cycle). Each entry:
+    #   name → (impending_cmc, time_counter_count)
+    # Impending cost is paid instead of hard cost; the card enters with
+    # the given number of time counters and isn't a creature until the
+    # last is removed. ETB 'enters or attacks' triggers still fire on
+    # impending cast (the ETB part). The 'attacks' half can only trigger
+    # after counters run out and it's a creature.
+    _IMPENDING_SPECS = {
+        # Hauntwoods: Impending 4—{1}{G}{G} = 3 mana
+        "Overlord of the Hauntwoods":   (3, 4),
+        # Boilerbilges: Impending 4—{2}{R}{R} = 4 mana
+        "Overlord of the Boilerbilges": (4, 4),
+        # Balemurk: Impending 5—{1}{B} = 2 mana
+        "Overlord of the Balemurk":     (2, 5),
+    }
+
+    def cast_spell_impending(self, card: Card) -> bool:
+        """Cast a card for its Impending cost. The card enters the
+        battlefield with N time counters, is NOT a creature until the
+        last is removed. The ETB trigger still fires (Hauntwoods
+        creates the Everywhere land token, Boilerbilges deals 4, etc.)"""
+        spec = self._IMPENDING_SPECS.get(card.name)
+        if spec is None:
+            return False
+        imp_cmc, counters = spec
+        if self.mana_pool.total() < imp_cmc:
+            return False
+        if card not in self.zones.hand:
+            return False
+        # Pay generic — impending costs we bundle as flex for simplicity
+        self.mana_pool.pay("", imp_cmc)
+        self.zones.hand.remove(card)
+        self.zones.battlefield.append(card)
+        card.turn_entered = self.turn
+        card.time_counters = counters
+        # Not a creature while impending — strip CREATURE tag
+        card._impending_creature = Tag.CREATURE in card.tags
+        if card._impending_creature:
+            card.tags.discard(Tag.CREATURE)
+        self._log(f"  Cast {card.name} (impending for {imp_cmc}, "
+                  f"{counters} time counters — enters as enchantment)")
+        # Fire the ETB — the 'enters or attacks' trigger applies
+        self._fire_etb_triggers(card)
+        return True
+
+    def _tick_impending(self):
+        """End-of-turn tick: remove one time counter from each impending
+        permanent. When counters hit 0, the permanent becomes a creature."""
+        for c in list(self.zones.battlefield):
+            if c.time_counters > 0:
+                c.time_counters -= 1
+                if c.time_counters == 0:
+                    if getattr(c, "_impending_creature", False):
+                        c.tags.add(Tag.CREATURE)
+                        c.summoning_sickness = True  # just became a creature
+                    self._log(f"  {c.name}: last time counter removed "
+                              f"— flips to creature")
+                else:
+                    self._log(f"  {c.name}: time counter → "
+                              f"{c.time_counters}")
+
+    # Registry: name → (activation cost, power, toughness, keyword or None)
+    _RESTLESS_LANDS = {
+        "Restless Reef":       (4, 4, 4, "deathtouch"),
+        "Restless Anchorage":  (3, 2, 3, "flying"),
+        "Restless Ridgeline":  (4, 3, 4, None),
+        "Restless Vents":      (3, 2, 3, "menace"),
+        "Restless Cottage":    (4, 4, 4, None),
+        "Restless Fortress":   (4, 1, 4, None),
+        "Restless Bivouac":    (3, 2, 2, None),
+        "Restless Spire":      (2, 2, 1, None),
+        "Restless Vinestalk":  (5, 5, 5, "trample"),
+    }
+
+    def activate_restless_lands(self) -> list:
+        """Activate every Restless land we can afford. Returns list of
+        newly-active lands (eligible attackers). Call from combat setup
+        in both goldfish (_do_combat) and match-mode paths."""
+        from engine.keywords import KWTag
+        activated = []
+        for land in list(self.zones.battlefield):
+            if not land.is_land() or land.has(Tag.CREATURE):
+                continue
+            spec = self._RESTLESS_LANDS.get(land.name)
+            if not spec:
+                continue
+            cost, p, t, kw = spec
+            if self.mana_pool.total() < cost:
+                continue
+            self.mana_pool.pay("", cost)
+            land.power = str(p)
+            land.toughness = str(t)
+            if " Creature" not in land.type_line:
+                land.type_line = land.type_line + " Creature"
+            land.tags.add(Tag.CREATURE)
+            land._revert_at_eot = True
+            land.summoning_sickness = False
+            if kw == "deathtouch":
+                land.tags.add(KWTag.DEATHTOUCH)
+            elif kw == "flying":
+                land.tags.add(KWTag.FLYING)
+            elif kw == "menace":
+                land.tags.add(KWTag.MENACE)
+            elif kw == "trample":
+                land.tags.add(KWTag.TRAMPLE)
+            activated.append(land)
+            self._log(f"  {land.name}: activated → {p}/{t} "
+                      f"{kw or ''} (reverts at EOT)")
+        return activated
 
     def make_treasure_token(self) -> Card:
         """Create a Treasure artifact token. Tap + sacrifice: add one
@@ -933,6 +1091,11 @@ class GameState:
             self.mana_pool.add_land(card.type_line, card.name)
             self._log(f"  Land: {card.name} "
                       f"({self.zones.count_lands_in_play()} total)")
+
+        # Landfall — any card on battlefield whose trigger fires on a
+        # land ETB (rule 603.6c). Fires once per land drop.
+        from engine.card_effects import on_landfall
+        on_landfall(self)
         return True
 
     def cast_spell(self, card: Card) -> bool:
@@ -945,6 +1108,14 @@ class GameState:
         if not self.mana_pool.can_cast(card.mana_cost, effective_cmc):
             return False
         self.mana_pool.pay(card.mana_cost, effective_cmc)
+        self.spells_cast_this_turn += 1
+        # Cosmogrand Zenith — 'Whenever you cast your second spell
+        # each turn, create two 1/1 white Human Soldier tokens OR
+        # put a +1/+1 counter on each creature you control.' Fires
+        # ON the second spell's cast (before it resolves).
+        if self.spells_cast_this_turn == 2:
+            from engine.card_effects import on_cosmogrand_second_spell
+            on_cosmogrand_second_spell(self)
         if card.has(Tag.INSTANT) or card.has(Tag.SORCERY):
             self.zones.cast_to_graveyard(card)
             self.noncreature_spells_this_turn += 1
@@ -991,6 +1162,92 @@ class GameState:
         self._fire_etb_triggers(card)
         self._log(f"  Vial ({vial.counters}): {card.name}")
         self.check_state_based_actions()
+        return True
+
+    def put_into_play(self, card: Card, from_zone: str = "hand") -> bool:
+        """Put a card onto the battlefield AND fire its ETB triggers.
+
+        Use this from APL cheat paths (Primeval Titan fetches,
+        reanimation, Through the Breach, Whir of Invention, etc.)
+        instead of a raw `gs.zones.battlefield.append(card)` — the
+        raw append skips ETB dispatch, so generic ETB_EFFECTS handlers
+        never fire for cards cheated in that way.
+
+        from_zone: 'hand' | 'graveyard' | 'library' | 'exile' |
+                   None (already removed from all zones by caller).
+        Returns True if the card was put into play.
+        """
+        from engine.keywords import KWTag
+
+        if from_zone == "hand" and card in self.zones.hand:
+            self.zones.hand.remove(card)
+        elif from_zone == "graveyard" and card in self.zones.graveyard:
+            self.zones.graveyard.remove(card)
+        elif from_zone == "library" and card in self.zones.library:
+            self.zones.library.remove(card)
+        # from_zone=None → caller already handled zone removal.
+
+        self.zones.battlefield.append(card)
+        card.turn_entered = self.turn
+        if card.has(Tag.CREATURE) and KWTag.HASTE not in card.tags:
+            card.summoning_sickness = True
+        self._fire_etb_triggers(card)
+        return True
+
+    def transform(self, card: Card) -> bool:
+        """Transform a DFC permanent to its back face (Stage 2 of the
+        T1.3+T1.4 transform arc).
+
+        Per CR 701.32: turn the permanent over so its other face is up.
+        The permanent retains its onboard counters, attached cards, and
+        tap state. Per CR 302.1 summoning sickness is NOT reset by
+        transform -- the permanent remains under its controller's
+        continuous control through the flip, so a Saga that has been
+        in play multiple turns becomes a back-face creature that CAN
+        attack the same turn it transforms (Avatar Roku attacks T6 when
+        Roku ticks chapter III on T6 upkeep).
+
+        We model the flip by mutating the Card in place:
+          - name / type_line / oracle_text / power / toughness update
+            to back-face values
+          - loyalty updates only if back face is a planeswalker
+          - tags are cleared and re-derived from new type_line
+          - is_transformed flips True (one-way; we don't model
+            day/night-style flip-back yet)
+          - .counters (+1/+1) is PRESERVED per CR 701.32
+          - .lore_counters resets to 0 (saga is gone; back-face
+            creature doesn't carry lore counters)
+          - summoning_sickness left untouched per CR 302.1
+
+        Returns True on successful transform; False if the card has no
+        back_face populated (single-face card or pre-Stage-1 data)."""
+        if not card.back_face:
+            self._log(f"  WARN: tried to transform {card.name} "
+                      f"but no back_face populated")
+            return False
+        bf = card.back_face
+        card.is_transformed = True
+        card.name = bf.get("name", card.name)
+        card.type_line = bf.get("type_line", card.type_line)
+        card.oracle_text = bf.get("oracle_text", "") or ""
+        card.power = bf.get("power")
+        card.toughness = bf.get("toughness")
+        # Loyalty: only set if back face is a planeswalker. Creature
+        # back faces (Avatar Roku, Etching of Kumano) have loyalty=None
+        # in card_db; skip the update so card.loyalty stays at front-
+        # face value (0 for non-PW front faces).
+        bf_loyalty = bf.get("loyalty")
+        if bf_loyalty is not None:
+            try:
+                card.loyalty = int(bf_loyalty)
+            except (TypeError, ValueError):
+                pass
+        # Reset lore counters -- saga is gone.
+        card.lore_counters = 0
+        # Re-derive tags from new type_line (Saga -> Creature etc.)
+        card.tags.clear()
+        card._auto_tag()
+        self._log(f"  TRANSFORMED: {card.name} ({card.type_line})")
         return True
 
     def vial_in_play(self):
@@ -1040,6 +1297,15 @@ class GameState:
                 self.life   += 1
                 self.energy += 1
                 self._log(f"    Guide of Souls: creature entered → +1 life ({self.life}), +1 energy ({self.energy})")
+            # Enduring Innocence: 'Whenever one or more other creatures
+            # you control with power 2 or less enter, draw a card.
+            # This ability triggers only once each turn.'
+            if (perm.name == "Enduring Innocence"
+                    and not self.innocence_drew_this_turn
+                    and entered.effective_power() <= 2):
+                self.zones.draw(1)
+                self.innocence_drew_this_turn = True
+                self._log("    Enduring Innocence: small creature ETB → draw 1")
 
     def _apply_entering_etb(self, entered: Card, _depth: int = 0):
         """The entering card fires its own ETB effects."""

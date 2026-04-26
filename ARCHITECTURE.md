@@ -124,7 +124,7 @@ NOT: combat → main1 → main2 (old broken order)
     inflation accelerated to T4.48), then T1.1 corrected the Guide "another" oracle bug
     which added back 0.01 turn (now T4.49). Bug had been silently inflating sim WR vs
     real-BE play; correction is in the slower-direction by design.
-- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-T2 stack, **current baseline**): 100.0% win, avg T4.47, 53% T4, 93% by T5
+- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-T2 stack): 100.0% win, avg T4.47, 53% T4, 93% by T5
   - T2.1 (Ranger-Captain priority) attempted and REVERTED: negative finding,
     displaces Ajani/Phlage from T3 cast slot.
   - T2.2 (Pyromancer GY activation): real oracle is 5-mana cost (not 1 as
@@ -134,5 +134,19 @@ NOT: combat → main1 → main2 (old broken order)
   - T2.4 (Ocelot city's blessing copy): activates on T6+ when 10+ permanents.
     Mostly compounds with token snowball when game lasts that long.
   - Net effect: -0.02 turn faster (T4.49 -> T4.47), WR ticked up 99.9% -> 100%.
-    Most T2 capabilities fire in late games that are already won; canonical
-    impact is small but real. Variants with longer game arcs would see more.
+- Boros Energy goldfish (2026-04-26 N=1000 seed=42, post-T1.3+T1.4 transform infrastructure arc, **current baseline**): 100.0% win, avg T4.45, 53% T4, 92% by T5
+  - 6-stage arc: Card DFC fields + gs.transform mechanic + planeswalker
+    dispatch + saga transform (Kumano fixed) + Ajani Pariah->Avenger
+    consumer + Roku->Avatar Roku consumer. See spec at
+    harness/knowledge/tech/be-apl-content-gaps-2026-04-25.md.
+  - Net drift vs T2-stack: -0.02 turn faster (T4.47 -> T4.45). Same pattern
+    as T2 stack: late-game capabilities lap correctly but BE's T4-median
+    clock leaves little room for them to materially affect kill turn.
+    Stage 5 (Ajani transform) produced ZERO canonical drift -- Ajani only
+    transforms ~10% of games, and Avenger has no time to snowball before
+    games end. Stage 6 (Roku) produced -0.16 turn at 100-game scale (down
+    to -0.02 at 1000) because Chapters I+II provide value on cast turn
+    and next turn even when Chapter III doesn't reach.
+  - Real value of this arc is INFRASTRUCTURE not BE-canonical impact:
+    Magic Origins planeswalkers, Innistrad werewolves, MH3 sagas in
+    Pioneer/Modern decks all unlocked for free.

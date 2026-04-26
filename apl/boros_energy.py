@@ -66,33 +66,31 @@ class BorosEnergyAPL(BaseAPL):
     # Cards with very limited goldfish value (creature-only removal, no face)
     LOW_VALUE_GOLDFISH = {THRABEN_CHARM, GALVANIC}
 
-    # ── Role-detection scaffolding (Phase 1 refactor 2026-04-25, stage 2) ──
-    # See harness/knowledge/tech/apl-role-refactor-2026-04-25.md for the
-    # full architectural spec. Currently scaffolding only -- methods exist
-    # but are NOT called from the turn loop yet (stage 2 = no behavior
-    # change). Stages 3-5 migrate keep/bottom/main_phase/main_phase2 to
-    # query role buckets instead of hardcoded card-name constants.
+    # ── Role-detection (Phase 1, 2026-04-25) + dispatch unification (Phase 2) ──
+    # See harness/knowledge/tech/apl-role-refactor-2026-04-25.md.
     _roles_computed = False
 
-    # Cards with mechanics too unique to capture via oracle-text patterns.
-    # Each entry maps card name -> (has_flag_attr, handler_method_name).
-    # Handlers fire only if the corresponding has_<card> flag is True
-    # (set during _compute_roles).
+    # SPECIAL_MECHANICS: cards with mechanics too unique to capture via
+    # oracle-text patterns. Maps card name -> handler method name string
+    # (resolved via getattr for subclass-overridability).
+    #
+    # Phase 2 simplification: dropped the per-card has_<flag> attr in
+    # favor of `card_name in self._deck_names` membership checks.
+    # Handlers self-gate on `phase` arg ("main", "main2", "combat", "end").
+    #
+    # Calling positions in main_phase / main_phase2 are individual (not
+    # a single dispatch loop) to preserve canonical call ordering with
+    # the role-driven loops -- the unified dispatch helper is used for
+    # the new Voice combat-trigger case (Phase 2 stage 2). A future
+    # Phase 3 could fully unify if drift bounds permit.
     SPECIAL_MECHANICS = {
-        "Phlage, Titan of Fire's Fury":
-            ("has_phlage", "_handle_phlage"),
-        "Ajani, Nacatl Pariah":
-            ("has_ajani", "_handle_ajani_etb"),
-        "Ocelot Pride":
-            ("has_ocelot", "_handle_ocelot_end_step"),
-        "Guide of Souls":
-            ("has_guide", "_handle_guide_attack_pump"),
-        "Arena of Glory":
-            ("has_arena_of_glory", "_handle_arena_exert_haste"),
-        "Goblin Bombardment":
-            ("has_bombardment", "_handle_bombardment_finish"),
-        "Seasoned Pyromancer":
-            ("has_pyromancer", "_handle_pyromancer_loot"),
+        "Phlage, Titan of Fire's Fury": "_handle_phlage",
+        "Ajani, Nacatl Pariah":         "_handle_ajani_etb",
+        "Ocelot Pride":                 "_handle_ocelot_end_step",
+        "Guide of Souls":               "_handle_guide_attack_pump",
+        "Arena of Glory":               "_handle_arena_exert_haste",
+        "Goblin Bombardment":           "_handle_bombardment_finish",
+        "Seasoned Pyromancer":          "_handle_pyromancer_loot",
     }
 
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
@@ -312,8 +310,8 @@ class BorosEnergyAPL(BaseAPL):
                 gs._log(f"  [PRE-COMBAT] {card.name} (haste, role-detected)")
                 gs.cast_spell(card)
 
-        # 3. Arena of Glory exert (SPECIAL_MECHANICS, gated on has_arena_of_glory)
-        if self.has_arena_of_glory:
+        # 3. Arena of Glory exert (SPECIAL_MECHANICS)
+        if "Arena of Glory" in self._deck_names:
             self._handle_arena_exert_haste(gs, 'main')
 
         # 4. Sac outlets -- ROLE-DRIVEN (was: if card.name == GOBLIN_BOMBARD).
@@ -326,11 +324,11 @@ class BorosEnergyAPL(BaseAPL):
                 break
 
         # 5. Ajani pre-combat (SPECIAL_MECHANICS) -- 2/1 token triggers Guide
-        if self.has_ajani:
+        if "Ajani, Nacatl Pariah" in self._deck_names:
             self._handle_ajani_etb(gs, 'main')
 
         # 6. Guide of Souls attack trigger (SPECIAL_MECHANICS) -- pay 3E for +2/+2 flying
-        if self.has_guide:
+        if "Guide of Souls" in self._deck_names:
             self._handle_guide_attack_pump(gs, 'main')
 
         # 7. Galvanic Discharge — cast ALL for +3 energy each
@@ -385,7 +383,7 @@ class BorosEnergyAPL(BaseAPL):
             if card.name == AJANI:
                 self._simulate_ajani_etb(gs)
             # Guide trigger for any creature ETB
-            if self.has_guide:
+            if "Guide of Souls" in self._deck_names:
                 guides = sum(1 for c in gs.zones.battlefield
                              if c.name == GUIDE_OF_SOULS)
                 if guides:
@@ -394,13 +392,13 @@ class BorosEnergyAPL(BaseAPL):
                     self._gained_life_this_turn = True
                     gs._log(f"  Guide trigger: +{guides} life, +{guides} energy")
 
-        # Pyromancer loot (SPECIAL_MECHANICS, gated on has_pyromancer)
-        if self.has_pyromancer:
+        # Pyromancer loot (SPECIAL_MECHANICS)
+        if "Seasoned Pyromancer" in self._deck_names:
             self._handle_pyromancer_loot(gs, 'main2')
 
-        # Phlage hardcast + escape (SPECIAL_MECHANICS, gated on has_phlage).
+        # Phlage hardcast + escape (SPECIAL_MECHANICS).
         # Preserves the CMC=0 mana-pool kludge inside the handler.
-        if self.has_phlage:
+        if "Phlage, Titan of Fire's Fury" in self._deck_names:
             self._handle_phlage(gs, 'main2')
 
         # Face burn -- ROLE-DRIVEN (was: if card.name == LIGHTNING_BOLT).
@@ -413,12 +411,12 @@ class BorosEnergyAPL(BaseAPL):
                 gs.damage_dealt += dmg
                 gs._log(f"  Face burn ({card.name}): {dmg} dmg ({gs.damage_dealt} total)")
 
-        # End step: Ocelot Pride tokens (SPECIAL_MECHANICS, gated on has_ocelot)
-        if self.has_ocelot:
+        # End step: Ocelot Pride tokens (SPECIAL_MECHANICS)
+        if "Ocelot Pride" in self._deck_names:
             self._handle_ocelot_end_step(gs, 'end')
 
-        # Bombardment finish (SPECIAL_MECHANICS, gated on has_bombardment)
-        if self.has_bombardment:
+        # Bombardment finish (SPECIAL_MECHANICS)
+        if "Goblin Bombardment" in self._deck_names:
             self._handle_bombardment_finish(gs, 'main2')
 
     # ────────────────────────────────────────────────────────────────
@@ -487,16 +485,23 @@ class BorosEnergyAPL(BaseAPL):
             key=lambda n: (cmc_by_name[n], n),
         )
 
-        # Special-mechanic flags -- each gates a SPECIAL_MECHANICS handler
-        self.has_phlage          = "Phlage, Titan of Fire's Fury" in deck_names
-        self.has_ajani           = "Ajani, Nacatl Pariah" in deck_names
-        self.has_ocelot          = "Ocelot Pride" in deck_names
-        self.has_guide           = "Guide of Souls" in deck_names
-        self.has_arena_of_glory  = "Arena of Glory" in deck_names
-        self.has_bombardment     = "Goblin Bombardment" in deck_names
-        self.has_pyromancer      = "Seasoned Pyromancer" in deck_names
+        # Phase 2 unification: deck_names membership replaces individual
+        # has_<card> flags for SPECIAL_MECHANICS dispatch.
+        self._deck_names = deck_names
 
         self._roles_computed = True
+
+    def _dispatch_special_mechanics(self, gs, phase):
+        """Dispatch every registered SPECIAL_MECHANICS handler whose card
+        is in the current deck. Handlers self-gate on `phase` arg.
+        Used for combat-phase dispatch (Voice Mobilize) where a single
+        dispatch loop fits naturally. main_phase / main_phase2 keep
+        individual handler call positions to preserve canonical ordering."""
+        for card_name, handler_name in self.SPECIAL_MECHANICS.items():
+            if card_name in self._deck_names:
+                handler = getattr(self, handler_name, None)
+                if handler is not None:
+                    handler(gs, phase)
 
     def _ensure_roles(self, gs):
         """Lazy-compute role buckets on first turn-loop call.

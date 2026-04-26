@@ -1,0 +1,59 @@
+// BE Voice/Nemesis variant -- Jermey is sleeving 2026-04-26
+//
+// Diff from canonical boros_energy_modern.txt:
+//   MB: -1 Ranger-Captain of Eos
+//       -2 The Legend of Roku   (moved to SB; net -1 Roku in 75)
+//       -1 Sunbaked Canyon
+//       -1 Marsh Flats
+//       +3 Voice of Victory
+//       +1 Screaming Nemesis    ({2}{R} 3/3 Haste, damage redirect + no lifegain)
+//       +2 Windswept Heath
+//       +1 Plains
+//       +1 Sacred Foundry
+//   SB: -2 Obsidian Charmaw
+//       -2 Orim's Chant
+//       -1 Soul-Guide Lantern
+//       -1 Wrath of the Skies
+//       +2 Celestial Purge
+//       +1 Meltdown
+//       +1 Surgical Extraction
+//       +1 Wear // Tear
+//       +1 The Legend of Roku   (now 2 SB, 0 MB)
+//
+// Net: trades Roku-MB clock + RangerCap tutor + Sunbaked Canyon for
+// Voice mobilize tokens + Nemesis pressure. SB swaps narrow tech
+// (Charmaw vs Tron, Chant vs combo, Lantern vs GY) for broader
+// hate (Purge anti-B/R, Meltdown anti-artifact, more Surgical/Wear-Tear).
+4 Ragavan, Nimble Pilferer
+4 Ocelot Pride
+4 Guide of Souls
+4 Phlage, Titan of Fire's Fury
+4 Ajani, Nacatl Pariah
+3 Voice of Victory
+2 Seasoned Pyromancer
+1 Screaming Nemesis
+4 Galvanic Discharge
+2 Thraben Charm
+1 Lightning Bolt
+3 Goblin Bombardment
+1 Blood Moon
+4 Arid Mesa
+4 Flooded Strand
+2 Marsh Flats
+2 Windswept Heath
+3 Arena of Glory
+2 Elegant Parlor
+3 Sacred Foundry
+2 Plains
+1 Mountain
+
+Sideboard
+1 Blood Moon
+2 Celestial Purge
+1 High Noon
+1 Meltdown
+2 Surgical Extraction
+2 The Legend of Roku
+2 Vexing Bauble
+2 Wear // Tear
+2 Wrath of the Skies

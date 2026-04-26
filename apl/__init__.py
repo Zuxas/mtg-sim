@@ -40,6 +40,8 @@ APL_REGISTRY = {
 
     # ── Modern (goldfish) ──
     "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "boros_energy"),
+    "borosenergyvariantjermey": ("apl.boros_energy", "BorosEnergyAPL",
+        "decks/boros_energy_variant_jermey_2026-04-26.txt"),
     "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),

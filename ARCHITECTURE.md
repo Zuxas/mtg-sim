@@ -201,6 +201,22 @@ NOT: combat → main1 → main2 (old broken order)
   has DB cache for ~8 matchups + sim for ~6. Field-weighted comparison
   is approximate apples-to-apples (same archetypes weighted by Modern
   meta share) but absolute numbers reflect different g1_source mixes.
+- METHODOLOGY CAVEAT for ALL Modern gauntlet entries above (surfaced
+  2026-04-26 morning by Diagnostic B): match-runner `_resolve_combat`
+  is a raw power-vs-toughness calc with no combat trigger dispatch,
+  AND `_simple_play_turn` doesn't call `main_phase2`. BE-specific
+  effects (Phlage hardcast, Phlage escape, Ocelot end-step snowball,
+  Bombardment lethal sac, Voice Mobilize, Phlage attack trigger,
+  Ragavan treasures, Guide attack pump, Avatar Roku firebending, saga
+  casts, Lightning Bolt face burn) DO NOT FIRE in match mode.
+  Variant-vs-canonical comparison still holds (both decks share the
+  simplification) but absolute gauntlet numbers reflect a heavily
+  truncated combat model. Real-tournament BE is probably MORE potent
+  than the 71.5% headline suggests. Goldfish numbers (T4.72 canonical
+  / T4.40 variant) are the more trustworthy "how does this deck
+  actually play" measurement. Fresh-session fix scope at
+  harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md
+  (~2.5-3.5hr, three phases).
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

@@ -1,0 +1,45 @@
+// BE variant test - synthetic 2026-04-25
+// Stress test for role-based detection. Diff from canonical
+// (boros_energy_modern.txt):
+//   + 4 Monastery Swiftspear  (replaces 4 Ragavan, Nimble Pilferer)
+//   + 1 Lightning Helix       (replaces 1 Phlage; Helix is face_burn + lifegain)
+//   + 2 Voice of Victory      (replaces 1 Goblin Bombardment + 1 Thraben Charm)
+// Validates that role auto-detection picks up Swiftspear (haste_threats),
+// Helix (face_burn AND lifegain_sources), and Voice (token_producers + creatures_by_cmc)
+// without any APL code changes. See data/full_audit/role-refactor spec.
+4 Monastery Swiftspear
+4 Ocelot Pride
+4 Guide of Souls
+3 Phlage, Titan of Fire's Fury
+1 Lightning Helix
+4 Ajani, Nacatl Pariah
+2 Seasoned Pyromancer
+1 Ranger-Captain of Eos
+4 Galvanic Discharge
+1 Thraben Charm
+2 Voice of Victory
+1 Lightning Bolt
+2 Goblin Bombardment
+2 Blood Moon
+2 The Legend of Roku
+4 Arid Mesa
+4 Flooded Strand
+3 Arena of Glory
+3 Elegant Parlor
+3 Marsh Flats
+2 Sacred Foundry
+2 Plains
+1 Mountain
+1 Sunbaked Canyon
+
+Sideboard
+2 Obsidian Charmaw
+1 Blood Moon
+3 Wrath of the Skies
+2 Orim's Chant
+2 Vexing Bauble
+1 High Noon
+1 Surgical Extraction
+1 Soul-Guide Lantern
+1 Wear // Tear
+1 The Legend of Roku

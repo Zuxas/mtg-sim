@@ -798,12 +798,16 @@ class BorosEnergyAPL(BaseAPL):
         #         +2 expected = cats * future_attack_steps
         #         0  expected = current creatures (+ red-permanent gating)
         #
-        # NB: zero_face_dmg = creatures count BEFORE the new Cat Warrior
-        # token created by the 0 ability. The actual damage when 0 fires
-        # is creatures + 1 (token enters first, then trigger checks
-        # creature count per oracle). Spec uses pre-token count which
-        # slightly underestimates 0 -- bucketing thresholds (>=20, >=17)
-        # absorb the 1-creature delta. Documented for future tightening.
+        # zero_face_dmg now correctly includes the +1 from the Cat Warrior
+        # token entering BEFORE the conditional damage trigger checks
+        # creature count. Per oracle: "Create a 2/1 white Cat Warrior
+        # creature token. When you do, if you control a red permanent
+        # other than Ajani, he deals damage equal to the number of
+        # creatures you control to any target." The "When you do" trigger
+        # fires after the token enters, so the token is in the count.
+        # Stage 5b initial spec underestimated by 1; tightened in Stage B
+        # (2026-04-26). The +1 only applies when has_red_other is True
+        # (the trigger doesn't fire without a red permanent gating).
         for card in list(gs.zones.battlefield):
             if card.name != "Ajani, Nacatl Avenger":
                 continue
@@ -822,7 +826,7 @@ class BorosEnergyAPL(BaseAPL):
                 for c in gs.zones.battlefield
                 if c is not card
             )
-            zero_face_dmg = creatures if has_red_other else 0
+            zero_face_dmg = (creatures + 1) if has_red_other else 0
             zero_total_after = gs.damage_dealt + zero_face_dmg
 
             if zero_total_after >= 20:

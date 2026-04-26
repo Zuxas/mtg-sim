@@ -115,7 +115,12 @@ NOT: combat → main1 → main2 (old broken order)
 - Standard gauntlet: Boros Aggro 45.5% (140K games)
 - Pioneer gauntlet: Izzet Prowess 50% (140K games, partial)
 - Boros Energy goldfish (2026-04-09 historical): 100% win, avg T4.92, 36% T4, 79% by T5
-- Boros Energy goldfish (2026-04-25 N=1000 seed=42, **current baseline**): 99.9% win, avg T4.59, 47% T4, 88% by T5
+- Boros Energy goldfish (2026-04-25 N=1000 seed=42, pre-role-refactor baseline): 99.9% win, avg T4.59, 47% T4, 88% by T5
   - Drift since 2026-04-09: avg kill 0.33 turn faster, T4 wins +11pp, by-T5 cumulative +9pp.
     Engine WIP push (game_state.py / card_effects.py / match_engine.py edits) likely
-    accounts for the speedup. This is the comparison baseline for the role-refactor work.
+    accounts for the speedup. Comparison baseline for the role-refactor work.
+- Boros Energy goldfish (2026-04-25 night N=1000 seed=42, post-role-refactor + Phase 2 + T1.2 + T1.1, **current baseline**): 99.9% win, avg T4.49, 53% T4, 92% by T5
+  - Net drift vs pre-role-refactor: avg kill -0.10 turn faster (Phase 1 +Guide-self-trigger
+    inflation accelerated to T4.48), then T1.1 corrected the Guide "another" oracle bug
+    which added back 0.01 turn (now T4.49). Bug had been silently inflating sim WR vs
+    real-BE play; correction is in the slower-direction by design.

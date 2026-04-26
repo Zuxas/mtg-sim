@@ -226,25 +226,18 @@ class BorosEnergyAPL(BaseAPL):
             for _ in range(ocelots):
                 token = gs._make_token("Cat Token", "1", "1", "Creature — Cat")
                 self._tokens_entered_this_turn += 1
-                # Guide of Souls triggers on token entering: +1 life +1 energy
-                guides = sum(1 for c in gs.zones.battlefield
-                             if c.name == GUIDE_OF_SOULS)
-                if guides:
-                    gs.life += guides
-                    gs.energy += guides
-                    self._gained_life_this_turn = True  # life gain chains more Ocelots? No, already in end step
+                # Guide ETB trigger (TOKEN site — Cat tokens can't be Guides).
+                # T1.1 stage 2 site 1.
+                self._fire_guide_etb_trigger(gs, None)
             gs._log(f"  Ocelot Pride: {ocelots} Cat token(s) (gained life this turn)")
 
     def _simulate_ajani_etb(self, gs: GameState):
         """Ajani ETB: create a 2/1 Cat Warrior token."""
         token = gs._make_token("Cat Warrior Token", "2", "1", "Creature — Cat Warrior")
         self._tokens_entered_this_turn += 1
-        # Guide triggers on token entering
-        guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-        if guides:
-            gs.life += guides
-            gs.energy += guides
-            self._gained_life_this_turn = True
+        # Guide trigger on Cat Warrior token entering (TOKEN site).
+        # T1.1 stage 2 site 3.
+        self._fire_guide_etb_trigger(gs, None)
         gs._log(f"  Ajani ETB: 2/1 Cat Warrior token")
 
     def _bombardment_finish(self, gs: GameState):
@@ -385,15 +378,10 @@ class BorosEnergyAPL(BaseAPL):
                 break
             if card.name == AJANI:
                 self._simulate_ajani_etb(gs)
-            # Guide trigger for any creature ETB
-            if "Guide of Souls" in self._deck_names:
-                guides = sum(1 for c in gs.zones.battlefield
-                             if c.name == GUIDE_OF_SOULS)
-                if guides:
-                    gs.life += guides
-                    gs.energy += guides
-                    self._gained_life_this_turn = True
-                    gs._log(f"  Guide trigger: +{guides} life, +{guides} energy")
+            # Guide trigger for any creature ETB (CREATURE site, exclude
+            # self-Guide via "another" oracle clause).
+            # T1.1 stage 2 site 5 -- the main bug-fix site.
+            self._fire_guide_etb_trigger(gs, card)
 
         # Pyromancer loot (SPECIAL_MECHANICS)
         if "Seasoned Pyromancer" in self._deck_names:
@@ -627,6 +615,10 @@ class BorosEnergyAPL(BaseAPL):
                     continue
                 # Handler fired ETB damage + life. Set internal flag.
                 self._gained_life_this_turn = True
+                # Guide trigger on Phlage ETB (CREATURE site, exclude
+                # self-Guide -- Phlage isn't a Guide so filter is moot).
+                # T1.1 stage 2 site 7a (NEW: was missing pre-T1.1).
+                self._fire_guide_etb_trigger(gs, card)
                 # Sacrifice after ETB -- hardcast path didn't escape.
                 if card in gs.zones.battlefield:
                     gs.zones.battlefield.remove(card)
@@ -654,6 +646,14 @@ class BorosEnergyAPL(BaseAPL):
             gs.damage_dealt += 3
             gs.life += 3
             self._gained_life_this_turn = True
+            # Guide trigger on escaped Phlage ETB (CREATURE site).
+            # T1.1 stage 2 site 7b (NEW: was missing pre-T1.1).
+            # Note: this path uses raw battlefield.append rather than
+            # cast_spell (escape isn't a normal cast cost), so the
+            # registered ETB handler doesn't fire -- damage/life are
+            # added manually above. The Guide trigger also has to be
+            # fired manually here.
+            self._fire_guide_etb_trigger(gs, phlage_in_gy)
             gs._log(f"  Phlage ESCAPED: 3 dmg ({gs.damage_dealt}), "
                     f"+3 life, 6/6 stays")
 
@@ -720,13 +720,9 @@ class BorosEnergyAPL(BaseAPL):
             gs.cast_spell(best)
             best.summoning_sickness = False  # HASTE from Arena
             gs._log(f"  [PRE-COMBAT] Arena of Glory exert -> {best.name} has HASTE")
-            # Guide triggers on creature entering
-            guides = sum(1 for c in gs.zones.battlefield
-                         if c.name == GUIDE_OF_SOULS)
-            if guides:
-                gs.life += guides
-                gs.energy += guides
-                self._gained_life_this_turn = True
+            # Guide trigger on Arena-cast creature ETB (CREATURE site,
+            # exclude self-Guide). T1.1 stage 2 site 6.
+            self._fire_guide_etb_trigger(gs, best)
 
     def _handle_bombardment_finish(self, gs, phase):
         """Sac creatures to Goblin Bombardment for lethal.
@@ -765,12 +761,9 @@ class BorosEnergyAPL(BaseAPL):
                     gs._make_token("Elemental Token", "1", "1",
                                     "Creature — Elemental")
                     self._tokens_entered_this_turn += 1
-                    guides = sum(1 for c in gs.zones.battlefield
-                                 if c.name == GUIDE_OF_SOULS)
-                    if guides:
-                        gs.life += guides
-                        gs.energy += guides
-                        self._gained_life_this_turn = True
+                    # Guide trigger per Elemental (TOKEN per-loop site).
+                    # T1.1 stage 2 site 4.
+                    self._fire_guide_etb_trigger(gs, None)
                 gs._log(f"  Pyromancer: discard 2, draw 2, "
                         f"{discarded_nonlands} Elemental(s)")
                 return
@@ -801,17 +794,9 @@ class BorosEnergyAPL(BaseAPL):
             return
         tokens = 2 * voices_attacking  # 2 tokens per Voice
         gs.damage_dealt += tokens      # 1 dmg each (1/1 attacking)
-        # Guide ETB triggers per token entering
-        if "Guide of Souls" in self._deck_names:
-            guides = sum(1 for c in gs.zones.battlefield
-                         if c.name == GUIDE_OF_SOULS)
-            if guides > 0:
-                life_gain = guides * tokens
-                gs.life += life_gain
-                gs.energy += life_gain
-                self._gained_life_this_turn = True
-                gs._log(f"  Voice Mobilize Guide trigger: "
-                        f"+{life_gain} life, +{life_gain} energy")
+        # Guide ETB triggers per token entering (TOKEN batch).
+        # T1.1 stage 2 site 2.
+        self._fire_guide_etb_trigger(gs, None, token_count=tokens)
         gs._log(f"  Voice of Victory Mobilize: {voices_attacking} Voice(s) "
                 f"attacking -> {tokens} 1/1 Warrior tokens = {tokens} dmg "
                 f"({gs.damage_dealt} total)")

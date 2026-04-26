@@ -576,17 +576,29 @@ def run_match_set(
     b_name = getattr(apl_b, 'name', '').lower().replace(' ', '').replace('-','')
     use_combo_sampler = any(k.replace(' ','') == b_name for k in combo_keys)
 
+    # Stage 1.6: instantiate a fresh APL per game to eliminate APL
+    # state leakage. Pre-fix, per-game-mutable APL fields
+    # (BorosEnergy: _cat_died_this_turn, _treasures, _gained_life_this_turn,
+    # _tokens_entered_this_turn, _roles_computed cache; similar in others)
+    # leaked between games even after Stage 1.5's Card deepcopy.
+    # Combined with Stage 1.5, this completes the determinism fix.
+    apl_a_class = type(apl_a)
+    apl_b_class = type(apl_b)
+
     for i in range(n):
         game_on_play = (i % 2 == 0) if mix_play_draw else on_play
 
+        fresh_apl_a = apl_a_class()
+        fresh_apl_b = apl_b_class()
+
         if use_combo_sampler:
-            combo_b = ComboKillSampler(getattr(apl_b, 'name', 'unknown'), rng)
+            combo_b = ComboKillSampler(getattr(fresh_apl_b, 'name', 'unknown'), rng)
             match = _run_match_with_combo(
-                apl_a, deck_a, combo_b,
+                fresh_apl_a, deck_a, combo_b,
                 on_play=game_on_play, max_turns=15, rng=rng
             )
         else:
-            match = run_match(apl_a, deck_a, apl_b, deck_b,
+            match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
                               on_play=game_on_play,
                               seed=rng.randint(0, 999999))
 

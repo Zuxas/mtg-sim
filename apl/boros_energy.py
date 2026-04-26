@@ -181,16 +181,10 @@ class BorosEnergyAPL(BaseAPL):
             self._treasures += ragavans
             gs._log(f"  Ragavan: +{ragavans} Treasure(s) ({self._treasures} total)")
 
-        # Phlage attack trigger: escaped Phlage deals 3 damage + 3 life on attack
-        phlages_attacking = sum(1 for c in gs.zones.creatures_on_battlefield()
-                                if c.name == PHLAGE
-                                and (not c.summoning_sickness or KWTag.HASTE in c.tags))
-        if phlages_attacking > 0:
-            dmg = 3 * phlages_attacking
-            gs.damage_dealt += dmg
-            gs.life += dmg
-            self._gained_life_this_turn = True
-            gs._log(f"  Phlage attack trigger: {dmg} dmg ({gs.damage_dealt} total), +{dmg} life")
+        # Phlage attack trigger now lives in _handle_phlage(phase='combat')
+        # and fires via the _dispatch_special_mechanics call below.
+        # Extracted 2026-04-25 night (Phase 2 stage 4) -- proves the dispatch
+        # pattern handles combat triggers beyond Voice Mobilize.
 
         # Ocelot Pride has lifelink — any Ocelot that attacked gained us life
         ocelots_attacked = sum(1 for c in gs.zones.creatures_on_battlefield()
@@ -534,10 +528,34 @@ class BorosEnergyAPL(BaseAPL):
     # ── Handler stubs (stage 2: empty; stages 4-5 fill them in) ──
 
     def _handle_phlage(self, gs, phase):
-        """Phlage hardcast + escape from GY. PRESERVES the CMC=0
-        mana-pool kludge (Scryfall data has Phlage at CMC 0; mana check
-        uses can_pay/pay with literal cost strings instead of can_cast).
-        Stage 5 fill-in: moved verbatim from main_phase2."""
+        """Phlage handler. Multi-phase:
+          - phase='combat': escaped Phlage attack trigger (3 dmg + 3 life
+            per Phlage attacking). Extracted from _simulate_combat_triggers
+            2026-04-25 night.
+          - phase='main2': hardcast {1}{R}{W} + escape from GY. PRESERVES
+            the CMC=0 mana-pool kludge (Scryfall data has Phlage at CMC 0;
+            mana check uses can_pay/pay with literal cost strings instead
+            of can_cast). Moved here from main_phase2 in Phase 1 stage 5."""
+        from engine.keywords import KWTag
+
+        if phase == 'combat':
+            # Phlage attack trigger: each Phlage that attacked deals 3 dmg
+            # to opp + gains us 3 life. Only escaped Phlages attack (stays
+            # on bf rather than sacrificing post-hardcast).
+            phlages_attacking = sum(
+                1 for c in gs.zones.creatures_on_battlefield()
+                if c.name == PHLAGE
+                and (not c.summoning_sickness or KWTag.HASTE in c.tags)
+            )
+            if phlages_attacking > 0:
+                dmg = 3 * phlages_attacking
+                gs.damage_dealt += dmg
+                gs.life += dmg
+                self._gained_life_this_turn = True
+                gs._log(f"  Phlage attack trigger: {dmg} dmg "
+                        f"({gs.damage_dealt} total), +{dmg} life")
+            return
+
         if phase != 'main2':
             return
         # Phlage hardcast {1}{R}{W}: 3 dmg + 3 life, then sacrifice

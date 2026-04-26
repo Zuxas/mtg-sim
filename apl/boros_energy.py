@@ -745,11 +745,21 @@ class BorosEnergyAPL(BaseAPL):
         self._bombardment_finish(gs)
 
     def _handle_pyromancer_loot(self, gs, phase):
-        """Seasoned Pyromancer ETB: discard 2, draw 2, +1/1 Elemental
-        token per nonland discarded. Stage 5 fill-in: moved verbatim
-        from main_phase2."""
+        """Seasoned Pyromancer (multi-path handler):
+          - ETB cast from hand: discard 2, draw 2, +1/1 Elemental token
+            per nonland discarded.
+          - GY activation ({3}{R}{R}, exile this card from GY):
+            create 2 1/1 red Elemental tokens.
+
+        T2.2 (2026-04-25 night) added the GY activation. Cost is 5
+        mana per actual oracle (Tom's initial spec said {R} but oracle
+        is {3}{R}{R}). Rare to fire in goldfish (median kill T4) but
+        real value when board state lasts long enough; each token
+        fires Guide ETB."""
         if phase != 'main2':
             return
+
+        # ETB cast from hand (existing behavior).
         for card in list(gs.hand()):
             if (card.name == SEASONED_PYRO
                     and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
@@ -778,7 +788,25 @@ class BorosEnergyAPL(BaseAPL):
                     self._fire_guide_etb_trigger(gs, None)
                 gs._log(f"  Pyromancer: discard 2, draw 2, "
                         f"{discarded_nonlands} Elemental(s)")
-                return
+                break  # one ETB cast per turn; fall through to GY-activation
+
+        # T2.2: GY activation -- {3}{R}{R}, exile from GY: 2 Elemental tokens.
+        # Both paths CAN fire in the same turn: cast a fresh Pyromancer from
+        # hand AND activate an older one from GY (8+ mana required, so rare).
+        pyro_in_gy = next(
+            (c for c in gs.zones.graveyard if c.name == SEASONED_PYRO),
+            None
+        )
+        if pyro_in_gy and gs.mana_pool.can_pay("{3}{R}{R}", 5):
+            gs.mana_pool.pay("{3}{R}{R}", 5)
+            gs.zones.graveyard.remove(pyro_in_gy)
+            gs.zones.exile.append(pyro_in_gy)
+            for _ in range(2):
+                gs._make_token("Elemental Token", "1", "1",
+                                "Creature — Elemental")
+                self._tokens_entered_this_turn += 1
+                self._fire_guide_etb_trigger(gs, None)
+            gs._log(f"  Pyromancer GY activation: exile, +2 Elemental tokens")
 
     def _handle_voice(self, gs, phase):
         """Voice of Victory: Mobilize 2 -- when this attacks, create 2x

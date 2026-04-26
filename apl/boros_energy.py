@@ -343,136 +343,83 @@ class BorosEnergyAPL(BaseAPL):
                     gs._log(f"  Galvanic: +3 energy ({gs.energy}), 0 dmg to own creature")
 
     def main_phase2(self, gs: GameState):
-        """Post-combat: simulate combat triggers, cast remaining, end step tokens."""
-        from engine.keywords import KWTag
+        """Post-combat: combat triggers, role-driven creature deployment,
+        SPECIAL_MECHANICS handlers (Pyromancer, Phlage, Ocelot end-step,
+        Bombardment finish), face burn.
 
-        # Count attackers that dealt damage
+        Stage 5 of role refactor: explicit priority tuple replaced with
+        cheapest-first iteration over castable creatures in hand. Phlage
+        / Pyromancer / Ocelot / Bombardment moved into _handle_* methods
+        gated on has_<flag>. Lightning Bolt / face burn replaced with
+        self.face_burn role iteration.
+        """
+        from engine.keywords import KWTag
+        self._ensure_roles(gs)
+
+        # Combat triggers (Ragavan treasure, Phlage attack, Ocelot lifelink)
         attackers = [c for c in gs.zones.creatures_on_battlefield()
                      if not c.summoning_sickness or KWTag.HASTE in c.tags]
         num_attackers = len(attackers)
-
-        # Combat triggers (Ragavan treasure, Ocelot lifelink)
         if num_attackers > 0:
             self._simulate_combat_triggers(gs, num_attackers)
 
-        # Guide of Souls: each creature entering triggers +1 life +1 energy
-        # (this happens when we cast creatures post-combat too)
-
-        # Cast remaining creatures
-        priority = (OCELOT_PRIDE, GUIDE_OF_SOULS, AJANI, VOICE_OF_VICTORY, RAGAVAN)
-        for name in priority:
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    # Ajani ETB
-                    if name == AJANI:
-                        self._simulate_ajani_etb(gs)
-                    # Guide triggers for any creature entering
-                    guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-                    if guides and card.has(Tag.CREATURE):
-                        gs.life += guides
-                        gs.energy += guides
-                        self._gained_life_this_turn = True
-                        gs._log(f"  Guide trigger: +{guides} life, +{guides} energy")
-                    break
-
-        # Seasoned Pyromancer: discard 2, draw 2, tokens per nonland discarded
-        for card in list(gs.hand()):
-            if card.name == SEASONED_PYRO and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
-                # Discard 2: prefer discarding lands/dead cards
-                hand = list(gs.zones.hand)
-                discardable = sorted(hand, key=lambda c: (
-                    0 if c.name in self.DEAD_IN_GOLDFISH else
-                    1 if c.is_land() else
-                    2 if c.name in self.LOW_VALUE_GOLDFISH else 3
-                ))
-                discarded_nonlands = 0
-                for i, c in enumerate(discardable[:2]):
-                    if c in gs.zones.hand:
-                        gs.zones.hand.remove(c)
-                        gs.zones.graveyard.append(c)
-                        if not c.is_land():
-                            discarded_nonlands += 1
-                gs.zones.draw(2)
-                for _ in range(discarded_nonlands):
-                    token = gs._make_token("Elemental Token", "1", "1", "Creature — Elemental")
-                    self._tokens_entered_this_turn += 1
-                    guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-                    if guides:
-                        gs.life += guides
-                        gs.energy += guides
-                        self._gained_life_this_turn = True
-                gs._log(f"  Pyromancer: discard 2, draw 2, {discarded_nonlands} Elemental(s)")
-                break
-
-        # Phlage — hardcast {1}{R}{W}: 3 damage + 3 life, then SACRIFICE (didn't escape)
-        # Scryfall data is bugged (CMC 0) so we check mana manually
-        for card in list(gs.hand()):
-            if card.name == PHLAGE and gs.mana_pool.can_pay("{1}{R}{W}", 3):
-                gs.mana_pool.pay("{1}{R}{W}", 3)
-                gs.zones.remove_from_hand(card)
-                gs.zones.battlefield.append(card)
-                card.turn_entered = gs.turn
-                gs.damage_dealt += 3
-                gs.life += 3
-                self._gained_life_this_turn = True
-                # Sacrifice — didn't escape from hand
-                if card in gs.zones.battlefield:
-                    gs.zones.battlefield.remove(card)
-                    gs.zones.graveyard.append(card)
-                gs._log(f"  Phlage hardcast: 3 dmg ({gs.damage_dealt}), +3 life, sacrificed (to GY for escape)")
-                break
-
-        # Phlage Escape — check graveyard for Phlage + 5 other cards + {R}{R}{W}{W}
-        phlage_in_gy = next((c for c in gs.zones.graveyard if c.name == PHLAGE), None)
-        other_gy_cards = [c for c in gs.zones.graveyard if c.name != PHLAGE]
-        if (phlage_in_gy and len(other_gy_cards) >= 5
-            and gs.mana_pool.can_pay("{R}{R}{W}{W}", 4)):
-            gs.mana_pool.pay("{R}{R}{W}{W}", 4)
-            # Exile 5 cards from GY
-            for c in other_gy_cards[:5]:
-                gs.zones.graveyard.remove(c)
-                gs.zones.exile.append(c)
-            # Move Phlage to battlefield (escaped — stays)
-            gs.zones.graveyard.remove(phlage_in_gy)
-            gs.zones.battlefield.append(phlage_in_gy)
-            phlage_in_gy.turn_entered = gs.turn
-            phlage_in_gy.summoning_sickness = True
-            phlage_in_gy.power = "6"
-            phlage_in_gy.toughness = "6"
-            gs.damage_dealt += 3
-            gs.life += 3
-            self._gained_life_this_turn = True
-            gs._log(f"  Phlage ESCAPED: 3 dmg ({gs.damage_dealt}), +3 life, 6/6 stays")
-
-        # Fill curve
+        # Role-driven creature deployment -- was: explicit priority tuple
+        # (OCELOT_PRIDE, GUIDE_OF_SOULS, AJANI, VOICE_OF_VICTORY, RAGAVAN).
+        # Now: cheapest-first iteration over castable creatures in hand.
+        # Each cast fires Ajani ETB if applicable + Guide trigger if guide
+        # is on bf. Subsumes both the old priority tuple and the old
+        # fill-curve loop into one role-driven loop.
         while True:
-            creatures = [c for c in gs.hand()
-                         if c.has(Tag.CREATURE)
-                         and c.name not in self.DEAD_IN_GOLDFISH
-                         and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
-            if not creatures: break
-            card = min(creatures, key=lambda c: (c.cmc, c.name))
-            if not gs.cast_spell(card): break
-            guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-            if guides:
-                gs.life += guides
-                gs.energy += guides
-                self._gained_life_this_turn = True
+            castable = sorted(
+                [c for c in gs.hand()
+                 if c.has(Tag.CREATURE)
+                 and c.name not in self.DEAD_IN_GOLDFISH
+                 and gs.mana_pool.can_cast(c.mana_cost, c.cmc)],
+                key=lambda c: (c.cmc, c.name),
+            )
+            if not castable:
+                break
+            card = castable[0]
+            if not gs.cast_spell(card):
+                break
+            if card.name == AJANI:
+                self._simulate_ajani_etb(gs)
+            # Guide trigger for any creature ETB
+            if self.has_guide:
+                guides = sum(1 for c in gs.zones.battlefield
+                             if c.name == GUIDE_OF_SOULS)
+                if guides:
+                    gs.life += guides
+                    gs.energy += guides
+                    self._gained_life_this_turn = True
+                    gs._log(f"  Guide trigger: +{guides} life, +{guides} energy")
 
-        # Lightning Bolt face — cast ALL with remaining mana
+        # Pyromancer loot (SPECIAL_MECHANICS, gated on has_pyromancer)
+        if self.has_pyromancer:
+            self._handle_pyromancer_loot(gs, 'main2')
+
+        # Phlage hardcast + escape (SPECIAL_MECHANICS, gated on has_phlage).
+        # Preserves the CMC=0 mana-pool kludge inside the handler.
+        if self.has_phlage:
+            self._handle_phlage(gs, 'main2')
+
+        # Face burn -- ROLE-DRIVEN (was: if card.name == LIGHTNING_BOLT).
+        # Cast all face_burn instants/sorceries; damage parsed from oracle.
         for card in list(gs.hand()):
-            if card.name == LIGHTNING_BOLT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+            if (card.name in self.face_burn
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
                 gs.cast_spell(card)
-                gs.damage_dealt += 3
-                gs._log(f"  Bolt face: 3 dmg ({gs.damage_dealt} total)")
+                dmg = self._parse_burn_damage(card)
+                gs.damage_dealt += dmg
+                gs._log(f"  Face burn ({card.name}): {dmg} dmg ({gs.damage_dealt} total)")
 
-        # End step: Ocelot Pride tokens if we gained life
-        self._simulate_end_step(gs)
+        # End step: Ocelot Pride tokens (SPECIAL_MECHANICS, gated on has_ocelot)
+        if self.has_ocelot:
+            self._handle_ocelot_end_step(gs, 'end')
 
-        # Bombardment: try to sac for lethal
-        self._bombardment_finish(gs)
+        # Bombardment finish (SPECIAL_MECHANICS, gated on has_bombardment)
+        if self.has_bombardment:
+            self._handle_bombardment_finish(gs, 'main2')
 
     # ────────────────────────────────────────────────────────────────
     # Phase 1 role-refactor scaffolding (2026-04-25, stage 2)
@@ -573,8 +520,51 @@ class BorosEnergyAPL(BaseAPL):
     # ── Handler stubs (stage 2: empty; stages 4-5 fill them in) ──
 
     def _handle_phlage(self, gs, phase):
-        """Phlage hardcast + escape. Will preserve CMC=0 mana-pool kludge."""
-        pass  # stage 2 stub
+        """Phlage hardcast + escape from GY. PRESERVES the CMC=0
+        mana-pool kludge (Scryfall data has Phlage at CMC 0; mana check
+        uses can_pay/pay with literal cost strings instead of can_cast).
+        Stage 5 fill-in: moved verbatim from main_phase2."""
+        if phase != 'main2':
+            return
+        # Phlage hardcast {1}{R}{W}: 3 dmg + 3 life, then sacrifice
+        for card in list(gs.hand()):
+            if (card.name == PHLAGE
+                    and gs.mana_pool.can_pay("{1}{R}{W}", 3)):
+                gs.mana_pool.pay("{1}{R}{W}", 3)
+                gs.zones.remove_from_hand(card)
+                gs.zones.battlefield.append(card)
+                card.turn_entered = gs.turn
+                gs.damage_dealt += 3
+                gs.life += 3
+                self._gained_life_this_turn = True
+                # Sacrifice -- didn't escape from hand
+                if card in gs.zones.battlefield:
+                    gs.zones.battlefield.remove(card)
+                    gs.zones.graveyard.append(card)
+                gs._log(f"  Phlage hardcast: 3 dmg ({gs.damage_dealt}), "
+                        f"+3 life, sacrificed (to GY for escape)")
+                break
+        # Phlage Escape: needs Phlage in GY + 5 other cards + {R}{R}{W}{W}
+        phlage_in_gy = next(
+            (c for c in gs.zones.graveyard if c.name == PHLAGE), None)
+        other_gy_cards = [c for c in gs.zones.graveyard if c.name != PHLAGE]
+        if (phlage_in_gy and len(other_gy_cards) >= 5
+                and gs.mana_pool.can_pay("{R}{R}{W}{W}", 4)):
+            gs.mana_pool.pay("{R}{R}{W}{W}", 4)
+            for c in other_gy_cards[:5]:
+                gs.zones.graveyard.remove(c)
+                gs.zones.exile.append(c)
+            gs.zones.graveyard.remove(phlage_in_gy)
+            gs.zones.battlefield.append(phlage_in_gy)
+            phlage_in_gy.turn_entered = gs.turn
+            phlage_in_gy.summoning_sickness = True
+            phlage_in_gy.power = "6"
+            phlage_in_gy.toughness = "6"
+            gs.damage_dealt += 3
+            gs.life += 3
+            self._gained_life_this_turn = True
+            gs._log(f"  Phlage ESCAPED: 3 dmg ({gs.damage_dealt}), "
+                    f"+3 life, 6/6 stays")
 
     def _handle_ajani_etb(self, gs, phase):
         """Pre-combat Ajani cast: 2/1 Cat Warrior token triggers Guide,
@@ -590,9 +580,12 @@ class BorosEnergyAPL(BaseAPL):
                 return
 
     def _handle_ocelot_end_step(self, gs, phase):
-        """Ocelot Pride end-step token if gained-life-this-turn.
-        Stage 5 will move existing _simulate_end_step logic here."""
-        pass  # stage 4: not yet filled
+        """Ocelot Pride end-step Cat token if gained-life-this-turn.
+        Stage 5 fill-in: delegates to existing _simulate_end_step
+        which has the Ocelot+Guide chain logic."""
+        if phase != 'end':
+            return
+        self._simulate_end_step(gs)
 
     def _handle_guide_attack_pump(self, gs, phase):
         """Guide of Souls attack trigger: pay 3E for +2/+2 flying.
@@ -645,9 +638,66 @@ class BorosEnergyAPL(BaseAPL):
                 self._gained_life_this_turn = True
 
     def _handle_bombardment_finish(self, gs, phase):
-        """Sac creatures to Bombardment for lethal."""
-        pass  # stage 2 stub
+        """Sac creatures to Goblin Bombardment for lethal.
+        Stage 5 fill-in: delegates to existing _bombardment_finish
+        which has the lethal-check + sac-priority logic."""
+        if phase != 'main2':
+            return
+        self._bombardment_finish(gs)
 
     def _handle_pyromancer_loot(self, gs, phase):
-        """Seasoned Pyromancer loot 2-for-2 + Elemental tokens."""
-        pass  # stage 2 stub
+        """Seasoned Pyromancer ETB: discard 2, draw 2, +1/1 Elemental
+        token per nonland discarded. Stage 5 fill-in: moved verbatim
+        from main_phase2."""
+        if phase != 'main2':
+            return
+        for card in list(gs.hand()):
+            if (card.name == SEASONED_PYRO
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                gs.cast_spell(card)
+                # Discard 2: prefer discarding lands/dead cards
+                hand = list(gs.zones.hand)
+                discardable = sorted(hand, key=lambda c: (
+                    0 if c.name in self.DEAD_IN_GOLDFISH else
+                    1 if c.is_land() else
+                    2 if c.name in self.LOW_VALUE_GOLDFISH else 3
+                ))
+                discarded_nonlands = 0
+                for c in discardable[:2]:
+                    if c in gs.zones.hand:
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
+                        if not c.is_land():
+                            discarded_nonlands += 1
+                gs.zones.draw(2)
+                for _ in range(discarded_nonlands):
+                    gs._make_token("Elemental Token", "1", "1",
+                                    "Creature — Elemental")
+                    self._tokens_entered_this_turn += 1
+                    guides = sum(1 for c in gs.zones.battlefield
+                                 if c.name == GUIDE_OF_SOULS)
+                    if guides:
+                        gs.life += guides
+                        gs.energy += guides
+                        self._gained_life_this_turn = True
+                gs._log(f"  Pyromancer: discard 2, draw 2, "
+                        f"{discarded_nonlands} Elemental(s)")
+                return
+
+    # ── Helper for face-burn role iteration ──
+
+    _BURN_DMG_RE = None  # compiled lazily
+
+    def _parse_burn_damage(self, card):
+        """Extract damage amount from face-burn oracle text.
+        Looks for 'deals N damage' or 'deal N damage'. Falls back to 3
+        (Lightning Bolt default) if no match."""
+        import re
+        if BorosEnergyAPL._BURN_DMG_RE is None:
+            BorosEnergyAPL._BURN_DMG_RE = re.compile(
+                r"deals?\s+(\d+)\s+damage", re.IGNORECASE)
+        if card.oracle_text:
+            m = BorosEnergyAPL._BURN_DMG_RE.search(card.oracle_text)
+            if m:
+                return int(m.group(1))
+        return 3

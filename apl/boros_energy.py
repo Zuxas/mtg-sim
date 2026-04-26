@@ -785,12 +785,68 @@ class BorosEnergyAPL(BaseAPL):
                     gs.transform(card)
                     break  # one Ajani transform per turn (legendary)
 
-        # Avenger +2 each turn (snowball). Per-turn budget enforced by
-        # activate_planeswalker_ability via gs._pw_activated_this_turn.
+        # T1.3 Stage 5b: Avenger ability selection via three buckets
+        # (replaces always-+2 from Stage 5).
+        #
+        #   1. Lethal-this-turn (zero_total >= 20)  -> pick 0 (close game)
+        #   2. Near-lethal      (zero_total >= 17)  -> pick 0 (counters
+        #                                              from +2 won't
+        #                                              materialize before
+        #                                              we kill anyway)
+        #   3. Mid-game                              -> compare expected
+        #                                              damage:
+        #         +2 expected = cats * future_attack_steps
+        #         0  expected = current creatures (+ red-permanent gating)
+        #
+        # NB: zero_face_dmg = creatures count BEFORE the new Cat Warrior
+        # token created by the 0 ability. The actual damage when 0 fires
+        # is creatures + 1 (token enters first, then trigger checks
+        # creature count per oracle). Spec uses pre-token count which
+        # slightly underestimates 0 -- bucketing thresholds (>=20, >=17)
+        # absorb the 1-creature delta. Documented for future tightening.
         for card in list(gs.zones.battlefield):
-            if card.name == "Ajani, Nacatl Avenger":
-                activate_planeswalker_ability(card, gs, 2)
-                break  # one Avenger per turn (legendary)
+            if card.name != "Ajani, Nacatl Avenger":
+                continue
+            cats = sum(
+                1 for c in gs.zones.battlefield
+                if "cat" in (c.type_line or "").lower()
+                and "creature" in (c.type_line or "").lower()
+            )
+            creatures = sum(
+                1 for c in gs.zones.battlefield
+                if "creature" in (c.type_line or "").lower()
+            )
+            has_red_other = any(
+                ("R" in (c.colors or []))
+                or "Mountain" in (c.type_line or "")
+                for c in gs.zones.battlefield
+                if c is not card
+            )
+            zero_face_dmg = creatures if has_red_other else 0
+            zero_total_after = gs.damage_dealt + zero_face_dmg
+
+            if zero_total_after >= 20:
+                picked = 0
+                reason = f"lethal this turn ({zero_total_after}/20)"
+            elif zero_total_after >= 17:
+                picked = 0
+                reason = f"near-lethal ({zero_total_after}/20)"
+            else:
+                future_attacks = max(0, 6 - gs.turn)
+                plus_2_expected = cats * future_attacks
+                if plus_2_expected > zero_face_dmg:
+                    picked = 2
+                    reason = (f"+2 expected={plus_2_expected} "
+                              f"> 0 expected={zero_face_dmg} "
+                              f"(cats={cats}, future_atks={future_attacks})")
+                else:
+                    picked = 0
+                    reason = (f"0 expected={zero_face_dmg} "
+                              f">= +2 expected={plus_2_expected}")
+
+            activate_planeswalker_ability(card, gs, picked)
+            gs._log(f"  Ajani Avenger choice: {picked} ({reason})")
+            break  # one Avenger per turn (legendary)
 
     def _handle_ocelot_end_step(self, gs, phase):
         """Ocelot Pride end-step Cat token if gained-life-this-turn.

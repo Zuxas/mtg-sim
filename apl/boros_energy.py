@@ -558,23 +558,35 @@ class BorosEnergyAPL(BaseAPL):
 
         if phase != 'main2':
             return
-        # Phlage hardcast {1}{R}{W}: 3 dmg + 3 life, then sacrifice
+        # Phlage hardcast {1}{R}{W}: 3 dmg + 3 life via registered ETB
+        # handler, then sacrifice (didn't escape -- per oracle "When Phlage
+        # enters, sacrifice it unless it escaped").
+        #
+        # T1.2 cleanup 2026-04-25 night: replaced obsolete CMC=0 mana-pool
+        # kludge (raw battlefield.append bypassed ETB dispatch). card_db
+        # now reports cmc=3.0; standard cast_spell fires _phlage_titan_etb
+        # which does damage_dealt += 3 + life += 3 (verified via
+        # _damage_any_helper goldfish path). APL still owns:
+        #   - _gained_life_this_turn flag (handler doesn't touch it; needed
+        #     for Ocelot end-step Cat trigger)
+        #   - sacrifice-after-ETB (handler explicitly comments
+        #     "sacrifice-unless-escaped clause [...] not modeled here")
+        # See harness/knowledge/tech/be-apl-content-gaps-2026-04-25.md T1.2.
         for card in list(gs.hand()):
             if (card.name == PHLAGE
-                    and gs.mana_pool.can_pay("{1}{R}{W}", 3)):
-                gs.mana_pool.pay("{1}{R}{W}", 3)
-                gs.zones.remove_from_hand(card)
-                gs.zones.battlefield.append(card)
-                card.turn_entered = gs.turn
-                gs.damage_dealt += 3
-                gs.life += 3
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                damage_before = gs.damage_dealt
+                if not gs.cast_spell(card):
+                    continue
+                # Handler fired ETB damage + life. Set internal flag.
                 self._gained_life_this_turn = True
-                # Sacrifice -- didn't escape from hand
+                # Sacrifice after ETB -- hardcast path didn't escape.
                 if card in gs.zones.battlefield:
                     gs.zones.battlefield.remove(card)
                     gs.zones.graveyard.append(card)
-                gs._log(f"  Phlage hardcast: 3 dmg ({gs.damage_dealt}), "
-                        f"+3 life, sacrificed (to GY for escape)")
+                dmg_added = gs.damage_dealt - damage_before
+                gs._log(f"  Phlage hardcast: {dmg_added} dmg via ETB "
+                        f"({gs.damage_dealt} total), +3 life, sac to GY")
                 break
         # Phlage Escape: needs Phlage in GY + 5 other cards + {R}{R}{W}{W}
         phlage_in_gy = next(

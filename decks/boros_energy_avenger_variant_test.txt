@@ -1,0 +1,56 @@
+// BE Avenger-variant test — synthetic 2026-04-26
+// Stage 5b validation deck for the mid-game expected-damage bucket.
+//
+// Goal: slow BE's clock enough that Ajani Pariah -> Avenger transform
+// happens early enough for the Avenger to activate +2 across multiple
+// turns -- the scenario the Stage 5b mid-game bucket was designed for
+// but which never fires in canonical BE (kill T4 leaves no
+// post-transform window).
+//
+// Diff from canonical boros_energy_modern.txt:
+//   - 4 Phlage, Titan of Fire's Fury  (the deck's biggest tempo swing)
+//   - 1 Ranger-Captain of Eos
+//   - 1 Lightning Bolt
+//   + 4 Plains
+//   + 2 Mountain
+//
+// Net: -6 fast damage / +6 lands. Game should last to T6-T8.
+// Bombardment + Cat creatures kept intact so Cat-die triggers still
+// fire (transform requires those).
+//
+// Acceptance per spec:
+//   - WR >= 80%   (deck should still win, just slower)
+//   - Avg kill T6-T8
+//   - >=5% of Avenger activations land in mid-game bucket (proves
+//     +2 path actually fires when conditions arise)
+4 Ragavan, Nimble Pilferer
+4 Ocelot Pride
+4 Guide of Souls
+4 Ajani, Nacatl Pariah
+2 Seasoned Pyromancer
+4 Galvanic Discharge
+2 Thraben Charm
+3 Goblin Bombardment
+2 Blood Moon
+2 The Legend of Roku
+4 Arid Mesa
+4 Flooded Strand
+3 Arena of Glory
+3 Elegant Parlor
+3 Marsh Flats
+2 Sacred Foundry
+6 Plains
+3 Mountain
+1 Sunbaked Canyon
+
+Sideboard
+2 Obsidian Charmaw
+1 Blood Moon
+3 Wrath of the Skies
+2 Orim's Chant
+2 Vexing Bauble
+1 High Noon
+1 Surgical Extraction
+1 Soul-Guide Lantern
+1 Wear // Tear
+1 The Legend of Roku

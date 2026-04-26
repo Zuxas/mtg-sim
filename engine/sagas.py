@@ -58,15 +58,17 @@ def _kumano_chapter_ii(card, gs):
 
 
 def _kumano_chapter_iii(card, gs):
-    """Kumano Faces Kakkazan III — exile this, return transformed as
-    a creature. Simplified in goldfish: just sacrifice (transformed
-    Kumano is a 2/2, modest threat)."""
-    # Move from battlefield to exile (simplified — real version returns
-    # as a 2/2 creature; goldfish can treat as removed).
-    if card in gs.zones.battlefield:
-        gs.zones.battlefield.remove(card)
-        gs.zones.exile.append(card)
-    gs._log("  Kumano Faces Kakkazan (III): exiled, transformed")
+    """Kumano Faces Kakkazan III — exile this Saga, return it
+    transformed under your control (Etching of Kumano, 2/2 Enchantment
+    Creature -- Human Shaman with haste + exile-on-death replacement).
+
+    Stage 4 of T1.3+T1.4 transform arc (2026-04-26): now uses the
+    real gs.transform mechanic from Stage 2 (commit 7ede331). The
+    previous "simplified as exile" approximation lost the back-face
+    creature entirely; Etching of Kumano is now properly on the
+    battlefield post-chapter-III, including its haste keyword (which
+    transforms via type_line re-tagging in gs.transform)."""
+    gs.transform(card)
 
 
 # ── Registry ────────────────────────────────────────────────────────

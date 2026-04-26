@@ -13,9 +13,11 @@ This module exposes three things the engine needs:
 
   tick_saga(card, gs)
       Call from the upkeep step on each battlefield card. Increments
-      card.counters (used as the lore-counter count), fires the
-      chapter effect for that count, and sacrifices the Saga when
-      it passes its final chapter.
+      card.lore_counters, fires the chapter effect for that count, and
+      sacrifices the Saga when it passes its final chapter. (Migrated
+      from card.counters to card.lore_counters in T1.3+T1.4 Stage 1
+      to avoid collision with +1/+1 counters now that sagas transform
+      to creatures at chapter III rather than exiling.)
 
   SAGA_EFFECTS
       Per-card chapter dispatch. Keys = card name; values = dict
@@ -98,8 +100,8 @@ def tick_saga(card, gs):
     if not is_saga(card):
         return
 
-    card.counters += 1
-    chapter = card.counters
+    card.lore_counters += 1
+    chapter = card.lore_counters
     effects = SAGA_EFFECTS.get(card.name, {})
     fn = effects.get(chapter)
     if fn is not None:

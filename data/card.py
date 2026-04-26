@@ -64,6 +64,23 @@ class Card:
     # +1/+1 counters (updated by lord ETB triggers)
     counters: int = 0
 
+    # Saga lore counters (Stage 1 of T1.3+T1.4 transform arc, 2026-04-26).
+    # SEPARATE from `counters` (which is +1/+1) -- they previously shared
+    # `counters` in engine/sagas.py, which was harmless while sagas
+    # exiled at chapter III but would have inflated post-transform
+    # creature P/T (e.g. Etching of Kumano 2/2 + 3 lore = 5/5 incorrectly)
+    # once the transform mechanic landed. Migrated to a dedicated field.
+    lore_counters: int = 0
+
+    # Planeswalker loyalty (Stage 1 of T1.3+T1.4). 0 for non-planeswalkers.
+    # Initialized from card_db card_faces[N].loyalty when present.
+    loyalty: int = 0
+
+    # Impending time counters (Duskmourn Overlord cycle). >0 means the
+    # permanent was cast for its impending cost and isn't a creature
+    # until all are removed. Ticks down once per controller's end step.
+    time_counters: int = 0
+
     # For clone effects — name of the card being copied
     copying: Optional[str] = None
 
@@ -74,6 +91,17 @@ class Card:
     tapped: bool = False
     # Which turn this permanent entered the battlefield (0 = not on battlefield)
     turn_entered: int = 0
+
+    # --- DFC / transform fields (Stage 1 of T1.3+T1.4 transform arc) ---
+    # is_transformed flips True after gs.transform(card) mutates the card
+    # in place to its back face. front_face / back_face are populated at
+    # deck-load time from card_db.card_faces (2 faces for DFC cards,
+    # both None for single-face cards). Each is the raw Scryfall face
+    # dict with name / type_line / oracle_text / power / toughness /
+    # mana_cost / loyalty / keywords.
+    is_transformed: bool = False
+    front_face: Optional[dict] = None
+    back_face: Optional[dict] = None
 
     def __post_init__(self):
         self._auto_tag()

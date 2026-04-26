@@ -113,6 +113,11 @@ def _get_cards_local(names: list[str]) -> dict:
                     "colors":       card.get("colors", []),
                     "color_identity": card.get("color_identity", []),
                     "scryfall_id":  card.get("id", ""),
+                    # Stage 1 of T1.3+T1.4 transform arc: pass through
+                    # card_faces and loyalty so _build_cards can populate
+                    # Card.front_face / back_face / loyalty for DFC cards.
+                    "card_faces":   card.get("card_faces", []),
+                    "loyalty":      card.get("loyalty"),
                 }
             else:
                 missing.append(name)
@@ -139,6 +144,20 @@ def _build_cards(entries, scryfall_data: dict) -> list:
     for qty, name in entries:
         data = scryfall_data.get(name, {})
         corrections = DFC_CORRECTIONS.get(name, {})
+        # DFC face plumbing (Stage 1 of T1.3+T1.4 transform arc):
+        # If card has 2 card_faces, populate front_face/back_face for
+        # later use by gs.transform(). For non-DFC cards both stay None.
+        card_faces = data.get("card_faces") or []
+        front_face = card_faces[0] if len(card_faces) >= 2 else None
+        back_face = card_faces[1] if len(card_faces) >= 2 else None
+        # Planeswalker loyalty: initialize from card_db. Some PWs are
+        # transform back-faces (Ajani Avenger) so loyalty starts at 0
+        # on the front-face card; gs.transform() reads from back_face
+        # at flip time. Single-face PWs get loyalty here directly.
+        try:
+            loyalty = int(data.get("loyalty") or 0)
+        except (TypeError, ValueError):
+            loyalty = 0
         card = Card(
             name=name,
             mana_cost=corrections.get("mana_cost", data.get("mana_cost", "")),
@@ -150,6 +169,9 @@ def _build_cards(entries, scryfall_data: dict) -> list:
             colors=data.get("colors") or [],
             color_identity=data.get("color_identity") or [],
             scryfall_id=data.get("scryfall_id", ""),
+            loyalty=loyalty,
+            front_face=front_face,
+            back_face=back_face,
         )
         tag_keywords(card)
         # CRITICAL: Each copy must be a SEPARATE object with independent state!

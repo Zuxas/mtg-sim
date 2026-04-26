@@ -91,6 +91,7 @@ class BorosEnergyAPL(BaseAPL):
         "Arena of Glory":               "_handle_arena_exert_haste",
         "Goblin Bombardment":           "_handle_bombardment_finish",
         "Seasoned Pyromancer":          "_handle_pyromancer_loot",
+        "Voice of Victory":             "_handle_voice",  # Phase 2 stage 2
     }
 
     def keep(self, hand: list[Card], mulligans: int, on_play: bool) -> bool:
@@ -197,6 +198,14 @@ class BorosEnergyAPL(BaseAPL):
                                and (not c.summoning_sickness or KWTag.HASTE in c.tags))
         if ocelots_attacked > 0:
             self._gained_life_this_turn = True
+
+        # Phase 2 stage 2: dispatch any combat-phase SPECIAL_MECHANICS
+        # handlers (Voice of Victory Mobilize today; future combat-phase
+        # cards land here automatically when added to SPECIAL_MECHANICS).
+        # Guarded by _roles_computed since _simulate_combat_triggers can
+        # be called before _ensure_roles in some flows.
+        if getattr(self, '_roles_computed', False):
+            self._dispatch_special_mechanics(gs, phase='combat')
 
     def _simulate_guide_attack_trigger(self, gs: GameState):
         """Guide of Souls: when you attack, pay 3E → +2/+2 flying on an attacker."""
@@ -688,6 +697,47 @@ class BorosEnergyAPL(BaseAPL):
                 gs._log(f"  Pyromancer: discard 2, draw 2, "
                         f"{discarded_nonlands} Elemental(s)")
                 return
+
+    def _handle_voice(self, gs, phase):
+        """Voice of Victory: Mobilize 2 -- when this attacks, create 2x
+        1/1 tapped attacking Warrior tokens (sacrificed end of turn).
+
+        Goldfish modeling: tokens enter ATTACKING per oracle and are
+        sacrificed EOT, so they don't persist to the next combat. We
+        model them as immediate +2 dmg per Voice attacking, plus Guide
+        ETB triggers for each token entering. We don't materialize the
+        token objects on the battlefield (no persistence needed in
+        goldfish; Mobilize tokens are Warriors not Cats so no Ajani
+        transform interaction).
+
+        Phase 2 stage 2 -- new card. See spec at
+        harness/knowledge/tech/apl-role-refactor-2026-04-25.md."""
+        if phase != 'combat':
+            return
+        from engine.keywords import KWTag
+        voices_attacking = sum(
+            1 for c in gs.zones.creatures_on_battlefield()
+            if c.name == "Voice of Victory"
+            and (not c.summoning_sickness or KWTag.HASTE in c.tags)
+        )
+        if voices_attacking == 0:
+            return
+        tokens = 2 * voices_attacking  # 2 tokens per Voice
+        gs.damage_dealt += tokens      # 1 dmg each (1/1 attacking)
+        # Guide ETB triggers per token entering
+        if "Guide of Souls" in self._deck_names:
+            guides = sum(1 for c in gs.zones.battlefield
+                         if c.name == GUIDE_OF_SOULS)
+            if guides > 0:
+                life_gain = guides * tokens
+                gs.life += life_gain
+                gs.energy += life_gain
+                self._gained_life_this_turn = True
+                gs._log(f"  Voice Mobilize Guide trigger: "
+                        f"+{life_gain} life, +{life_gain} energy")
+        gs._log(f"  Voice of Victory Mobilize: {voices_attacking} Voice(s) "
+                f"attacking -> {tokens} 1/1 Warrior tokens = {tokens} dmg "
+                f"({gs.damage_dealt} total)")
 
     # ── Helper for face-burn role iteration ──
 

@@ -78,8 +78,9 @@ APL_REGISTRY = {
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
 
     # ── Standard / Pioneer ──
-    "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
-    "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  None),
+    "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_standard.txt"),
+    "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_standard.txt"),
+    "monogreenlandfall": ("apl.mono_green_landfall", "MonoGreenLandfallAPL", "decks/mono_green_landfall_standard.txt"),
     "standardaggro":   ("apl.standard_aggro",   "StandardAggroAPL",  None),
     "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
     "rakdos":          ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
@@ -142,14 +143,27 @@ MATCH_APL_REGISTRY = {
 
 
 def _normalize_key(name: str) -> str:
-    """Normalize a deck name to a registry key."""
+    """Normalize a deck name to a registry key.
+
+    Two-phase (fixed 2026-04-24 — caught when 'Dimir Midrange'
+    was being normalized to 'midrange' by prefix-strip, missing
+    the 'dimirmidrange' registry entry):
+      1. Strict: lowercase + strip separators, no prefix rewrite.
+         If that key exists in APL_REGISTRY or MATCH_APL_REGISTRY,
+         return it directly.
+      2. Fallback: strip known color/format prefixes ('dimir ',
+         'ur ', 'legacy ', etc.) for short-form aliases like
+         'UR Prowess' → 'prowess' and 'Dimir Murktide' → 'murktide'.
+    """
+    strict = name.lower().strip().replace(" ", "").replace("-", "").replace("'", "")
+    if strict in APL_REGISTRY or strict in MATCH_APL_REGISTRY:
+        return strict
+    # Fall back to prefix-strip for short-form aliases
     key = name.lower().strip()
-    # Strip format prefixes
     for prefix in ("legacy ", "modern ", "pioneer ", "standard ",
                    "ur ", "uw ", "golgari ", "dimir "):
         if key.startswith(prefix):
             key = key[len(prefix):]
-    # Remove separators
     return key.replace(" ", "").replace("-", "").replace("'", "")
 
 

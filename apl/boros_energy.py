@@ -275,8 +275,16 @@ class BorosEnergyAPL(BaseAPL):
     # ------------------------------------------------------------------
 
     def main_phase(self, gs: GameState):
-        """Pre-combat: land, haste creatures, Arena of Glory haste, Guide pump."""
+        """Pre-combat: land, haste creatures, Arena of Glory, sac outlets,
+        Ajani ETB, Guide attack pump, energy spells.
+
+        Stage 4 of role refactor: haste loop and sac-outlet loop are
+        role-driven (KWTag.HASTE / self.sac_outlets). Arena/Ajani/Guide
+        are SPECIAL_MECHANICS handlers gated on has_<flag>. Galvanic
+        stays name-keyed (Galvanic-specific +3-energy-net optimization).
+        """
         from engine.keywords import KWTag
+        self._ensure_roles(gs)
 
         # Reset per-turn tracking
         self._gained_life_this_turn = False
@@ -292,70 +300,38 @@ class BorosEnergyAPL(BaseAPL):
         # 1. Land
         self._play_land_if_able(gs)
 
-        # 2. Haste creatures pre-combat (attack this turn)
-        for name in (RAGAVAN, SCREAMING_NEMESIS):
-            for card in list(gs.hand()):
-                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs._log(f"  [PRE-COMBAT] {card.name} (haste)")
-                    gs.cast_spell(card)
-                    break
-
-        # 3. Arena of Glory — exert to give haste to a creature cast this turn
-        #    Pay {R}, tap, exert: add {R}{R}. If spent on creature → haste.
-        #    Perfect player: use Arena mana to cast a non-haste creature pre-combat.
-        arena = next((c for c in gs.zones.lands_on_battlefield()
-                      if c.name == "Arena of Glory" and not c.tapped), None)
-        if arena:
-            # Find a non-haste creature we could cast with the extra R
-            # Arena gives RR when exerted (net +1R since it costs R to activate)
-            castable_with_haste = []
-            for card in gs.hand():
-                if (card.has(Tag.CREATURE)
-                    and KWTag.HASTE not in card.tags
-                    and card.name not in (RAGAVAN, SCREAMING_NEMESIS)
-                    and card.summoning_sickness != False):  # not already on BF
-                    # Can we cast it with current pool + the extra R from Arena?
-                    # Arena exert: pay R, get RR (net +1R). But arena is untapped so
-                    # its base tap wasn't used yet. Exert = tap for RR instead of R.
-                    test_total = gs.mana_pool.total() + 1  # +1 net from exert
-                    if card.cmc <= test_total:
-                        castable_with_haste.append(card)
-
-            if castable_with_haste:
-                # Pick best creature to give haste (highest power)
-                best = max(castable_with_haste, key=lambda c: (
-                    int(c.power or 0), -c.cmc))
-                # Exert Arena: tap it, add RR to pool
-                arena.tapped = True
-                arena._exerted = True  # won't untap next turn
-                gs.mana_pool.add("R", 2)
-                # Cast the creature
-                if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
-                    gs.cast_spell(best)
-                    best.summoning_sickness = False  # HASTE from Arena
-                    gs._log(f"  [PRE-COMBAT] Arena of Glory exert → {best.name} has HASTE")
-                    # Guide triggers on creature entering
-                    guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-                    if guides:
-                        gs.life += guides
-                        gs.energy += guides
-                        self._gained_life_this_turn = True
-
-        # 4. Goblin Bombardment (set up sac outlet early)
+        # 2. Haste creatures pre-combat -- ROLE-DRIVEN (was: for name in
+        #    (RAGAVAN, SCREAMING_NEMESIS)). Iterates hand for any creature
+        #    with KWTag.HASTE; casts each whose mana is available. No
+        #    break -- preserves OLD behavior of casting one of each haste
+        #    name when mana allows (multiple-Ragavan case slightly more
+        #    aggressive than OLD's per-name-break, acceptable per drift bounds).
         for card in list(gs.hand()):
-            if card.name == GOBLIN_BOMBARD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+            if (card.has(Tag.CREATURE) and KWTag.HASTE in card.tags
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                gs._log(f"  [PRE-COMBAT] {card.name} (haste, role-detected)")
+                gs.cast_spell(card)
+
+        # 3. Arena of Glory exert (SPECIAL_MECHANICS, gated on has_arena_of_glory)
+        if self.has_arena_of_glory:
+            self._handle_arena_exert_haste(gs, 'main')
+
+        # 4. Sac outlets -- ROLE-DRIVEN (was: if card.name == GOBLIN_BOMBARD).
+        #    Cast first sac outlet found castable. Picks up Bombardment plus
+        #    any new sac outlet in a variant deck.
+        for card in list(gs.hand()):
+            if (card.name in self.sac_outlets
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
                 gs.cast_spell(card)
                 break
 
-        # 5. Ajani pre-combat — 2/1 token triggers Guide
-        for card in list(gs.hand()):
-            if card.name == AJANI and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
-                self._simulate_ajani_etb(gs)
-                break
+        # 5. Ajani pre-combat (SPECIAL_MECHANICS) -- 2/1 token triggers Guide
+        if self.has_ajani:
+            self._handle_ajani_etb(gs, 'main')
 
-        # 6. Guide of Souls attack trigger — pay 3E for +2/+2 flying
-        self._simulate_guide_attack_trigger(gs)
+        # 6. Guide of Souls attack trigger (SPECIAL_MECHANICS) -- pay 3E for +2/+2 flying
+        if self.has_guide:
+            self._handle_guide_attack_pump(gs, 'main')
 
         # 7. Galvanic Discharge — cast ALL for +3 energy each
         for card in list(gs.hand()):
@@ -601,20 +577,72 @@ class BorosEnergyAPL(BaseAPL):
         pass  # stage 2 stub
 
     def _handle_ajani_etb(self, gs, phase):
-        """Ajani ETB token + Cat-die transform tracking."""
-        pass  # stage 2 stub
+        """Pre-combat Ajani cast: 2/1 Cat Warrior token triggers Guide,
+        sets up bigger attack. Stage 4 fill-in: moved from main_phase
+        section 5 (was: `if card.name == AJANI ...`)."""
+        if phase != 'main':
+            return
+        for card in list(gs.hand()):
+            if (card.name == AJANI
+                    and gs.mana_pool.can_cast(card.mana_cost, card.cmc)):
+                gs.cast_spell(card)
+                self._simulate_ajani_etb(gs)
+                return
 
     def _handle_ocelot_end_step(self, gs, phase):
-        """Ocelot Pride end-step token if gained-life-this-turn."""
-        pass  # stage 2 stub
+        """Ocelot Pride end-step token if gained-life-this-turn.
+        Stage 5 will move existing _simulate_end_step logic here."""
+        pass  # stage 4: not yet filled
 
     def _handle_guide_attack_pump(self, gs, phase):
-        """Guide of Souls attack trigger: pay 3E for +2/+2 flying."""
-        pass  # stage 2 stub
+        """Guide of Souls attack trigger: pay 3E for +2/+2 flying.
+        Stage 4 fill-in: delegates to existing
+        _simulate_guide_attack_trigger."""
+        if phase != 'main':
+            return
+        self._simulate_guide_attack_trigger(gs)
 
     def _handle_arena_exert_haste(self, gs, phase):
-        """Arena of Glory exert: tap for RR, give haste to a creature."""
-        pass  # stage 2 stub
+        """Arena of Glory exert: tap for RR, give haste to a non-haste
+        creature. Stage 4 fill-in: moved from main_phase section 3."""
+        if phase != 'main':
+            return
+        from engine.keywords import KWTag
+        arena = next((c for c in gs.zones.lands_on_battlefield()
+                      if c.name == "Arena of Glory" and not c.tapped), None)
+        if not arena:
+            return
+        # Find a non-haste creature to give haste via Arena
+        # Was: `card.name not in (RAGAVAN, SCREAMING_NEMESIS)`
+        # Now: filter by KWTag.HASTE absence (creature doesn't already have haste)
+        castable_with_haste = []
+        for card in gs.hand():
+            if (card.has(Tag.CREATURE)
+                    and KWTag.HASTE not in card.tags
+                    and card.summoning_sickness != False):  # not already on BF
+                test_total = gs.mana_pool.total() + 1  # +1 net from exert
+                if card.cmc <= test_total:
+                    castable_with_haste.append(card)
+        if not castable_with_haste:
+            return
+        # Pick best creature to give haste (highest power)
+        best = max(castable_with_haste, key=lambda c: (
+            int(c.power or 0), -c.cmc))
+        # Exert Arena: tap it, add RR to pool
+        arena.tapped = True
+        arena._exerted = True  # won't untap next turn
+        gs.mana_pool.add("R", 2)
+        if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
+            gs.cast_spell(best)
+            best.summoning_sickness = False  # HASTE from Arena
+            gs._log(f"  [PRE-COMBAT] Arena of Glory exert -> {best.name} has HASTE")
+            # Guide triggers on creature entering
+            guides = sum(1 for c in gs.zones.battlefield
+                         if c.name == GUIDE_OF_SOULS)
+            if guides:
+                gs.life += guides
+                gs.energy += guides
+                self._gained_life_this_turn = True
 
     def _handle_bombardment_finish(self, gs, phase):
         """Sac creatures to Bombardment for lethal."""

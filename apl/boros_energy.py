@@ -558,51 +558,44 @@ class BorosEnergyAPL(BaseAPL):
         self._roles_computed = True
 
     def _fire_guide_etb_trigger(self, gs, card_just_cast, token_count=1):
-        """Fire Guide of Souls ETB trigger.
+        """Set _gained_life_this_turn flag for Ocelot end-step trigger.
 
-        Oracle: "Whenever ANOTHER creature you control enters, you gain
-        1 life and get {E} (an energy counter)." The "another" clause
-        means Guide doesn't trigger on its own ETB.
+        Oracle: Guide of Souls "Whenever ANOTHER creature you control
+        enters, you gain 1 life and get {E} (an energy counter)."
 
-        T1.1 fix 2026-04-25 night -- replaces inline
-        `guides = sum(...); gs.life += guides; gs.energy += guides`
-        blocks scattered across the file. Pre-fix the inline blocks
-        spuriously counted the just-cast Guide, inflating energy/life.
+        T2.5 fix (2026-04-26 morning, post-Diagnostic-E):
+          Removed life/energy add (was double-counting -- engine
+          _apply_existing_board_etb fires Guide trigger automatically
+          whenever any creature/token enters bf via _fire_etb_triggers).
+          APL helper now only sets _gained_life_this_turn flag for
+          Ocelot's end-step Cat trigger.
 
-        Args:
-          gs: GameState
-          card_just_cast: the Card whose ETB is firing this trigger.
-            Pass None for token ETBs (tokens cannot be Guides, so the
-            "another" filter is moot).
-          token_count: number of tokens entering simultaneously (Voice
-            Mobilize creates 2 per attacking Voice). Default 1 for
-            single-card ETBs.
+        Pre-fix: every creature/token entering BF fired Guide trigger
+        twice -- once via engine ETB system, once via this helper.
+        Inflated canonical T4.62 baseline by ~0.09 turn (Diagnostic E
+        2026-04-26 morning).
 
-        Audited call sites (apl/boros_energy.py, 2026-04-25):
-          1. _simulate_end_step (TOKEN, Ocelot Cat)
-          2. _simulate_ajani_etb (TOKEN, Ajani Cat Warrior)
-          3. main_phase2 fill-curve loop (CREATURE, pass `card`)
-          4. _handle_arena_exert_haste (CREATURE, pass `best`)
-          5. _handle_pyromancer_loot (TOKEN per-loop, default count=1)
-          6. _handle_voice (TOKEN batch, pass token_count=tokens)
-          7. _handle_phlage main2 path (CREATURE, pass `card`)  [NEW: T1.2 didn't add this]
+        Audited call sites still call this for the flag:
+          1. _simulate_end_step (Ocelot Cat tokens)
+          2. _simulate_ajani_etb (Ajani Cat Warrior token)
+          3. main_phase2 fill-curve loop (creature ETBs)
+          4. _handle_arena_exert_haste (Arena haste creature ETB)
+          5. _handle_pyromancer_loot (Elemental tokens)
+          6. (formerly _handle_voice -- removed in T2.5 Step 1)
+          7. _handle_phlage main2 path (Phlage hardcast / escape ETB)
+
+        token_count param retained for backward compat with call sites
+        but no longer materially used (flag is binary).
         """
         if "Guide of Souls" not in self._deck_names:
             return
         guides_count = sum(
             1 for c in gs.zones.battlefield
             if c.name == GUIDE_OF_SOULS
-            and c is not card_just_cast  # "another" filter (identity, not equality)
+            and c is not card_just_cast
         )
         if guides_count > 0:
-            gain = guides_count * token_count
-            gs.life += gain
-            gs.energy += gain
             self._gained_life_this_turn = True
-            source = (card_just_cast.name if card_just_cast
-                      else f"{token_count} token(s)")
-            gs._log(f"  Guide trigger ({source} ETB): "
-                    f"+{gain} life, +{gain} energy")
 
     def _dispatch_special_mechanics(self, gs, phase):
         """Dispatch every registered SPECIAL_MECHANICS handler whose card
@@ -1031,19 +1024,27 @@ class BorosEnergyAPL(BaseAPL):
             gs._log(f"  Pyromancer GY activation: exile, +2 Elemental tokens")
 
     def _handle_voice(self, gs, phase):
-        """Voice of Victory: Mobilize 2 -- when this attacks, create 2x
-        1/1 tapped attacking Warrior tokens (sacrificed end of turn).
+        """Voice of Victory: Mobilize 2.
 
-        Goldfish modeling: tokens enter ATTACKING per oracle and are
-        sacrificed EOT, so they don't persist to the next combat. We
-        model them as immediate +2 dmg per Voice attacking, plus Guide
-        ETB triggers for each token entering. We don't materialize the
-        token objects on the battlefield (no persistence needed in
-        goldfish; Mobilize tokens are Warriors not Cats so no Ajani
-        transform interaction).
+        Engine _do_combat (game_state.py:461-469) handles token creation
+        via _make_token (which fires engine ETB triggers including Guide),
+        combat damage from attacking 1/1 tokens via the combat damage
+        step, and EOT sacrifice via _sacrifice_at_eot flag.
 
-        Phase 2 stage 2 -- new card. See spec at
-        harness/knowledge/tech/apl-role-refactor-2026-04-25.md."""
+        APL only needs to track _tokens_entered_this_turn for Ocelot's
+        city's blessing copy clause (T2.4) which copies all tokens that
+        entered this turn.
+
+        T2.5 fix (2026-04-26 morning, post-Diagnostic-E):
+          Removed direct damage add (was double-counting -- engine
+          combat damage step already counts attacking tokens via
+          sum(c.effective_power() for c in attackers)).
+          Removed _fire_guide_etb_trigger call (was double-firing --
+          engine _apply_existing_board_etb fires Guide trigger per
+          token via _make_token -> _fire_etb_triggers).
+
+        Pre-fix: every Voice attack counted 4 damage instead of 2 AND
+        fired Guide trigger 4 times instead of 2 per Mobilize."""
         if phase != 'combat':
             return
         from engine.keywords import KWTag
@@ -1052,16 +1053,13 @@ class BorosEnergyAPL(BaseAPL):
             if c.name == "Voice of Victory"
             and (not c.summoning_sickness or KWTag.HASTE in c.tags)
         )
-        if voices_attacking == 0:
-            return
-        tokens = 2 * voices_attacking  # 2 tokens per Voice
-        gs.damage_dealt += tokens      # 1 dmg each (1/1 attacking)
-        # Guide ETB triggers per token entering (TOKEN batch).
-        # T1.1 stage 2 site 2.
-        self._fire_guide_etb_trigger(gs, None, token_count=tokens)
-        gs._log(f"  Voice of Victory Mobilize: {voices_attacking} Voice(s) "
-                f"attacking -> {tokens} 1/1 Warrior tokens = {tokens} dmg "
-                f"({gs.damage_dealt} total)")
+        if voices_attacking > 0:
+            tokens = 2 * voices_attacking
+            self._tokens_entered_this_turn += tokens
+            gs._log(f"  Voice of Victory Mobilize: {voices_attacking} "
+                    f"Voice(s) attacking -> +{tokens} tokens tracked "
+                    f"for Ocelot ascend (engine handles damage + "
+                    f"Guide ETB + EOT sac)")
 
     def _handle_avatar_roku(self, gs, phase):
         """Avatar Roku attack trigger: firebending 4 -- "Whenever this

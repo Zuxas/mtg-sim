@@ -151,7 +151,7 @@ NOT: combat → main1 → main2 (old broken order)
   - Real value of this arc is INFRASTRUCTURE not BE-canonical impact:
     Magic Origins planeswalkers, Innistrad werewolves, MH3 sagas in
     Pioneer/Modern decks all unlocked for free.
-- Boros Energy goldfish (2026-04-26 morning N=1000 seed=42, post-foundation-fix, **current canonical**): 99.9% WR, T4.62 avg, T5 median, T4 share 47.3%.
+- Boros Energy goldfish (2026-04-26 morning N=1000 seed=42, post-foundation-fix, SUPERSEDED by Voice+Guide fix below): 99.9% WR, T4.62 avg, T5 median, T4 share 47.3%.
   Drift from T4.45 baseline (8c3c2d5, 2026-04-25 night) attributed to
   engine WIP committed at 7e213ea (load-bearing card_effects + match_engine
   + effect_primitives). The WIP added landfall trigger dispatch, ETB
@@ -159,7 +159,30 @@ NOT: combat → main1 → main2 (old broken order)
   Jeskai Revelation, etc.). Per-turn handler dispatch overhead matches
   the 0.17-turn slow-down. Behavior is correct (real card effects
   firing); baseline shift is expected and reflects more accurate
-  modeling. This is the stable canonical going forward.
+  modeling.
+- Boros Energy goldfish (2026-04-26 morning post-Voice+Guide-bug-fix, **current canonical**): 99.9% WR, T4.72 avg, T5 median, T4 share 43.1%.
+  Resolves two double-firing handler bugs surfaced by Block 2 audit
+  + Diagnostic E (2026-04-26 5-7 AM session):
+    * Voice Mobilize: APL handler added 2 dmg per Voice attack on top
+      of engine combat-damage-step counting (4 dmg/Voice instead of 2).
+      Affected variant decks only.
+    * Guide ETB: APL `_fire_guide_etb_trigger` added +1 life/energy
+      per Guide on every creature/token ETB on top of engine
+      `_apply_existing_board_etb` already firing the same trigger
+      (2x life/energy per Guide ETB).
+  Drift from T4.62 (foundation-fix baseline 7e213ea): +0.10 turn slower.
+  Net drift from T4.45 (8c3c2d5 historical): +0.27 turn -- combined
+  effect of foundation WIP + bug corrections. Both shifts represent
+  more accurate modeling, not regression. This is the stable canonical
+  going forward.
+- Boros Energy variant Jermey goldfish (2026-04-26 morning post-Voice+Guide-fix):
+  100.0% WR, T4.40 avg, T4 median, T4 share 58.6%. Variant edge over
+  canonical: -0.32 turn faster. Voice double-counting was inflating
+  variant advantage by +0.03 turn vs the post-fix true value
+  (pre-fix variant T4.33 vs post-fix T4.40 = +0.07 turn slower; but
+  canonical also slowed by +0.10 turn, so edge contracted from -0.29
+  to -0.32 -- variant edge actually GREW slightly because canonical
+  absorbed more of the Guide bug than variant).
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

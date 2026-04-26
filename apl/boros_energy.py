@@ -222,14 +222,39 @@ class BorosEnergyAPL(BaseAPL):
         """End step: Ocelot Pride creates Cat token if we gained life."""
         ocelots = sum(1 for c in gs.zones.creatures_on_battlefield()
                       if c.name == OCELOT_PRIDE)
-        if ocelots > 0 and self._gained_life_this_turn:
-            for _ in range(ocelots):
-                token = gs._make_token("Cat Token", "1", "1", "Creature — Cat")
-                self._tokens_entered_this_turn += 1
-                # Guide ETB trigger (TOKEN site — Cat tokens can't be Guides).
-                # T1.1 stage 2 site 1.
-                self._fire_guide_etb_trigger(gs, None)
-            gs._log(f"  Ocelot Pride: {ocelots} Cat token(s) (gained life this turn)")
+        # Ocelot end-step trigger requires Ocelot on bf to fire at all.
+        # Two sub-effects per oracle:
+        #   1. If gained life this turn: create 1/1 Cat token (existing).
+        #   2. T2.4 NEW: if you have city's blessing (10+ permanents),
+        #      for each token entered this turn, create a copy.
+        if ocelots > 0:
+            if self._gained_life_this_turn:
+                for _ in range(ocelots):
+                    gs._make_token("Cat Token", "1", "1", "Creature — Cat")
+                    self._tokens_entered_this_turn += 1
+                    # Guide ETB trigger (TOKEN site -- Cat tokens can't be Guides).
+                    # T1.1 stage 2 site 1.
+                    self._fire_guide_etb_trigger(gs, None)
+                gs._log(f"  Ocelot Pride: {ocelots} Cat token(s) (gained life this turn)")
+
+            # T2.4: city's blessing copy. In goldfish, permanent counts
+            # only increase (no opp removal), so per-turn check at end
+            # step is equivalent to the sticky Ascend tracking. Copies
+            # all tokens that entered this turn (Cat / Cat Warrior /
+            # Elemental / etc.) -- exact type doesn't matter for goldfish
+            # damage; all 1/1 tokens deal 1 dmg attacking. Each copy is
+            # itself a token entering, fires Guide ETB.
+            permanent_count = len(gs.zones.battlefield)  # includes lands
+            if permanent_count >= 10 and self._tokens_entered_this_turn > 0:
+                copies = self._tokens_entered_this_turn
+                for _ in range(copies):
+                    gs._make_token("Cat Token", "1", "1", "Creature — Cat")
+                    # Don't increment _tokens_entered_this_turn here --
+                    # the copy clause fires once based on tokens entered
+                    # before it; copies-of-copies don't chain.
+                    self._fire_guide_etb_trigger(gs, None)
+                gs._log(f"  Ocelot city's blessing ({permanent_count} perms): "
+                        f"copied {copies} token(s)")
 
     def _simulate_ajani_etb(self, gs: GameState):
         """Ajani ETB: create a 2/1 Cat Warrior token."""

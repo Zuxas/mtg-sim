@@ -393,16 +393,15 @@ class GameState:
             self._log("  Adeline: created 1/1 attacking Human token")
             # Note: Guide of Souls trigger fires via _apply_existing_board_etb in _make_token
 
-        # ── 3. Guide of Souls attack trigger: spend 3 energy for +2/+2 ────
-        # Each Guide triggers independently — if you have 6 energy and 2 Guides,
-        # both can trigger (spend 3 each)
-        guides_attacking = [c for c in attackers if c.name == "Guide of Souls"]
-        for guide in guides_attacking:
-            if self.energy >= 3:
-                self.energy -= 3
-                guide.counters += 2   # +2/+2 (permanent in goldfish = same effect)
-                self._log(f"  Guide of Souls: spent 3 energy → +2/+2 "
-                          f"(energy now: {self.energy})")
+        # ── 3. Guide of Souls attack trigger: handled by APL ──────────────
+        # Per oracle: "Whenever Guide of Souls attacks, you may pay 3E. If
+        # you do, target attacking creature gets +2/+2 and gains flying
+        # until end of turn." The TARGET is "attacking creature", not
+        # Guide-self -- best implementation is to pump the highest-power
+        # attacker. APL handles via _handle_guide_attack_pump(gs, 'main')
+        # in BorosEnergyAPL.main_phase. Engine self-pump (which both
+        # double-fired AND targeted the wrong creature) removed 2026-04-27
+        # per spec harness/specs/2026-04-27-guide-attack-trigger-fix.md.
 
         # ── Gran-Gran attack trigger: whenever Gran-Gran becomes tapped,
         # draw a card, then discard a card. Discard fires any on-discard

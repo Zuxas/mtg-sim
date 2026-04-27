@@ -242,6 +242,24 @@ NOT: combat → main1 → main2 (old broken order)
   correction better AND gained on previously close matchups. Sleeve-
   up read STRENGTHENED: goldfish edge -0.32 turn + gauntlet edge
   +13.7pp post-fix.
+- Boros Energy Modern gauntlet (2026-04-27 morning post-Phase-4 turn-order
+  fix): 68.4% field-weighted (was 69.1% post-Phase-1, -0.7pp). Phase 4
+  removes structural ~6pp player-A advantage that pre-fix had A acting
+  first per turn AND B drawing on T1 regardless of on_play. Mono Red
+  shifted further (58.3% -> 47.8%, -10.5pp) since Mono Red was always
+  apl_b in BE-vs-Mono-Red gauntlets and previously disadvantaged by
+  always-second turn order. Other sim matchups within +/-0.5pp;
+  DB-cached unchanged. BE mirror converged 57.4% -> 51.3%, Murktide
+  mirror 55.6% -> 51.0% (both within statistical noise of 50% null).
+- Boros Energy variant Jermey gauntlet (2026-04-27 morning post-Phase-4):
+  79.4% field-weighted (was 82.8% post-Phase-1, -3.4pp). Variant edge
+  over canonical: +11.0pp (was +13.7pp, contracted by 2.7pp but still
+  meaningfully positive). Variant lost more than canonical because all
+  15 variant matchups are sim-source (no DB cache); Phase 4's correction
+  applied broadly. Notable variant shifts: Boros mirror 70.7% -> 61.5%,
+  Murktide 86.0% -> 78.7%, Mono Red 65.9% -> 55.2%, Eldrazi Ramp 90.5%
+  -> 85.1%. Sleeve-up read holds: variant still T0.32 faster goldfish +
+  +11.0pp gauntlet edge.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

@@ -274,6 +274,68 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         gs.mana_b = mana_left
 
 
+def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
+                     skip_draw: bool, result: MatchResult, turn_num: int) -> bool:
+    """Run one player's turn: draw, main, combat, main2, win check.
+
+    Phase 4 of match-runner combat-gap fix (2026-04-26 evening / 2026-04-27).
+    Extracted from run_match's inline turn handling so the loop can respect
+    on_play: first-player goes first per turn (with T1 draw skip), second-
+    player goes second (always draws).
+
+    Pre-Phase-4: A always acted first per loop iteration, AND B always drew
+    on T1, regardless of on_play. Both bugs compounded into a structural
+    ~6pp player-A advantage in mirror matches (BE mirror n=1000: 57.4% A
+    wins; Murktide mirror: 55.6%). Phase 4 makes turn order honor on_play.
+
+    Returns True if the game ended this turn (caller should return result).
+    """
+    # Draw step
+    if not skip_draw:
+        if player == "a":
+            gs.draw_a(1)
+        else:
+            gs.draw_b(1)
+
+    # Main phase 1
+    _simple_play_turn(gs, player, apl)
+
+    # Combat (raw power calc; combat triggers + keywords are Phase 2/3)
+    dmg, attacker_lost, defender_lost = _resolve_combat(gs, player)
+    if player == "a":
+        gs.damage_to_b += dmg
+        gs.life_b      -= dmg
+        for c in attacker_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
+        for c in defender_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
+    else:
+        gs.damage_to_a += dmg
+        gs.life_a      -= dmg
+        for c in attacker_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
+        for c in defender_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
+
+    # Main phase 2 (Phase 1 wiring, commit a31f360)
+    _run_post_combat_phase(gs, player, apl)
+
+    # Win check
+    if player == "a":
+        if gs.life_b <= 0 or gs.damage_to_b >= 20:
+            result.won           = True
+            result.kill_turn     = turn_num
+            result.loser_life    = gs.life_b
+            result.winner_damage = gs.damage_to_b
+            result.turn_count    = turn_num
+            return True
+    else:
+        if gs.life_a <= 0 or gs.damage_to_a >= 20:
+            result.won           = False
+            result.kill_turn     = turn_num
+            result.loser_life    = gs.life_a
+            result.winner_damage = gs.damage_to_a
+            result.turn_count    = turn_num
+            return True
+    return False
+
+
 def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     """Phase 1 of match-runner combat-gap fix (2026-04-26 morning).
 
@@ -600,53 +662,28 @@ def run_match(
             for c in gs.bf_a + gs.bf_b:
                 c.summoning_sickness = False
 
-        # Draw (skip A's draw if on play turn 1)
-        if not (turn_num == 1 and on_play):
-            gs.draw_a(1)
-        gs.draw_b(1)
+        # Phase 4 fix (2026-04-27): turn order respects on_play. The player
+        # on the play goes first each turn (and skips draw on T1). Pre-fix,
+        # A always acted first per loop iteration AND B always drew on T1
+        # regardless of on_play, producing a structural ~6pp player-A
+        # advantage in mirror matches.
+        if on_play:
+            first, first_apl   = "a", apl_a
+            second, second_apl = "b", apl_b
+        else:
+            first, first_apl   = "b", apl_b
+            second, second_apl = "a", apl_a
 
-        # Player A main phase
-        _simple_play_turn(gs, "a", apl_a)
-
-        # Player A attacks
-        dmg, a_lost, b_lost = _resolve_combat(gs, "a")
-        gs.damage_to_b += dmg
-        gs.life_b      -= dmg
-        for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
-        for c in b_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
-
-        # Phase 1 fix (2026-04-26 morning): main_phase2 fires here.
-        # Bombardment lethal sac, Phlage hardcast, face burn, etc. can
-        # push damage to lethal before win check below.
-        _run_post_combat_phase(gs, "a", apl_a)
-
-        if gs.life_b <= 0 or gs.damage_to_b >= 20:
-            result.won          = True
-            result.kill_turn    = turn_num
-            result.loser_life   = gs.life_b
-            result.winner_damage = gs.damage_to_b
-            result.turn_count   = turn_num
+        # First player's turn (skips draw on T1 per Magic rules)
+        if _run_player_turn(gs, first, first_apl,
+                            skip_draw=(turn_num == 1),
+                            result=result, turn_num=turn_num):
             return result
 
-        # Player B main phase
-        _simple_play_turn(gs, "b", apl_b)
-
-        # Player B attacks
-        dmg, b_lost, a_lost = _resolve_combat(gs, "b")
-        gs.damage_to_a += dmg
-        gs.life_a      -= dmg
-        for c in b_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
-        for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
-
-        # Phase 1 fix: B's main_phase2.
-        _run_post_combat_phase(gs, "b", apl_b)
-
-        if gs.life_a <= 0 or gs.damage_to_a >= 20:
-            result.won          = False
-            result.kill_turn    = turn_num
-            result.loser_life   = gs.life_a
-            result.winner_damage = gs.damage_to_a
-            result.turn_count   = turn_num
+        # Second player's turn (always draws)
+        if _run_player_turn(gs, second, second_apl,
+                            skip_draw=False,
+                            result=result, turn_num=turn_num):
             return result
 
     # Time out — call it based on life totals

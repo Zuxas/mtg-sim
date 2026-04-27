@@ -1,5 +1,26 @@
 # MTG-Sim Master Plan -- "Perfect Play" Ground-Up Build
-# Last updated: 2026-04-26 (post-Phase-1 match-runner fix)
+# Last updated: 2026-04-27 (post-Phase-3 + 100k canonical headline)
+
+## DEFINITIVE CANONICAL HEADLINE (2026-04-27)
+
+**Boros Energy 100k Modern field-weighted: 65.8%** (1.4M games, 42min wall,
+post-everything-2026-04-27 engine). Supersedes the 71.5% number from
+commit `0bc20bf`, which was on the stub canonical + pre-Phase-1+4 engine
++ double-firing handlers + pre-canonical-alignment.
+
+Sample-size validation: 1k preview at 65.6% (commit `972de04`) matched
+within +/-0.2pp. Methodology robust.
+
+Cumulative session work converging to this number:
+- Foundation alignment (`7e213ea` + `0c0f42c`)
+- Voice + Guide ETB double-firing fix (`8fc9b82`)
+- Match-runner Phase 1 main_phase2 wiring (`a31f360`)
+- Match-runner Phase 4 turn-order asymmetry (`9721329`)
+- Canonical-deck alignment to .txt (`362b04c`)
+- Match-runner Phase 3 combat keywords partial (`972de04`)
+
+Phase 3.5 (full keyword-effects coverage) in progress -- 11-stage arc
+will produce a NEW 100k headline after completion.
 
 ## CURRENT STATE (2026-04-26)
 

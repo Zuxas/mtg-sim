@@ -314,6 +314,24 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
+- Boros Energy Modern gauntlet (2026-04-27 N=100k seed=42, post-Phase-3
+  partial + canonical-aligned + all bug fixes, **DEFINITIVE HEADLINE**):
+  65.8% field-weighted (1,400,000 games, 2516s wall, 14 matchups, 0
+  errors). Supersedes 71.5% from commit 0bc20bf (which was on stub
+  canonical + pre-Phase-1+4 engine + double-firing handlers + pre-
+  canonical-alignment). Sample-size validation: 1k preview at 65.6%
+  matched within +/-0.2pp. Cumulative -5.7pp shift attributed to all
+  session work converging:
+    Foundation alignment (7e213ea + 0c0f42c)
+    Voice + Guide ETB double-firing fix (8fc9b82)
+    Match-runner Phase 1 main_phase2 wiring (a31f360)
+    Match-runner Phase 4 turn-order asymmetry (9721329)
+    Canonical alignment to .txt deck (362b04c)
+    Match-runner Phase 3 combat keywords partial (972de04)
+  Phase 3.5 (full keyword-effects coverage, 11-stage arc) in progress;
+  will produce a NEW 100k headline after completion. This number is
+  the definitive baseline against which Phase 3.5 shifts will be
+  measured.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

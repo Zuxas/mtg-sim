@@ -202,21 +202,35 @@ NOT: combat → main1 → main2 (old broken order)
   is approximate apples-to-apples (same archetypes weighted by Modern
   meta share) but absolute numbers reflect different g1_source mixes.
 - METHODOLOGY CAVEAT for ALL Modern gauntlet entries above (surfaced
-  2026-04-26 morning by Diagnostic B): match-runner `_resolve_combat`
-  is a raw power-vs-toughness calc with no combat trigger dispatch,
-  AND `_simple_play_turn` doesn't call `main_phase2`. BE-specific
-  effects (Phlage hardcast, Phlage escape, Ocelot end-step snowball,
-  Bombardment lethal sac, Voice Mobilize, Phlage attack trigger,
-  Ragavan treasures, Guide attack pump, Avatar Roku firebending, saga
-  casts, Lightning Bolt face burn) DO NOT FIRE in match mode.
-  Variant-vs-canonical comparison still holds (both decks share the
-  simplification) but absolute gauntlet numbers reflect a heavily
-  truncated combat model. Real-tournament BE is probably MORE potent
-  than the 71.5% headline suggests. Goldfish numbers (T4.72 canonical
-  / T4.40 variant) are the more trustworthy "how does this deck
-  actually play" measurement. Fresh-session fix scope at
-  harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md
-  (~2.5-3.5hr, three phases).
+  2026-04-26 morning by Diagnostic B, PARTIALLY RESOLVED by Phase 1):
+  Pre-Phase-1: match-runner `_resolve_combat` was raw power calc with
+  no combat trigger dispatch, AND `_simple_play_turn` didn't call
+  `main_phase2` -- Phlage hardcast, Bombardment lethal sac, Ocelot
+  end-step, Mono Red burn package, etc. all dead in match mode. Phase
+  1 (commit below) wires `main_phase2` for both players. Phases 2
+  (combat triggers) + 3 (combat keywords) remain.
+- Boros Energy Modern gauntlet (2026-04-26 morning N=1000 seed=42,
+  post-Phase-1 main_phase2 wiring): 69.1% field-weighted (was 71.7%
+  pre-Phase-1, delta -2.6pp DOWNWARD). Drift attributed to Mono Red
+  matchup correction (99.9% -> 58.3%, -41.6pp). Pre-Phase-1, opposing
+  APLs' main_phase2 work was dead -- Mono Red's burn package
+  (Lightning Bolt face, Lava Spike, etc.) couldn't fire, leaving
+  creature-only goldfish that BE auto-raced. Post-fix, Mono Red
+  deploys real burn damage. The 99.9% headline was the artifact;
+  58.3% is closer to real Modern. Other matchups held within +/-1.5pp
+  because their main_phase2 work is creature-deployment (Affinity,
+  Domain Zoo, Tron) or counterspell/draw (Murktide, Esper Blink),
+  neither providing major direct damage gains.
+- Boros Energy variant Jermey gauntlet (2026-04-26 morning post-Phase-1):
+  82.8% field-weighted (was 83.1%, -0.3pp aggregate). Variant edge
+  over canonical: +13.7pp (was +11.4pp, GREW by +2.3pp). Per-matchup:
+  Mono Red 99.9% -> 65.9% (same pattern as canonical), Eldrazi Ramp
+  64.5% -> 90.5% (+26pp -- variant Phlage hardcast + Bombardment
+  lethal sac now fire and win close races; canonical's Eldrazi Ramp
+  is DB-cached so didn't shift). Variant absorbed the Mono Red
+  correction better AND gained on previously close matchups. Sleeve-
+  up read STRENGTHENED: goldfish edge -0.32 turn + gauntlet edge
+  +13.7pp post-fix.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

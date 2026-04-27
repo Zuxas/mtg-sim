@@ -274,6 +274,101 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         gs.mana_b = mana_left
 
 
+def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
+    """Phase 1 of match-runner combat-gap fix (2026-04-26 morning).
+
+    Calls apl.main_phase2(view) after _resolve_combat resolves, so
+    BE's main_phase2 work fires in match mode (Phlage hardcast/escape,
+    Pyromancer ETB+GY, Lightning Bolt face burn, Ocelot end-step Cat
+    tokens, Bombardment lethal sac, Ajani transform check, saga casts,
+    face_burn role iteration).
+
+    Pre-fix: match-runner only called main_phase_match; main_phase2
+    was never invoked. Diagnostic B 2026-04-26 surfaced this gap.
+    See harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md.
+
+    Caveats (Phase 2 fixes):
+    - view.mana_pool resets fresh from lands-in-play (not synced from
+      main_phase remainder). main_phase2 effectively has full mana
+      again. BE may over-cast Phlage hardcast.
+    - view.energy resets to 0 each phase call. Pre-existing energy
+      from main_phase is lost. APL flags persist on apl instance.
+    - APLs without main_phase2 method no-op via getattr fallback.
+    """
+    if apl is None:
+        return
+    import os, sys
+    from engine.game_state import GameState
+    from apl.match_apl import MatchAPL, RemovalAwareGoldfishAdapter
+
+    if player == "a":
+        on_play = gs.on_play
+        hand, bf, gy, lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
+        life, land_played = gs.life_a, gs.land_played_a
+        prev_damage = gs.damage_to_b
+    else:
+        on_play = not gs.on_play
+        hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
+        life, land_played = gs.life_b, gs.land_played_b
+        prev_damage = gs.damage_to_a
+
+    view = GameState(mainboard=[], on_play=on_play)
+    view.turn              = gs.turn
+    view.zones.hand        = hand
+    view.zones.battlefield = bf
+    view.zones.graveyard   = gy
+    view.zones.library     = lib
+    view.life              = life
+    view.land_played       = land_played
+    view.damage_dealt      = prev_damage
+
+    for c in view.zones.battlefield:
+        if c.is_land():
+            try:
+                view.mana_pool.add_land(c.type_line or "", c.name or "")
+            except Exception:
+                view.mana_pool.add("C", 1)
+
+    if player == "a":
+        opp_hand, opp_bf, opp_gy = gs.hand_b, gs.bf_b, gs.gy_b
+        opp_life = gs.life_b
+    else:
+        opp_hand, opp_bf, opp_gy = gs.hand_a, gs.bf_a, gs.gy_a
+        opp_life = gs.life_a
+    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.turn = gs.turn
+    opp_view.zones.hand = opp_hand
+    opp_view.zones.battlefield = opp_bf
+    opp_view.zones.graveyard = opp_gy
+    opp_view.life = opp_life
+
+    match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
+
+    try:
+        if hasattr(match_apl, 'main_phase2_match'):
+            match_apl.main_phase2_match(view, opp_view)
+        elif hasattr(match_apl, 'main_phase2'):
+            match_apl.main_phase2(view)
+    except Exception as e:
+        if os.environ.get("SIM_DEBUG"):
+            raise
+        print(
+            f"  [WARN _run_post_combat_phase APL exec failed for "
+            f"{type(apl).__name__} player={player} turn={gs.turn}: {e}]",
+            file=sys.stderr,
+        )
+
+    delta_damage = view.damage_dealt - prev_damage
+    if player == "a":
+        gs.damage_to_b = view.damage_dealt
+        gs.life_b -= delta_damage
+        gs.life_a = view.life
+    else:
+        gs.damage_to_a = view.damage_dealt
+        gs.life_a -= delta_damage
+        gs.life_b = view.life
+
+
 def _safe_power(card) -> int:
     """Safely get a card's power as int, handling '*' and None."""
     try:
@@ -520,6 +615,11 @@ def run_match(
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
         for c in b_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
 
+        # Phase 1 fix (2026-04-26 morning): main_phase2 fires here.
+        # Bombardment lethal sac, Phlage hardcast, face burn, etc. can
+        # push damage to lethal before win check below.
+        _run_post_combat_phase(gs, "a", apl_a)
+
         if gs.life_b <= 0 or gs.damage_to_b >= 20:
             result.won          = True
             result.kill_turn    = turn_num
@@ -537,6 +637,9 @@ def run_match(
         gs.life_a      -= dmg
         for c in b_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
+
+        # Phase 1 fix: B's main_phase2.
+        _run_post_combat_phase(gs, "b", apl_b)
 
         if gs.life_a <= 0 or gs.damage_to_a >= 20:
             result.won          = False

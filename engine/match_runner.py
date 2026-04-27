@@ -461,6 +461,51 @@ def _safe_toughness(card) -> int:
         return 1
 
 
+def _legal_blockers(atk, blockers):
+    """Filter blockers list to those legally able to block `atk` per
+    evasion keywords. Returns a new list (does not mutate input).
+
+    Phase 3.5 Stage A (2026-04-27): full block-eligibility coverage.
+    Pre-Stage-A: only FLYING + REACH handled inline in _resolve_combat.
+
+    Covers: UNBLOCKABLE, FLYING (vs reach), SHADOW (mutual restriction),
+    HORSEMANSHIP, FEAR (artifact/black only), INTIMIDATE (artifact or
+    shares-color). MENACE is handled at the assignment-count level in
+    _resolve_combat, not here.
+    """
+    from engine.keywords import KWTag
+
+    if KWTag.UNBLOCKABLE in atk.tags:
+        return []
+
+    legal = list(blockers)
+
+    if KWTag.FLYING in atk.tags:
+        legal = [b for b in legal
+                 if KWTag.FLYING in b.tags or KWTag.REACH in b.tags]
+
+    if KWTag.SHADOW in atk.tags:
+        legal = [b for b in legal if KWTag.SHADOW in b.tags]
+    else:
+        legal = [b for b in legal if KWTag.SHADOW not in b.tags]
+
+    if KWTag.HORSEMANSHIP in atk.tags:
+        legal = [b for b in legal if KWTag.HORSEMANSHIP in b.tags]
+
+    if KWTag.FEAR in atk.tags:
+        legal = [b for b in legal
+                 if 'Artifact' in (b.type_line or '')
+                 or 'B' in (b.colors or [])]
+
+    if KWTag.INTIMIDATE in atk.tags:
+        atk_colors = set(atk.colors or [])
+        legal = [b for b in legal
+                 if 'Artifact' in (b.type_line or '')
+                 or set(b.colors or []) & atk_colors]
+
+    return legal
+
+
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     """
     Combat with keyword awareness (Phase 3, 2026-04-27).
@@ -497,19 +542,27 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     atk_sorted = sorted(attackers, key=lambda c: -_safe_power(c))
     blk_sorted = sorted(blockers,  key=lambda c: -_safe_power(c))
 
-    # Blocker assignment: biggest legal blocker -> biggest attacker.
-    # Flying attackers can only be blocked by flying or reach blockers.
+    # Blocker assignment (Phase 3.5 Stage A): full evasion coverage via
+    # _legal_blockers helper. Each attacker gets a LIST of blockers
+    # (menace requires 2+; unblockable / unsatisfiable -> empty list).
+    # Defender prioritizes biggest attackers first; uses biggest legal
+    # blockers; for menace attackers, assigns 2 if available else 0.
     available_blockers = list(blk_sorted)
-    assignments = {}  # id(attacker) -> blocker
+    assignments = {}  # id(attacker) -> list[blocker]
     for atk in atk_sorted:
-        atk_flies = KWTag.FLYING in atk.tags
-        for i, blk in enumerate(available_blockers):
-            if atk_flies and (KWTag.FLYING not in blk.tags
-                              and KWTag.REACH not in blk.tags):
-                continue
-            assignments[id(atk)] = blk
-            available_blockers.pop(i)
-            break
+        legal = _legal_blockers(atk, available_blockers)
+        if not legal:
+            assignments[id(atk)] = []
+            continue
+        needed = 2 if KWTag.MENACE in atk.tags else 1
+        if len(legal) < needed:
+            # Can't satisfy menace -- attacker goes unblocked
+            assignments[id(atk)] = []
+            continue
+        chosen = legal[:needed]
+        assignments[id(atk)] = chosen
+        for b in chosen:
+            available_blockers.remove(b)
 
     atk_dead = set()  # id() of dead attackers
     blk_dead = set()  # id() of dead blockers
@@ -524,7 +577,12 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     def _resolve_strike_step(strike_attackers):
         """Resolve damage for one strike step (first-strike or regular).
         Updates atk_dead, blk_dead, total_dmg, lifelink_gain in enclosing
-        scope. Skips attackers/blockers already dead from prior step."""
+        scope. Skips attackers/blockers already dead from prior step.
+
+        Phase 3.5 Stage A: handles multi-blocker assignment (menace).
+        Attacker assigns damage among blockers in list order (biggest-
+        first); deathtouch makes 1 damage lethal to each blocker.
+        """
         nonlocal total_dmg, lifelink_gain
         for atk in strike_attackers:
             if id(atk) in atk_dead:
@@ -535,44 +593,65 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
             atk_ll  = KWTag.LIFELINK in atk.tags
             atk_tr  = KWTag.TRAMPLE in atk.tags
 
-            blk = assignments.get(id(atk))
-            if blk is None or id(blk) in blk_dead:
-                # Unblocked (or original blocker died in first-strike step):
-                # damage goes to defending player, lifelink gains us life
+            blocker_list = assignments.get(id(atk), [])
+            # Filter out blockers already dead from prior step
+            live_blockers = [b for b in blocker_list if id(b) not in blk_dead]
+
+            if not live_blockers:
+                # Unblocked (or all blockers died in first-strike step):
+                # full damage to defending player
                 total_dmg += atk_pwr
                 if atk_ll:
                     lifelink_gain += atk_pwr
                 continue
 
-            # Blocked combat
-            blk_pwr = _safe_power(blk)
-            blk_tou = _safe_toughness(blk)
-            blk_dt  = KWTag.DEATHTOUCH in blk.tags
-            blk_ll  = KWTag.LIFELINK in blk.tags
-
-            # Blocker damage to attacker
-            if blk_pwr > 0:
-                if not _is_indestructible(atk):
-                    if blk_pwr >= atk_tou or blk_dt:
-                        atk_dead.add(id(atk))
+            # Blocked combat -- two sequential passes over live_blockers.
+            # Pass 1: accumulate total damage TO attacker before lethality
+            # check (CR: blocker damage sums on the attacker; total >=
+            # toughness is lethal). Pre-fix bug: per-blocker check meant
+            # 2x 2/2 vs 3/4 menace attacker didn't kill it (neither blocker
+            # had 2 >= 4 individually). Hidden in BE/Murktide mirrors (no
+            # menace) but breaks Rakdos Bloodtithe Harvester etc.
+            total_damage_to_atk = 0
+            any_blocker_deathtouch = False
+            for blk in live_blockers:
+                blk_pwr = _safe_power(blk)
+                blk_ll  = KWTag.LIFELINK in blk.tags
+                if blk_pwr > 0:
+                    total_damage_to_atk += blk_pwr
+                    if KWTag.DEATHTOUCH in blk.tags:
+                        any_blocker_deathtouch = True
                 if blk_ll:
-                    # Blocker's lifelink: defender gains, not attacker.
-                    # Match-runner tracks attacker's lifelink_gain only;
-                    # blocker lifelink applied via separate caller path.
-                    pass  # NOTE: defender lifelink not tracked here
+                    # Blocker's lifelink: defender gains. Stage A leaves
+                    # this as no-op pending Stage B (defender_lifelink_gain
+                    # threading through return tuple + callers).
+                    pass
 
-            # Attacker damage to blocker (deathtouch -> any damage lethal)
-            if atk_pwr > 0:
-                if not _is_indestructible(blk):
-                    if atk_pwr >= blk_tou or atk_dt:
-                        blk_dead.add(id(blk))
+            # Apply combined damage to attacker
+            if total_damage_to_atk > 0 and not _is_indestructible(atk):
+                if total_damage_to_atk >= atk_tou or any_blocker_deathtouch:
+                    atk_dead.add(id(atk))
+
+            # Pass 2: attacker assigns damage among blockers in list order
+            # (biggest-first per assignment, CR 509.4 attacker chooses order)
+            damage_remaining = atk_pwr
+            for blk in live_blockers:
+                blk_tou = _safe_toughness(blk)
+                if damage_remaining > 0:
+                    # Deathtouch: 1 damage is lethal regardless of toughness
+                    damage_to_assign = 1 if atk_dt else min(damage_remaining, blk_tou)
+                    if not _is_indestructible(blk):
+                        if damage_to_assign >= blk_tou or atk_dt:
+                            blk_dead.add(id(blk))
+                    if atk_ll:
+                        lifelink_gain += damage_to_assign
+                    damage_remaining -= damage_to_assign
+
+            # Trample: excess damage after all blockers go to defending player
+            if atk_tr and damage_remaining > 0:
+                total_dmg += damage_remaining
                 if atk_ll:
-                    lifelink_gain += min(atk_pwr, blk_tou) if not atk_tr else atk_pwr
-
-                # Trample: excess damage goes to defending player
-                if atk_tr:
-                    excess = max(0, atk_pwr - blk_tou)
-                    total_dmg += excess
+                    lifelink_gain += damage_remaining
 
     # First-strike step: FIRST_STRIKE or DOUBLE_STRIKE attackers
     first_strikers = [c for c in atk_sorted

@@ -290,6 +290,13 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     Returns True if the game ended this turn (caller should return result).
     """
+    # Phase 3.5 Stage B: clear tapped_from_attack at start of player's
+    # turn (creature untap step). Vigilance creatures don't tap to
+    # attack, so this only clears non-vigilance creatures.
+    own_bf = gs.bf_a if player == "a" else gs.bf_b
+    for c in own_bf:
+        c.tapped_from_attack = False
+
     # Draw step
     if not skip_draw:
         if player == "a":
@@ -301,18 +308,21 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     _simple_play_turn(gs, player, apl)
 
     # Combat (Phase 3: keyword-aware -- first strike, deathtouch,
-    # lifelink, trample, flying-vs-blocker, indestructible)
-    dmg, attacker_lost, defender_lost, lifelink_gain = _resolve_combat(gs, player)
+    # lifelink, trample, flying-vs-blocker, indestructible.
+    # Phase 3.5 Stage B: 5-tuple return adds defender_lifelink_gain.)
+    dmg, attacker_lost, defender_lost, lifelink_gain, defender_lifelink_gain = _resolve_combat(gs, player)
     if player == "a":
         gs.damage_to_b += dmg
         gs.life_b      -= dmg
         gs.life_a      += lifelink_gain
+        gs.life_b      += defender_lifelink_gain
         for c in attacker_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
         for c in defender_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
     else:
         gs.damage_to_a += dmg
         gs.life_a      -= dmg
         gs.life_b      += lifelink_gain
+        gs.life_a      += defender_lifelink_gain
         for c in attacker_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
         for c in defender_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
 
@@ -525,19 +535,38 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     """
     from engine.keywords import KWTag
 
+    # Phase 3.5 Stage B: attacker filter ORs with KWTag.HASTE (so Ragavan
+    # cast T1 can attack T1) and excludes KWTag.DEFENDER (defender
+    # creatures can't attack). Blockers filter excludes
+    # tapped_from_attack creatures (vigilance no-ops the tap).
     if attacker == "a":
         attackers = [c for c in gs.bf_a
                      if not c.is_land()
-                     and not getattr(c, 'summoning_sickness', False)]
-        blockers  = [c for c in gs.bf_b if not c.is_land()]
+                     and KWTag.DEFENDER not in c.tags
+                     and (not getattr(c, 'summoning_sickness', False)
+                          or KWTag.HASTE in c.tags)]
+        blockers  = [c for c in gs.bf_b
+                     if not c.is_land()
+                     and not getattr(c, 'tapped_from_attack', False)]
     else:
         attackers = [c for c in gs.bf_b
                      if not c.is_land()
-                     and not getattr(c, 'summoning_sickness', False)]
-        blockers  = [c for c in gs.bf_a if not c.is_land()]
+                     and KWTag.DEFENDER not in c.tags
+                     and (not getattr(c, 'summoning_sickness', False)
+                          or KWTag.HASTE in c.tags)]
+        blockers  = [c for c in gs.bf_a
+                     if not c.is_land()
+                     and not getattr(c, 'tapped_from_attack', False)]
 
     if not attackers:
-        return 0, [], [], 0
+        return 0, [], [], 0, 0
+
+    # Phase 3.5 Stage B: mark non-vigilance attackers as tapped from attack.
+    # Vigilance creatures don't tap to attack, so they remain available
+    # to block on opponent's next turn.
+    for atk in attackers:
+        if KWTag.VIGILANCE not in atk.tags:
+            atk.tapped_from_attack = True
 
     atk_sorted = sorted(attackers, key=lambda c: -_safe_power(c))
     blk_sorted = sorted(blockers,  key=lambda c: -_safe_power(c))
@@ -569,7 +598,8 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     blk_lookup = {id(b): b for b in blockers}
     atk_lookup = {id(a): a for a in attackers}
     total_dmg = 0
-    lifelink_gain = 0
+    lifelink_gain = 0           # attacker-side lifelink (gains attacking player)
+    defender_lifelink_gain = 0  # blocker-side lifelink (gains defending player)
 
     def _is_indestructible(c):
         return KWTag.INDESTRUCTIBLE in c.tags
@@ -583,7 +613,7 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         Attacker assigns damage among blockers in list order (biggest-
         first); deathtouch makes 1 damage lethal to each blocker.
         """
-        nonlocal total_dmg, lifelink_gain
+        nonlocal total_dmg, lifelink_gain, defender_lifelink_gain
         for atk in strike_attackers:
             if id(atk) in atk_dead:
                 continue
@@ -616,16 +646,14 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
             any_blocker_deathtouch = False
             for blk in live_blockers:
                 blk_pwr = _safe_power(blk)
-                blk_ll  = KWTag.LIFELINK in blk.tags
                 if blk_pwr > 0:
                     total_damage_to_atk += blk_pwr
                     if KWTag.DEATHTOUCH in blk.tags:
                         any_blocker_deathtouch = True
-                if blk_ll:
-                    # Blocker's lifelink: defender gains. Stage A leaves
-                    # this as no-op pending Stage B (defender_lifelink_gain
-                    # threading through return tuple + callers).
-                    pass
+                    # Phase 3.5 Stage B: blocker-side lifelink (defender
+                    # gains life equal to blocker's damage to attacker).
+                    if KWTag.LIFELINK in blk.tags:
+                        defender_lifelink_gain += blk_pwr
 
             # Apply combined damage to attacker
             if total_damage_to_atk > 0 and not _is_indestructible(atk):
@@ -669,7 +697,7 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     atk_losses = [atk_lookup[i] for i in atk_dead]
     blk_losses = [blk_lookup[i] for i in blk_dead]
 
-    return total_dmg, atk_losses, blk_losses, lifelink_gain
+    return total_dmg, atk_losses, blk_losses, lifelink_gain, defender_lifelink_gain
 
 
 class ComboKillSampler:
@@ -754,8 +782,8 @@ def _run_match_with_combo(
 
         _simple_play_turn(gs, "a")
 
-        # Player A attacks (Phase 3: keyword-aware combat)
-        dmg, a_lost, b_lost, lifelink_gain = _resolve_combat(gs, "a")
+        # Player A attacks (Phase 3: keyword-aware; Phase 3.5 Stage B 5-tuple)
+        dmg, a_lost, b_lost, lifelink_gain, defender_lifelink_gain = _resolve_combat(gs, "a")
         gs.damage_to_b += dmg
         # Note: combo path doesn't track gs.life_a directly; lifelink no-op here
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)

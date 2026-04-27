@@ -1,5 +1,68 @@
-# MTG-Sim Master Plan — "Perfect Play" Ground-Up Build
-# Updated: 2026-04-09
+# MTG-Sim Master Plan -- "Perfect Play" Ground-Up Build
+# Last updated: 2026-04-26 (post-Phase-1 match-runner fix)
+
+## CURRENT STATE (2026-04-26)
+
+### Engine
+- Foundation stable (post-2026-04-26 fix, commits 7e213ea + 0c0f42c).
+  Committed engine self-consistent; previously had load-bearing
+  uncommitted WIP that crashed goldfish on stash.
+- Transform infrastructure complete (T1.3+T1.4 arc, 2026-04-26
+  morning): DFC fields, gs.transform mechanic, planeswalker dispatch,
+  saga transform, Ajani Avenger + Roku/Avatar Roku consumers.
+- Match-runner Phase 1 shipped (2026-04-26 morning, commit a31f360):
+  main_phase2 wired into both-sides sim. Mono Red, Phlage hardcast,
+  Bombardment lethal sac, Ocelot end-step now fire in match mode.
+  Phase 2 (combat triggers) + Phase 3 (combat keywords) + Phase 4
+  (turn-order asymmetry) remain fresh-session work.
+- Determinism arc: Stage 1.5 + 1.6 partial fixes shipped. Stage 1.7
+  (event_bus suspected) specced for fresh session. Within-matchup
+  parallelism (3-5x gauntlet wall reduction) blocked on Stage 1.7.
+- Two double-firing handler bugs resolved (commit 8fc9b82): Voice
+  Mobilize damage and Guide ETB life/energy. Guide attack-trigger
+  has similar pattern flagged for fresh-session.
+
+### Boros Energy APL (canonical)
+- Variant-adaptive role refactor complete (Phase 1+2). Same APL
+  handles canonical 75 + Voice/Pyromancer attrition variants
+  automatically via _compute_roles().
+- SPECIAL_MECHANICS dispatch: Phlage, Ajani (front+Avenger), Ocelot
+  (incl city's blessing T2.4), Guide pump, Arena haste, Bombardment
+  (lethal + T2.3 GY-fill), Pyromancer (loot + GY activation), Voice
+  Mobilize, Avatar Roku firebending.
+- Goldfish baseline (post-Voice+Guide-fix, current canonical):
+  99.9% WR, T4.72 avg, T5 median, T4 share 43.1%.
+- Modern field-weighted (1k seed=42, post-Phase-1): 69.1%. Mono Red
+  corrected from 99.9% (artifact) to 58.3%.
+
+### Variant Jermey 75 (validated for tournament play)
+- 4 Ragavan / 4 Ocelot / 4 Guide / 4 Phlage / 4 Ajani / 3 Voice /
+  1 Screaming Nemesis / 2 Pyromancer / 4 Galvanic / 2 Thraben Charm /
+  1 Bolt / 3 Bombardment / 1 Blood Moon MB / 23 lands.
+- Goldfish: 100% WR, T4.40 avg, T4 median, T4 share 58.6%.
+- Modern field-weighted (1k post-Phase-1): 82.8%.
+- Variant edge over canonical: -0.32 turn goldfish, +13.7pp gauntlet.
+- Sleeve-up read: variant for fast field, canonical for grindy.
+
+### Tooling
+- sleeve_check.py (commit 5801804): variant-vs-canonical comparison
+  runner with --gauntlet flag. Copy-to-clipboard readout.
+- parallel_launcher.py + dashboard.py: ASCII-only fixes shipped.
+- 8 tracked engine files committed today; 3 orphan engine files
+  (card_priority/telemetry/oracle_parser) flagged for triage.
+
+### Open architectural findings (fresh-session work, all specced)
+- Match-runner Phase 2 (combat triggers): ~45-60 min
+- Match-runner Phase 3 (combat keywords): ~60-90 min
+- Match-runner Phase 4 (turn-order asymmetry): ~30-45 min
+- Stage 1.7 (event_bus determinism): ~30-60 min
+- Guide attack-trigger double-firing: ~30 min
+- Three orphan engine files triage: decision-needed
+- All findings documented in `harness/knowledge/tech/`.
+
+---
+
+## HISTORICAL -- 2026-04-09 baseline (preserved below for reference)
 
 ## ENGINE ✅
 - Summoning sickness, tapped state, turn_entered

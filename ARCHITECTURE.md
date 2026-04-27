@@ -1,6 +1,6 @@
 # MTG-Sim Architecture Map
 # Read this FIRST before working on the codebase.
-# Last updated: 2026-04-09
+# Last updated: 2026-04-26 (post-Phase-1 match-runner combat gap fix)
 
 ## GOD NODES (most connected, touch these carefully)
 
@@ -102,12 +102,23 @@ NOT: combat → main1 → main2 (old broken order)
 - list_saved_decks() / list_meta_archetypes() → discovery
 
 ## KNOWN ISSUES / TECH DEBT
-1. Phlage Scryfall data is bugged (CMC 0, empty oracle) — hardcoded in APL
-2. Some DFC cards need DFC_CORRECTIONS in deck.py
-3. Storm APL at 25-30% win rate — needs better combo sequencing
-4. Pioneer parallel_launcher: 5 matchups fail on deck name mapping
-5. Standard Izzet Lessons: 0% win (combo, needs specific APL)
-6. Gauntlet G1 win rates use estimator, not actual goldfish-vs-goldfish (needs Phase 3)
+1. Phlage Scryfall data was bugged (CMC 0). RESOLVED -- card_db now
+   loads cmc=3.0; APL kludge cleaned up in T1.2.
+2. Some DFC cards need DFC_CORRECTIONS in deck.py.
+3. Storm APL at 25-30% win rate -- needs better combo sequencing.
+4. Pioneer parallel_launcher: 5 matchups fail on deck name mapping.
+5. Standard Izzet Lessons: 0% win (combo, needs specific APL).
+6. Match-runner combat gap PARTIALLY RESOLVED at Phase 1 (commit
+   a31f360, 2026-04-26). main_phase2 now fires both sides. Phases 2
+   (combat triggers), 3 (combat keywords), 4 (turn-order asymmetry)
+   remain fresh-session. See
+   harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md.
+7. Determinism arc PARTIAL (Stage 1.5 + 1.6 shipped; Stage 1.7
+   specced for fresh session). Within-matchup parallelism blocked
+   until Stage 1.7. See
+   harness/knowledge/tech/perf-within-matchup-parallelism-2026-04-26.md.
+8. Three orphan engine files (card_priority/telemetry/oracle_parser)
+   untracked with no importers; triage deferred to fresh session.
 
 ## VALIDATED RESULTS (2026-04-09)
 - Modern 100k gauntlet: Boros Energy 65.3% field-weighted (1.4M games, 45s)

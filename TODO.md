@@ -1,5 +1,64 @@
 # mtg-sim TODO
 
+## Active priorities (2026-04-26 morning, post-session)
+
+### P0 -- Match-runner combat gap, remaining phases
+Phase 1 SHIPPED at commit a31f360. Phases 2/3/4 fresh-session work,
+all specced at
+`harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md`:
+- Phase 2 (combat trigger dispatch): ~45-60 min. Wires
+  `_simulate_combat_triggers` into match-runner. Voice/Phlage attack
+  triggers, Ragavan treasures, Guide attack pump, Avatar Roku
+  firebending. BE gauntlet predicted to shift modestly upward;
+  variant likely gains more than canonical.
+- Phase 3 (combat keywords): ~60-90 min. First strike, lifelink,
+  deathtouch, trample, flying-vs-blocker. Refactor `_resolve_combat`
+  to share with goldfish `_do_combat`.
+- Phase 4 (turn-order asymmetry): ~30-45 min. Fix structural ~6pp
+  player-A advantage in mirror matches. Surfaced incidentally during
+  Phase 1 validation.
+
+### P0 -- Stage 1.7 determinism (unblocks parallelism)
+Specced at
+`harness/knowledge/tech/perf-within-matchup-parallelism-2026-04-26.md`.
+~30-60 min. Event_bus is highest-suspicion candidate. After Stage 1.7
+lands, Stage 1 perf parallelism (3-5x gauntlet wall reduction)
+unblocks.
+
+### P1 -- Guide attack-trigger double-firing
+Third double-firing pattern from 2026-04-26 morning. Smaller impact
+than Voice + Guide ETB (only fires when Guide attacks). ~30 min.
+Findings doc:
+`harness/knowledge/tech/double-firing-handler-bugs-2026-04-26.md`
+Remaining Triage section.
+
+### P1 -- Three orphan engine files triage
+`engine/card_priority.py` (357 lines), `engine/card_telemetry.py`
+(261), `engine/oracle_parser.py` (322). Untracked, no importers.
+Decide: wire up, finish, or delete. Findings doc:
+`harness/knowledge/tech/load-bearing-wip-2026-04-26.md` Resolution >
+Remaining triage.
+
+### P2 -- IzzetProwess role refactor
+Apply BE Phase 1+2 template. ~3-4 hours fresh session.
+Spec: `harness/knowledge/tech/apl-role-refactor-2026-04-25.md`.
+
+### P2 -- Standard *_match.py WIP triage
+12 modified + 3 untracked match-mode APL files sitting since
+2026-04-23. Cleanup. ~30 min.
+
+### Tournament-relevant
+- PT Strixhaven May 1-3 -> post-PT pipeline exercise
+- Standard RC May 29 deck-lock around May 11-12
+
+---
+
+## SUPERSEDED -- 2026-04-23 sim framework MVP work
+(Original tomorrow's-work item from 2026-04-23 overnight session.
+The MVP fix described below was shipped weeks ago. The actual current
+match-runner issue is the combat gap above, not the APL-not-invoked
+claim. Preserved for context.)
+
 ## Tomorrow's work — sim framework MVP fix (surfaced 2026-04-23 overnight)
 
 - **`engine/match_runner.py:_simple_play_turn` does not invoke APLs.**

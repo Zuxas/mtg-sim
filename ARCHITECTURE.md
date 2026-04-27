@@ -260,6 +260,42 @@ NOT: combat → main1 → main2 (old broken order)
   Murktide 86.0% -> 78.7%, Mono Red 65.9% -> 55.2%, Eldrazi Ramp 90.5%
   -> 85.1%. Sleeve-up read holds: variant still T0.32 faster goldfish +
   +11.0pp gauntlet edge.
+- Boros Energy goldfish (2026-04-27 morning N=1000 seed=42, post-canonical-alignment, **current canonical**):
+  100.0% WR, T4.50 avg, T4 median, T4 share 53.4%.
+  Resolves canonical-deck-mismatch finding (canonical-deck-mismatch-2026-04-27.md).
+  Pre-fix: "boros_energy" registry resolved to data.stub_decks (auto-
+  generated tournament scrape with phantom card "Static Prison" + zero
+  sideboard). Post-fix: registry points at decks/boros_energy_modern.txt
+  (hand-curated 75 with full SB).
+  Drift from stub-baseline T4.72: -0.22 turn FASTER, +6.1pp T4 share.
+  Counterintuitive direction: spec predicted .txt would be slower
+  (Roku saga value engine, Blood Moon lock instead of damage). Reality:
+  stub had 3x Static Prison which is in BE APL's DEAD_IN_GOLDFISH set,
+  effectively a 57-card deck. .txt has zero dead cards = full 60-card
+  consistency. Static Prison drag explained the stub's slower goldfish.
+- Boros Energy Modern gauntlet (2026-04-27 morning N=1000 seed=42, post-canonical-alignment):
+  66.0% field-weighted (was 68.4% on stub canonical, -2.4pp). Net effect
+  is mixed: .txt is more controlling (gains vs Mono Red 47.8% -> 53.2%
+  via Blood Moon lock) but slower against value/disruption decks
+  (Jeskai Blink 65.3% -> 49.6%, Eldrazi Tron 79.3% -> 70.6%, Domain Zoo
+  95.8% -> 90.8%). Reflects the deck's actual structural identity:
+  curated value-engine 75 with Roku saga + RangerCap + Blood Moon
+  package, vs stub's Voice/Static-Prison aggro mishmash.
+- Boros Energy variant Jermey gauntlet (2026-04-27 morning post-canonical-alignment):
+  77.9% field-weighted (was 79.4% on stub canonical, -1.5pp). Variant
+  edge over corrected canonical: +11.9pp (was +11.0pp on stub, GREW
+  +0.9pp). Variant edge held essentially flat. Mirror matchup shifted:
+  variant Boros mirror 61.5% -> 54.9% (-6.6pp) -- variant lost mirror
+  dominance because now playing real curated .txt deck instead of stub
+  with phantom Static Prison. Other matchups within +/-1.5pp.
+  Sleeve-up read CORRECTED (not just held): variant trades canonical's
+  Roku MB + Blood Moon + RangerCap (value engine + lock) for 3x Voice
+  + Bombardment + Nemesis + extra Blood Moon (aggro pressure). Both
+  decks have similar speed (variant T4.40 vs canonical T4.50, only
+  -0.10 turn) but variant has dramatically better field-weighted edge
+  (+11.9pp). Pre-alignment narrative was wrong about Voice -- both
+  decks have it. Real variant differentiation is the burn/Nemesis
+  package replacing Roku/Blood-Moon/RangerCap.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

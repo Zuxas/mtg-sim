@@ -39,7 +39,7 @@ APL_REGISTRY = {
     "dimirtempolegacy":("apl.tempo",            "DimirTempoAPL",     None),
 
     # ── Modern (goldfish) ──
-    "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "boros_energy"),
+    "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "decks/boros_energy_modern.txt"),
     "borosenergyvariantjermey": ("apl.boros_energy", "BorosEnergyAPL",
         "decks/boros_energy_variant_jermey_2026-04-26.txt"),
     "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),

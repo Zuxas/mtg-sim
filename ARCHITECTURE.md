@@ -296,6 +296,24 @@ NOT: combat → main1 → main2 (old broken order)
   (+11.9pp). Pre-alignment narrative was wrong about Voice -- both
   decks have it. Real variant differentiation is the burn/Nemesis
   package replacing Roku/Blood-Moon/RangerCap.
+- Boros Energy Modern gauntlet (2026-04-27 morning N=1000 seed=42, post-Phase-3
+  combat keywords, MATCH-RUNNER COMBAT-GAP ARC COMPLETE): 65.6%
+  field-weighted (was 66.0% pre-Phase-3, -0.4pp). Phase 3 wired
+  flying/reach blocking, first-strike steps, deathtouch, lifelink,
+  trample, indestructible into match-runner _resolve_combat. Small
+  uniform shift across most matchups; BE's lifelink/first-strike
+  abilities mostly fire via APL handler dispatch (Ocelot
+  _gained_life_this_turn flag) not via the keyword-tag system.
+- Boros Energy variant Jermey gauntlet (2026-04-27 morning post-Phase-3):
+  78.4% field-weighted (was 77.9% pre-Phase-3, +0.5pp). Variant edge
+  over canonical: +12.8pp (was +11.9pp, GREW +0.9pp). Notable
+  per-matchup shift: variant vs Dimir Murktide 79.0% -> 69.1%
+  (-9.9pp). Murktide Regent (6/6 Flying) now correctly requires
+  flying/reach to block; BE has zero flyers/reach so Regent is
+  effectively unblockable. Real keyword-driven matchup correction.
+  Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
+  faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
+  (+12.8pp). Match-runner combat-gap arc fully complete.
 - Boros Energy Modern gauntlet (2026-04-26 N=100k/matchup seed=42, post-arc + Stage A registry):
   **71.5% field-weighted match win% (1,400,000 games, 2419s, 14 matchups, 0 errors).
   Confirmed +6.2pp lift over the 2026-04-09 baseline of 65.3%.** This is

@@ -314,13 +314,27 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
+- Boros Energy Modern gauntlet (2026-04-28 N=1k seed=42, post-Stage-1.7
+  determinism fix at commit 30c992a, **NEW DEFINITIVE BIT-STABLE BASELINE
+  for Phase 3.5 Stages D-K anchoring**): canonical 64.5% / variant 78.8%
+  field-weighted, edge ~+14.3pp. **Bit-stable across consecutive runs**
+  (per-matchup max-dev 0.00pp, aggregate dev 0.00pp on both decks at
+  n=1000 seed=42). Same-seed re-run JSONs verifiably identical:
+  parallel_results_20260428_145943.json + ..._150015.json (canonical) +
+  parallel_results_20260428_150033.json + ..._150051.json (variant).
+  Pre-1.7 noise floor was per-matchup ±2.5pp and aggregate ±0.6pp;
+  Stage 1.7 collapsed both to 0.00pp by closing the global-random-module
+  third mutation source (naked random.foo() consumers in engine/zones.py,
+  engine/opponent.py, engine/race.py, several handler sites read from
+  subprocess-entropy-initialized global state pre-fix).
+
 - Boros Energy Modern gauntlet (2026-04-28 N=1k seed=42, post-tagger-
-  load-path-unification at commit 199d28e, **NEW DEFINITIVE BASELINE
-  for Phase 3.5 Stages D-K anchoring**): canonical 64.5% field-weighted,
-  variant 78.7% field-weighted, edge ~+14.2pp. Supersedes the 65.8%
-  pre-tagger-fix headline below as the trusted baseline because Stage
-  A/B/C keyword filters now apply to all 14 Modern field opps (not just
-  the 11 .txt-loaded). Pre-tagger-fix: 65.8% canonical / 79.2% variant
+  load-path-unification at commit 199d28e, prior baseline now superseded
+  by post-Stage-1.7 above): canonical 64.5% field-weighted, variant 78.7%
+  field-weighted, edge ~+14.2pp. Supersedes the 65.8% pre-tagger-fix
+  headline below as the trusted baseline because Stage A/B/C keyword
+  filters now apply to all 14 Modern field opps (not just the 11
+  .txt-loaded). Pre-tagger-fix: 65.8% canonical / 79.2% variant
   (parallel_results_20260428_124757.json + ..._124813.json). Post-fix:
   64.5% canonical / 78.7% variant (parallel_results_20260428_125005.json
   + ..._125019.json). Subset-aggregate analysis confirms the shift is
@@ -328,7 +342,7 @@ NOT: combat → main1 → main2 (old broken order)
   Prowess, Domain Zoo, Esper Blink): -4.52pp on stub-share-weighted
   canonical, -0.51pp on .txt-share-weighted canonical (control =
   noise). Per-matchup canonical noise floor (Stage 1.7 residual): ±2.5pp;
-  aggregate noise: ±0.6pp.
+  aggregate noise: ±0.6pp -- both collapsed by Stage 1.7 fix above.
 
 - Boros Energy Modern gauntlet (2026-04-27 N=100k seed=42, post-Phase-3
   partial + canonical-aligned + all bug fixes, prior headline now

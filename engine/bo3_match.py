@@ -175,7 +175,7 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     """
     results = Bo3SetResults(n_matches=n)
     rng = random.Random(seed)
-    
+
     g1_a_wins = 0
     g1_total = 0
     g2_a_wins = 0
@@ -183,41 +183,52 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     g3_a_wins = 0
     g3_total = 0
     g3_count = 0
-    
-    for i in range(n):
-        a_on_play = (i % 2 == 0) if mix_play_draw else True
-        
-        bo3 = run_bo3(
-            apl_a, deck_a, sb_a,
-            apl_b, deck_b, sb_b,
-            sb_plan_a=sb_plan_a,
-            sb_plan_b=sb_plan_b,
-            a_on_play_g1=a_on_play,
-            seed=rng.randint(0, 999_999)
-        )
-        
-        if bo3.winner == 'a':
-            results.a_wins += 1
-        else:
-            results.b_wins += 1
-        results.results.append(bo3)
-        
-        # Track per-game stats
-        games = bo3.game_results
-        if len(games) >= 1:
-            g1_total += 1
-            if games[0].winner == 'a':
-                g1_a_wins += 1
-        if len(games) >= 2:
-            g2_total += 1
-            if games[1].winner == 'a':
-                g2_a_wins += 1
-        if len(games) >= 3:
-            g3_total += 1
-            g3_count += 1
-            if games[2].winner == 'a':
-                g3_a_wins += 1
-    
+
+    # Stage 1.7: scope global random module determinism to this call.
+    # Mirror of the run_match_set fix in engine/match_runner.py — naked
+    # `random.foo()` consumers in engine code (zones.shuffle, opponent.py,
+    # race.py, several handler sites) read from a subprocess-entropy-
+    # initialized global state that differs across subprocess invocations,
+    # breaking determinism in bo3 matchups even with seeded rng instances.
+    saved_global_random_state = random.getstate()
+    random.seed(seed)
+    try:
+        for i in range(n):
+            a_on_play = (i % 2 == 0) if mix_play_draw else True
+
+            bo3 = run_bo3(
+                apl_a, deck_a, sb_a,
+                apl_b, deck_b, sb_b,
+                sb_plan_a=sb_plan_a,
+                sb_plan_b=sb_plan_b,
+                a_on_play_g1=a_on_play,
+                seed=rng.randint(0, 999_999)
+            )
+
+            if bo3.winner == 'a':
+                results.a_wins += 1
+            else:
+                results.b_wins += 1
+            results.results.append(bo3)
+
+            # Track per-game stats
+            games = bo3.game_results
+            if len(games) >= 1:
+                g1_total += 1
+                if games[0].winner == 'a':
+                    g1_a_wins += 1
+            if len(games) >= 2:
+                g2_total += 1
+                if games[1].winner == 'a':
+                    g2_a_wins += 1
+            if len(games) >= 3:
+                g3_total += 1
+                g3_count += 1
+                if games[2].winner == 'a':
+                    g3_a_wins += 1
+    finally:
+        random.setstate(saved_global_random_state)
+
     results.g1_wr_a = round(g1_a_wins / max(1, g1_total) * 100, 1)
     results.g2_wr_a = round(g2_a_wins / max(1, g2_total) * 100, 1)
     results.g3_wr_a = round(g3_a_wins / max(1, g3_total) * 100, 1) if g3_total else 0

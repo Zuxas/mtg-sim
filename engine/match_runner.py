@@ -920,28 +920,43 @@ def run_match_set(
     apl_a_class = type(apl_a)
     apl_b_class = type(apl_b)
 
-    for i in range(n):
-        game_on_play = (i % 2 == 0) if mix_play_draw else on_play
+    # Stage 1.7: scope global random module determinism to this call.
+    # Without this, naked `random.foo()` consumers in engine code
+    # (engine/zones.py:shuffle, engine/opponent.py, engine/race.py,
+    # ~10 sites in engine/card_handlers_verified.py) read from a
+    # subprocess-entropy-initialized global state that differs across
+    # subprocess invocations, breaking determinism even with seeded
+    # rng instances. Empirically: BE mirror n=10 seed=42 produced
+    # avg_turns 5.500 vs 5.800 across two same-process runs without
+    # this guard. Save/restore pattern preserves caller's expectations
+    # about the global random module beyond this function's scope.
+    saved_global_random_state = random.getstate()
+    random.seed(seed)
+    try:
+        for i in range(n):
+            game_on_play = (i % 2 == 0) if mix_play_draw else on_play
 
-        fresh_apl_a = apl_a_class()
-        fresh_apl_b = apl_b_class()
+            fresh_apl_a = apl_a_class()
+            fresh_apl_b = apl_b_class()
 
-        if use_combo_sampler:
-            combo_b = ComboKillSampler(getattr(fresh_apl_b, 'name', 'unknown'), rng)
-            match = _run_match_with_combo(
-                fresh_apl_a, deck_a, combo_b,
-                on_play=game_on_play, max_turns=15, rng=rng
-            )
-        else:
-            match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
-                              on_play=game_on_play,
-                              seed=rng.randint(0, 999999))
+            if use_combo_sampler:
+                combo_b = ComboKillSampler(getattr(fresh_apl_b, 'name', 'unknown'), rng)
+                match = _run_match_with_combo(
+                    fresh_apl_a, deck_a, combo_b,
+                    on_play=game_on_play, max_turns=15, rng=rng
+                )
+            else:
+                match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
+                                  on_play=game_on_play,
+                                  seed=rng.randint(0, 999999))
 
-        if match.won:
-            results.a_wins += 1
-        else:
-            results.b_wins += 1
-        results.kill_turns.append(match.kill_turn)
+            if match.won:
+                results.a_wins += 1
+            else:
+                results.b_wins += 1
+            results.kill_turns.append(match.kill_turn)
+    finally:
+        random.setstate(saved_global_random_state)
 
     results.avg_turns = sum(results.kill_turns) / n if n else 0
     return results

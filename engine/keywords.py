@@ -220,6 +220,91 @@ def get_keywords(card: Card) -> set[str]:
     return found
 
 
+# ---------------------------------------------------------------------------
+# Phase 3.5 Stage C: Protection cluster targeting helpers (2026-04-27)
+# ---------------------------------------------------------------------------
+
+def can_be_targeted_by(target: Card, source: Card = None,
+                       controller_is_opp: bool = True) -> bool:
+    """True if `target` can legally be targeted.
+
+    Stage C v1: filters SHROUD (always) + HEXPROOF (when source is opp-
+    controlled) + PROTECTION (when source provided and matches X).
+
+    Args:
+      target: the Card being targeted
+      source: the Card casting the spell/ability (None = skip protection
+        check; HEXPROOF/SHROUD checks still apply)
+      controller_is_opp: True when our spell targets their creature.
+        HEXPROOF only restricts opp-targeting; shroud restricts both.
+
+    Returns False if targeting illegal, True otherwise.
+    """
+    if KWTag.SHROUD in target.tags:
+        return False
+    if controller_is_opp and KWTag.HEXPROOF in target.tags:
+        return False
+    if source is not None and KWTag.PROTECTION in target.tags:
+        if _protection_blocks(target, source):
+            return False
+    return True
+
+
+def ward_cost(target: Card, controller_is_opp: bool = True) -> int:
+    """Return ward mana cost N if target has WARD and source is opp-
+    controlled. Returns 0 if no ward applies.
+
+    v1 limitation: parses 'Ward N' / 'Ward {N}' from oracle text only.
+    Non-mana ward variants (Pay X life, discard, sacrifice) treated as
+    cost 1 fallback. Logged in IMPERFECTIONS for follow-up.
+    """
+    if not controller_is_opp:
+        return 0
+    if KWTag.WARD not in target.tags:
+        return 0
+    return _parse_ward_cost(target)
+
+
+def _parse_ward_cost(card: Card) -> int:
+    """Extract N from 'Ward N' / 'Ward {N}' oracle text. Returns 1 as
+    conservative default when WARD tag present but cost unparseable."""
+    if not card.oracle_text:
+        return 1
+    m = re.search(r'ward\s+\{?(\d+)\}?', card.oracle_text.lower())
+    return int(m.group(1)) if m else 1
+
+
+def _protection_blocks(target: Card, source) -> bool:
+    """True if target has 'Protection from X' clause and source matches X.
+
+    v1 covers: protection from <color>, from creatures, from multicolored,
+    from everything. Other variants (specific names, instants, spells)
+    return False (conservative) and can be added per-card as needed.
+    """
+    if not target.oracle_text:
+        return False
+    matches = re.findall(r'protection from (\w+)', target.oracle_text.lower())
+    if not matches:
+        return False
+    source_colors = set(getattr(source, 'colors', None) or [])
+    source_types = (getattr(source, 'type_line', None) or "").lower()
+    color_map = {'white': 'W', 'blue': 'U', 'black': 'B',
+                 'red': 'R', 'green': 'G'}
+    for prot in matches:
+        if prot in color_map and color_map[prot] in source_colors:
+            return True
+        if prot == 'creatures' and 'creature' in source_types:
+            return True
+        if prot == 'multicolored' and len(source_colors) > 1:
+            return True
+        if prot == 'everything':
+            return True
+    return False
+
+
+# ---------------------------------------------------------------------------
+
+
 def describe_keywords(card: Card) -> str:
     """Return a human-readable list of keyword abilities detected."""
     kw = {t for t in card.tags if t in {

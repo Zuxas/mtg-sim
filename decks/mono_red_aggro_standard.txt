@@ -1,23 +1,29 @@
-// Mono Red Aggro - tchuco (31/10/25)
-// Event: MTGO Challenge 32, Place: 7
-4 Burnout Bashtronaut
+// Mono Red Aggro - botboy (2026-04-03, top 8)
+// Event: MTGO Standard Challenge 32 #12838105
+// Post-ban build (no Heartfire Hero, no Monstrous Rage)
 4 Burst Lightning
-4 Emberheart Challenger
+1 Fanatical Firebrand
+4 Hearthborn Battler
 4 Hired Claw
-4 Lightning Strike
-18 Mountain
-4 Nova Hellkite
+2 Kellan, Planar Trailblazer
+12 Mountain
+1 Multiversal Passage
+3 Nova Hellkite
+3 Ojer Axonil, Deepest Might
 4 Razorkin Needlehead
-4 Rockface Village
-4 Screaming Nemesis
-1 Shock
-2 Soulstone Sanctuary
-3 Witchstalker Frenzy
+4 Riverpyre Verge
+1 Rockface Village
+4 Scalding Viper
+3 Scorching Shot
+4 Shock
+1 Spirebluff Canal
+4 Steam Vents
+1 Tokka & Rahzar, Terrible Twos
 
 Sideboard
-3 Obliterating Bolt
-1 Shock
-2 Soul-Guide Lantern
-3 Stingerback Terror
-4 Sunspine Lynx
-2 Vengeful Possession
+2 Leyline of the Void
+4 Magebane Lizard
+1 Scorching Shot
+3 Sear
+2 Tokka & Rahzar, Terrible Twos
+3 Twisted Fealty

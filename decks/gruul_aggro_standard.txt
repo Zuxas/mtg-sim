@@ -1,28 +1,33 @@
-// Gruul Aggro - MJ_23 (31/10/24)
-// Event: MTGO Challenge 32, Place: 1
-4 Copperline Gorge
-4 Emberheart Challenger
-4 Heartfire Hero
-3 Innkeeper's Talent
-4 Karplusan Forest
-4 Manifold Mouse
-4 Monastery Swiftspear
-4 Monstrous Rage
-6 Mountain
-2 Questing Druid
+// Gruul (Overlord Ramp) - fudgems (2026-03-28, top 8)
+// Event: MTGO League
+// Post-ban build — this is Gruul Ramp/Overlord, not classic prowess aggro.
+// DB labels it "Gruul Aggro" but it plays like a Hauntwoods/Boilerbilges
+// Overlord midrange shell with Esper Origins and Llanowar Elves.
+4 Badgermole Cub
+2 Calamity, Galloping Inferno
+2 Cavern of Souls
+3 Commercial District
+4 Esper Origins
+2 Fire Magic
+6 Forest
+4 Llanowar Elves
+4 Mountain
+4 Overlord of the Boilerbilges
+4 Overlord of the Hauntwoods
 1 Restless Ridgeline
-1 Rockface Village
-3 Shock
-4 Slickshot Show-Off
-3 Snakeskin Veil
+4 Smuggler's Surprise
+4 Stomping Ground
+2 Summon: Bahamut
 4 Thornspire Verge
-3 Torch the Tower
-2 Turn Inside Out
+2 Vaultborn Tyrant
+4 Vibrance
 
 Sideboard
+1 Fire Magic
 2 Ghost Vacuum
-3 Obliterating Bolt
-4 Pick Your Poison
-1 Scorching Shot
-2 Sunspine Lynx
-3 Urabrask's Forge
+3 Heritage Reclamation
+1 Leatherhead, Swamp Stalker
+3 Sear
+1 Soul-Guide Lantern
+2 Surrak, Elusive Hunter
+2 Ureni, the Song Unending

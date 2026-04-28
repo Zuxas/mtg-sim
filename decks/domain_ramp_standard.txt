@@ -1,37 +1,36 @@
-// Domain Ramp - Tortofelipe (31/10/23)
-// Event: Construído do TorTo (269), Place: 5
-4 Archangel of Wrath
-3 Atraxa, Grand Unifier
-1 Boseiju, Who Endures
-3 Courier's Briefcase
-1 Depopulate
-1 Eiganjo, Seat of the Empire
-4 Forest
-2 Go for the Throat
-3 Herd Migration
-3 Invasion of Zendikar
-1 Island
-3 Jetmir's Garden
-4 Leyline Binding
-2 Mirrex
-2 Plains
-1 Raffine's Tower
-1 Shadow Prophecy
-4 Spara's Headquarters
-4 Sunfall
-3 Swamp
-4 Topiary Stomper
-2 Virtue of Persistence
-4 Ziatora's Proving Ground
+// Sultai Reanimator - yukiro (2026-03-31, 2nd place)
+// Event: MTGO Standard Challenge 64 #12836807
+// Bringer of the Last Gift + Overlord of the Balemurk reanimator shell.
+// Still stored as "domain_ramp_standard" filename for matrix continuity —
+// label in calibrate_matrix.py is "Domain" but deck is Sultai Reanimator.
+2 Ardyn, the Usurper
+1 Awaken the Honored Dead
+2 Bitter Triumph
+2 Breeding Pool
+4 Bringer of the Last Gift
+2 Cavern of Souls
+4 Deceit
+4 Dredger's Insight
+3 Formidable Speaker
+2 Gloomlake Verge
+4 Kavaero, Mind-Bitten
+4 Overgrown Tomb
+3 Overlord of the Balemurk
+4 Requiting Hex
+1 Swamp
+2 Undercity Sewers
+2 Underground Mortuary
+3 Wastewood Verge
+4 Watery Grave
+4 Willowrush Verge
+3 Wistfulness
 
 Sideboard
-1 Destroy Evil
-3 Disdainful Stroke
+2 Deadly Cover-Up
 2 Duress
-1 Farewell
-2 Knockout Blow
-1 Obstinate Baloth
-1 Path of Peril
-1 Shadow Prophecy
-1 Temporary Lockdown
-2 The Cruelty of Gix
+1 Glarb, Calamity's Augur
+2 Intimidation Tactics
+2 Quantum Riddler
+2 Soul-Guide Lantern
+3 Tragic Trajectory
+1 Wistfulness

@@ -1,40 +1,40 @@
-// Dimir Midrange - O_danielakos (31/10/25)
-// Event: MTGO Challenge 32, Place: 5
-2 Bitter Triumph
-2 Cecil, Dark Knight
-4 Deep-Cavern Bat
-4 Enduring Curiosity
-1 Essence Scatter
-1 Faebloom Trick
-4 Floodpits Drowner
-1 Fountainport
+// Dimir Midrange — Bigbrain (placement 1, 2026-04-08)
+// Source: mtg_meta.db deck_id=103203 event='$$Big Brain Games #10 $$'
+1 Ba Sing Se
+2 Breeding Pool
+4 Consult the Star Charts
+4 Deadly Cover-Up
+4 Deceit
+3 Duress
+2 Feed the Cycle
+1 Forest
 4 Gloomlake Verge
-4 Island
-3 Kaito, Bane of Nightmares
-1 Long Goodbye
-2 Multiversal Passage
-1 Phantom Interference
-1 Preacher of the Schism
-2 Restless Reef
+1 Island
+2 Maelstrom Pulse
+1 Mistrise Village
+4 Overgrown Tomb
+4 Requiting Hex
+3 Restless Reef
 2 Shoot the Sheriff
-2 Soulstone Sanctuary
-4 Spyglass Siren
-1 Stab
-1 Starting Town
-5 Swamp
-3 Tishana's Tidebinder
-1 Tragic Trajectory
+3 Stock Up
+2 Superior Spider-Man
+2 Swamp
+3 Three Steps Ahead
+2 Wan Shi Tong, Librarian
+1 Wastewood Verge
 4 Watery Grave
+1 Willowrush Verge
 
 Sideboard
-1 Annul
-2 Duress
-2 Faebloom Trick
-1 Kaito, Bane of Nightmares
-1 Lord Skitter, Sewer King
+1 Ancient Vendetta
+2 Assassin's Trophy
+1 Disdainful Stroke
+1 Flashfreeze
+1 Ghost Vacuum
+1 Heritage Reclamation
+2 Intimidation Tactics
 1 Negate
-1 Qarsi Revenant
-2 Stab
-2 Strategic Betrayal
-1 Tishana's Tidebinder
-1 Tragic Trajectory
+2 Qarsi Revenant
+1 Riverchurn Monument
+1 Soul-Guide Lantern
+1 The Unagi of Kyoshi Island

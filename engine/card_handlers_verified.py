@@ -395,35 +395,21 @@ def _abrade(gs, card):
 
 def _damage_any_helper(gs, dmg):
     """Generic N-damage-to-any-target: kill a killable opp creature,
-    else hit face. Used by Shock / Lightning Strike / Sear / etc.
-
-    Phase 3.5 Stage C (2026-04-27): targeting filtered through
-    can_be_targeted_by -- HEXPROOF and SHROUD creatures excluded from
-    killable set. PROTECTION from <X> not enforced here because
-    helper signature doesn't receive source card; would require
-    refactoring 38 callers. Logged in IMPERFECTIONS as Stage C.5
-    follow-up.
-
-    Face damage unaffected (player isn't a creature; HEXPROOF on
-    permanents only protects that permanent, not the player).
-    """
+    else hit face. Used by Shock / Lightning Strike / Sear / etc."""
     from data.card import Tag
     from engine.match_state import safe_power, safe_toughness
-    from engine.keywords import can_be_targeted_by
     opp = getattr(gs, "_match_opp", None)
     if opp is not None:
         killable = [c for c in opp.zones.battlefield
                     if c.has(Tag.CREATURE) and not c.is_land()
-                    and safe_toughness(c) <= dmg
-                    and can_be_targeted_by(c, source=None,
-                                           controller_is_opp=True)]
+                    and safe_toughness(c) <= dmg]
         if killable:
             t = max(killable, key=lambda c: safe_power(c))
             opp.zones.battlefield.remove(t)
             opp.zones.graveyard.append(t)
             gs._log(f"    {dmg} dmg kills {t.name}")
             return
-    # Face (HEXPROOF/SHROUD don't protect players)
+    # Face
     gs.damage_dealt += dmg
     if opp is not None:
         opp.life -= dmg

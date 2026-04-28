@@ -35,13 +35,23 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
     _db = CardDB()
 
     def build_deck_from_dict(card_dict):
-        """Convert {card_name: qty} dict to list of Card objects."""
+        """Convert {card_name: qty} dict to list of Card objects.
+
+        Calls tag_keywords on every constructed Card so dict-loaded decks
+        (stub path) get the same keyword tagging as .txt-loaded decks
+        (which tag at data/deck.py:176). Pre-fix gap surfaced by Stage C
+        re-execution Amendment A5 (2026-04-28): of 14 Modern field opps,
+        3 use this path (Izzet Prowess, Domain Zoo, Esper Blink) and
+        their cards entered the battlefield without keyword tags from
+        oracle text scanning -- silent no-op for Stages A/B/C filters.
+        """
+        from engine.keywords import tag_keywords
         deck = []
         for card_name, qty in card_dict.items():
             for _ in range(qty):
                 data = _db.get(card_name)
                 if data:
-                    deck.append(Card(
+                    card = Card(
                         name=data.get("name", card_name),
                         mana_cost=data.get("mana_cost", ""),
                         cmc=float(data.get("cmc", 2)),
@@ -50,13 +60,15 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                         power=data.get("power"),
                         toughness=data.get("toughness"),
                         colors=data.get("colors", []),
-                    ))
+                    )
                 else:
-                    deck.append(Card(
+                    card = Card(
                         name=card_name, mana_cost="{1}", cmc=1,
                         type_line="Creature", oracle_text="",
                         power="1", toughness="1", colors=[],
-                    ))
+                    )
+                tag_keywords(card)
+                deck.append(card)
         return deck
 
     # 1. Check unified APL registry

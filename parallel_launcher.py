@@ -3,6 +3,11 @@ parallel_launcher.py — Launch all matchups as independent subprocesses
 
 Format-agnostic. Works for Legacy, Modern, Pioneer, Standard.
 
+Subprocess output layout: data/matchup_jobs/<our_deck_slug>/<opp_slug>.json
+Keyed on (our_deck, opp); see matchup_jobs.matchup_job_path. Prior layout
+keyed on opp only and clobbered between concurrent variant + canonical
+runs (cache-collision-bug-2026-04-27.md).
+
 Usage:
     python parallel_launcher.py --deck "Legacy Humans"   --format legacy
     python parallel_launcher.py --deck "Boros Energy"    --format modern
@@ -13,6 +18,7 @@ Usage:
 import sys, os, json, time, subprocess, argparse
 from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from matchup_jobs import matchup_job_path
 os.makedirs("data/matchup_jobs", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
 
@@ -73,9 +79,8 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
             if proc.poll() is not None:
                 log_f.close()
                 finished.append(opp)
-                safe     = opp.lower().replace(" ", "_").replace("'", "")
-                out_path = f"data/matchup_jobs/{safe}.json"
-                if os.path.exists(out_path):
+                out_path = matchup_job_path(our_deck, opp)
+                if out_path.exists():
                     with open(out_path) as f:
                         r = json.load(f)
                     done.append(r)

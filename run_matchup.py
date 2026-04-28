@@ -8,6 +8,7 @@ Usage:
 """
 import sys, os, json, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from matchup_jobs import matchup_job_path, ensure_parent
 os.makedirs("data/matchup_jobs", exist_ok=True)
 
 
@@ -262,8 +263,7 @@ def main():
     format_name = sys.argv[6]
     mtype       = sys.argv[7]
 
-    safe     = opp_name.lower().replace(" ","_").replace("'","")
-    out_path = f"data/matchup_jobs/{safe}.json"
+    out_path = ensure_parent(matchup_job_path(our_deck, opp_name))
 
     t0     = time.time()
     result = {"opp": opp_name, "our_deck": our_deck, "field_pct": field_pct,

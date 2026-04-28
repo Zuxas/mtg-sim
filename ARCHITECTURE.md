@@ -314,14 +314,30 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
+- Boros Energy Modern gauntlet (2026-04-28 N=1k seed=42, post-tagger-
+  load-path-unification at commit 199d28e, **NEW DEFINITIVE BASELINE
+  for Phase 3.5 Stages D-K anchoring**): canonical 64.5% field-weighted,
+  variant 78.7% field-weighted, edge ~+14.2pp. Supersedes the 65.8%
+  pre-tagger-fix headline below as the trusted baseline because Stage
+  A/B/C keyword filters now apply to all 14 Modern field opps (not just
+  the 11 .txt-loaded). Pre-tagger-fix: 65.8% canonical / 79.2% variant
+  (parallel_results_20260428_124757.json + ..._124813.json). Post-fix:
+  64.5% canonical / 78.7% variant (parallel_results_20260428_125005.json
+  + ..._125019.json). Subset-aggregate analysis confirms the shift is
+  fully attributable to stub-loaded-subset activation (3 matchups: Izzet
+  Prowess, Domain Zoo, Esper Blink): -4.52pp on stub-share-weighted
+  canonical, -0.51pp on .txt-share-weighted canonical (control =
+  noise). Per-matchup canonical noise floor (Stage 1.7 residual): ±2.5pp;
+  aggregate noise: ±0.6pp.
+
 - Boros Energy Modern gauntlet (2026-04-27 N=100k seed=42, post-Phase-3
-  partial + canonical-aligned + all bug fixes, **DEFINITIVE HEADLINE**):
-  65.8% field-weighted (1,400,000 games, 2516s wall, 14 matchups, 0
-  errors). Supersedes 71.5% from commit 0bc20bf (which was on stub
-  canonical + pre-Phase-1+4 engine + double-firing handlers + pre-
-  canonical-alignment). Sample-size validation: 1k preview at 65.6%
-  matched within +/-0.2pp. Cumulative -5.7pp shift attributed to all
-  session work converging:
+  partial + canonical-aligned + all bug fixes, prior headline now
+  superseded by post-tagger-fix above): 65.8% field-weighted (1,400,000
+  games, 2516s wall, 14 matchups, 0 errors). Supersedes 71.5% from
+  commit 0bc20bf (which was on stub canonical + pre-Phase-1+4 engine +
+  double-firing handlers + pre-canonical-alignment). Sample-size
+  validation: 1k preview at 65.6% matched within +/-0.2pp. Cumulative
+  -5.7pp shift attributed to all session work converging:
     Foundation alignment (7e213ea + 0c0f42c)
     Voice + Guide ETB double-firing fix (8fc9b82)
     Match-runner Phase 1 main_phase2 wiring (a31f360)

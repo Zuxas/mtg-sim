@@ -10,4 +10,26 @@ from apl.izzet_prowess_standard import IzzetProwessAPL
 
 
 class IzzetProwessStandardMatchAPL(MatchAPL, IzzetProwessAPL):
-    pass
+    ARCHETYPE = "tempo"
+    SB_PLANS = {
+        "aggro": (
+            ["2 Eddymurk Crab", "1 Fire Magic", "1 Slagstorm", "2 Get Out"],
+            ["2 Wild Ride", "1 Octopus Form", "1 Boomerang Basics", "2 Bounce Off"],
+        ),
+        "control": (
+            ["2 Spell Pierce", "3 Ral, Crackling Wit"],
+            ["2 Bounce Off", "2 Boomerang Basics", "1 Octopus Form"],
+        ),
+        "combo": (
+            ["2 Spell Pierce", "2 Soul-Guide Lantern"],
+            ["2 Wild Ride", "1 Octopus Form", "1 Boomerang Basics"],
+        ),
+        "ramp": (
+            ["2 Spell Pierce", "3 Ral, Crackling Wit"],
+            ["2 Wild Ride", "2 Bounce Off", "1 Octopus Form"],
+        ),
+        "tempo": (
+            ["2 Spell Pierce", "2 Eddymurk Crab", "2 Get Out"],
+            ["2 Wild Ride", "1 Octopus Form", "2 Boomerang Basics", "1 Bounce Off"],
+        ),
+    }

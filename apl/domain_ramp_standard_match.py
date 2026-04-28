@@ -32,6 +32,34 @@ HAYMAKERS   = {ARCHANGEL_OF_WRATH, ATRAXA, HERD_MIGRATION, VIRTUE_PERSISTENCE}
 
 
 class DomainRampStandardMatchAPL(MatchAPL):
+    ARCHETYPE = "ramp"
+    SB_PLANS = {
+        "aggro": (
+            ["1 Destroy Evil", "1 Farewell", "1 Path of Peril",
+             "1 Obstinate Baloth", "1 Temporary Lockdown"],
+            ["2 Duress", "3 Disdainful Stroke"],
+        ),
+        "control": (
+            ["3 Disdainful Stroke", "2 Duress", "2 Knockout Blow",
+             "2 The Cruelty of Gix"],
+            ["1 Depopulate", "4 Sunfall", "2 Go for the Throat",
+             "2 Archangel of Wrath"],
+        ),
+        "combo": (
+            ["3 Disdainful Stroke", "2 Duress", "1 Shadow Prophecy"],
+            ["2 Archangel of Wrath", "2 Go for the Throat", "2 Virtue of Persistence"],
+        ),
+        "ramp": (
+            ["3 Disdainful Stroke", "2 Duress", "1 Farewell"],
+            ["2 Go for the Throat", "1 Depopulate", "2 Archangel of Wrath",
+             "1 Herd Migration"],
+        ),
+        "tempo": (
+            ["2 Duress", "1 Destroy Evil", "1 Path of Peril",
+             "1 Temporary Lockdown"],
+            ["2 Archangel of Wrath", "1 Depopulate", "2 Virtue of Persistence"],
+        ),
+    }
     name = "Domain Ramp Standard"
     win_condition_damage = 20
     max_turns = 15

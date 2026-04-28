@@ -36,6 +36,29 @@ LANDFALL_CREATURES = {BADGERMOLE_CUB, ICETILL_EXPLORER, SAZHS_CHOCOBO,
 
 
 class MonoGreenLandfallStandardMatchAPL(MatchAPL):
+    ARCHETYPE = "ramp"
+    SB_PLANS = {
+        "control": (
+            ["4 Mossborn Hydra", "2 Pawpatch Formation", "1 Archdruid's Charm"],
+            ["3 Esper Origins", "3 Sapling Nursery", "1 Meltstrider's Resolve"],
+        ),
+        "aggro": (
+            ["2 Eumidian Terrabotanist", "4 Mossborn Hydra", "1 Scrapshooter"],
+            ["3 Esper Origins", "3 Sapling Nursery", "1 Meltstrider's Resolve"],
+        ),
+        "combo": (
+            ["2 Soul-Guide Lantern", "2 Torpor Orb", "1 Archdruid's Charm"],
+            ["3 Esper Origins", "2 Sapling Nursery"],
+        ),
+        "ramp": (
+            ["4 Mossborn Hydra", "2 Torpor Orb", "2 Pawpatch Formation"],
+            ["3 Esper Origins", "3 Sapling Nursery", "2 Meltstrider's Resolve"],
+        ),
+        "tempo": (
+            ["4 Mossborn Hydra", "2 Pawpatch Formation", "1 Scrapshooter"],
+            ["3 Esper Origins", "2 Sapling Nursery", "2 Meltstrider's Resolve"],
+        ),
+    }
     name = "Mono Green Landfall (Standard)"
     win_condition_damage = 20
     max_turns = 10
@@ -102,17 +125,51 @@ class MonoGreenLandfallStandardMatchAPL(MatchAPL):
                     gs.cast_spell(c)
                     break
 
-        # 7. Meltstrider's Resolve (pump spell for combat)
+        # 7. Meltstrider's Resolve — Aura "Enchant creature you control.
+        # When this Aura enters, enchanted creature fights up to one
+        # target creature an opp controls. Enchanted creature gets
+        # +0/+2 and can't be blocked by more than one creature."
+        # Effect: fight an opp creature (winner is our biggest; if we
+        # win the fight, opp creature dies), then our creature gets
+        # +0/+2 and evasion.
         my_creatures = [x for x in gs.zones.battlefield
                         if not x.is_land() and x.has(Tag.CREATURE)]
-        if my_creatures:
+        if my_creatures and opponent:
+            opp_creatures = [x for x in opponent.zones.battlefield
+                              if not x.is_land() and x.has(Tag.CREATURE)]
             for c in list(gs.zones.hand):
                 if c.name == MELTSTRIDERS_RESOLVE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    attacker = max(my_creatures, key=lambda x: safe_power(x))
                     gs.mana_pool.pay(c.mana_cost, c.cmc)
                     gs.zones.hand.remove(c)
-                    gs.zones.graveyard.append(c)
-                    gs.noncreature_spells_this_turn += 1
-                    gs._log(f"  Meltstrider's Resolve (pump)")
+                    # Put Aura on battlefield attached to attacker
+                    gs.zones.battlefield.append(c)
+                    c.turn_entered = gs.turn
+                    # Fight: pick opp creature we can kill
+                    target = None
+                    for opp_cr in sorted(opp_creatures,
+                                          key=lambda x: -safe_power(x)):
+                        if safe_power(attacker) >= safe_toughness(opp_cr):
+                            target = opp_cr
+                            break
+                    if target:
+                        # Fight — both deal damage equal to power to each other
+                        opp_dmg = safe_power(attacker)
+                        my_dmg = safe_power(target)
+                        if opp_dmg >= safe_toughness(target):
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                            gs._log(f"  Meltstrider's Resolve: {attacker.name}"
+                                    f" fights, kills {target.name}")
+                        if my_dmg >= safe_toughness(attacker) + 2:  # +0/+2 Aura
+                            # Attacker dies too
+                            gs.zones.battlefield.remove(attacker)
+                            gs.zones.graveyard.append(attacker)
+                            gs._log(f"    (attacker {attacker.name} dies)")
+                    # +0/+2 + evasion pump applied as +1 counter proxy
+                    if attacker in gs.zones.battlefield:
+                        attacker.counters = (attacker.counters or 0) + 1
+                        gs._log(f"    {attacker.name}: +1 counter (Aura pump)")
                     break
 
         # 8. Any remaining creatures

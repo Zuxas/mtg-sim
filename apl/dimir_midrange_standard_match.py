@@ -33,6 +33,29 @@ REMOVAL    = {BITTER_TRIUMPH, SHOOT_THE_SHERIFF, LONG_GOODBYE, ESSENCE_SCATTER}
 
 
 class DimirMidrangeStandardMatchAPL(MatchAPL):
+    ARCHETYPE = "midrange"
+    SB_PLANS = {
+        "aggro": (
+            ["2 Stab", "1 Tragic Trajectory", "1 Lord Skitter, Sewer King"],
+            ["2 Deep-Cavern Bat", "1 Floodpits Drowner", "1 Essence Scatter"],
+        ),
+        "control": (
+            ["2 Duress", "1 Negate", "1 Annul", "2 Strategic Betrayal"],
+            ["2 Shoot the Sheriff", "2 Stab", "2 Faebloom Trick"],
+        ),
+        "combo": (
+            ["2 Duress", "1 Negate", "1 Annul", "1 Qarsi Revenant"],
+            ["2 Shoot the Sheriff", "1 Tragic Trajectory", "2 Faebloom Trick"],
+        ),
+        "ramp": (
+            ["2 Duress", "1 Negate", "1 Annul"],
+            ["2 Shoot the Sheriff", "1 Tragic Trajectory", "1 Bitter Triumph"],
+        ),
+        "tempo": (
+            ["2 Stab", "1 Tragic Trajectory", "2 Strategic Betrayal"],
+            ["1 Long Goodbye", "2 Faebloom Trick", "2 Deep-Cavern Bat"],
+        ),
+    }
     name = "Dimir Midrange Standard"
     win_condition_damage = 20
     max_turns = 12

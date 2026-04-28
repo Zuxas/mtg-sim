@@ -1,13 +1,25 @@
 """
-apl/gruul_aggro_standard_match.py — Match-aware Gruul Aggro APL (Standard)
+apl/gruul_aggro_standard_match.py — Gruul Overlord Ramp (Standard)
 
-Gruul prowess-style aggro deck:
-1. T1 Heartfire Hero or Swiftspear (haste)
-2. Pump spells (Monstrous Rage, Turn Inside Out) trigger prowess en masse
-3. Slickshot Show-Off: flying, prowess, 3-power with any noncreature spell
-4. Torch the Tower / Shock as removal OR face burn
-5. Snakeskin Veil protects key threats + pumps
-6. Emberheart Challenger: 2/2 haste, draw on attack
+Current-meta Gruul "Aggro" is actually Gruul Overlord Ramp — fudgems
+2026-03-28 list. Post-ban, post-rotation shell.
+
+Plan:
+  T1  Llanowar Elves (mana dork for T2 ramp)
+  T2  Badgermole Cub (landfall grower) or Esper Origins (scry+ramp?)
+  T3  Overlord of the Hauntwoods (impending = Saga chapters, or hard
+      cast = 6/6 flying) or Vibrance (anthem)
+  T4  Overlord of the Boilerbilges (4/5 trample, impending damage)
+  T5+ Calamity, Galloping Inferno (5/5 haste trample, copy spells)
+      Vaultborn Tyrant (7/7 flying — reanimator-ish, life gain)
+      Summon: Bahamut (big spell/creature — FF crossover set)
+
+Removal: Fire Magic (2 dmg to creature/player tiered), Smuggler's
+Surprise (protection / disruption).
+
+This is NOT classic Gruul Aggro — it's a midrange/ramp deck with
+big creature finishers. ARCHETYPE updated to "ramp" so opponent
+sideboard plans pull the vs-ramp tuple, not vs-aggro.
 """
 from typing import Optional
 from data.card import Card, Tag
@@ -15,163 +27,174 @@ from engine.game_state import GameState
 from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
 
-# Card name constants
-HEARTFIRE_HERO     = "Heartfire Hero"
-SWIFTSPEAR         = "Monastery Swiftspear"
-MANIFOLD_MOUSE     = "Manifold Mouse"
-EMBERHEART         = "Emberheart Challenger"
-SLICKSHOT          = "Slickshot Show-Off"
-QUESTING_DRUID     = "Questing Druid"
-MONSTROUS_RAGE     = "Monstrous Rage"
-TURN_INSIDE_OUT    = "Turn Inside Out"
-SHOCK              = "Shock"
-TORCH_THE_TOWER    = "Torch the Tower"
-SNAKESKIN_VEIL     = "Snakeskin Veil"
-INNKEEPERS_TALENT  = "Innkeeper's Talent"
-OBLITERATING_BOLT  = "Obliterating Bolt"
-SUNSPINE_LYNX      = "Sunspine Lynx"
 
-ONE_DROPS = {HEARTFIRE_HERO, SWIFTSPEAR}
-PUMP_SPELLS = {MONSTROUS_RAGE, TURN_INSIDE_OUT, SNAKESKIN_VEIL}
-BURN_SPELLS = {SHOCK, TORCH_THE_TOWER, OBLITERATING_BOLT}
-REMOVAL_SPELLS = {SHOCK, TORCH_THE_TOWER, OBLITERATING_BOLT}
+# Ramp / early play
+LLANOWAR_ELVES      = "Llanowar Elves"
+BADGERMOLE_CUB      = "Badgermole Cub"
+ESPER_ORIGINS       = "Esper Origins"
+VIBRANCE            = "Vibrance"
+
+# Removal
+FIRE_MAGIC          = "Fire Magic"
+SMUGGLERS_SURPRISE  = "Smuggler's Surprise"
+
+# Overlord finishers (Duskmourn cycle — impending sagas that flip
+# to big creatures)
+OVERLORD_HAUNTWOODS = "Overlord of the Hauntwoods"
+OVERLORD_BOILER     = "Overlord of the Boilerbilges"
+
+# Top-end bombs
+CALAMITY            = "Calamity, Galloping Inferno"
+VAULTBORN_TYRANT    = "Vaultborn Tyrant"
+BAHAMUT             = "Summon: Bahamut"
+
+
+CREATURES = {
+    LLANOWAR_ELVES, BADGERMOLE_CUB,
+    OVERLORD_HAUNTWOODS, OVERLORD_BOILER,
+    CALAMITY, VAULTBORN_TYRANT, BAHAMUT,
+}
+REMOVAL_SPELLS = {FIRE_MAGIC}
 
 
 class GruulAggroStandardMatchAPL(MatchAPL):
-    name = "Gruul Aggro (Standard)"
+    ARCHETYPE = "ramp"
+    name = "Gruul Overlord Ramp (Standard)"
     win_condition_damage = 20
-    max_turns = 8
+    max_turns = 12
+
+    # Sideboard: 1 Fire Magic, 2 Ghost Vacuum, 3 Heritage Reclamation,
+    # 1 Leatherhead, 3 Sear, 1 Soul-Guide Lantern, 2 Surrak, 2 Ureni.
+    # All sb_out cards must be in MAINBOARD.
+    SB_PLANS = {
+        "aggro": (
+            ["1 Fire Magic", "3 Sear", "1 Soul-Guide Lantern",
+             "2 Surrak, Elusive Hunter"],
+            ["2 Vaultborn Tyrant", "2 Summon: Bahamut",
+             "3 Smuggler's Surprise"],
+        ),
+        "control": (
+            ["2 Ghost Vacuum", "3 Heritage Reclamation",
+             "2 Ureni, the Song Unending"],
+            ["2 Fire Magic", "4 Smuggler's Surprise",
+             "1 Restless Ridgeline"],
+        ),
+        "combo": (
+            ["3 Heritage Reclamation", "1 Soul-Guide Lantern",
+             "2 Ghost Vacuum"],
+            ["2 Fire Magic", "4 Smuggler's Surprise"],
+        ),
+        "ramp": (
+            ["2 Ureni, the Song Unending", "2 Surrak, Elusive Hunter",
+             "1 Soul-Guide Lantern"],
+            ["2 Fire Magic", "3 Smuggler's Surprise"],
+        ),
+        "tempo": (
+            ["1 Fire Magic", "3 Sear", "2 Surrak, Elusive Hunter"],
+            ["2 Vaultborn Tyrant", "3 Smuggler's Surprise",
+             "1 Restless Ridgeline"],
+        ),
+    }
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4:
             return True
         lands = sum(1 for c in hand if c.is_land())
-        creatures = sum(1 for c in hand if c.has(Tag.CREATURE))
-        pumps = sum(1 for c in hand if c.name in PUMP_SPELLS)
-        burns = sum(1 for c in hand if c.name in BURN_SPELLS)
-        if lands == 0:
+        ramp = sum(1 for c in hand if c.name == LLANOWAR_ELVES)
+        has_payoff = any(c.name in {OVERLORD_HAUNTWOODS, OVERLORD_BOILER,
+                                     CALAMITY, VAULTBORN_TYRANT, BAHAMUT}
+                          for c in hand)
+        if lands < 2 or lands > 5:
             return False
-        if lands >= 4:
-            return False
-        # Need a creature + action
-        if creatures >= 1 and (pumps + burns >= 1):
+        if ramp >= 1 and (has_payoff or lands >= 3):
             return True
-        if lands <= 2 and creatures >= 2:
+        if lands >= 3 and has_payoff:
             return True
         return mulligans >= 2
 
     def bottom(self, hand, n):
         lands = sorted([c for c in hand if c.is_land()], key=lambda c: c.name)
         spells = sorted([c for c in hand if not c.is_land()],
-                        key=lambda c: -getattr(c, 'cmc', 0))
-        pool = lands[2:] + spells
-        return pool[:n]
+                         key=lambda c: -getattr(c, 'cmc', 0))
+        return (lands[3:] + spells)[:n]
 
     def main_phase(self, gs):
         self.main_phase_match(gs, None)
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
-        """Prowess aggro: deploy threats, pump, burn."""
+        """Ramp → impending Overlord → big bomb."""
         self._play_land_if_able(gs)
         gs.tap_lands()
 
-        # 1. Removal on opponent's biggest creature first
+        # 1. Spot removal on opp's biggest creature
         if opponent:
-            self._try_removal(gs, opponent)
+            self._use_removal(gs, opponent)
 
-        # 2. Deploy one-drops (haste creatures first)
-        for name in (HEARTFIRE_HERO, SWIFTSPEAR):
+        # 2. T1 Llanowar Elves
+        for c in list(gs.zones.hand):
+            if c.name == LLANOWAR_ELVES and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                break
+
+        # 3. T2 Badgermole Cub (landfall grower — gets +1/+1 every
+        # subsequent land drop via on_landfall hook)
+        for c in list(gs.zones.hand):
+            if c.name == BADGERMOLE_CUB and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                break
+
+        # 4. Esper Origins / Vibrance (enchantment anthem / draw)
+        for name in (ESPER_ORIGINS, VIBRANCE):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     break
 
-        # 3. Deploy Manifold Mouse (menace + pump)
+        # 5-6. Overlord cycle — prefer impending cast (cheaper) when
+        # we can't afford hard-cast. ETB fires either way. Hauntwoods
+        # impending = 3 mana (vs 5 hard), Boilerbilges = 4 (vs 6).
+        for name in (OVERLORD_HAUNTWOODS, OVERLORD_BOILER):
+            for c in list(gs.zones.hand):
+                if c.name != name:
+                    continue
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                else:
+                    # Try impending cast as fallback
+                    gs.cast_spell_impending(c)
+                break
+
+        # 7. Calamity — 5/5 haste trample, copies spells
         for c in list(gs.zones.hand):
-            if c.name == MANIFOLD_MOUSE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+            if c.name == CALAMITY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
                 break
 
-        # 4. Emberheart Challenger (2/2 haste, draw on attack)
-        for c in list(gs.zones.hand):
-            if c.name == EMBERHEART and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 5. Slickshot Show-Off (flying prowess)
-        for c in list(gs.zones.hand):
-            if c.name == SLICKSHOT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 6. Innkeeper's Talent (enchantment value)
-        for c in list(gs.zones.hand):
-            if c.name == INNKEEPERS_TALENT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 7. Questing Druid
-        for c in list(gs.zones.hand):
-            if c.name == QUESTING_DRUID and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 7b. Sunspine Lynx (creature, cast when able)
-        for c in list(gs.zones.hand):
-            if c.name == SUNSPINE_LYNX and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 8. Pump spells — cast pre-combat to trigger prowess
-        for name in (MONSTROUS_RAGE, TURN_INSIDE_OUT):
-            my_creatures = [x for x in gs.zones.battlefield
-                            if not x.is_land() and x.has(Tag.CREATURE)]
-            if not my_creatures:
-                break
+        # 8. Vaultborn Tyrant / Summon: Bahamut — top-end
+        for name in (VAULTBORN_TYRANT, BAHAMUT):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.mana_pool.pay(c.mana_cost, c.cmc)
-                    gs.zones.hand.remove(c)
-                    gs.zones.graveyard.append(c)
-                    gs.noncreature_spells_this_turn += 1
-                    gs._log(f"  {c.name} (pump + prowess trigger)")
+                    gs.cast_spell(c)
                     break
 
-        # 9. Burn face with remaining mana
-        for c in list(gs.zones.hand):
-            if c.name not in BURN_SPELLS:
-                continue
-            if not gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                continue
-            dmg = 3 if c.name == OBLITERATING_BOLT else 2  # Bolt = 3, Shock/Torch = 2
-            gs.mana_pool.pay(c.mana_cost, c.cmc)
-            gs.zones.hand.remove(c)
-            gs.zones.graveyard.append(c)
-            gs.damage_dealt += dmg
-            gs.noncreature_spells_this_turn += 1
-            gs._log(f"  {c.name} face: {dmg} ({gs.damage_dealt} total)")
-
-        # 10. Any remaining creatures
+        # 9. Any remaining creature
         for c in list(gs.zones.hand):
             if c.has(Tag.CREATURE) and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
 
-    def _try_removal(self, gs: GameState, opponent: GameState):
-        """Use Shock/Torch on opponent's biggest creature."""
+    def _use_removal(self, gs, opponent):
         opp_creatures = [c for c in opponent.zones.battlefield
-                         if not c.is_land() and c.has(Tag.CREATURE)]
+                          if not c.is_land() and c.has(Tag.CREATURE)]
         if not opp_creatures:
             return
         target = max(opp_creatures, key=lambda c: safe_power(c))
-        if safe_power(target) < 2:
+        # Fire Magic: 2 dmg to creature/PW. Kills toughness <= 2.
+        if safe_toughness(target) > 2:
             return
         for c in list(gs.zones.hand):
-            if c.name not in REMOVAL_SPELLS:
+            if c.name != FIRE_MAGIC:
                 continue
             if not gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                continue
-            dmg = 3 if c.name == OBLITERATING_BOLT else 2  # Bolt = 3, Shock/Torch = 2
-            if dmg < safe_toughness(target):
                 continue
             gs.mana_pool.pay(c.mana_cost, c.cmc)
             gs.zones.hand.remove(c)
@@ -180,7 +203,7 @@ class GruulAggroStandardMatchAPL(MatchAPL):
             if target in opponent.zones.battlefield:
                 opponent.zones.battlefield.remove(target)
                 opponent.zones.graveyard.append(target)
-            gs._log(f"  {c.name} -> kill {target.name}")
+            gs._log(f"  Fire Magic: kill {target.name}")
             return
 
     def declare_attackers(self, gs, opponent):
@@ -192,12 +215,30 @@ class GruulAggroStandardMatchAPL(MatchAPL):
                 continue
             if getattr(c, 'tapped', False):
                 continue
-            if c.has(Tag.CREATURE):
-                attackers.append(c)
+            if not c.has(Tag.CREATURE):
+                continue
+            # Llanowar Elves stays home as mana source
+            if c.name == LLANOWAR_ELVES:
+                continue
+            attackers.append(c)
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
-        return {}  # aggro never blocks — race
+        assignments = {}
+        if not attackers:
+            return assignments
+        blockers = [c for c in gs.zones.battlefield
+                     if c.has(Tag.CREATURE) and not c.is_land()
+                     and not getattr(c, 'tapped', False)
+                     and c.name != LLANOWAR_ELVES]
+        if not blockers:
+            return assignments
+        biggest_att = max(attackers, key=lambda c: safe_power(c))
+        if safe_power(biggest_att) >= 3:
+            best_blocker = max(blockers, key=lambda c: safe_toughness(c))
+            if safe_toughness(best_blocker) > safe_power(biggest_att):
+                assignments[id(biggest_att)] = [best_blocker]
+        return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
         return None
@@ -206,7 +247,17 @@ class GruulAggroStandardMatchAPL(MatchAPL):
         pass
 
     def _play_land_if_able(self, gs):
+        """Prefer untapped duals and dual lands for quick development."""
         lands = [c for c in gs.zones.hand if c.is_land()]
         if not lands or gs.land_played:
             return
-        gs.play_land(lands[0])
+        def score(c):
+            n = (c.name or '').lower()
+            if 'cavern of souls' in n:
+                return 0
+            if 'stomping ground' in n or 'thornspire' in n or 'commercial' in n:
+                return 1
+            if 'forest' in n or 'mountain' in n:
+                return 2
+            return 3
+        gs.play_land(min(lands, key=score))

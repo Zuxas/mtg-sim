@@ -16,27 +16,61 @@ from engine.game_state import GameState
 from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
 
-# Card name constants
-SWIFTSPEAR          = "Monastery Swiftspear"
-KUMANO              = "Kumano Faces Kakkazan"
-PHOENIX_CHICK       = "Phoenix Chick"
-CHARMING_SCOUNDREL  = "Charming Scoundrel"
-GODDRIC             = "Goddric, Cloaked Reveler"
-SQUEE               = "Squee, Dubious Monarch"
-BLOODTHIRSTY_ADV    = "Bloodthirsty Adversary"
-LIGHTNING_STRIKE    = "Lightning Strike"
-PLAY_WITH_FIRE      = "Play with Fire"
-MONSTROUS_RAGE      = "Monstrous Rage"
-WITCHSTALKER_FRENZY = "Witchstalker Frenzy"
-FELDON              = "Feldon, Ronom Excavator"
-VOLDAREN_EPICURE    = "Voldaren Epicure"
+# Card name constants — post-ban Leyline of Resonance Heroic build
+# (Arkany1, MTGO 2026-04-18). Key plan: T0 Leyline of Resonance in
+# opening hand, T1 Cheeky House-Mouse or Stadium Headliner, then
+# pump-spell storm via Turn Inside Out / Full Bore / Honor — each
+# spell gets copied by Leyline for double-pump prowess damage.
+CHEEKY_HOUSE_MOUSE  = "Cheeky House-Mouse"      # 1/1 haste
+STADIUM_HEADLINER   = "Stadium Headliner"       # 2-drop haste
+EMBERHEART          = "Emberheart Challenger"   # 2/2 haste prowess
+BURNOUT_BASHTRONAUT = "Burnout Bashtronaut"     # 2/2 haste
+SLICKSHOT           = "Slickshot Show-Off"      # 3/1 flying prowess
+LEYLINE_RESONANCE   = "Leyline of Resonance"    # 0-cost spell-copier
+FULL_BORE           = "Full Bore"               # pump
+HONOR               = "Honor"                   # pump
+MIGHT_OF_MEEK       = "Might of the Meek"       # pump for 1s
+TURN_INSIDE_OUT     = "Turn Inside Out"         # +3/-3 reach
+BURST_LIGHTNING     = "Burst Lightning"         # burn
 
-ONE_DROPS = {SWIFTSPEAR, KUMANO, PHOENIX_CHICK, VOLDAREN_EPICURE}
-BURN_SPELLS = {LIGHTNING_STRIKE, PLAY_WITH_FIRE}
-REMOVAL_SPELLS = {LIGHTNING_STRIKE, PLAY_WITH_FIRE, WITCHSTALKER_FRENZY}
+ONE_DROPS = {CHEEKY_HOUSE_MOUSE}
+BURN_SPELLS = {BURST_LIGHTNING}
+# No mainboard creature removal — deck goes under with pump and burn.
+# Sideboard has Lightning Helix + Get Lost, added for post-board games.
+REMOVAL_SPELLS: set = set()
+PUMP_SPELLS = {FULL_BORE, HONOR, MIGHT_OF_MEEK, TURN_INSIDE_OUT}
 
 
 class BorosAggroStandardMatchAPL(MatchAPL):
+    ARCHETYPE = "aggro"
+    # SB_PLANS verified against Arkany1 2026-04-18 Boros Heroic list.
+    # Sideboard: 2 Get Lost, 3 Lightning Helix, 4 Magebane Lizard,
+    # 3 Rest in Peace, 3 Sheltered by Ghosts.
+    SB_PLANS = {
+        "control": (
+            ["3 Lightning Helix", "3 Sheltered by Ghosts",
+             "2 Get Lost"],
+            ["4 Full Bore", "2 Might of the Meek", "2 Cheeky House-Mouse"],
+        ),
+        "aggro": (
+            ["4 Magebane Lizard", "3 Lightning Helix"],
+            ["4 Full Bore", "2 Might of the Meek", "1 Turn Inside Out"],
+        ),
+        "combo": (
+            ["3 Rest in Peace", "2 Get Lost", "3 Lightning Helix"],
+            ["4 Full Bore", "2 Might of the Meek", "2 Cheeky House-Mouse"],
+        ),
+        "ramp": (
+            ["4 Magebane Lizard", "3 Lightning Helix",
+             "2 Get Lost"],
+            ["4 Full Bore", "2 Might of the Meek", "3 Honor"],
+        ),
+        "tempo": (
+            ["3 Lightning Helix", "3 Sheltered by Ghosts",
+             "2 Get Lost"],
+            ["4 Full Bore", "2 Might of the Meek", "2 Cheeky House-Mouse"],
+        ),
+    }
     name = "Boros Aggro (Standard)"
     win_condition_damage = 20
     max_turns = 8
@@ -70,78 +104,92 @@ class BorosAggroStandardMatchAPL(MatchAPL):
         self.main_phase_match(gs, None)
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
-        """Boros aggro: deploy hasty threats, burn face or remove blockers."""
+        """Boros Heroic: Leyline of Resonance (free in opening hand —
+        copies every spell targeting our creatures) + one-drops that
+        grow from the pump storm. Turn Inside Out / Full Bore / Honor
+        each get doubled by Leyline for massive prowess bursts."""
+        # Leyline of Resonance enters from hand for free at game start —
+        # cast it before the land drop on turn 1.
+        for c in list(gs.zones.hand):
+            if c.name == LEYLINE_RESONANCE:
+                gs.zones.hand.remove(c)
+                gs.zones.battlefield.append(c)
+                c.turn_entered = gs.turn
+                gs._log("  Leyline of Resonance: free ETB (spell-copier online)")
+                break
+
         self._play_land_if_able(gs)
         gs.tap_lands()
 
-        # 1. Removal on opponent's biggest creature
-        if opponent:
-            self._try_removal(gs, opponent)
-
-        # 2. Deploy one-drops (haste priority)
-        for name in (SWIFTSPEAR, KUMANO, PHOENIX_CHICK):
+        # 1. Deploy 1-drop haste creatures (Cheeky House-Mouse)
+        for name in (CHEEKY_HOUSE_MOUSE,):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     break
 
-        # 2b. Voldaren Epicure (1-drop, creates blood token)
-        for c in list(gs.zones.hand):
-            if c.name == VOLDAREN_EPICURE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                gs._log(f"  Voldaren Epicure ETB: create Blood token")
-                break
-
-        # 3. Charming Scoundrel (T2 haste + treasure/rummage)
-        for c in list(gs.zones.hand):
-            if c.name == CHARMING_SCOUNDREL and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 4. Bloodthirsty Adversary (2/2 haste, can recast burn from GY)
-        for c in list(gs.zones.hand):
-            if c.name == BLOODTHIRSTY_ADV and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 5. Squee (2/1 haste, creates goblin tokens)
-        for c in list(gs.zones.hand):
-            if c.name == SQUEE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 5b. Feldon, Ronom Excavator (creature, cast when mana available)
-        for c in list(gs.zones.hand):
-            if c.name == FELDON and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 6. Goddric (4/4, celebrant = 3/3 haste dragon)
-        for c in list(gs.zones.hand):
-            if c.name == GODDRIC and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
-
-        # 7. Pump spells pre-combat (prowess triggers)
-        my_creatures = [x for x in gs.zones.battlefield
-                        if not x.is_land() and x.has(Tag.CREATURE)]
-        if my_creatures:
+        # 2. Deploy 2-drops — priority Stadium Headliner (fast clock),
+        # then Emberheart (2/2 haste prowess), then Burnout Bashtronaut
+        for name in (STADIUM_HEADLINER, EMBERHEART, BURNOUT_BASHTRONAUT):
             for c in list(gs.zones.hand):
-                if c.name == MONSTROUS_RAGE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    break
+
+        # 3. Slickshot Show-Off (3-drop flying prowess — finisher)
+        for c in list(gs.zones.hand):
+            if c.name == SLICKSHOT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                break
+
+        # 4. Pump spells pre-combat. Each pump targets a creature — if
+        # Leyline of Resonance is in play, the spell is copied for double
+        # effect. The MONSTROUS_RAGE helper was replaced wholesale for
+        # this deck; we loop through PUMP_SPELLS in order of best payoff.
+        my_creatures = [x for x in gs.zones.battlefield
+                        if not x.is_land() and x.has(Tag.CREATURE)
+                        and not getattr(x, 'tapped', False)
+                        and not getattr(x, 'summoning_sickness', False)]
+        has_leyline = any(c.name == LEYLINE_RESONANCE
+                           for c in gs.zones.battlefield)
+        if my_creatures:
+            for pump_name in (TURN_INSIDE_OUT, FULL_BORE,
+                              HONOR, MIGHT_OF_MEEK):
+                for c in list(gs.zones.hand):
+                    if c.name == pump_name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.mana_pool.pay(c.mana_cost, c.cmc)
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
+                        gs.noncreature_spells_this_turn += 1
+                        # Pump the strongest attacker; Leyline copies
+                        # the effect so add 2 counters instead of 1.
+                        target = max(my_creatures, key=lambda x: safe_power(x))
+                        bump = 2 if has_leyline else 1
+                        target.counters = (target.counters or 0) + bump
+                        tag = " (Leyline×2)" if has_leyline else ""
+                        gs._log(f"  {pump_name} on {target.name}: +{bump}"
+                                f"{tag}")
+                        break
+            # Dead code path — old Monstrous Rage loop retained as
+            # no-op shim so the rest of the method still parses.
+            for c in list(gs.zones.hand):
+                if False:  # never fires, placeholder
                     gs.mana_pool.pay(c.mana_cost, c.cmc)
                     gs.zones.hand.remove(c)
                     gs.zones.graveyard.append(c)
                     gs.noncreature_spells_this_turn += 1
-                    gs._log(f"  Monstrous Rage (pump + prowess)")
+                    target = max(my_creatures, key=lambda x: safe_power(x))
+                    target.counters = (target.counters or 0) + 1
+                    gs._log(f"  Monstrous Rage on {target.name} (+1 counter)")
                     break
 
-        # 8. Burn face with remaining mana
+        # 8. Burst Lightning face with remaining mana (base 2 dmg).
         for c in list(gs.zones.hand):
             if c.name not in BURN_SPELLS:
                 continue
             if not gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 continue
-            dmg = 3 if c.name == LIGHTNING_STRIKE else 2
+            dmg = 2  # Burst Lightning unkicked
             gs.mana_pool.pay(c.mana_cost, c.cmc)
             gs.zones.hand.remove(c)
             gs.zones.graveyard.append(c)
@@ -155,7 +203,7 @@ class BorosAggroStandardMatchAPL(MatchAPL):
                 gs.cast_spell(c)
 
     def _try_removal(self, gs: GameState, opponent: GameState):
-        """Use Lightning Strike / Play with Fire / Witchstalker Frenzy on threats."""
+        """Post-board only: Lightning Helix / Get Lost come in from SB."""
         opp_creatures = [c for c in opponent.zones.battlefield
                          if not c.is_land() and c.has(Tag.CREATURE)]
         if not opp_creatures:
@@ -168,15 +216,8 @@ class BorosAggroStandardMatchAPL(MatchAPL):
                 continue
             if not gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 continue
-            # Determine damage
-            if c.name == LIGHTNING_STRIKE:
-                dmg = 3
-            elif c.name == PLAY_WITH_FIRE:
-                dmg = 2
-            elif c.name == WITCHSTALKER_FRENZY:
-                dmg = 4  # Frenzy deals 4 to creature
-            else:
-                dmg = 2
+            # Determine damage — post-board SB spells only (Helix=3)
+            dmg = 3 if c.name == "Lightning Helix" else 2
             if dmg < safe_toughness(target):
                 continue
             gs.mana_pool.pay(c.mana_cost, c.cmc)

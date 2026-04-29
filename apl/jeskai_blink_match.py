@@ -32,6 +32,7 @@ EPHEMERATE = "Ephemerate"
 TEFERI     = "Teferi, Time Raveler"
 WRATH      = "Wrath of the Skies"
 MARCH      = "March of Otherworldly Light"
+FABLE      = "Fable of the Mirror-Breaker"
 
 ETB_CREATURES = {SOLITUDE, PHLAGE, QUANTUM, CASEY}
 REMOVAL = {SOLITUDE, GALVANIC, PRISMATIC, CONSIGN, MARCH}
@@ -374,6 +375,44 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                                 opponent.zones.exile.append(target)
                             gs._log(f"  March: exile {target.name} (pitched {pitch_count})")
                         break
+
+        # 10b. Prismatic Ending ({X}{W}) — exile small opp permanent
+        # Pre-2026-04-29: never cast despite being in REMOVAL set; 2 copies
+        # rotted in hand each game. Now: target the smallest annoying opp
+        # nonland permanent (X = its MV). Common X=1 hits 1-drops like
+        # Ocelot/Ajani/Ragavan/Static Prison.
+        if opponent:
+            opp_perms = [x for x in opponent.zones.battlefield
+                         if not x.is_land()]
+            if opp_perms:
+                # Pick lowest-MV target (cheapest cast); often kills
+                # high-priority disruption like Static Prison MV=2.
+                target = min(opp_perms, key=lambda x: getattr(x, 'cmc', 99))
+                tgt_mv = int(getattr(target, 'cmc', 99))
+                cost = tgt_mv + 1  # X + W
+                for c in list(gs.zones.hand):
+                    if c.name == PRISMATIC and gs.mana_pool.total() >= cost:
+                        try:
+                            gs.mana_pool.pay(c.mana_cost, cost)
+                        except Exception:
+                            continue
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
+                        opponent.zones.battlefield.remove(target)
+                        opponent.zones.exile.append(target)
+                        gs._log(f"  Prismatic Ending X={tgt_mv}: exile {target.name}")
+                        break
+
+        # 10c. Fable of the Mirror-Breaker ({2}{R}) — saga, always cast on curve
+        # Pre-2026-04-29: never cast despite being in deck (0 references in
+        # match APL). Saga chapters tick automatically via engine
+        # _fable_mirror_breaker_etb. Always-cast: Ch1 loot/treasure +
+        # Ch2 token + Ch3 transform = 3-mana 6-loyalty saga, premier value.
+        for c in list(gs.zones.hand):
+            if c.name == FABLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                gs._log(f"  Fable of the Mirror-Breaker: cast (saga ticks Ch1->III)")
+                break
 
         # 11. Solitude HARDCAST ({3}{W}{W}) — when we have 5+ mana and want to keep cards
         if opponent and gs.mana_pool.total() >= 5:

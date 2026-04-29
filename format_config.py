@@ -57,14 +57,29 @@ FORMATS = {
 },
 
 "standard": {
-    # Real field shares from 60,658 tournament matches in DB
+    # Real field shares from mtg_meta.db — 9,806 decks, last 28d (2026-04-29)
+    # Source: meta_analyzer query, paper + MTGO events combined
     "field": {
-        "Izzet Prowess": 19.6, "Dimir Midrange": 12.8, "Mono Red Aggro": 12.2,
-        "Izzet Cauldron": 6.5, "Jeskai Control": 6.3, "Izzet Lessons": 6.3,
-        "Azorius Control": 5.7, "Esper Pixie": 5.2, "Gruul Aggro": 4.7,
-        "Mono Green Landfall": 4.2, "Jeskai Oculus": 4.0,
-        "Azorius Omniscience": 3.7, "Simic Ouroboroid": 3.4,
-        "Boros Aggro": 2.9, "Sultai Reanimator": 2.5,
+        "Mono Red Aggro":        9.8,
+        "Dimir Midrange":        8.6,
+        "Esper Raffine":         7.7,
+        "Dimir Aggro":           6.4,
+        "Domain Ramp":           4.7,
+        "Grixis Discard":        4.4,
+        "Gruul Aggro":           3.9,
+        "Boros Aggro":           3.6,
+        "Boros Convoke":         3.0,
+        "Izzet Cauldron":        2.9,
+        "Four-Color Overlords":  2.8,
+        "Izzet Prowess":         2.8,
+        "Esper Pixie":           2.6,
+        "Azorius Soldiers":      2.5,
+        "Mono Green Landfall":   2.2,
+        "Jeskai Control":        2.1,
+        "Azorius Control":       1.8,
+        "Azorius Omniscience":   1.6,
+        "Temur Analyst":         1.5,
+        "Simic Jackal":          1.4,
     },
     "combo": {
         "izzet cauldron", "jeskai oculus", "azorius omniscience",

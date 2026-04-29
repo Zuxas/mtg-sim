@@ -112,11 +112,17 @@ APL_REGISTRY = {
     # ── Standard match APLs (2026-04-29) — class doubles as goldfish APL ──
     "gruulaggro":      ("apl.gruul_aggro_standard_match",    "GruulAggroStandardMatchAPL", "decks/gruul_aggro_standard.txt"),
     "borosaggrostandard": ("apl.boros_aggro_standard_match","BorosAggroMatchAPL",          "decks/boros_aggro_standard.txt"),
+    "borosaggro":      ("apl.boros_aggro_standard_match","BorosAggroMatchAPL",            "decks/boros_aggro_standard.txt"),
     "azoriuscontrol":  ("apl.azorius_control_standard_match","AzoriusControlMatchAPL",     "decks/azorius_control_standard.txt"),
     "esperpixie":      ("apl.esper_pixie_standard_match",    "EsperPixieMatchAPL",         "decks/esper_pixie_standard.txt"),
     "jeskaioculus":    ("apl.jeskai_oculus_standard_match",  "JeskaiOculusMatchAPL",       "decks/jeskai_oculus_standard.txt"),
     "simicouroboroid": ("apl.simic_ouroboroid_standard_match","SimicOuroboroidMatchAPL",   "decks/simic_ouroboroid_standard.txt"),
     "sultaireanimator":("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL","decks/sultai_reanimator_standard.txt"),
+    "domainramp":      ("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL","decks/domain_ramp_standard.txt"),
+    "grixisdiscard":   ("apl.izzet_cauldron_standard_match",  "IzzetCauldronMatchAPL",           "decks/grixis_discard_standard.txt"),
+    "esperraffine":    ("apl.esper_raffine_standard_match",   "EsperRaffineMatchAPL",            "decks/esper_raffine_standard.txt"),
+    "dimiragggrostandard":("apl.esper_raffine_standard_match", "EsperRaffineMatchAPL",            "decks/dimir_aggro_standard.txt"),
+    "dimiraggro":       ("apl.esper_raffine_standard_match",   "EsperRaffineMatchAPL",            "decks/dimir_aggro_standard.txt"),
     "azoriusomniscience":("apl.azorius_omniscience_standard_match","AzoriusOmniscienceMatchAPL","decks/azorius_omniscience_standard.txt"),
 
     # ── Standard Strixhaven brews (GenericAPL shims, 2026-04-23) ──
@@ -186,12 +192,17 @@ MATCH_APL_REGISTRY = {
     "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL"),
     "gruulaggro":      ("apl.gruul_aggro_standard_match",    "GruulAggroStandardMatchAPL"),
     "borosaggrostandard": ("apl.boros_aggro_standard_match", "BorosAggroMatchAPL"),
+    "borosaggro":         ("apl.boros_aggro_standard_match", "BorosAggroMatchAPL"),
     "azoriuscontrol":  ("apl.azorius_control_standard_match","AzoriusControlMatchAPL"),
     "esperpixie":      ("apl.esper_pixie_standard_match",    "EsperPixieMatchAPL"),
     "jeskaioculus":    ("apl.jeskai_oculus_standard_match",  "JeskaiOculusMatchAPL"),
     "simicouroboroid": ("apl.simic_ouroboroid_standard_match","SimicOuroboroidMatchAPL"),
-    "sultaireanimator":("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL"),
+    "sultaireanimator":  ("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL"),
+    "domainramp":        ("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL"),
+    "grixisdiscard":     ("apl.izzet_cauldron_standard_match",  "IzzetCauldronMatchAPL"),
     "azoriusomniscience":("apl.azorius_omniscience_standard_match","AzoriusOmniscienceMatchAPL"),
+    "esperraffine":      ("apl.esper_raffine_standard_match",   "EsperRaffineMatchAPL"),
+    "dimiraggro":         ("apl.esper_raffine_standard_match",   "EsperRaffineMatchAPL"),
 }
 
 

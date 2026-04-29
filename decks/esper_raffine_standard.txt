@@ -1,0 +1,24 @@
+// audit:stub reason="pre-Strixhaven Esper Raffine baseline — real list pending post-PT data"
+// Esper Raffine Standard - approximate pre-Strixhaven shell
+4 Raffine, Scheming Seer
+4 Faerie Mastermind
+4 Sheoldred, the Apocalypse
+4 Preacher of the Schism
+3 Spyglass Siren
+2 Malcolm, Alluring Scoundrel
+2 Floodpits Drowner
+2 Kaito, Bane of Nightmares
+4 Cut Down
+3 Go for the Throat
+3 Three Steps Ahead
+2 Phantom Interference
+2 Enduring Curiosity
+4 Raffine's Tower
+4 Darkslick Shores
+4 Shattered Sanctum
+4 Underground River
+3 Gloomlake Verge
+2 Restless Reef
+2 Island
+1 Plains
+1 Swamp

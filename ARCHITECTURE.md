@@ -314,8 +314,16 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
-- **Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, REAL-META FIELD
-  -- MTGGoldfish 30-day shares, 12 opponents, RC DC COMPETITIVE BASELINE)**:
+- **Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, 17-DECK ALL-FIXES
+  -- DEFINITIVE RC DC PRE-PT BASELINE)**:
+  **67.4% field-weighted** (1,600,000 games, 2238s wall, 16 matchups).
+  17-deck real meta, all 2026-04-29 fixes (has_keyword, Affinity blocking,
+  Goryo white-pitch, Domain Zoo Scion keywords, Esper Blink Phelia, Living End
+  cascade, Jeskai Control match APL). Key: Izzet Prowess 41.0% (HARD), Jeskai
+  Blink 65.1%, Affinity 81.8%, Domain Zoo 83.2%.
+  Saved: data/parallel_results_20260429_120718.json.
+- Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, 12-DECK pre-fixes
+  -- MTGGoldfish 30-day shares, 12 opponents, SUPERSEDED by 17-deck above)**:
   **69.8% field-weighted** (1,200,000 games, 2431s wall, 12 cores).
   Field: real 30-day MTGGoldfish shares (Boros Energy 21.2%, Jeskai Blink
   10.6%, Affinity 9.0%, Amulet Titan 5.2%, Ruby Storm 4.1%, Eldrazi Tron

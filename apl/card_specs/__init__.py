@@ -15,26 +15,37 @@ Findings: harness/knowledge/tech/jeskai-blink-card-specs-2026-04-28.md
 """
 from . import phlage, ragavan, phelia, ephemerate
 from . import quantum_riddler, teferi_time_raveler, consign_to_memory, wrath_of_the_skies
+# Secrets of Strixhaven Standard — wave 1
 from . import (prismari, silverquill, emeritus_of_conflict, rootha,
                veyran, quandrix, the_dawning_archaic, strixhaven_lessons, muddle)
+# Secrets of Strixhaven Standard — wave 2
 from . import (lorehold, deekah, zaffai, magma_opus, maelstrom_artisan,
                brazen_borrower, ral_zarek_guest_lecturer)
+# Secrets of Strixhaven Standard — wave 3
 from . import (plargg_and_nassari, witherbloom, serra_paragon, laelia,
                rionya, mathemagics, jadar, ozolith)
+# Standard set coverage — all remaining sets (2026-04-29)
+from . import (duskmourn_overlords, duskmourn_spells, duskmourn_creatures,
+               lorwyn_eclipsed, edge_of_eternities, avatar_the_last_airbender,
+               bloomburrow, foundations, aetherdrift, tarkir_dragonstorm,
+               final_fantasy, multi_set_standard)
 
 __all__ = [
-    # Tier 1 — Modern core (extracted 2026-04-29 POC)
+    # Tier 1 — Modern core
     "phlage", "ragavan", "phelia", "ephemerate",
-    # Tier 2 — Modern shared (extracted 2026-04-29)
+    # Tier 2 — Modern shared
     "quantum_riddler", "teferi_time_raveler", "consign_to_memory",
     "wrath_of_the_skies",
-    # Tier 3 — Secrets of Strixhaven Standard wave 1 (2026-04-29)
+    # Tier 3 — Secrets of Strixhaven Standard (waves 1-3)
     "prismari", "silverquill", "emeritus_of_conflict", "rootha",
     "veyran", "quandrix", "the_dawning_archaic", "strixhaven_lessons", "muddle",
-    # Tier 3 — Secrets of Strixhaven Standard wave 2 (2026-04-29)
     "lorehold", "deekah", "zaffai", "magma_opus", "maelstrom_artisan",
     "brazen_borrower", "ral_zarek_guest_lecturer",
-    # Tier 3 — Secrets of Strixhaven Standard wave 3 (2026-04-29)
     "plargg_and_nassari", "witherbloom", "serra_paragon", "laelia",
     "rionya", "mathemagics", "jadar", "ozolith",
+    # Standard set coverage — all remaining sets
+    "duskmourn_overlords", "duskmourn_spells", "duskmourn_creatures",
+    "lorwyn_eclipsed", "edge_of_eternities", "avatar_the_last_airbender",
+    "bloomburrow", "foundations", "aetherdrift", "tarkir_dragonstorm",
+    "final_fantasy", "multi_set_standard",
 ]

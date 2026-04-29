@@ -31,19 +31,22 @@ FORMATS = {
 "modern": {
     # Real field shares from 53,269 tournament matches in DB
     "field": {
+        # NOTE: Orzhov Blink and Grinding Breach removed 2026-04-29 --
+        # their deck files were duplicates of Esper Blink and Temur Breach
+        # respectively (SHA-256 identical; see duplicate-deck-files imperfection).
+        # Removed phantom 12.5pp; launcher self-normalizes via weighted/total_w.
         "Boros Energy": 22.1, "Amulet Titan": 8.5, "Eldrazi Ramp": 7.4,
-        "Izzet Prowess": 7.2, "Izzet Affinity": 6.8, "Grinding Breach": 6.4,
-        "Jeskai Blink": 6.4, "Orzhov Blink": 6.1, "Goryo's Vengeance": 5.6,
+        "Izzet Prowess": 7.2, "Izzet Affinity": 6.8,
+        "Jeskai Blink": 6.4, "Goryo's Vengeance": 5.6,
         "Domain Zoo": 5.0, "Eldrazi Tron": 4.3, "Mono Red Aggro": 4.1,
         "Temur Breach": 3.8, "Dimir Murktide": 3.5, "Esper Blink": 2.8,
     },
     "combo": {
-        "amulet titan", "goryo's vengeance", "grinding breach", "temur breach",
+        "amulet titan", "goryo's vengeance", "temur breach",
     },
     "combo_kill_dists": {
         "amulet titan":      {3: 15, 4: 45, 5: 30, 6: 10},
         "goryo's vengeance": {2: 15, 3: 45, 4: 30, 5: 10},
-        "grinding breach":   {3: 20, 4: 40, 5: 30, 6: 10},
         "temur breach":      {3: 25, 4: 40, 5: 25, 6: 10},
     },
 },

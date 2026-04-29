@@ -176,7 +176,12 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                             gs.zones.graveyard.append(c)
                             # But if we have Ephemerate, blink Solitude BEFORE it dies!
                             eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
-                            if eph and avail >= 1:
+                            if eph and gs.mana_pool.can_cast(eph.mana_cost, eph.cmc):
+                                # Pay Ephemerate's {W} (pre-2026-04-29 fix:
+                                # this was a free cast — only checked avail >= 1
+                                # without calling mana_pool.pay, so Ephemerate
+                                # in the Solitude+Ephemerate stack cost no mana).
+                                gs.mana_pool.pay(eph.mana_cost, eph.cmc)
                                 gs.zones.hand.remove(eph)
                                 gs.zones.exile.append(eph)  # rebound exile
                                 self._ephemerate_rebound = True

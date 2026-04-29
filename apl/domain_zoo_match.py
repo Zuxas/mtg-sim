@@ -22,6 +22,7 @@ from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
+from engine.keywords import KWTag
 
 RAGAVAN   = "Ragavan, Nimble Pilferer"
 KAVU      = "Territorial Kavu"
@@ -105,6 +106,7 @@ class DomainZooMatchAPL(MatchAPL):
         self._play_land_if_able(gs)
         gs.tap_lands()
         self._update_domain(gs)
+        self._apply_scion_keywords(gs)  # apply hexproof/first-strike/etc before combat
 
         # 0. Leyline of the Guildpact — T0 if in opening hand (auto-deploy)
         for c in list(gs.zones.hand):
@@ -378,7 +380,39 @@ class DomainZooMatchAPL(MatchAPL):
                     return c
         return None
 
-    def end_step_actions(self, gs, opponent): pass
+    def _apply_scion_keywords(self, gs):
+        """Apply Scion of Draco keyword grants to all friendly creatures.
+
+        Oracle: creatures you control that share a color with Scion gain
+        hexproof, lifelink, first strike (W), flying (U), trample (G),
+        vigilance (W/G), and deathtouch (B). With Leyline (all colors),
+        they get the full suite.
+
+        Applied to card.tags so has_keyword() and combat resolution pick
+        them up correctly. Removed at end step when Scion is gone.
+        """
+        if not self._scion_active:
+            # Remove Scion-granted tags if Scion left
+            for c in gs.zones.battlefield:
+                if c.has(Tag.CREATURE) and not c.is_land():
+                    c.tags.discard(KWTag.HEXPROOF)
+                    c.tags.discard(KWTag.FIRST_STRIKE)
+                    c.tags.discard(KWTag.LIFELINK)
+                    c.tags.discard(KWTag.VIGILANCE)
+                    c.tags.discard(KWTag.TRAMPLE)
+            return
+        # Scion active — grant keywords to all friendly creatures
+        SCION_GRANTS = {
+            KWTag.HEXPROOF, KWTag.FIRST_STRIKE, KWTag.LIFELINK,
+            KWTag.VIGILANCE, KWTag.TRAMPLE,
+        }
+        for c in gs.zones.battlefield:
+            if c.has(Tag.CREATURE) and not c.is_land():
+                c.tags.update(SCION_GRANTS)
+
+    def end_step_actions(self, gs, opponent):
+        self._update_domain(gs)
+        self._apply_scion_keywords(gs)
 
     def _play_land_if_able(self, gs):
         """Fetch lands first (fix colors), then duals, then basics."""

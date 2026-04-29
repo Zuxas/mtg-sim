@@ -345,10 +345,18 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     if c.name == MARCH:
                         target = max(problem_permanents, key=lambda x: safe_power(x))
                         target_mv = getattr(target, 'cmc', 0)
-                        # March costs {X}{W}, pitch white cards to reduce by 2 each
+                        # March's oracle: "You may exile up to 2 WHITE cards
+                        # from your hand rather than pay {X}{W}." Pitch must
+                        # be white. Pre-2026-04-29 fix: pitched any non-land,
+                        # which is illegal (and same bug class as Solitude
+                        # evoke fixed in commit ce492dc).
                         base_cost = target_mv + 1
-                        white_pitch = [x for x in gs.zones.hand if x != c and not x.is_land()]
-                        pitch_count = min(len(white_pitch), int((base_cost - 1) // 2))
+                        white_pitch = [x for x in gs.zones.hand
+                                       if x != c and not x.is_land()
+                                       and 'W' in (getattr(x, 'colors', []) or [])]
+                        # Oracle-cap: at most 2 pitches per cast
+                        pitch_count = min(len(white_pitch), 2,
+                                          int((base_cost - 1) // 2))
                         effective_cost = max(1, base_cost - pitch_count * 2)
                         if gs.mana_pool.total() >= effective_cost:
                             for i in range(pitch_count):

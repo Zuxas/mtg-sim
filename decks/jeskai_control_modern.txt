@@ -1,0 +1,22 @@
+// Jeskai Control - Modern (MTGGoldfish 2026-04-29)
+// Key cards: Teferi, Narset, Orim's Chant, Solitude, Supreme Verdict
+4 Teferi, Time Raveler
+3 Narset, Parter of Veils
+4 Solitude
+4 Orim's Chant
+2 Supreme Verdict
+4 Counterspell
+4 Force of Negation
+3 Prismatic Ending
+2 Flame of Anor
+4 Opt
+4 Preordain
+3 Snapcaster Mage
+4 Flooded Strand
+4 Scalding Tarn
+2 Hallowed Fountain
+2 Steam Vents
+2 Sacred Foundry
+4 Island
+2 Plains
+2 Mountain

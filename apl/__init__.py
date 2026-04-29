@@ -97,7 +97,7 @@ APL_REGISTRY = {
     "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
-    "jeskaicontrol":   ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
+    "jeskaicontrol":   ("apl.jeskai_control",   "JeskaiControlAPL",  "decks/jeskai_control_modern.txt"),
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
 
     # ── Standard / Pioneer ──
@@ -169,6 +169,8 @@ MATCH_APL_REGISTRY = {
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
+    "jeskaicontrol":   ("apl.jeskai_control_match",  "JeskaiControlMatchAPL"),
+    "jeskaienergycontrol": ("apl.jeskai_control_match", "JeskaiControlMatchAPL"),
 }
 
 

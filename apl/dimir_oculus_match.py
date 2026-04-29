@@ -48,24 +48,21 @@ class DimirOculusMatchAPL(MatchAPL):
         gs.tap_lands()
         avail = gs.mana_pool.total()
 
-        # Removal on opponent creatures
+        # Removal on opponent creatures — dedicated removal only
+        REMOVAL = {FATAL_PUSH, SHOOT_THE_SHERIFF}
         if opponent:
             opp_cr = [c for c in opponent.zones.battlefield
                      if not c.is_land() and c.has(Tag.CREATURE) and safe_power(c) >= 2]
             if opp_cr:
                 target = max(opp_cr, key=lambda x: safe_power(x))
                 for c in list(gs.zones.hand):
-                    if not c.is_land() and not c.has(Tag.CREATURE):
-                        if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                            dmg = 3  # approximate
-                            if safe_toughness(target) <= dmg:
-                                gs.mana_pool.pay(c.mana_cost, c.cmc)
-                                gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                                if target in opponent.zones.battlefield:
-                                    opponent.zones.battlefield.remove(target)
-                                    opponent.zones.graveyard.append(target)
-                                gs._log(f"  Remove: {target.name}")
-                                break
+                    if c.name in REMOVAL and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.cast_spell(c)
+                        if target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                        gs._log(f"  {c.name}: kill {target.name}")
+                        break
 
         # Deploy creatures by CMC (cheapest first for tempo)
         deployed = False
@@ -109,7 +106,23 @@ class DimirOculusMatchAPL(MatchAPL):
                 assignments[id(biggest)] = [blockers[0]]
         return assignments
 
-    def respond_to_spell(self, gs, opponent, spell): return None
+    def respond_to_spell(self, gs, opponent, spell):
+        """Counter key threats with Counterspell."""
+        if not spell or not opponent:
+            return None
+        spell_cmc = getattr(spell, 'cmc', 0)
+        # Counter high-value threats (CMC 3+) or key combo pieces
+        if spell_cmc >= 3 or spell.name in (
+            "Primeval Titan", "Archon of Cruelty", "Griselbrand",
+            "Goryo's Vengeance", "Living End", "Violent Outburst",
+        ):
+            for c in list(gs.zones.hand):
+                if c.name == COUNTERSPELL and gs.mana_pool.total() >= 2:
+                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
+                    gs._log(f"  Counterspell: counter {spell.name}")
+                    return c
+        return None
+
     def end_step_actions(self, gs, opponent): pass
 
     def _play_land_if_able(self, gs):

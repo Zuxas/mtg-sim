@@ -57,7 +57,17 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         self._phelia_counters = 0
         self._ephemerate_rebound = False
         self._energy = 0  # energy counter tracking
-        self._casey_discard_pending = False  # Casey Jones discard 3 next upkeep
+        # Casey discard-3-next-upkeep is INT (number of pending discard-3
+        # triggers, since multiple Casey ETBs from blinks accumulate per
+        # oracle "at your next upkeep, discard three cards"). Pre-2026-04-29
+        # fix: was boolean — multi-blink Casey only fired one discard.
+        self._casey_discards_pending = 0
+        # Phelia attack-trigger exile creatures that need to return at the
+        # next end step. Oracle: "Return that card to the battlefield under
+        # its owner's control at the beginning of the next end step."
+        # Pre-2026-04-29 fix: opp creatures Phelia-exiled stayed permanently
+        # exiled (log claimed "returns at end step" but no return logic).
+        self._phelia_exile_returns = []  # list of (card, owner)
         self._treasures = 0  # from Ragavan combat damage
         self._role = "beatdown"  # beatdown, tempo_control, or grind
 
@@ -123,19 +133,21 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         # Detect role for strategic decisions
         self._role = self._detect_role(opponent)
         
-        # Casey Jones: discard 3 random at upkeep (deferred from last turn)
-        if self._casey_discard_pending:
-            self._casey_discard_pending = False
-            discarded = 0
-            for _ in range(3):
-                if gs.zones.hand:
-                    # Discard worst card (simulate "random" as lowest value)
-                    worst = min(gs.zones.hand, key=lambda c: self._card_value(c))
-                    gs.zones.hand.remove(worst)
-                    gs.zones.graveyard.append(worst)
-                    discarded += 1
-            if discarded:
-                gs._log(f"  Casey Jones upkeep: discard {discarded} cards")
+        # Casey Jones: discard 3 random at upkeep (deferred from last turn).
+        # Multiple Casey ETBs in same prior turn (cast + blinks) accumulate
+        # — N pending casts means N * 3 discards total at next upkeep.
+        total_discards = self._casey_discards_pending * 3
+        self._casey_discards_pending = 0
+        discarded = 0
+        for _ in range(total_discards):
+            if gs.zones.hand:
+                # Discard worst card (simulate "random" as lowest value)
+                worst = min(gs.zones.hand, key=lambda c: self._card_value(c))
+                gs.zones.hand.remove(worst)
+                gs.zones.graveyard.append(worst)
+                discarded += 1
+        if discarded:
+            gs._log(f"  Casey Jones upkeep: discard {discarded} cards")
 
         # Ephemerate Rebound — free blink at upkeep
         if self._ephemerate_rebound:
@@ -241,12 +253,16 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
                 break
 
-        # 5. Casey Jones ({1}{R}{R}) — ETB draw 3, discard 3 next upkeep
+        # 5. Casey Jones ({1}{R}{R}) — ETB draw 3, schedule discard 3 next upkeep
+        # Pre-2026-04-29 fix: this site did not increment
+        # _casey_discards_pending — Casey cast here gave free draw 3 with no
+        # discard penalty.
         for c in list(gs.zones.hand):
             if c.name == CASEY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
                 gs.zones.draw(3)
-                gs._log(f"  Casey Jones: draw 3")
+                self._casey_discards_pending += 1
+                gs._log(f"  Casey Jones: draw 3 (pending discards={self._casey_discards_pending})")
                 break
 
         # 6. Teferi ({1}{W}{U}) — opponents sorcery-speed, -3 bounce+draw
@@ -441,8 +457,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     # Casey Jones ETB: draw 3, defer discard 3
                     if c.name == CASEY:
                         gs.zones.draw(3)
-                        self._casey_discard_pending = True
-                        gs._log(f"  Casey Jones: draw 3 (discard 3 next upkeep)")
+                        self._casey_discards_pending += 1
+                        gs._log(f"  Casey Jones: draw 3 (discard 3 next upkeep, pending={self._casey_discards_pending})")
                     # Quantum Riddler ETB: draw 1
                     elif c.name == QUANTUM:
                         gs.zones.draw(1)
@@ -490,7 +506,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 blinked = True
             elif name == CASEY:
                 gs.zones.draw(3)
-                gs._log(f"  Blink Casey Jones: draw 3")
+                self._casey_discards_pending += 1
+                gs._log(f"  Blink Casey Jones: draw 3 (pending discards={self._casey_discards_pending})")
                 blinked = True
             if blinked:
                 return  # only return on actual blink; else try next priority
@@ -550,13 +567,18 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 phelia.counters += 1
                 gs._log(f"  Phelia attack: blink own {own_etb[0].name} (Phelia now {phelia.counters} counters)")
             elif opponent:
-                # Exile opponent's best creature (returns at end step under THEIR control)
+                # Exile opponent's best creature. Oracle: return at next end
+                # step under owner's control. Pre-2026-04-29 fix: card stayed
+                # in opp.zones.exile permanently — log claimed "returns at end
+                # step" but no return logic existed. Now tracked in
+                # _phelia_exile_returns and returned in end_step_actions.
                 opp_cr = [c for c in opponent.zones.battlefield
                          if c.has(Tag.CREATURE) and not c.is_land() and safe_power(c) >= 2]
                 if opp_cr:
                     target = max(opp_cr, key=lambda x: safe_power(x))
                     opponent.zones.battlefield.remove(target)
                     opponent.zones.exile.append(target)
+                    self._phelia_exile_returns.append((target, opponent))
                     gs._log(f"  Phelia attack: exile opponent's {target.name} (returns at end step)")
         
         # RAGAVAN COMBAT DAMAGE TRIGGER (handled here for logging)
@@ -622,8 +644,26 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         return None
 
     def end_step_actions(self, gs, opponent):
-        """End step: Phelia returns exiled creature (already handled in blink_best_etb)."""
-        pass
+        """End step: return creatures Phelia exiled this turn to their owners.
+
+        Oracle: "Return that card to the battlefield under its owner's
+        control at the beginning of the next end step."
+
+        Pre-2026-04-29 fix: this was `pass` with a misleading docstring
+        claiming "already handled in blink_best_etb" — but blink_best_etb
+        only handles OWN ETB blinks (re-trigger), not the OPP creatures
+        Phelia exiled in declare_attackers. So opp creatures stayed
+        permanently exiled. Now properly returned at end of turn.
+        """
+        if not self._phelia_exile_returns:
+            return
+        for card, owner in self._phelia_exile_returns:
+            if card in owner.zones.exile:
+                owner.zones.exile.remove(card)
+                owner.zones.battlefield.append(card)
+                card.summoning_sickness = False  # was already on the field
+                gs._log(f"  Phelia exile return: {card.name} -> opp battlefield")
+        self._phelia_exile_returns.clear()
 
     def _card_value(self, c):
         """Rate a card's value for discard decisions (Casey Jones)."""

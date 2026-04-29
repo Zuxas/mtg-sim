@@ -38,6 +38,9 @@ class EsperBlinkMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 14
 
+    def __init__(self):
+        self._phelia_exile_returns = []  # (card, owner) tuples, returned at end step
+
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
         lands = sum(1 for c in hand if c.is_land())
@@ -189,6 +192,19 @@ class EsperBlinkMatchAPL(MatchAPL):
             if getattr(c, 'summoning_sickness', False): continue
             if getattr(c, 'tapped', False): continue
             if c.has(Tag.CREATURE): attackers.append(c)
+
+        # Phelia attack trigger: exile opponent's best creature, return at end step
+        phelia = next((c for c in attackers if c.name == PHELIA), None)
+        if phelia and opponent:
+            opp_cr = [c for c in opponent.zones.battlefield
+                      if c.has(Tag.CREATURE) and not c.is_land() and safe_power(c) >= 2]
+            if opp_cr:
+                target = max(opp_cr, key=lambda x: safe_power(x))
+                opponent.zones.battlefield.remove(target)
+                opponent.zones.exile.append(target)
+                self._phelia_exile_returns.append((target, opponent))
+                gs._log(f"  Phelia attack: exile {target.name} (returns at end step)")
+
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
@@ -202,7 +218,15 @@ class EsperBlinkMatchAPL(MatchAPL):
                 assignments[id(biggest)] = [solitudes[0]]
         return assignments
 
-    def end_step_actions(self, gs, opponent): pass
+    def end_step_actions(self, gs, opponent):
+        """Return Phelia-exiled opponent creatures at end step."""
+        for card, owner in self._phelia_exile_returns:
+            if card in owner.zones.exile:
+                owner.zones.exile.remove(card)
+                owner.zones.battlefield.append(card)
+                card.summoning_sickness = False
+                gs._log(f"  Phelia exile return: {card.name} -> opp battlefield")
+        self._phelia_exile_returns.clear()
 
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]

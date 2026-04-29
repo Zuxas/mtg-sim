@@ -29,25 +29,25 @@ FORMATS = {
 },
 
 "modern": {
-    # Real field shares from 53,269 tournament matches in DB
+    # Field shares from MTGGoldfish 30-day snapshot 2026-04-29 (501-4 decks).
+    # Only decks with working APLs included; launcher self-normalizes.
+    # Covers ~72% of real meta. Dropped: Belcher/Neobrand/Grixis Rean/Temur Prowess
+    # (no APLs), Dimir Murktide (0.2% real), Mono Red Aggro (absorbed into Izzet Prowess).
     "field": {
-        # NOTE: Orzhov Blink and Grinding Breach removed 2026-04-29 --
-        # their deck files were duplicates of Esper Blink and Temur Breach
-        # respectively (SHA-256 identical; see duplicate-deck-files imperfection).
-        # Removed phantom 12.5pp; launcher self-normalizes via weighted/total_w.
-        "Boros Energy": 22.1, "Amulet Titan": 8.5, "Eldrazi Ramp": 7.4,
-        "Izzet Prowess": 7.2, "Izzet Affinity": 6.8,
-        "Jeskai Blink": 6.4, "Goryo's Vengeance": 5.6,
-        "Domain Zoo": 5.0, "Eldrazi Tron": 4.3, "Mono Red Aggro": 4.1,
-        "Temur Breach": 3.8, "Dimir Murktide": 3.5, "Esper Blink": 2.8,
+        "Boros Energy": 21.2, "Jeskai Blink": 10.6, "Affinity": 9.0,
+        "Amulet Titan": 5.2,  "Ruby Storm": 4.1,    "Eldrazi Tron": 3.7,
+        "Goryo's Vengeance": 3.5, "Domain Zoo": 3.4, "Living End": 2.7,
+        "Dimir Midrange": 2.0, "Esper Blink": 1.8,  "Izzet Prowess": 1.7,
+        "Eldrazi Ramp": 1.6,
     },
     "combo": {
-        "amulet titan", "goryo's vengeance", "temur breach",
+        "amulet titan", "goryo's vengeance", "ruby storm", "living end",
     },
     "combo_kill_dists": {
         "amulet titan":      {3: 15, 4: 45, 5: 30, 6: 10},
         "goryo's vengeance": {2: 15, 3: 45, 4: 30, 5: 10},
-        "temur breach":      {3: 25, 4: 40, 5: 25, 6: 10},
+        "ruby storm":        {2: 10, 3: 35, 4: 40, 5: 15},
+        "living end":        {3: 20, 4: 50, 5: 25, 6:  5},
     },
 },
 

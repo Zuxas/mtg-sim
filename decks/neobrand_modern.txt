@@ -1,3 +1,4 @@
+// audit:stub reason="combo kill-sampler opponent; real decklist not required for routing"
 // Neobrand (Modern)
 // Stub deck for combo routing. Real list from MTGGoldfish 2026-04-29.
 // G1 win% sourced from ComboKillSampler (format_config kill dist).

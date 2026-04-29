@@ -392,37 +392,51 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                         gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
 
     def _blink_best_etb(self, gs, opponent):
-        """Blink the best ETB creature on our battlefield."""
+        """Blink the best ETB creature on our battlefield.
+
+        Priority: Solitude (exile creature) > Phlage (3 dmg + 3 life) >
+        Quantum (draw) > Casey (draw 3). Falls through to next priority
+        if the chosen card's ETB cannot fire (e.g., Solitude with no opp
+        creature target). Pre-2026-04-29 fix: early-returned after
+        targeting any matching name even when the blink did nothing,
+        silently skipping the rest of the priority chain.
+        """
         etb_creatures = [c for c in gs.zones.battlefield
                         if c.has(Tag.CREATURE) and not c.is_land()
                         and c.name in ETB_CREATURES]
         if not etb_creatures:
             return
-        # Priority: Solitude (exile creature) > Phlage (3 dmg + 3 life) > Quantum (draw)
         for name in (SOLITUDE, PHLAGE, QUANTUM, CASEY):
             target = next((c for c in etb_creatures if c.name == name), None)
-            if target:
-                if name == SOLITUDE and opponent:
-                    opp_cr = [x for x in opponent.zones.battlefield
-                             if not x.is_land() and x.has(Tag.CREATURE)]
-                    if opp_cr:
-                        t = max(opp_cr, key=lambda x: safe_power(x))
-                        opponent.zones.battlefield.remove(t)
-                        opponent.zones.exile.append(t)
-                        opponent.life += safe_power(t)
-                        gs._log(f"  Blink Solitude: exile {t.name}")
-                elif name == PHLAGE:
-                    if opponent:
-                        gs.damage_dealt += 3
-                    gs.life += 3
-                    gs._log(f"  Blink Phlage: 3 dmg + 3 life")
-                elif name == QUANTUM:
-                    gs.zones.draw(1)
-                    gs._log(f"  Blink Quantum Riddler: draw 1")
-                elif name == CASEY:
-                    gs.zones.draw(3)
-                    gs._log(f"  Blink Casey Jones: draw 3")
-                return
+            if not target:
+                continue
+            blinked = False
+            if name == SOLITUDE and opponent:
+                opp_cr = [x for x in opponent.zones.battlefield
+                         if not x.is_land() and x.has(Tag.CREATURE)]
+                if opp_cr:
+                    t = max(opp_cr, key=lambda x: safe_power(x))
+                    opponent.zones.battlefield.remove(t)
+                    opponent.zones.exile.append(t)
+                    opponent.life += safe_power(t)
+                    gs._log(f"  Blink Solitude: exile {t.name}")
+                    blinked = True
+            elif name == PHLAGE:
+                if opponent:
+                    gs.damage_dealt += 3
+                gs.life += 3
+                gs._log(f"  Blink Phlage: 3 dmg + 3 life")
+                blinked = True
+            elif name == QUANTUM:
+                gs.zones.draw(1)
+                gs._log(f"  Blink Quantum Riddler: draw 1")
+                blinked = True
+            elif name == CASEY:
+                gs.zones.draw(3)
+                gs._log(f"  Blink Casey Jones: draw 3")
+                blinked = True
+            if blinked:
+                return  # only return on actual blink; else try next priority
 
     def declare_attackers(self, gs, opponent):
         """Role-aware attack decisions + Phelia/Ragavan/Phlage triggers.

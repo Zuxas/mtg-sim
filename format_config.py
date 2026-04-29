@@ -36,18 +36,23 @@ FORMATS = {
     "field": {
         "Boros Energy": 21.2, "Jeskai Blink": 10.6, "Affinity": 9.0,
         "Amulet Titan": 5.2,  "Ruby Storm": 4.1,    "Eldrazi Tron": 3.7,
-        "Goryo's Vengeance": 3.5, "Domain Zoo": 3.4, "Living End": 2.7,
+        "Belcher": 3.5,       "Goryo's Vengeance": 3.5, "Domain Zoo": 3.4,
+        "Neobrand": 3.2,      "Living End": 2.7,    "Grixis Reanimator": 2.3,
         "Dimir Midrange": 2.0, "Esper Blink": 1.8,  "Izzet Prowess": 1.7,
         "Eldrazi Ramp": 1.6,
     },
     "combo": {
         "amulet titan", "goryo's vengeance", "ruby storm", "living end",
+        "belcher", "neobrand", "grixis reanimator",
     },
     "combo_kill_dists": {
         "amulet titan":      {3: 15, 4: 45, 5: 30, 6: 10},
         "goryo's vengeance": {2: 15, 3: 45, 4: 30, 5: 10},
         "ruby storm":        {2: 10, 3: 35, 4: 40, 5: 15},
         "living end":        {3: 20, 4: 50, 5: 25, 6:  5},
+        "belcher":           {2: 20, 3: 50, 4: 30},
+        "neobrand":          {1: 30, 2: 50, 3: 20},
+        "grixis reanimator": {2: 15, 3: 45, 4: 30, 5: 10},
     },
 },
 
@@ -102,7 +107,7 @@ FORMATS = {
 def get_format(fmt):
     return FORMATS.get(fmt.lower())
 
-def get_field(fmt, top_n=15):
+def get_field(fmt, top_n=16):
     cfg = get_format(fmt)
     if not cfg:
         raise ValueError(f"Unknown format: {fmt}. Options: {list(FORMATS)}")

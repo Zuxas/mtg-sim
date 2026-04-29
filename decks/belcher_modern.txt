@@ -1,0 +1,19 @@
+// Belcher - Goblin Charbelcher (Modern)
+// Stub deck for combo routing. Real list from MTGGoldfish 2026-04-29.
+// G1 win% sourced from ComboKillSampler (format_config kill dist).
+4 Goblin Charbelcher
+4 Chancellor of the Tangle
+4 Simian Spirit Guide
+4 Elvish Spirit Guide
+4 Manamorphose
+4 Chancellor of the Annex
+4 Sea Gate Restoration
+4 Desperate Ritual
+4 Pyretic Ritual
+4 Rite of Flame
+4 Seething Song
+4 Street Wraith
+4 Burning Inquiry
+4 Irencrag Feat
+4 Force of Negation
+4 Disrupting Shoal

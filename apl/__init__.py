@@ -58,6 +58,10 @@ APL_REGISTRY = {
     "grindingbreach":  ("apl.grinding_breach",  "GrindingBreachAPL", "decks/grinding_breach_modern.txt"),
     "breach":          ("apl.grinding_breach",  "GrindingBreachAPL", "decks/grinding_breach_modern.txt"),
     "rubystorm":       ("apl.ruby_storm",       "RubyStormAPL",      "decks/ruby_storm_modern.txt"),
+    "belcher":         ("apl.belcher_match",     "BelcherMatchAPL",   "decks/belcher_modern.txt"),
+    "goblincharbelcher":("apl.belcher_match",    "BelcherMatchAPL",   "decks/belcher_modern.txt"),
+    "neobrand":        ("apl.neobrand_match",    "NeobrandMatchAPL",  "decks/neobrand_modern.txt"),
+    "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL","decks/grixis_reanimator_modern.txt"),
     "burn":            ("apl.burn",             "BurnAPL",           None),
     "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
     "monoredaggro":    ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
@@ -160,6 +164,11 @@ MATCH_APL_REGISTRY = {
     "uwcontrol":       ("apl.uw_control_match",      "UWControlMatchAPL"),
     "dimirmidrange":   ("apl.dimir_oculus_match",    "DimirOculusMatchAPL"),
     "dimir":           ("apl.dimir_oculus_match",    "DimirOculusMatchAPL"),
+    # New 2026-04-29: real-meta gap decks
+    "belcher":         ("apl.belcher_match",         "BelcherMatchAPL"),
+    "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
+    "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
+    "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
 }
 
 

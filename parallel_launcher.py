@@ -160,7 +160,7 @@ if __name__ == "__main__":
     ap.add_argument("--format", default="legacy")
     ap.add_argument("--n",      type=int, default=1000)
     ap.add_argument("--cores",  type=int, default=20)
-    ap.add_argument("--top-n",  type=int, default=15)
+    ap.add_argument("--top-n",  type=int, default=20)
     ap.add_argument("--seed",   type=int, default=42)
     args = ap.parse_args()
 

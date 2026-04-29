@@ -154,7 +154,21 @@ class IzzetAffinityMatchAPL(MatchAPL):
                 and not getattr(c, 'tapped', False)]
 
     def declare_blockers(self, gs, opp, attackers):
-        return {}
+        """Block with largest creatures. Kappa (ward 4) and Ravager soak hits."""
+        if not attackers:
+            return {}
+        blockers = [c for c in gs.zones.battlefield
+                    if c.has(Tag.CREATURE) and not c.is_land()
+                    and not getattr(c, 'tapped', False)
+                    and not getattr(c, 'summoning_sickness', False)]
+        if not blockers:
+            return {}
+        assignments = {}
+        blockers_sorted = sorted(blockers, key=lambda c: -safe_toughness(c))
+        attackers_sorted = sorted(attackers, key=lambda c: -safe_power(c))
+        for atk, blk in zip(attackers_sorted, blockers_sorted):
+            assignments[id(atk)] = [blk]
+        return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
         """Metallic Rebuke — affinity counter ({2}{U} - artifacts)."""

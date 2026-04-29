@@ -1,0 +1,23 @@
+// Grixis Reanimator (Modern)
+// Stub deck for combo routing. Real list from MTGGoldfish 2026-04-29.
+// G1 win% sourced from ComboKillSampler (format_config kill dist).
+4 Archon of Cruelty
+4 Abhorrent Oculus
+4 Unmarked Grave
+4 Persist
+4 Faithless Looting
+4 Thoughtseize
+4 Inquisition of Kozilek
+4 Reanimate
+4 Grief
+4 Solitude
+4 Orcish Bowmasters
+4 Expressive Iteration
+4 Bloodstained Mire
+4 Polluted Delta
+2 Blood Crypt
+2 Watery Grave
+2 Steam Vents
+2 Island
+1 Swamp
+1 Mountain

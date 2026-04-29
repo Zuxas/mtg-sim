@@ -15,11 +15,16 @@ Findings: harness/knowledge/tech/jeskai-blink-card-specs-2026-04-28.md
 """
 from . import phlage, ragavan, phelia, ephemerate
 from . import quantum_riddler, teferi_time_raveler, consign_to_memory, wrath_of_the_skies
+from . import (prismari, silverquill, emeritus_of_conflict, rootha,
+               veyran, quandrix, the_dawning_archaic, strixhaven_lessons, muddle)
 
 __all__ = [
-    # Tier 1 (extracted 2026-04-29 POC)
+    # Tier 1 — Modern core (extracted 2026-04-29 POC)
     "phlage", "ragavan", "phelia", "ephemerate",
-    # Tier 2 (extracted 2026-04-29)
+    # Tier 2 — Modern shared (extracted 2026-04-29)
     "quantum_riddler", "teferi_time_raveler", "consign_to_memory",
     "wrath_of_the_skies",
+    # Tier 3 — Secrets of Strixhaven Standard (extracted 2026-04-29)
+    "prismari", "silverquill", "emeritus_of_conflict", "rootha",
+    "veyran", "quandrix", "the_dawning_archaic", "strixhaven_lessons", "muddle",
 ]

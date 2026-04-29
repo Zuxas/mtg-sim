@@ -1,3 +1,4 @@
+// audit:stub reason="representative stub for match APL quality; real list from MTGGoldfish 2026-04-29"
 // Jeskai Control - Modern (MTGGoldfish 2026-04-29)
 // Key cards: Teferi, Narset, Orim's Chant, Solitude, Supreme Verdict
 4 Teferi, Time Raveler

@@ -1,0 +1,40 @@
+// audit:auto-generated:Cutter Affinity:2026-04-28
+// Source: meta-analyzer DB deck_id=78235, archetype=Cutter Affinity
+
+1 Aether Spellbomb
+1 Breeding Pool
+4 Cori-Steel Cutter
+4 Emry, Lurker of the Loch
+2 Fiery Islet
+2 Flame of Anor
+1 Haywire Mite
+1 Island
+4 Metallic Rebuke
+4 Mishra's Bauble
+1 Mountain
+3 Mox Amber
+4 Mox Opal
+1 Otawara, Soaring City
+1 Preordain
+3 Quantum Riddler
+4 Scalding Tarn
+1 Skateboard
+1 Spirebluff Canal
+2 Steam Vents
+1 Strix Serenade
+4 Tamiyo, Inquisitive Student
+1 Thundering Falls
+1 Tormod's Crypt
+4 Unholy Heat
+4 Urza's Saga
+
+Sideboard
+2 Blood Moon
+3 Consign to Memory
+2 Fire Magic
+2 Force of Negation
+2 Mystical Dispute
+1 Pithing Needle
+1 Soul-Guide Lantern
+1 Strix Serenade
+1 Vexing Bauble

@@ -1,0 +1,40 @@
+// audit:auto-generated:Jeskai Phelia:2026-04-28
+// Source: meta-analyzer DB deck_id=80138, archetype=Jeskai Phelia
+
+2 Arena of Glory
+4 Arid Mesa
+2 Casey Jones, Vigilante
+4 Consign to Memory
+1 Elegant Parlor
+1 Ephemerate
+1 Fable of the Mirror-Breaker
+4 Flooded Strand
+4 Galvanic Discharge
+1 Hallowed Fountain
+1 Island
+2 March of Otherworldly Light
+1 Meticulous Archive
+1 Mountain
+4 Phelia, Exuberant Shepherd
+4 Phlage, Titan of Fire's Fury
+2 Plains
+4 Quantum Riddler
+3 Ragavan, Nimble Pilferer
+2 Sacred Foundry
+3 Scalding Tarn
+4 Solitude
+1 Steam Vents
+1 Strix Serenade
+1 Teferi, Time Raveler
+1 Thundering Falls
+1 Wrath of the Skies
+
+Sideboard
+1 Ashiok, Dream Render
+2 Celestial Purge
+2 High Noon
+3 Mystical Dispute
+3 Obsidian Charmaw
+1 Strix Serenade
+1 Surgical Extraction
+2 Wrath of the Skies

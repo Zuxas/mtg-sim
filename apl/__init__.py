@@ -63,6 +63,7 @@ APL_REGISTRY = {
     "neobrand":        ("apl.neobrand_match",    "NeobrandMatchAPL",  "decks/neobrand_modern.txt"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL","decks/grixis_reanimator_modern.txt"),
     "burn":            ("apl.burn",             "BurnAPL",           None),
+    "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL", "decks/izzet_cauldron_standard.txt"),
     "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
     "monoredaggro":    ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
     "izzetaffinity":   ("apl.izzet_affinity",   "IzzetAffinityAPL",  "decks/izzet_affinity_modern.txt"),
@@ -171,6 +172,8 @@ MATCH_APL_REGISTRY = {
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
     "jeskaicontrol":   ("apl.jeskai_control_match",  "JeskaiControlMatchAPL"),
     "jeskaienergycontrol": ("apl.jeskai_control_match", "JeskaiControlMatchAPL"),
+    # Standard APLs (2026-04-29)
+    "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL"),
 }
 
 

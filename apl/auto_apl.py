@@ -162,6 +162,11 @@ def _get_api_token() -> str:
     Get Anthropic API token from Claude Code credentials (persisted).
     Falls back to ANTHROPIC_API_KEY env var or .env file.
     Never requires manual setup.
+
+    Auth-path probe results:
+    - 2026-04-28: HTTP 401 "OAuth authentication is currently not supported" (transient policy state)
+    - 2026-04-29: HTTP 200 SUCCESS with sk-ant-oat01... OAuth token, no ANTHROPIC_API_KEY set.
+    OAuth tokens NOW WORK against api.anthropic.com/v1/messages. Claude path is free under Claude Max.
     """
     import os, json, time
     from pathlib import Path

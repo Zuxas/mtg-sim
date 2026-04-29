@@ -1,118 +1,101 @@
 # Auto-generated APL for Cutter Affinity (Gemma draft)
-# 2026-04-28
+# 2026-04-29
 
+from typing import Optional
+from data.card import Card, Tag
+from engine.game_state import GameState
 from apl.base_apl import BaseAPL
-from typing import List, Tuple
 
-class CutterAffinity(BaseAPL):
-    """
-    MTG Modern APL for the 'Cutter Affinity' archetype.
-    Focuses on aggressive, low-curve plays combined with removal/damage sources.
-    """
+# Assuming "Cutter Affinity" focuses on low-cost, synergistic, aggressive creatures
+# We define placeholder threats that represent the core synergy pieces.
+# In a real scenario, these would be specific card names (e.g., "Goblin Guide", "Swarm").
+SYNERGY_THREATS = {"Goblin", "Swarm", "Affinity"}
 
-    def keep(self, hand: List['Card'], mulligans: List['Card'], on_play: List['Card']) -> bool:
+class CutterAffinityAPL(BaseAPL):
+    name = "Cutter Affinity"
+    win_condition_damage = 25
+    max_turns = 10
+
+    def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
         """
-        Decides whether to keep the hand after mulligans.
-        Prioritizes early plays, interaction, and curve consistency.
+        Keep hands that are aggressive, land-rich, and contain multiple low-cost threats.
         """
-        # 1. Check for early plays (1-2 mana)
-        early_plays = [card for card in hand if card.mana_cost <= 2]
-        if not early_plays:
+        lands = [c for c in hand if c.is_land()]
+        
+        # Must have at least 2 lands to start establishing board presence
+        if len(lands) < 2:
             return False
 
-        # 2. Check for interaction (removal/utility)
-        has_interaction = any(card.is_removal or card.is_utility for card in hand)
-
-        # 3. Check for land count (enough to establish board presence)
-        land_count = sum(1 for card in hand if card.is_land)
-
-        # Keep if we have a mix of early plays, interaction, and enough land potential.
-        if len(early_plays) >= 2 and has_interaction and land_count >= 2:
+        # Identify low-cost, synergistic threats (CMC <= 3)
+        threats = [c for c in hand if c.cmc <= 3 and any(tag in c.name for tag in SYNERGY_THREATS)]
+        
+        # We need at least 2 threats or enough mulligans to compensate for a weak hand
+        if len(threats) >= 2:
             return True
         
-        # If we have a strong curve (e.g., 3+ low-cost cards) even without perfect interaction, keep it.
-        if len(early_plays) >= 3 and land_count >= 1:
+        # If we only have one threat, we need a decent mulligan count
+        if len(threats) == 1 and mulligans >= 2:
             return True
-
+        
+        # Otherwise, the hand is too slow or lacks synergy
         return False
 
-    def bottom(self, hand: List['Card'], n: int) -> List['Card']:
+    def bottom(self, hand: list, n: int) -> list:
         """
-        Filters the bottom 'n' cards of the hand.
-        Prioritizes finding lands or low-cost interaction/creatures.
+        Prioritize bottoming excess lands and high-cost, non-synergistic spells.
         """
-        # We want to find the best 'n' cards, so we sort the hand based on utility.
+        lands = [c for c in hand if c.is_land()]
         
-        def card_score(card: 'Card') -> int:
-            score = 0
-            if card.is_land:
-                score += 3  # High priority
-            elif card.mana_cost <= 2:
-                score += 2  # Medium priority (early plays)
-            elif card.is_removal or card.is_utility:
-                score += 1  # Low priority (interaction)
-            return score
-
-        # Sort the hand by score (descending)
-        sorted_hand = sorted(hand, key=card_score, reverse=True)
+        # 1. Excess Lands: Keep the first 3-4 lands, bottom the rest.
+        to_bottom = lands[4:]
         
-        # Return the top 'n' cards from the sorted list
-        return sorted_hand[:n]
+        # 2. High CMC, non-synergistic cards
+        remaining_cards = [c for c in hand if c not in to_bottom]
+        
+        # Sort by CMC descending, then by name (to ensure deterministic removal)
+        high_cmc_spells = sorted(
+            [c for c in remaining_cards if c.cmc > 3 and not any(tag in c.name for tag in SYNERGY_THREATS)],
+            key=lambda c: (c.cmc, c.name), reverse=True
+        )
+        
+        # Combine and limit to n
+        to_bottom.extend(high_cmc_spells)
+        return to_bottom[:n]
 
-    def main_phase(self, gs: 'GameState') -> Tuple[List['Card'], List['Card']]:
+    def main_phase(self, gs: GameState) -> None:
         """
-        Plays land and then casts the most impactful spells/creatures.
-        Returns (cards_to_play, cards_to_discard).
+        Play all available lands and cast the cheapest, most synergistic threats.
         """
-        # 1. Play Land
-        lands_to_play = [card for card in self.hand if card.is_land and card.mana_cost <= gs.mana_available]
-        
-        if lands_to_play:
-            # Play the land that costs the least, or the one that is most critical (if we had that data)
-            land_to_play = min(lands_to_play, key=lambda c: c.mana_cost)
-            self.play_card(land_to_play)
-            print(f"Playing land: {land_to_play.name}")
-            
-        # Update available mana after playing land
-        mana_available = gs.mana_available - (land_to_play.mana_cost if 'land_to_play' in locals() else 0)
+        # 1. Play Lands
+        lands_to_play = [c for c in gs.hand() if c.is_land()]
+        for land in lands_to_play:
+            if gs.mana_pool.can_cast(land.mana_cost, land.cmc):
+                gs.play_land(land)
 
-        # 2. Cast Spells/Creatures
-        
-        # Filter for playable cards (low cost, affordable)
-        playable_cards = [card for card in self.hand if card.mana_cost <= mana_available and not card.is_land]
-        
-        # Prioritize:
-        # 1. Removal/Interaction (to control the board)
-        # 2. Low-cost, high-impact creatures (the core synergy)
-        
-        # Sort by impact score (simple heuristic: removal > low-cost creature > high-cost creature)
-        def spell_score(card: 'Card') -> int:
-            if card.is_removal or card.is_utility:
-                return 3
-            if card.mana_cost <= 2:
-                return 2
-            return 1
+        # 2. Cast Threats (Prioritize cheapest first)
+        threats = [c for c in gs.hand() if c.cmc <= 3 and any(tag in c.name for tag in SYNERGY_THREATS)]
+        # Sort by CMC ascending
+        threats.sort(key=lambda c: c.cmc)
 
-        playable_cards.sort(key=spell_score, reverse=True)
+        for card in threats:
+            if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
 
-        cards_to_play = []
-        cards_to_discard = []
+    def main_phase2(self, gs: GameState) -> None:
+        """
+        Cast any remaining affordable threats or utility spells.
+        """
+        # Identify all remaining threats (regardless of cost, if affordable)
+        all_threats = [c for c in gs.hand() if any(tag in c.name for tag in SYNERGY_THREATS)]
         
-        # Play up to 3 cards, or until mana runs out
-        for card in playable_cards:
-            if card.mana_cost <= mana_available:
-                # Check if playing this card is beneficial (e.g., doesn't overcommit)
-                if mana_available - card.mana_cost >= 0:
-                    self.play_card(card)
-                    cards_to_play.append(card)
-                    mana_available -= card.mana_cost
-                else:
-                    # Cannot afford this card
-                    break
+        # Sort by CMC ascending to maximize casting potential
+        all_threats.sort(key=lambda c: c.cmc)
+
+        for card in all_threats:
+            if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
             else:
-                # Cannot afford this card
-                break
-
-        # If we played cards, we assume we want to keep the rest of the hand for future turns.
-        # No cards are explicitly discarded unless they are lands we don't need.
-        return cards_to_play, []
+                # Optimization: If the card is too expensive now, assume subsequent cards are also too.
+                # This is a heuristic, but helps prevent unnecessary checks.
+                if card.cmc > 5:
+                    break

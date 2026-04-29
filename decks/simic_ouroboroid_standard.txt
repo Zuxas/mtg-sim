@@ -1,0 +1,18 @@
+// audit:stub reason="deck list pending; Simic Ouroboroid counter-based engine"
+// Simic Ouroboroid Standard - approximate build
+4 Ouroboroid
+4 Zimone, Infinite Analyst
+3 Zimone, All-Questioning
+4 Nev, the Practical Dean
+4 Ozolith, the Shattered Spire
+3 Striding Shotcaller
+4 Icetill Explorer
+4 Mightform Harmonizer
+3 Gene Pollinator
+4 Consult the Star Charts
+4 Forest
+4 Island
+4 Botanical Sanctum
+4 Thornspire Verge
+4 Rimewood Falls
+2 Soulstone Sanctuary

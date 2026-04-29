@@ -24,6 +24,7 @@ from enum import Enum
 from data.card import Card, Tag
 from engine.mana import ManaPool
 from engine.zones import Zones
+from engine.keywords import KWTag
 
 
 # Per-card cost-reduction rules. Each entry: (card_name, reducer_fn(card, gs))

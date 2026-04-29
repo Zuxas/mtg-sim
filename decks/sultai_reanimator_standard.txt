@@ -1,0 +1,19 @@
+// audit:stub reason="deck list pending; Sultai Reanimator"
+// Sultai Reanimator Standard - approximate build
+4 Witherbloom, the Balancer
+3 Bringer of the Last Gift
+3 Overlord of the Balemurk
+4 Jadar, Ghoulcaller of Nephalia
+4 Faerie Dreamthief
+4 Fatal Push
+4 Duress
+3 Feed the Cycle
+4 Esper Origins
+3 Nowhere to Run
+4 Watery Grave
+4 Overgrown Tomb
+4 Zagoth Triome
+3 Forest
+3 Swamp
+2 Island
+2 Soulstone Sanctuary

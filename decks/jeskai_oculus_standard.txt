@@ -1,0 +1,21 @@
+// audit:stub reason="deck list pending; approximate Jeskai Oculus post-Strixhaven"
+// Jeskai Oculus Standard - approximate post-Strixhaven build
+4 Prismari, the Inspiration
+4 Rootha, Mastering the Moment
+4 Veyran, Voice of Duality
+4 Zaffai and the Tempests
+2 Deekah, Fractal Theorist
+4 Magma Opus
+4 Mathemagics
+3 Lorehold, the Historian
+4 Opt
+4 Winternight Stories
+3 Into the Flood Maw
+2 Bounce Off
+4 Spirebluff Canal
+4 Sacred Foundry
+4 Hallowed Fountain
+3 Island
+2 Mountain
+2 Plains
+2 Soulstone Sanctuary

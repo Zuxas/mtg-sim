@@ -1,0 +1,16 @@
+// audit:stub reason="deck list pending; Azorius Omniscience combo"
+// Azorius Omniscience Standard - approximate build
+4 Elspeth, Storm Slayer
+4 Mangara, the Diplomat
+4 Serra Paragon
+4 Cosmogrand Zenith
+4 Enduring Innocence
+4 Voice of Victory
+4 Novice Inspector
+4 Get Lost
+2 Seam Rip
+3 Honor
+2 Nurturing Pixie
+3 Shardmage's Rescue
+20 Plains
+2 Fountainport

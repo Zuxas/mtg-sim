@@ -1,39 +1,40 @@
 """
-apl/azorius_control_standard_match.py — Azorius Control (Standard, August 2025)
+apl/azorius_omniscience_standard_match.py — Azorius Omniscience (Standard)
 
-Token-swarm control. Win with Novice Inspector Clues + Voice of Victory
-Warriors + Cosmogrand Zenith tokens. Remove threats with Get Lost + Seam Rip.
-Enduring Innocence draws on every small ETB creature.
+Token-doubling Elspeth + Cosmogrand Zenith engine. Elspeth doubles all
+token creation; Cosmogrand makes tokens on 2nd spell each turn; Serra
+Paragon recurs valuable permanents from GY. Mangara draws against aggro.
 
-Replaced old version (blue-heavy control) with current white-primary token build.
+Win condition: token flood with doubled Elspeth → large attack.
 """
 from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
-from apl.card_specs import multi_set_standard, edge_of_eternities
+from apl.card_specs import (multi_set_standard, edge_of_eternities,
+                              serra_paragon as sp, strixhaven_support)
 
-COSMOGRAND   = "Cosmogrand Zenith"
-ENDURING_INN = "Enduring Innocence"
-NOVICE_INSP  = "Novice Inspector"
-SEAM_RIP     = "Seam Rip"
-VOICE_VIC    = "Voice of Victory"
 ELSPETH_ST   = "Elspeth, Storm Slayer"
+VOICE_VIC    = "Voice of Victory"
+COSMOGRAND   = edge_of_eternities.COSMOGRAND_ZENITH
+MANGARA      = strixhaven_support.MANGARA
+NOVICE_INSP  = multi_set_standard.NOVICE_INSPECTOR
+ENDURING_INN = "Enduring Innocence"
+HONOR        = "Honor"
 GET_LOST     = "Get Lost"
-STARFIELD    = "Starfield Shepherd"
-NURTURING    = "Nurturing Pixie"
+SERRA_PAR    = sp.NAME
 
-THREATS = {ENDURING_INN, VOICE_VIC, NOVICE_INSP, STARFIELD}
+THREATS = {ELSPETH_ST, COSMOGRAND, VOICE_VIC, NOVICE_INSP, SERRA_PAR, MANGARA}
 
 
-class AzoriusControlMatchAPL(MatchAPL):
-    name = "Azorius Control"
+class AzoriusOmniscienceMatchAPL(MatchAPL):
+    name = "Azorius Omniscience"
     win_condition_damage = 20
     max_turns = 14
 
     def __init__(self):
-        self._spells_cast_this_turn = 0
+        self._spells_this_turn = 0
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
@@ -41,7 +42,6 @@ class AzoriusControlMatchAPL(MatchAPL):
         threats = sum(1 for c in hand if c.name in THREATS)
         if lands == 0: return False
         if lands >= 3 and threats >= 1: return True
-        if lands >= 2 and threats >= 2: return True
         return mulligans >= 2
 
     def bottom(self, hand, n):
@@ -57,66 +57,73 @@ class AzoriusControlMatchAPL(MatchAPL):
     def main_phase_match(self, gs, opponent):
         self._play_land_if_able(gs)
         gs.tap_lands()
-        self._spells_cast_this_turn = 0
+        self._spells_this_turn = 0
+        elspeth_active = any(c.name == ELSPETH_ST for c in gs.zones.battlefield)
 
-        # 1. Novice Inspector T1
+        # T1: Novice Inspector (Clue + draw engine)
         for c in list(gs.zones.hand):
             if c.name == NOVICE_INSP and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._spells_cast_this_turn += 1
+                self._spells_this_turn += 1
                 multi_set_standard._on_resolve(gs, NOVICE_INSP, c, opponent)
                 break
 
-        # 2. Voice of Victory T2
+        # T2: Voice of Victory (mobilize 2)
         for c in list(gs.zones.hand):
             if c.name == VOICE_VIC and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._spells_cast_this_turn += 1
+                self._spells_this_turn += 1
                 break
 
-        # 3. Enduring Innocence T3
+        # T3: Elspeth, Storm Slayer (token doubler)
         for c in list(gs.zones.hand):
-            if c.name == ENDURING_INN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+            if c.name == ELSPETH_ST and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._spells_cast_this_turn += 1
-                if self._spells_cast_this_turn >= 2:
-                    gs.zones.draw(1)
+                self._spells_this_turn += 1
+                gs._log(f"  Elspeth Storm Slayer: all tokens created are doubled!")
                 break
 
-        # 4. Cosmogrand Zenith — 2nd spell = two 1/1 tokens
+        # T3: Mangara anti-aggro draw
+        for c in list(gs.zones.hand):
+            if c.name == MANGARA and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                self._spells_this_turn += 1
+                strixhaven_support._on_resolve(gs, MANGARA, c, opponent)
+                break
+
+        # T4: Cosmogrand Zenith (2nd spell = 2 tokens × 2 with Elspeth = 4)
         for c in list(gs.zones.hand):
             if c.name == COSMOGRAND and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._spells_cast_this_turn += 1
-                if self._spells_cast_this_turn >= 2:
-                    for _ in range(2):
+                self._spells_this_turn += 1
+                n_tokens = 4 if elspeth_active else 2
+                if self._spells_this_turn >= 2:
+                    for _ in range(n_tokens):
                         tok = Card("Soldier Token", "{0}", 1, "Token Creature — Soldier")
                         tok.power = "1"; tok.toughness = "1"
                         tok.turn_entered = gs.turn; tok.summoning_sickness = True
                         gs.zones.battlefield.append(tok)
-                    gs._log(f"  Cosmogrand Zenith: 2 Soldier tokens")
+                    gs._log(f"  Cosmogrand: {n_tokens} tokens (Elspeth: {'×2' if elspeth_active else '×1'})")
                 break
 
-        # 5. Elspeth Storm Slayer
+        # Serra Paragon: recur best CMC<=3 from GY
         for c in list(gs.zones.hand):
-            if c.name == ELSPETH_ST and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+            if c.name == SERRA_PAR and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                self._spells_cast_this_turn += 1
+                self._spells_this_turn += 1
                 break
+        sp.use_recursion(gs, opponent)
+        sp.reset_turn_flag(gs)
 
-        # 6. Removal
+        # Removal
         if opponent:
-            for removal_name in (SEAM_RIP, GET_LOST):
-                threats = [x for x in opponent.zones.battlefield if not x.is_land()]
-                if threats:
-                    for c in list(gs.zones.hand):
-                        if c.name == removal_name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                            gs.cast_spell(c)
-                            if removal_name == SEAM_RIP:
-                                edge_of_eternities._on_resolve(gs, SEAM_RIP, c, opponent)
-                            else:
-                                multi_set_standard._on_resolve(gs, GET_LOST, c, opponent)
-                            break
+            threats = [x for x in opponent.zones.battlefield if not x.is_land()]
+            if threats:
+                for c in list(gs.zones.hand):
+                    if c.name == GET_LOST and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.cast_spell(c)
+                        multi_set_standard._on_resolve(gs, GET_LOST, c, opponent)
+                        break
 
         self._cast_all_castable(gs)
 
@@ -145,8 +152,4 @@ class AzoriusControlMatchAPL(MatchAPL):
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]
         if not lands or gs.land_played: return
-        def score(c):
-            n = (c.name or '').lower()
-            if 'plains' in n: return 1
-            return 2
-        gs.play_land(min(lands, key=score))
+        gs.play_land(lands[0])

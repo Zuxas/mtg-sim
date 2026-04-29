@@ -109,6 +109,16 @@ APL_REGISTRY = {
     "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
     "rakdos":          ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
 
+    # ── Standard match APLs (2026-04-29) — class doubles as goldfish APL ──
+    "gruulaggro":      ("apl.gruul_aggro_standard_match",    "GruulAggroStandardMatchAPL", "decks/gruul_aggro_standard.txt"),
+    "borosaggrostandard": ("apl.boros_aggro_standard_match","BorosAggroMatchAPL",          "decks/boros_aggro_standard.txt"),
+    "azoriuscontrol":  ("apl.azorius_control_standard_match","AzoriusControlMatchAPL",     "decks/azorius_control_standard.txt"),
+    "esperpixie":      ("apl.esper_pixie_standard_match",    "EsperPixieMatchAPL",         "decks/esper_pixie_standard.txt"),
+    "jeskaioculus":    ("apl.jeskai_oculus_standard_match",  "JeskaiOculusMatchAPL",       "decks/jeskai_oculus_standard.txt"),
+    "simicouroboroid": ("apl.simic_ouroboroid_standard_match","SimicOuroboroidMatchAPL",   "decks/simic_ouroboroid_standard.txt"),
+    "sultaireanimator":("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL","decks/sultai_reanimator_standard.txt"),
+    "azoriusomniscience":("apl.azorius_omniscience_standard_match","AzoriusOmniscienceMatchAPL","decks/azorius_omniscience_standard.txt"),
+
     # ── Standard Strixhaven brews (GenericAPL shims, 2026-04-23) ──
     "izzetcontrol":       ("apl.izzet_control_standard",      "IzzetControlAPL",      "decks/izzet_control_standard.txt"),
     "roamingelementals":  ("apl.roaming_elementals_standard", "RoamingElementalsAPL", "decks/roaming_elementals_standard.txt"),
@@ -174,6 +184,14 @@ MATCH_APL_REGISTRY = {
     "jeskaienergycontrol": ("apl.jeskai_control_match", "JeskaiControlMatchAPL"),
     # Standard APLs (2026-04-29)
     "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL"),
+    "gruulaggro":      ("apl.gruul_aggro_standard_match",    "GruulAggroStandardMatchAPL"),
+    "borosaggrostandard": ("apl.boros_aggro_standard_match", "BorosAggroMatchAPL"),
+    "azoriuscontrol":  ("apl.azorius_control_standard_match","AzoriusControlMatchAPL"),
+    "esperpixie":      ("apl.esper_pixie_standard_match",    "EsperPixieMatchAPL"),
+    "jeskaioculus":    ("apl.jeskai_oculus_standard_match",  "JeskaiOculusMatchAPL"),
+    "simicouroboroid": ("apl.simic_ouroboroid_standard_match","SimicOuroboroidMatchAPL"),
+    "sultaireanimator":("apl.sultai_reanimator_standard_match","SultaiReanimatorStandardMatchAPL"),
+    "azoriusomniscience":("apl.azorius_omniscience_standard_match","AzoriusOmniscienceMatchAPL"),
 }
 
 

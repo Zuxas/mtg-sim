@@ -151,9 +151,14 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             if opp_threats:
                 for c in list(gs.zones.hand):
                     if c.name == SOLITUDE:
-                        # Find a white card to pitch (not Solitude itself)
-                        white_cards = [x for x in gs.zones.hand 
-                                      if x != c and not x.is_land()]
+                        # Solitude evoke requires pitching a WHITE card from hand
+                        # (oracle: "Evoke—Exile a white card from your hand").
+                        # Pre-2026-04-29 fix: this picked any non-land which
+                        # frequently evoked illegally with Galvanic / Consign /
+                        # Ragavan as "pitch" when no white card was available.
+                        white_cards = [x for x in gs.zones.hand
+                                      if x != c and not x.is_land()
+                                      and 'W' in (getattr(x, 'colors', []) or [])]
                         if white_cards:
                             pitch = white_cards[0]
                             gs.zones.hand.remove(pitch)

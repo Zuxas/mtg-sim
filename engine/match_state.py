@@ -216,10 +216,16 @@ def safe_toughness(card: Card) -> int:
 
 
 def has_keyword(card: Card, keyword: str) -> bool:
-    """Check if a card has a keyword ability."""
-    kw = getattr(card, 'keywords', set())
-    if isinstance(kw, set):
-        return keyword.lower() in {k.lower() for k in kw}
+    """Check if a card has a keyword ability.
+
+    Checks card.tags first (populated by tag_keywords() at deck load; KWTag
+    values use underscores so 'first strike' -> 'first_strike').  Falls back
+    to oracle_text for keywords not covered by KWTag (e.g. double strike).
+    """
+    tags = getattr(card, 'tags', None)
+    if tags:
+        if keyword.lower().replace(' ', '_') in tags:
+            return True
     oracle = getattr(card, 'oracle_text', '') or ''
     return keyword.lower() in oracle.lower()
 

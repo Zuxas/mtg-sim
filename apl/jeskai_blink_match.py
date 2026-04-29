@@ -472,7 +472,12 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             if own_etb:
                 self._blink_best_etb(gs, opponent)
                 self._phelia_counters += 1
-                gs._log(f"  Phelia attack: blink own {own_etb[0].name} (+1/+1 counter #{self._phelia_counters})")
+                # Oracle: +1/+1 counter on Phelia when an own permanent was exiled
+                # (Pre-2026-04-29 fix: counter was tracked in _phelia_counters
+                # but never applied to phelia.counters — Phelia stayed a 1/1
+                # forever, losing significant combat damage.)
+                phelia.counters += 1
+                gs._log(f"  Phelia attack: blink own {own_etb[0].name} (Phelia now {phelia.counters} counters)")
             elif opponent:
                 # Exile opponent's best creature (returns at end step under THEIR control)
                 opp_cr = [c for c in opponent.zones.battlefield

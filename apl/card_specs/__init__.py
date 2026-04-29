@@ -28,7 +28,7 @@ from . import (plargg_and_nassari, witherbloom, serra_paragon, laelia,
 from . import (duskmourn_overlords, duskmourn_spells, duskmourn_creatures,
                lorwyn_eclipsed, edge_of_eternities, avatar_the_last_airbender,
                bloomburrow, foundations, aetherdrift, tarkir_dragonstorm,
-               final_fantasy, multi_set_standard)
+               final_fantasy, multi_set_standard, standard_remaining)
 
 __all__ = [
     # Tier 1 — Modern core
@@ -47,5 +47,5 @@ __all__ = [
     "duskmourn_overlords", "duskmourn_spells", "duskmourn_creatures",
     "lorwyn_eclipsed", "edge_of_eternities", "avatar_the_last_airbender",
     "bloomburrow", "foundations", "aetherdrift", "tarkir_dragonstorm",
-    "final_fantasy", "multi_set_standard",
+    "final_fantasy", "multi_set_standard", "standard_remaining",
 ]

@@ -98,7 +98,8 @@ class GoryosMatchAPL(MatchAPL):
             if opp_threats:
                 for c in list(gs.zones.hand):
                     if c.name == SOLITUDE:
-                        white_cards = [x for x in gs.zones.hand if x != c and not x.is_land()]
+                        white_cards = [x for x in gs.zones.hand if x != c and not x.is_land()
+                                      and 'W' in (getattr(x, 'colors', []) or [])]
                         if white_cards:
                             pitch = white_cards[0]
                             gs.zones.hand.remove(pitch); gs.zones.exile.append(pitch)

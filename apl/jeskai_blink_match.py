@@ -241,7 +241,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     if name == CASEY:
-                        gs.zones.draw(3)
+                        self._draw(gs, 3)
                         gs._log(f"  Casey Jones ETB: draw 3 (discard 3 next upkeep)")
                     break
 
@@ -249,7 +249,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         for c in list(gs.zones.hand):
             if c.name == QUANTUM and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                gs.zones.draw(1)
+                self._draw(gs, 1)
                 gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
                 break
 
@@ -260,7 +260,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         for c in list(gs.zones.hand):
             if c.name == CASEY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                gs.zones.draw(3)
+                self._draw(gs, 3)
                 self._casey_discards_pending += 1
                 gs._log(f"  Casey Jones: draw 3 (pending discards={self._casey_discards_pending})")
                 break
@@ -276,7 +276,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                         opponent.zones.battlefield.remove(target)
                         opponent.zones.hand.append(target)
                         gs._log(f"  Teferi -3: bounce {target.name} + draw")
-                gs.zones.draw(1)
+                self._draw(gs, 1)
                 break
 
         # 7. Phlage — hardcast as removal OR escape from GY as finisher
@@ -395,32 +395,74 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                             gs._log(f"  March: exile {target.name} (pitched {pitch_count})")
                         break
 
-        # 10b. Prismatic Ending ({X}{W}) — exile small opp permanent
-        # Pre-2026-04-29: never cast despite being in REMOVAL set; 2 copies
-        # rotted in hand each game. Now: target the smallest annoying opp
-        # nonland permanent (X = its MV). Common X=1 hits 1-drops like
-        # Ocelot/Ajani/Ragavan/Static Prison.
+        # 10b. Prismatic Ending ({X}{W}) — CONVERGE removal
+        # Oracle (verified Scryfall 2026-04-29):
+        #   "Converge — Exile target nonland permanent if its mana value
+        #    is less than or equal to the number of colors of mana spent
+        #    to cast this spell."
+        #
+        # Pre-2026-04-29 model (db68d8a) was WRONG: it scaled cost by
+        # target.cmc (cost = mv + 1), conflating mana paid with converge
+        # threshold. The actual mechanic: pay {X}{W} where X is generic
+        # mana, then count DISTINCT COLORS spent across the cast. Threshold
+        # is the color count, not the mana amount.
+        #
+        # Mana model: engine ManaPool tracks W/U/B/R/G/C/flex independently
+        # but has no native colors-spent-on-cast tracking. We approximate
+        # by counting the distinct colors in the pool that we could plausibly
+        # spend on this cast: 1 for W (mandatory pip) plus one per other
+        # color we have at least 1 mana of. flex (Cavern-style any-color)
+        # can stand in for any color we lack.
+        # Jeskai max practical converge = 3 (W/U/R available; B/G are off-color).
         if opponent:
             opp_perms = [x for x in opponent.zones.battlefield
                          if not x.is_land()]
             if opp_perms:
-                # Pick lowest-MV target (cheapest cast); often kills
-                # high-priority disruption like Static Prison MV=2.
-                target = min(opp_perms, key=lambda x: getattr(x, 'cmc', 99))
-                tgt_mv = int(getattr(target, 'cmc', 99))
-                cost = tgt_mv + 1  # X + W
-                for c in list(gs.zones.hand):
-                    if c.name == PRISMATIC and gs.mana_pool.total() >= cost:
-                        try:
-                            gs.mana_pool.pay(c.mana_cost, cost)
-                        except Exception:
-                            continue
-                        gs.zones.hand.remove(c)
-                        gs.zones.graveyard.append(c)
-                        opponent.zones.battlefield.remove(target)
-                        opponent.zones.exile.append(target)
-                        gs._log(f"  Prismatic Ending X={tgt_mv}: exile {target.name}")
-                        break
+                mp = gs.mana_pool
+                w_pool = mp.W + mp.flex  # W pip can be paid by W or flex
+                if w_pool >= 1 and mp.total() >= 1:
+                    # Reserve 1 mana for the {W} pip; the rest pays {X}.
+                    other_colors_have = [col for col in 'UBRG'
+                                         if getattr(mp, col, 0) > 0]
+                    flex_after_w = max(0, mp.flex - (1 if mp.W < 1 else 0))
+                    # Each non-W color we want to spend costs 1 generic mana
+                    # (paid as that color, satisfying X). Cap at Jeskai's
+                    # natural color access (3 = W/U/R).
+                    extra_distinct_avail = len(other_colors_have) + flex_after_w
+                    max_converge = 1 + min(mp.total() - 1, extra_distinct_avail)
+                    max_converge = min(max_converge, 3)
+                    # Pick LARGEST target we can kill at our converge level,
+                    # not smallest -- removes biggest opp threat efficiently.
+                    candidates = [p for p in opp_perms
+                                  if int(getattr(p, 'cmc', 99)) <= max_converge]
+                    if candidates:
+                        target = max(candidates,
+                                     key=lambda x: int(getattr(x, 'cmc', 0)))
+                        tgt_mv = int(getattr(target, 'cmc', 0))
+                        # Pay {X}{W}: total mana spent = max(1, tgt_mv).
+                        # The pre-fix code (db68d8a) called
+                        # mp.pay("{X}{W}", tgt_mv + 1), which due to a
+                        # ManaPool.pay quirk only actually deducts the {W}
+                        # pip (X parses to 0 in parse_cost; cmc param is
+                        # ignored when mana_cost is set). We preserve that
+                        # mana-drain semantics here so this commit isolates
+                        # the CONVERGE-target-selection fix from any
+                        # mana-bookkeeping change. The X-drain quirk is a
+                        # separate engine issue (Phase C).
+                        cost_to_pay = max(1, tgt_mv)
+                        for c in list(gs.zones.hand):
+                            if c.name == PRISMATIC and mp.total() >= cost_to_pay:
+                                try:
+                                    mp.pay(c.mana_cost, cost_to_pay)
+                                except Exception:
+                                    continue
+                                gs.zones.hand.remove(c)
+                                gs.zones.graveyard.append(c)
+                                opponent.zones.battlefield.remove(target)
+                                opponent.zones.exile.append(target)
+                                gs._log(f"  Prismatic Ending CONVERGE={tgt_mv}: "
+                                        f"exile {target.name}")
+                                break
 
         # 10c. Fable of the Mirror-Breaker ({2}{R}) — saga, always cast on curve
         # Pre-2026-04-29: never cast despite being in deck (0 references in
@@ -459,12 +501,12 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     gs.cast_spell(c)
                     # Casey Jones ETB: draw 3, defer discard 3
                     if c.name == CASEY:
-                        gs.zones.draw(3)
+                        self._draw(gs, 3)
                         self._casey_discards_pending += 1
                         gs._log(f"  Casey Jones: draw 3 (discard 3 next upkeep, pending={self._casey_discards_pending})")
                     # Quantum Riddler ETB: draw 1
                     elif c.name == QUANTUM:
-                        gs.zones.draw(1)
+                        self._draw(gs, 1)
                         gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
 
     def _blink_best_etb(self, gs, opponent):
@@ -504,11 +546,11 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 gs._log(f"  Blink Phlage: 3 dmg + 3 life")
                 blinked = True
             elif name == QUANTUM:
-                gs.zones.draw(1)
+                self._draw(gs, 1)
                 gs._log(f"  Blink Quantum Riddler: draw 1")
                 blinked = True
             elif name == CASEY:
-                gs.zones.draw(3)
+                self._draw(gs, 3)
                 self._casey_discards_pending += 1
                 gs._log(f"  Blink Casey Jones: draw 3 (pending discards={self._casey_discards_pending})")
                 blinked = True
@@ -667,6 +709,33 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 card.summoning_sickness = False  # was already on the field
                 gs._log(f"  Phelia exile return: {card.name} -> opp battlefield")
         self._phelia_exile_returns.clear()
+
+    def _draw(self, gs, n):
+        """Wrapper around gs.zones.draw(n) that applies Quantum Riddler's
+        static replacement effect.
+
+        Oracle (Quantum Riddler, verified Scryfall 2026-04-29):
+          "As long as you have one or fewer cards in hand, if you would
+           draw one or more cards, you draw that many cards plus one
+           instead."
+
+        APL-side workaround for an engine gap (no static replacement
+        framework). We check (a) Quantum Riddler in our battlefield AND
+        (b) hand size <= 1 BEFORE the draw, and add +1 to n if both hold.
+        Per oracle the check is on the draw-event creator's hand state,
+        evaluated when the draw would occur. We approximate as
+        pre-draw-hand-size check, which matches the oracle for any
+        single-event draw.
+        """
+        if n <= 0:
+            return
+        if (len(gs.zones.hand) <= 1
+                and any(c.name == QUANTUM for c in gs.zones.battlefield
+                        if not c.is_land())):
+            n += 1
+            gs._log(f"  Quantum Riddler static: +1 to draw "
+                    f"(hand <= 1, drew {n})")
+        gs.zones.draw(n)
 
     def _card_value(self, c):
         """Rate a card's value for discard decisions (Casey Jones)."""

@@ -213,15 +213,15 @@ def run_parallel(
         }, f, indent=2)
     print(f"  Saved: {out_path}")
 
-    # Update live matrix
+    # Update live matrix (concurrency-safe RMW; see engine/atomic_json.py)
+    from engine.atomic_json import atomic_rmw_json
     matrix_path = "data/sim_matchup_matrix.json"
-    matrix = {}
-    if os.path.exists(matrix_path):
-        with open(matrix_path) as f:
-            matrix = json.load(f)
-    matrix[our_deck] = {r["opp"]: r["g1"] for r in results if not r.get("error")}
-    with open(matrix_path, "w") as f:
-        json.dump(matrix, f, indent=2)
+    new_row = {r["opp"]: r["g1"] for r in results if not r.get("error")}
+    atomic_rmw_json(
+        matrix_path,
+        lambda matrix: matrix.update({our_deck: new_row}),
+        default_factory=dict,
+    )
 
     return results
 

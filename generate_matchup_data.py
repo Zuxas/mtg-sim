@@ -231,18 +231,20 @@ def run_our_matchups(
 
 def update_real_matrix(sim_results: list, output_path: str = "data/sim_matchup_matrix.json"):
     """
-    Convert sim results to real_matchup_matrix format for event_simulator.
-    Format: {(deck_a, deck_b): win_pct_a}
-    """
-    matrix = {}
-    for r in sim_results:
-        matrix[r['deck_a']] = matrix.get(r['deck_a'], {})
-        matrix[r['deck_a']][r['deck_b']] = r['a_win_pct']
-        matrix[r['deck_b']] = matrix.get(r['deck_b'], {})
-        matrix[r['deck_b']][r['deck_a']] = r['b_win_pct']
+    Merge sim results into real_matchup_matrix for event_simulator.
+    Format: {deck_a: {deck_b: win_pct_a, ...}, ...}
 
-    with open(output_path, 'w') as f:
-        json.dump(matrix, f, indent=2)
+    RMW-merge (preserves entries from prior runs); concurrency-safe via
+    engine.atomic_json.atomic_rmw_json.
+    """
+    from engine.atomic_json import atomic_rmw_json
+
+    def _merge(matrix):
+        for r in sim_results:
+            matrix.setdefault(r['deck_a'], {})[r['deck_b']] = r['a_win_pct']
+            matrix.setdefault(r['deck_b'], {})[r['deck_a']] = r['b_win_pct']
+
+    matrix = atomic_rmw_json(output_path, _merge, default_factory=dict)
     print(f"Matrix saved: {output_path}")
     return matrix
 

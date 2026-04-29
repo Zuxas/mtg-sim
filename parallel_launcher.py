@@ -140,16 +140,16 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
         }, f, indent=2)
     print(f"  Saved: {out}")
 
-    # Update matchup matrix
+    # Update matchup matrix (concurrency-safe RMW; see engine/atomic_json.py)
+    from engine.atomic_json import atomic_rmw_json
     matrix_path = "data/sim_matchup_matrix.json"
-    matrix = {}
-    if os.path.exists(matrix_path):
-        with open(matrix_path) as f:
-            matrix = json.load(f)
     key = f"{our_deck} ({format_name})"
-    matrix[key] = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")}
-    with open(matrix_path, "w") as f:
-        json.dump(matrix, f, indent=2)
+    new_row = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")}
+    atomic_rmw_json(
+        matrix_path,
+        lambda matrix: matrix.update({key: new_row}),
+        default_factory=dict,
+    )
 
     return done
 

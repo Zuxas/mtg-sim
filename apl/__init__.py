@@ -148,6 +148,11 @@ MATCH_APL_REGISTRY = {
     "dimirmurktide":   ("apl.murktide_match",        "MurktideMatchAPL"),
     "neoform":         ("apl.neoform_match",         "NeoformMatchAPL"),
     "neoformcombo":    ("apl.neoform_match",         "NeoformMatchAPL"),
+    "jeskaiblink":     ("apl.jeskai_blink_match",    "JeskaiBlinkMatchAPL"),
+    # NB: "jeskaicontrol" key was incorrectly pointing at JeskaiBlinkMatchAPL
+    # (Jeskai Control != Jeskai Blink). Kept for backward compat, but should
+    # be moved/removed when a real Jeskai Control match APL exists.
+    # See IMPERFECTIONS:jeskaicontrol-key-mismapping.
     "jeskaicontrol":   ("apl.jeskai_blink_match",    "JeskaiBlinkMatchAPL"),
     "izzetaffinity":   ("apl.affinity_match",        "IzzetAffinityMatchAPL"),
     "affinity":        ("apl.affinity_match",        "IzzetAffinityMatchAPL"),

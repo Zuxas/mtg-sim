@@ -367,17 +367,20 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     if c.name == MARCH:
                         target = max(problem_permanents, key=lambda x: safe_power(x))
                         target_mv = getattr(target, 'cmc', 0)
-                        # March's oracle: "You may exile up to 2 WHITE cards
-                        # from your hand rather than pay {X}{W}." Pitch must
-                        # be white. Pre-2026-04-29 fix: pitched any non-land,
-                        # which is illegal (and same bug class as Solitude
-                        # evoke fixed in commit ce492dc).
+                        # March's oracle: "As an additional cost to cast this
+                        # spell, you may exile ANY NUMBER of WHITE cards from
+                        # your hand. This spell costs {2} less to cast for
+                        # each card exiled this way."
+                        # Pre-ce492dc: pitched any non-land (illegal).
+                        # Post-ce492dc/46e6160: white-only + 2-pitch cap.
+                        # Oracle audit 2026-04-29: there's NO 2-cap — "any
+                        # number." Removing the cap. White-only filter stays
+                        # because oracle requires WHITE cards specifically.
                         base_cost = target_mv + 1
                         white_pitch = [x for x in gs.zones.hand
                                        if x != c and not x.is_land()
                                        and 'W' in (getattr(x, 'colors', []) or [])]
-                        # Oracle-cap: at most 2 pitches per cast
-                        pitch_count = min(len(white_pitch), 2,
+                        pitch_count = min(len(white_pitch),
                                           int((base_cost - 1) // 2))
                         effective_cost = max(1, base_cost - pitch_count * 2)
                         if gs.mana_pool.total() >= effective_cost:

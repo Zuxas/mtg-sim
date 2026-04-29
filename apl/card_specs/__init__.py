@@ -19,6 +19,8 @@ from . import (prismari, silverquill, emeritus_of_conflict, rootha,
                veyran, quandrix, the_dawning_archaic, strixhaven_lessons, muddle)
 from . import (lorehold, deekah, zaffai, magma_opus, maelstrom_artisan,
                brazen_borrower, ral_zarek_guest_lecturer)
+from . import (plargg_and_nassari, witherbloom, serra_paragon, laelia,
+               rionya, mathemagics, jadar, ozolith)
 
 __all__ = [
     # Tier 1 — Modern core (extracted 2026-04-29 POC)
@@ -32,4 +34,7 @@ __all__ = [
     # Tier 3 — Secrets of Strixhaven Standard wave 2 (2026-04-29)
     "lorehold", "deekah", "zaffai", "magma_opus", "maelstrom_artisan",
     "brazen_borrower", "ral_zarek_guest_lecturer",
+    # Tier 3 — Secrets of Strixhaven Standard wave 3 (2026-04-29)
+    "plargg_and_nassari", "witherbloom", "serra_paragon", "laelia",
+    "rionya", "mathemagics", "jadar", "ozolith",
 ]

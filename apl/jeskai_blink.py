@@ -28,17 +28,16 @@ from __future__ import annotations
 from apl.base_apl import BaseAPL
 from data.card import Card, Tag
 from engine.game_state import GameState
-from apl.card_specs import phlage, ragavan, phelia, ephemerate
+from apl.card_specs import (phlage, ragavan, phelia, ephemerate,
+                             quantum_riddler, teferi_time_raveler)
 
-# Inline-still cards (Tier 2/3 — pending extraction)
-PHLAGE = "Phlage, Titan of Fire's Fury"
-QUANTUM = "Quantum Riddler"
+# Inline-still cards (Tier 3 — deck-specific, not extracted)
 CASEY = "Casey Jones, Vigilante"
-TEFERI = "Teferi, Time Raveler"
 FABLE = "Fable of the Mirror-Breaker"
+PHLAGE = phlage.NAME
 
 # Threats for keep() decisions
-THREATS = {ragavan.NAME, phelia.NAME, QUANTUM, CASEY, PHLAGE}
+THREATS = {ragavan.NAME, phelia.NAME, quantum_riddler.NAME, CASEY, phlage.NAME}
 
 
 class JeskaiBlinkAPL(BaseAPL):
@@ -129,18 +128,10 @@ class JeskaiBlinkAPL(BaseAPL):
                 break
 
         # 4. Quantum Riddler (5 mana) — 4/6 flying + draw 1
-        for c in list(gs.zones.hand):
-            if c.name == QUANTUM and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                gs.zones.draw(1)
-                break
+        quantum_riddler.cast(gs)
 
-        # 5. Teferi (3 mana) — -3 for draw (bounce target dead in goldfish)
-        for c in list(gs.zones.hand):
-            if c.name == TEFERI and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                gs.zones.draw(1)
-                break
+        # 5. Teferi (3 mana) — -3 for draw (bounce dead in goldfish)
+        teferi_time_raveler.cast(gs)
 
         # 6. Fable (3 mana saga) — Ch1 loot
         for c in list(gs.zones.hand):
@@ -174,11 +165,11 @@ class JeskaiBlinkAPL(BaseAPL):
     def _card_value(self, c: Card) -> int:
         """Rate card value for discard decisions (Casey upkeep, Fable loot)."""
         if c.is_land():       return 1
-        if c.name == phelia.NAME:   return 9
-        if c.name == PHLAGE:        return 7
-        if c.name == QUANTUM:       return 7
-        if c.name == ragavan.NAME:  return 5
-        if c.name == ephemerate.NAME: return 8
+        if c.name == phelia.NAME:           return 9
+        if c.name == phlage.NAME:           return 7
+        if c.name == quantum_riddler.NAME:  return 7
+        if c.name == ragavan.NAME:          return 5
+        if c.name == ephemerate.NAME:       return 8
         return 3
 
     def _play_land(self, gs: GameState):

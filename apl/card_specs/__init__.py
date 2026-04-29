@@ -14,5 +14,12 @@ Spec: harness/specs/2026-04-29-card-specs-framework.md
 Findings: harness/knowledge/tech/jeskai-blink-card-specs-2026-04-28.md
 """
 from . import phlage, ragavan, phelia, ephemerate
+from . import quantum_riddler, teferi_time_raveler, consign_to_memory, wrath_of_the_skies
 
-__all__ = ["phlage", "ragavan", "phelia", "ephemerate"]
+__all__ = [
+    # Tier 1 (extracted 2026-04-29 POC)
+    "phlage", "ragavan", "phelia", "ephemerate",
+    # Tier 2 (extracted 2026-04-29)
+    "quantum_riddler", "teferi_time_raveler", "consign_to_memory",
+    "wrath_of_the_skies",
+]

@@ -1,0 +1,26 @@
+{
+  "cutteraffinity": {
+    "module": "apl.auto_apls.cutter_affinity",
+    "class": "CutterAffinityAPL",
+    "deck_file": "decks/auto/cutter_affinity_modern.txt",
+    "generated_date": "2026-04-30",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "jeskaiphelia": {
+    "module": "apl.auto_apls.jeskai_phelia",
+    "class": "JeskaiPheliaAPL",
+    "deck_file": "decks/auto/jeskai_phelia_modern.txt",
+    "generated_date": "2026-04-30",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "izzetlessons": {
+    "module": "apl.auto_apls.izzet_lessons",
+    "class": "IzzetLessonsAPL",
+    "deck_file": "decks/auto/izzet_lessons_standard.txt",
+    "generated_date": "2026-04-30",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  }
+}

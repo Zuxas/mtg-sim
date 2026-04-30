@@ -1,118 +1,103 @@
-# Auto-generated APL for Jeskai Phelia (Gemma draft)
-# 2026-04-29
+# Auto-generated APL for Jeskai Phelia (gemma draft)
+# 2026-04-30
 
-from typing import Optional
 from data.card import Card, Tag
-from engine.game_state import GameState
 from apl.base_apl import BaseAPL
 
-# Jeskai Phelia focuses on tempo, counterspells, and burn/direct damage.
-# Key threats/interactions include efficient flyers, cheap removal, and card advantage engines.
-CORE_THREATS = {"Aethermage's Volition", "Counterspell", "Lightning Bolt", "Skyclave Apparition", "Shock"}
+# Key cards for this deck
+THREATS = {"Ragavan, Nimble Pilferer", "Solitude", "Phelia, Exuberant Shepherd", "Phlage, Titan of Fire's Fury", "Teferi, Time Raveler"}
+UTILITY_SPELLS = {"Consign to Memory", "Fable of the Mirror-Breaker", "March of Otherworldly Light", "Strix Serenade"}
+LANDS = {"Arid Mesa", "Flooded Strand", "Scalding Tarn", "Hallowed Fountain", "Steam Vents", "Sacred Foundry", "Plains", "Island", "Mountain", "Arena of Glory", "Thundering Falls"}
 
-class JeskaiAPL(BaseAPL):
+class JeskaiPheliaAPL(BaseAPL):
     name = "Jeskai Phelia"
     win_condition_damage = 20
     max_turns = 15
 
     def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
-        """
-        Keep a hand if it has enough lands and a mix of interaction/threats.
-        """
+        # We want a mix of lands, threats, and interaction.
+        
+        # 1. Check for basic land count
         lands = [c for c in hand if c.is_land()]
-        
-        # Minimum requirement: 2 lands, at least one interaction piece, and some threats.
-        if len(lands) < 2:
+        if len(lands) < 2 and not on_play:
             return False
         
-        interaction_count = sum(1 for c in hand if c.name in CORE_THREATS and c.mana_cost != "{0}")
+        # 2. Check for threats/utility
+        threats = [c for c in hand if c.name in THREATS]
+        utility = [c for c in hand if c.name in UTILITY_SPELLS]
         
-        if interaction_count == 0 and mulligans < 2:
+        # Must have at least one threat or utility spell, unless we are on turn 1 and have lots of lands.
+        if not (threats or utility):
             return False
-        
-        # If we have few cards, we are likely fine, unless we have zero lands.
+
+        # If we have few cards, we keep them regardless of composition.
         if len(hand) <= 3:
             return True
-            
-        # General check: Need a balance of resources.
-        return len(lands) >= 2 and interaction_count >= 1
+
+        # General rule: Keep if we have enough land density and some impact.
+        return len(lands) >= 2 and (threats or utility)
 
     def bottom(self, hand: list, n: int) -> list:
-        """
-        Bottom the excess lands and the highest CMC, lowest impact spells.
-        """
+        # Prioritize putting excess lands at the bottom.
         lands = [c for c in hand if c.is_land()]
         
-        # 1. Excess lands (keep at least 3-4)
-        excess_lands = lands[3:] if len(lands) > 3 else []
+        # Identify excess lands (keep at least 4-5)
+        excess_lands = lands[4:] if len(lands) > 4 else []
         
-        # 2. Non-land cards: Sort by CMC descending, then by name (to ensure deterministic removal)
-        non_lands = [c for c in hand if not c.is_land() and c not in excess_lands]
-        
-        # Prioritize removing high CMC, non-essential spells/creatures
-        high_cmc_to_remove = sorted(non_lands, key=lambda c: (-c.cmc, c.name))
+        # Identify non-land, non-threat, non-utility cards to put at the bottom
+        low_impact_spells = [c for c in hand if not c.is_land() and c.name not in THREATS and c.name not in UTILITY_SPELLS]
         
         to_bottom = []
         
-        # Combine excess lands and high-CMC spells
-        for i in range(min(n, len(excess_lands) + len(high_cmc_to_remove))):
-            if i < len(excess_lands):
-                to_bottom.append(excess_lands[i])
+        # Add excess lands first
+        for land in excess_lands:
+            if len(to_bottom) < n:
+                to_bottom.append(land)
             else:
-                to_bottom.append(high_cmc_to_remove[i - len(excess_lands)])
+                break
+        
+        # Fill remaining slots with low impact spells
+        remaining_slots = n - len(to_bottom)
+        for spell in low_impact_spells:
+            if remaining_slots > 0:
+                to_bottom.append(spell)
+                remaining_slots -= 1
+            else:
+                break
                 
-        return to_bottom
+        return to_bottom[:n]
 
-    def main_phase(self, gs: GameState) -> None:
-        """
-        Early game phase: Prioritize playing lands and cheap, efficient interaction.
-        """
+    def main_phase(self, gs) -> None:
         # 1. Play land if possible
         self._play_land_if_able(gs)
-        
-        # 2. Play cheap interaction/threats (CMC 1-3)
+
+        # 2. Cast threats/removal
         for card in list(gs.hand()):
-            if card.is_land():
-                continue
+            # Check for high-priority threats first
+            if card.name in THREATS:
+                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    continue
             
-            # Check for low-cost, high-impact spells (e.g., 1-2 CMC counterspells or burn)
-            if card.cmc <= 3 and card.mana_cost != "{0}":
-                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    # Prioritize counterspells/removal first
-                    if card.name in CORE_THREATS and card.has(Tag.INSTANT):
-                        gs.cast_spell(card)
-                        continue
-                    
-                    # Otherwise, cast if it's cheap and useful
+            # Check for removal/tempo effects
+            if card.name in {"Galvanic Discharge", "March of Otherworldly Light"} and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                # Assuming we target something on the battlefield if removal is castable
+                if gs.zones.battlefield:
                     gs.cast_spell(card)
-                    
-    def main_phase2(self, gs: GameState) -> None:
-        """
-        Late game phase: Focus on closing the game with burn or countering major threats.
-        """
-        # 1. Counter the biggest threat on the board if we can afford it
-        for card in list(gs.zones.battlefield):
-            if card.name in CORE_THREATS and card.has(Tag.CREATURE) and card.cmc > 3:
-                if gs.mana_pool.can_cast("{U}", card.cmc): # Assuming Blue counterspell
-                    gs.cast_spell(Card("Counterspell", "{U}", 2, "Counterspell", Tag.INSTANT))
+                    continue
+
+    def main_phase2(self, gs) -> None:
+        # 1. Utility/Card Advantage
+        for card in list(gs.hand()):
+            if card.name in UTILITY_SPELLS:
+                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    # After casting utility, we might want to check for more threats
                     break
         
-        # 2. Burn down the opponent if we have direct damage spells
+        # 2. If we have mana left, cast remaining threats
         for card in list(gs.hand()):
-            if card.name in CORE_THREATS and card.mana_cost == "{R}" and card.has(Tag.SORCERY):
+            if card.name in THREATS:
                 if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
                     break
-        
-        # 3. Otherwise, cast the most expensive, impactful spell we can afford
-        best_card = None
-        max_cmc = -1
-        for card in list(gs.hand()):
-            if not card.is_land() and card.cmc > 0:
-                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    if card.cmc > max_cmc:
-                        max_cmc = card.cmc
-                        best_card = card
-        
-        if best_card:
-            gs.cast_spell(best_card)

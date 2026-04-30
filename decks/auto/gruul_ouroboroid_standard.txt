@@ -1,0 +1,28 @@
+// audit:auto-generated:Gruul Ouroboroid:2026-04-30
+// Source: meta-analyzer DB deck_id=9432, archetype=Gruul Ouroboroid
+
+4 Badgermole Cub
+4 Emberheart Challenger
+3 Forest
+2 Hexing Squelcher
+4 Hired Claw
+3 Impolite Entrance
+4 Innkeeper's Talent
+4 Lightning Strike
+3 Might of the Meek
+2 Mountain
+2 Multiversal Passage
+4 Ouroboroid
+4 Overprotect
+4 Pawpatch Recruit
+2 Soulstone Sanctuary
+3 Starting Town
+4 Stomping Ground
+4 Thornspire Verge
+
+Sideboard
+3 Heritage Reclamation
+3 Pyroclasm
+3 Sunspine Lynx
+3 Tokka & Rahzar, Terrible Twos
+3 Torpor Orb

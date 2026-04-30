@@ -1,0 +1,25 @@
+// audit:auto-generated:Boros Convoke:2026-04-30
+// Source: meta-analyzer DB deck_id=30947, archetype=Boros Convoke
+
+4 Battlefield Forge
+4 Case of the Gateway Express
+4 Gleeful Demolition
+4 Imodane's Recruiter
+4 Inspiring Vantage
+4 Knight-Errant of Eos
+3 Mirrex
+5 Mountain
+4 Novice Inspector
+6 Plains
+4 Resolute Reinforcements
+3 Sanguine Evangelist
+4 Warden of the Inner Sky
+3 Warleader's Call
+4 Yotian Frontliner
+
+Sideboard
+2 Destroy Evil
+3 Elspeth's Smite
+3 Invasion of Gobakhan
+3 Lightning Helix
+4 Urabrask's Forge

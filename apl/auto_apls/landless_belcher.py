@@ -1,102 +1,78 @@
-# Auto-generated APL for Landless Belcher (Gemma draft)
-# 2026-04-29
+# Auto-generated APL for Landless Belcher (gemma draft)
+# 2026-04-30
 
-from typing import Optional
 from data.card import Card, Tag
-from engine.game_state import GameState
 from apl.base_apl import BaseAPL
 
-# Key cards for Landless Belcher (Modern)
-MANA_ROCKS = {"Sol Ring", "Mana Crypt", "Chrome Mox"}
-FINISHER = "Belcher's Breastplate"
-LOW_COST_THREATS = {"Lightning Bolt", "Thoughtseize", "Counterspell"}
+# Core combo pieces and high-impact spells
+COMBO_PIECES = {"Lotus Bloom", "Goblin Charbelcher", "Whir of Invention", "Fallaji Archaeologist"}
+INTERACTION = {"Disrupting Shoal", "Jwari Disruption", "Sink into Stupor", "Suppression Ray", "Flare of Denial", "Force of Negation", "Stern Scolding"}
+RAMP_UTILITY = {"Hydroelectric Specimen", "Sea Gate Restoration", "Waterlogged Teachings", "Thundertrap Trainer", "Tameshi, Reality Architect"}
+FINISHER = "Whir of Invention"
 
 class BelcherAPL(BaseAPL):
     name = "Landless Belcher"
-    win_condition_damage = 25
-    max_turns = 10
+    win_condition_damage = 20
+    max_turns = 15
 
     def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
-        """
-        Mulligan strategy: Prioritize hands with mana rocks and cheap spells.
-        Avoid hands that are mostly lands or too slow.
-        """
-        if not hand:
-            return False
-
-        # Count non-land spells and mana rocks
-        spells = [c for c in hand if not c.is_land()]
-        mana_rocks_count = sum(1 for c in hand if c.name in MANA_ROCKS)
-
-        # If we have 3+ spells/rocks, we are likely okay.
-        if len(spells) >= 3:
+        # We need at least 2 combo pieces or a strong mix of interaction/ramp.
+        combo_count = sum(1 for card in hand if card.name in COMBO_PIECES)
+        interaction_count = sum(1 for card in hand if card.name in INTERACTION)
+        
+        if combo_count >= 2:
             return True
-
-        # If we have 0 spells but 2+ mana rocks, we might be able to ramp into a finish.
-        if len(spells) < 3 and mana_rocks_count >= 2:
+        
+        # If no combo, we need strong interaction or ramp to survive the early game.
+        if interaction_count >= 3 or any(c.name in RAMP_UTILITY for c in hand):
             return True
-
-        # If we are on the first mulligan and have a decent hand, keep it.
-        if mulligans > 0 and len(spells) >= 2:
+            
+        # If we are mulliganing, we can afford to be slightly weaker.
+        if mulligans >= 2 and (combo_count >= 1 or interaction_count >= 2):
             return True
-
-        # Otherwise, mulligan.
+            
         return False
 
     def bottom(self, hand: list, n: int) -> list:
-        """
-        Bottom strategy: Get the worst lands and high-CMC, non-essential spells to the bottom.
-        """
-        lands = [c for c in hand if c.is_land()]
-        spells = [c for c in hand if not c.is_land()]
+        # Prioritize removing high CMC, low impact spells that aren't core combo pieces.
+        
+        # Identify non-essential, high-cost spells
+        to_bottom_candidates = [
+            c for c in hand 
+            if c.name not in COMBO_PIECES and c.name not in INTERACTION and c.name not in RAMP_UTILITY
+            and c.cmc > 2
+        ]
+        
+        # Sort by CMC descending to remove the biggest threats/most useless cards first
+        to_bottom_candidates.sort(key=lambda c: c.cmc, reverse=True)
+        
+        return to_bottom_candidates[:n]
 
-        # 1. Prioritize bottoming lands first, as we are landless.
-        to_bottom = lands[:]
-
-        # 2. If we still need to bottom cards, take the highest CMC spells that aren't critical.
-        # We sort by CMC descending, and take the top N-len(lands) cards.
-        remaining_needed = n - len(to_bottom)
-        if remaining_needed > 0 and spells:
-            # Sort by CMC descending, then alphabetically (to ensure deterministic choice)
-            high_cmc_spells = sorted(spells, key=lambda c: (-c.cmc, c.name))
-            to_bottom.extend(high_cmc_spells[:remaining_needed])
-
-        return to_bottom[:n]
-
-    def main_phase(self, gs: GameState) -> None:
-        """
-        Early game phase (Turns 1-3): Play mana rocks and cheap interaction/threats.
-        """
-        # 1. Play all available mana rocks first.
-        rocks_to_play = [c for c in gs.hand() if c.name in MANA_ROCKS and c.is_land() == False]
-        for rock in rocks_to_play:
-            if gs.mana_pool.cancast(rock.mana_cost, rock.cmc):
-                gs.cast_spell(rock)
-
-        # 2. Play cheap interaction/threats (e.g., Lightning Bolt, Thoughtseize).
-        # Sort by CMC ascending to maximize early impact.
-        threats_and_interaction = sorted([c for c in gs.hand() if c.name in LOW_COST_THREATS],
-                                       key=lambda c: c.cmc)
-
-        for card in threats_and_interaction:
-            if gs.mana_pool.cancast(card.mana_cost, card.cmc):
+    def main_phase(self, gs) -> None:
+        # 1. Use early interaction/removal if needed (e.g., dealing with threats).
+        # 2. Cast the cheapest, most impactful combo pieces first.
+        
+        # Attempt to cast cheap interaction first
+        for card in list(gs.hand()):
+            if card.name in INTERACTION and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                
+        # Attempt to cast core ramp/combo pieces
+        for card in list(gs.hand()):
+            if card.name in COMBO_PIECES and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
 
-    def main_phase2(self, gs: GameState) -> None:
-        """
-        Mid/Late game phase: Cast the finisher or remaining threats.
-        """
-        # 1. Attempt to cast the finisher if it's in hand and affordable.
-        if any(c.name == FINISHER for c in gs.hand()):
-            finisher = next((c for c in gs.hand() if c.name == FINISHER), None)
-            if finisher and gs.mana_pool.cancast(finisher.mana_cost, finisher.cmc):
-                gs.cast_spell(finisher)
-                return # Finisher is the priority
+    def main_phase2(self, gs) -> None:
+        # 1. Attempt to cast the finisher (Whir of Invention).
+        # 2. Cast remaining ramp/draw spells to maximize mana/card advantage.
+        
+        # Try to cast the finisher first
+        for card in list(gs.hand()):
+            if card.name == FINISHER and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                gs.cast_spell(card)
+                return # Stop if we cast the finisher
 
-        # 2. If the finisher isn't ready, cast any remaining threats or high-impact spells.
-        remaining_spells = sorted([c for c in gs.hand() if c.name not in MANA_ROCKS and c.name != FINISHER],
-                               key=lambda c: c.cmc)
-
-        for card in remaining_spells:
-            if gs.mana_pool.cancast(card.mana_cost, card.cmc):
+        # Cast remaining ramp/utility spells
+        for card in list(gs.hand()):
+            if card.name in RAMP_UTILITY and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)

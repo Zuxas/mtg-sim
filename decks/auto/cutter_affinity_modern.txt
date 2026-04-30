@@ -1,4 +1,4 @@
-// audit:auto-generated:Cutter Affinity:2026-04-28
+// audit:auto-generated:Cutter Affinity:2026-04-30
 // Source: meta-analyzer DB deck_id=78235, archetype=Cutter Affinity
 
 1 Aether Spellbomb

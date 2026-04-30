@@ -1,101 +1,94 @@
-# Auto-generated APL for Cutter Affinity (Gemma draft)
-# 2026-04-29
+# Auto-generated APL for Cutter Affinity (gemma draft)
+# 2026-04-30
 
-from typing import Optional
 from data.card import Card, Tag
-from engine.game_state import GameState
 from apl.base_apl import BaseAPL
 
-# Assuming "Cutter Affinity" focuses on low-cost, synergistic, aggressive creatures
-# We define placeholder threats that represent the core synergy pieces.
-# In a real scenario, these would be specific card names (e.g., "Goblin Guide", "Swarm").
-SYNERGY_THREATS = {"Goblin", "Swarm", "Affinity"}
+# Key artifacts and synergy pieces for Cutter Affinity
+ARTIFACT_STARS = {"Mox Opal", "Mox Amber", "Mishra's Bauble", "Emry, Lurker of the Loch", "Cori-Steel Cutter"}
+LANDS = {"Scalding Tarn", "Steam Vents", "Breeding Pool", "Otawara, Soaring City", "Spirebluff Canal", "Strix Serenade", "Thundering Falls", "Island", "Mountain"}
 
 class CutterAffinityAPL(BaseAPL):
     name = "Cutter Affinity"
-    win_condition_damage = 25
-    max_turns = 10
+    win_condition_damage = 20
+    max_turns = 15
 
     def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
-        """
-        Keep hands that are aggressive, land-rich, and contain multiple low-cost threats.
-        """
-        lands = [c for c in hand if c.is_land()]
+        # We want a mix of lands and low-cost artifacts/spells.
         
-        # Must have at least 2 lands to start establishing board presence
+        lands = [c for c in hand if c.is_land()]
+        artifacts = [c for c in hand if c.name in ARTIFACT_STARS]
+        low_cost_spells = [c for c in hand if c.cmc <= 3 and not c.is_land()]
+        
+        # Minimum requirements: 2 lands, and at least 2 synergistic cards (artifact or low-cost spell)
         if len(lands) < 2:
             return False
-
-        # Identify low-cost, synergistic threats (CMC <= 3)
-        threats = [c for c in hand if c.cmc <= 3 and any(tag in c.name for tag in SYNERGY_THREATS)]
         
-        # We need at least 2 threats or enough mulligans to compensate for a weak hand
-        if len(threats) >= 2:
-            return True
-        
-        # If we only have one threat, we need a decent mulligan count
-        if len(threats) == 1 and mulligans >= 2:
-            return True
-        
-        # Otherwise, the hand is too slow or lacks synergy
-        return False
+        if not (artifacts or low_cost_spells):
+            return False
+            
+        # If we have enough synergy and land, keep it.
+        return True
 
     def bottom(self, hand: list, n: int) -> list:
-        """
-        Prioritize bottoming excess lands and high-cost, non-synergistic spells.
-        """
-        lands = [c for c in hand if c.is_land()]
+        # Prioritize dumping excess lands first.
+        excess_lands = [c for c in hand if c.is_land()]
         
-        # 1. Excess Lands: Keep the first 3-4 lands, bottom the rest.
-        to_bottom = lands[4:]
+        # Sort by name to ensure deterministic dumping (though any excess land works)
+        to_bottom = sorted(excess_lands, key=lambda c: c.name)
         
-        # 2. High CMC, non-synergistic cards
-        remaining_cards = [c for c in hand if c not in to_bottom]
+        # Only dump excess lands if we have more than 4.
+        if len(to_bottom) > 4:
+            to_bottom = to_bottom[4:]
+        else:
+            to_bottom = []
+            
+        # If we still need to dump cards, dump high CMC, non-land cards.
+        remaining_hand = [c for c in hand if c not in to_bottom]
         
-        # Sort by CMC descending, then by name (to ensure deterministic removal)
-        high_cmc_spells = sorted(
-            [c for c in remaining_cards if c.cmc > 3 and not any(tag in c.name for tag in SYNERGY_THREATS)],
-            key=lambda c: (c.cmc, c.name), reverse=True
-        )
+        # Sort by CMC descending
+        high_cmc = sorted(remaining_hand, key=lambda c: c.cmc, reverse=True)
         
-        # Combine and limit to n
-        to_bottom.extend(high_cmc_spells)
-        return to_bottom[:n]
+        dump_count = n - len(to_bottom)
+        if dump_count > 0:
+            to_bottom.extend(high_cmc[:dump_count])
+            
+        return to_bottom
 
-    def main_phase(self, gs: GameState) -> None:
-        """
-        Play all available lands and cast the cheapest, most synergistic threats.
-        """
-        # 1. Play Lands
-        lands_to_play = [c for c in gs.hand() if c.is_land()]
-        for land in lands_to_play:
-            if gs.mana_pool.can_cast(land.mana_cost, land.cmc):
-                gs.play_land(land)
-
-        # 2. Cast Threats (Prioritize cheapest first)
-        threats = [c for c in gs.hand() if c.cmc <= 3 and any(tag in c.name for tag in SYNERGY_THREATS)]
-        # Sort by CMC ascending
-        threats.sort(key=lambda c: c.cmc)
-
-        for card in threats:
-            if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+    def main_phase(self, gs) -> None:
+        # 1. Play lands first.
+        self._play_land_if_able(gs)
+        
+        # 2. Prioritize casting the cheapest, most impactful artifacts/spells.
+        # Sort by CMC ascending to ensure we play the most efficient cards first.
+        castable_cards = sorted(gs.hand(), key=lambda c: c.cmc)
+        
+        for card in castable_cards:
+            # Check if it's an artifact or a low-cost spell we want to leverage.
+            is_synergy_card = (card.name in ARTIFACT_STARS or 
+                               card.name in ["Metallic Rebuke", "Unholy Heat", "Tamiyo, Inquisitive Student"])
+            
+            if is_synergy_card and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
 
-    def main_phase2(self, gs: GameState) -> None:
-        """
-        Cast any remaining affordable threats or utility spells.
-        """
-        # Identify all remaining threats (regardless of cost, if affordable)
-        all_threats = [c for c in gs.hand() if any(tag in c.name for tag in SYNERGY_THREATS)]
+    def main_phase2(self, gs) -> None:
+        # 3. Cast remaining spells/utility cards.
         
-        # Sort by CMC ascending to maximize casting potential
-        all_threats.sort(key=lambda c: c.cmc)
-
-        for card in all_threats:
-            if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+        # Re-sort the hand to ensure we try to cast the cheapest remaining cards first.
+        remaining_hand = sorted(gs.hand(), key=lambda c: c.cmc)
+        
+        for card in remaining_hand:
+            # Check if the card is castable and is not a land (lands are handled in main_phase)
+            if not card.is_land() and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
-            else:
-                # Optimization: If the card is too expensive now, assume subsequent cards are also too.
-                # This is a heuristic, but helps prevent unnecessary checks.
-                if card.cmc > 5:
-                    break
+                
+    def _play_land_if_able(self, gs):
+        """Helper function to play any available land."""
+        lands_in_hand = [c for c in gs.hand() if c.is_land()]
+        
+        # Play the first available land (simplistic approach)
+        if lands_in_hand:
+            land_to_play = lands_in_hand[0]
+            # We assume land costs are always payable if the land is in hand.
+            gs.play_land(land_to_play)
+            gs._log(f"Played land: {land_to_play.name}")

@@ -36,6 +36,9 @@ STATIC_PRISON    = "Static Prison"
 THRABEN_CHARM    = "Thraben Charm"
 LIGHTNING_BOLT   = "Lightning Bolt"
 VOICE_OF_VICTORY = "Voice of Victory"
+RANGER_CAPTAIN   = "Ranger-Captain of Eos"
+AVATAR_ROKU      = "Avatar Roku"
+BLOOD_MOON       = "Blood Moon"
 
 # Dead in goldfish but LIVE in match mode
 REMOVAL_SPELLS = {LIGHTNING_BOLT, GALVANIC, STATIC_PRISON, THRABEN_CHARM}
@@ -489,6 +492,26 @@ class BorosEnergyMatchAPL(MatchAPL):
                 gs.life += guides
                 gs.energy = getattr(gs, 'energy', 0) + guides
                 self._gained_life_this_turn = True
+            # Ranger-Captain of Eos ETB: search library for a creature with MV <= 1.
+            # Oracle: "When this creature enters, you may search your library for a
+            # creature card with mana value 1 or less, reveal it, put it into your hand."
+            # Simulate as draw 1 (tutor hits Ragavan, Guide of Souls, Ocelot Pride).
+            if card.name == RANGER_CAPTAIN:
+                gs.zones.draw(1)
+                gs._log(f"  Ranger-Captain ETB: tutor MV<=1 creature (draw 1)")
+
+        # 7b. Blood Moon — deploy vs opponents with nonbasic-heavy manabases
+        # Oracle: "Nonbasic lands are Mountains." Devastating vs Amulet Titan,
+        # Eldrazi, Domain Zoo. Low impact vs Prowess (basics). Prioritize early.
+        if opponent:
+            opp_nonbasics = sum(1 for c in opponent.zones.battlefield
+                                if c.is_land() and 'basic' not in (getattr(c, 'type_line', '') or '').lower())
+            if opp_nonbasics >= 2:
+                for c in list(gs.zones.hand):
+                    if c.name == BLOOD_MOON and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.cast_spell(c)
+                        gs._log(f"  Blood Moon: {opp_nonbasics} opp nonbasics now Mountains")
+                        break
 
         # 8. NOTE: Ocelot tokens happen at END STEP (in end_step_actions), not here
 
@@ -571,6 +594,17 @@ class BorosEnergyMatchAPL(MatchAPL):
                 target.counters += 2  # +2/+2
                 gs._log(f"  Guide pump: {target.name} gets +2/+2 flying ({gs.energy}E left)")
         
+        # Avatar Roku attack trigger: firebending 4 — add {R}{R}{R}{R} when attacks.
+        # Oracle (Avatar Roku, back face of The Legend of Roku):
+        #   "Whenever a player attacks, add six {R}. Until end of combat, you don't
+        #    lose this mana as steps end."
+        # In this deck Roku attacks → add 4R to mana pool for post-attack spells.
+        rokus_attacking = [a for a in attackers if a.name == AVATAR_ROKU]
+        if rokus_attacking:
+            mana_added = 4 * len(rokus_attacking)
+            gs.mana_pool.flex += mana_added
+            gs._log(f"  Avatar Roku firebending: +{mana_added}R (for post-combat spells)")
+
         # Phlage attack trigger: "Whenever Phlage enters or ATTACKS, deals 3 to any target + 3 life"
         # This fires EVERY attack, not just ETB. Massive damage over multiple turns.
         phlages_attacking = [a for a in attackers if a.name == PHLAGE]
@@ -648,9 +682,31 @@ class BorosEnergyMatchAPL(MatchAPL):
         return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
-        """Use removal reactively when opponent deploys a threat."""
+        """Reactive responses: removal on threats + Screaming Nemesis redirection.
+
+        Screaming Nemesis oracle (verified):
+          "Haste. Whenever this creature is dealt damage, it deals that much
+           damage to any other target. If a player is dealt damage this way,
+           they can't gain life for the rest of the game."
+        If opponent targets Nemesis with burn, the damage redirects to them.
+        Model: if Nemesis is on board and spell would deal damage to it,
+        we redirect that damage to opponent player.
+        """
         if not opponent:
             return None
+
+        # Screaming Nemesis damage redirection — no card to "play", this is passive.
+        # Model: if opponent casts burn spell AND we have Nemesis on board,
+        # redirect the damage back to the opponent (as Nemesis oracle dictates).
+        if spell:
+            burn_dmg = get_burn_damage(spell)
+            if burn_dmg > 0:
+                nemesis = next((c for c in gs.zones.battlefield if c.name == SCREAMING_NEMESIS), None)
+                if nemesis:
+                    # Burn spell targeting Nemesis → Nemesis redirects to opponent
+                    opponent.life -= burn_dmg
+                    gs._log(f"  Screaming Nemesis: redirects {burn_dmg} dmg back to opp (oracle)")
+
         opp_creatures = [c for c in opponent.zones.battlefield
                          if not c.is_land() and c.has(Tag.CREATURE)]
         if not opp_creatures:
@@ -660,7 +716,7 @@ class BorosEnergyMatchAPL(MatchAPL):
         if safe_power(best) < 2:
             return None
 
-        # Find castable removal
+        # Reactive Lightning Bolt on newly-deployed high-power threats
         for c in gs.zones.hand:
             if c.name == LIGHTNING_BOLT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 if safe_toughness(best) <= 3:

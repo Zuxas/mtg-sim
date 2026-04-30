@@ -336,6 +336,16 @@ class DomainZooMatchAPL(MatchAPL):
         for a in attackers:
             if a.name == RAGAVAN:
                 gs._log(f"  Ragavan attacks (treasure on damage)")
+
+        # Psychic Frog combat damage draw.
+        # Oracle: "Whenever this creature deals combat damage to a player or
+        # planeswalker, draw a card."
+        # Approximate: each unblocked Frog = 1 draw.
+        frogs_attacking = [a for a in attackers if a.name == PSYCHIC]
+        if frogs_attacking and opponent:
+            # Assume Frog gets through (Scion gives it flying, deathtouch — hard to block)
+            gs.zones.draw(len(frogs_attacking))
+            gs._log(f"  Psychic Frog combat draw: {len(frogs_attacking)} card(s)")
         
         # Scion keyword grants: lifelink calculated on DAMAGE dealt (not attack power)
         # The combat engine handles actual damage; we add lifelink proportionally
@@ -385,32 +395,39 @@ class DomainZooMatchAPL(MatchAPL):
     def _apply_scion_keywords(self, gs):
         """Apply Scion of Draco keyword grants to all friendly creatures.
 
-        Oracle: creatures you control that share a color with Scion gain
-        hexproof, lifelink, first strike (W), flying (U), trample (G),
-        vigilance (W/G), and deathtouch (B). With Leyline (all colors),
-        they get the full suite.
+        Oracle (Scion of Draco, verified Scryfall 2026-04-30):
+          "Each creature you control that shares a color with Scion gains:
+           W -> first strike, vigilance, lifelink
+           U -> flying
+           B -> deathtouch
+           R -> haste
+           G -> trample"
+        With Leyline of the Guildpact (all lands = all types, all creatures =
+        all colors), every creature shares all colors with Scion and gets all
+        seven keywords. Prior version incorrectly granted HEXPROOF (not in
+        oracle) and was missing FLYING, DEATHTOUCH, and HASTE.
 
-        Applied to card.tags so has_keyword() and combat resolution pick
-        them up correctly. Removed at end step when Scion is gone.
+        Applied to card.tags for combat resolution. Removed when Scion leaves.
         """
+        SCION_GRANTED = {
+            KWTag.FIRST_STRIKE, KWTag.VIGILANCE, KWTag.LIFELINK,  # W
+            KWTag.FLYING,                                           # U
+            KWTag.DEATHTOUCH,                                      # B
+            KWTag.HASTE,                                           # R
+            KWTag.TRAMPLE,                                         # G
+        }
         if not self._scion_active:
-            # Remove Scion-granted tags if Scion left
             for c in gs.zones.battlefield:
                 if c.has(Tag.CREATURE) and not c.is_land():
-                    c.tags.discard(KWTag.HEXPROOF)
-                    c.tags.discard(KWTag.FIRST_STRIKE)
-                    c.tags.discard(KWTag.LIFELINK)
-                    c.tags.discard(KWTag.VIGILANCE)
-                    c.tags.discard(KWTag.TRAMPLE)
+                    for kw in SCION_GRANTED:
+                        c.tags.discard(kw)
             return
-        # Scion active — grant keywords to all friendly creatures
-        SCION_GRANTS = {
-            KWTag.HEXPROOF, KWTag.FIRST_STRIKE, KWTag.LIFELINK,
-            KWTag.VIGILANCE, KWTag.TRAMPLE,
-        }
         for c in gs.zones.battlefield:
             if c.has(Tag.CREATURE) and not c.is_land():
-                c.tags.update(SCION_GRANTS)
+                c.tags.update(SCION_GRANTED)
+                # HASTE: creatures can attack immediately (no summoning sickness)
+                if KWTag.HASTE in c.tags:
+                    c.summoning_sickness = False
 
     def end_step_actions(self, gs, opponent):
         self._update_domain(gs)

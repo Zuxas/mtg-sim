@@ -332,30 +332,62 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 gs._log(f"  Ephemerate: blink ETB creature (rebound next turn)")
                 break
 
-        # 9. Wrath of the Skies — board wipe when behind
-        # Oracle: {X}{W}{W}, get X energy, pay energy to destroy MV <= energy paid
+        # 9. Wrath of the Skies — board wipe with optimal X selection
+        # Oracle (verbatim, Scryfall 2026-04-30):
+        #   "{X}{W}{W}. You get X energy counters. Pay any amount of energy up to X.
+        #   Destroy each artifact, creature, and enchantment with mana value less
+        #   than or equal to the amount of energy paid."
+        # Key: X = energy GOTTEN (separate from energy SPENT). We choose how much
+        # energy to spend after getting it, so we can wipe asymmetrically.
         if opponent and self._should_wrath(gs, opponent):
             for c in list(gs.zones.hand):
-                if c.name == WRATH and gs.mana_pool.total() >= 3:
-                    x_val = gs.mana_pool.total() - 2  # {X}{W}{W}
-                    self._energy += x_val
-                    energy_to_spend = min(self._energy, 3)  # usually X=1-3 is enough
-                    self._energy -= energy_to_spend
-                    gs.mana_pool.pay("{W}{W}", 2) if gs.mana_pool.can_pay("{W}{W}", 2) else None
-                    gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                    # Destroy all creatures with MV <= energy spent (both sides!)
-                    for zone_owner, zone_gs in [("opponent", opponent), ("self", gs)]:
-                        killed = []
-                        for cr in list(zone_gs.zones.battlefield):
-                            if cr.has(Tag.CREATURE) and not cr.is_land():
-                                if getattr(cr, 'cmc', 0) <= energy_to_spend:
-                                    killed.append(cr)
-                        for cr in killed:
-                            if cr in zone_gs.zones.battlefield:
-                                zone_gs.zones.battlefield.remove(cr)
-                                zone_gs.zones.graveyard.append(cr)
-                    gs._log(f"  Wrath of the Skies X={x_val}: destroy MV<={energy_to_spend} creatures")
+                if c.name != WRATH:
+                    continue
+                their_threats = [cr for cr in opponent.zones.battlefield
+                                 if cr.has(Tag.CREATURE) and not cr.is_land()]
+                our_creatures = [cr for cr in gs.zones.battlefield
+                                 if cr.has(Tag.CREATURE) and not cr.is_land()]
+                if not their_threats:
                     break
+                # Target threshold: kill their highest-priority threats.
+                # Priority = power >= 3. Fall back to all threats if none qualify.
+                priority = [cr for cr in their_threats if safe_power(cr) >= 3]
+                pool = priority if priority else their_threats
+                target_mv = max(int(getattr(cr, 'cmc', 0)) for cr in pool)
+                # Asymmetric wipe: skip if threshold >= our lowest creature CMC AND
+                # we still have creatures on board (don't self-wipe unnecessarily).
+                our_min_mv = min((int(getattr(cr, 'cmc', 99)) for cr in our_creatures),
+                                 default=99)
+                if target_mv >= our_min_mv and our_creatures:
+                    # Would collaterally kill our own — only proceed if clearly behind
+                    their_count = len(their_threats)
+                    our_count = len(our_creatures)
+                    if their_count < our_count + 3:
+                        break  # not worth the collateral damage
+                energy_to_spend = target_mv
+                # Compute exact X: we need accumulated + X >= energy_to_spend.
+                # Minimise X to conserve mana for other plays.
+                extra_energy_needed = max(0, energy_to_spend - self._energy)
+                x_val = extra_energy_needed
+                total_cost = x_val + 2  # {X}{W}{W}
+                if gs.mana_pool.total() < total_cost:
+                    break  # can't cast
+                self._energy += x_val
+                self._energy -= energy_to_spend
+                gs.mana_pool.pay(f"{{{x_val}}}{{W}}{{W}}", total_cost)
+                gs.zones.hand.remove(c)
+                gs.zones.graveyard.append(c)
+                for zone_gs in [gs, opponent]:
+                    killed = [cr for cr in list(zone_gs.zones.battlefield)
+                              if cr.has(Tag.CREATURE) and not cr.is_land()
+                              and int(getattr(cr, 'cmc', 0)) <= energy_to_spend]
+                    for cr in killed:
+                        if cr in zone_gs.zones.battlefield:
+                            zone_gs.zones.battlefield.remove(cr)
+                            zone_gs.zones.graveyard.append(cr)
+                gs._log(f"  Wrath of Skies X={x_val} energy_spent={energy_to_spend}: "
+                        f"destroy MV<={energy_to_spend}")
+                break
 
         # 10. March of Otherworldly Light — exile permanent (pitch white to reduce cost)
         if opponent:

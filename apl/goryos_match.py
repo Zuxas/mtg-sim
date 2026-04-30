@@ -111,8 +111,11 @@ class GoryosMatchAPL(MatchAPL):
                                 opponent.life += safe_power(target)
                             gs._log(f"  Solitude EVOKE: exile {target.name}")
                             # Ephemerate to keep Solitude + double exile
+                            # Oracle (Ephemerate): {W}, exile creature you control, return EOT.
+                            # Oracle (Solitude ETB): exile target + controller gains life = power.
                             eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
                             if eph and avail >= 1:
+                                gs.mana_pool.pay("{W}", 1) if gs.mana_pool.can_pay("{W}", 1) else None
                                 gs.zones.hand.remove(eph); gs.zones.exile.append(eph)
                                 self._ephemerate_rebound = True
                                 gs.zones.battlefield.append(c)
@@ -123,7 +126,8 @@ class GoryosMatchAPL(MatchAPL):
                                     t2 = max(opp2, key=lambda x: safe_power(x))
                                     opponent.zones.battlefield.remove(t2)
                                     opponent.zones.exile.append(t2)
-                                    gs._log(f"  Ephemerate Solitude: exile {t2.name} (stays + rebound)")
+                                    opponent.life += safe_power(t2)  # oracle: controller gains life = power
+                                    gs._log(f"  Ephemerate Solitude: exile {t2.name} (+{safe_power(t2)} life)")
                             else:
                                 gs.zones.graveyard.append(c)
                             break

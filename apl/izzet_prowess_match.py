@@ -251,7 +251,7 @@ class IzzetProwessMatchAPL(MatchAPL):
     # ------------------------------------------------------------------
 
     def _trigger_prowess(self, gs: GameState, spell_name: str = "spell"):
-        """Give prowess creatures +1/+1 and Slickshot +2/+0 until EOT."""
+        """Give prowess creatures +1/+1, Slickshot +2/+0, and surveil DRC on each noncreature cast."""
         for c in gs.zones.battlefield:
             if c.is_land():
                 continue
@@ -264,6 +264,8 @@ class IzzetProwessMatchAPL(MatchAPL):
                 c.counters += SLICKSHOT_BOOST
                 self._prowess_boosts.append(c)
                 self._prowess_boosts.append(c)  # track 2 counters to remove
+        # DRC surveil 1: each noncreature cast puts top card to GY (accelerates delirium)
+        self._surveil_drc(gs)
 
     def _try_plot_slickshot(self, gs: GameState) -> bool:
         """Plot Slickshot Show-Off if in hand and we have 2 mana."""
@@ -699,8 +701,48 @@ class IzzetProwessMatchAPL(MatchAPL):
     # Combat — attackers, blockers, combat tricks
     # ------------------------------------------------------------------
 
+    def _update_drc_delirium(self, gs: GameState):
+        """Apply/remove DRC delirium state.
+
+        Oracle (Dragon's Rage Channeler, verified Scryfall 2026-04-30):
+          "Delirium -- As long as there are four or more card types among cards
+           in your graveyard, this creature has base power and toughness 3/3
+           and has flying."
+        Sets c.power/toughness='3' and adds KWTag.FLYING when delirium active.
+        Resets to '1' and removes FLYING when delirium is lost.
+        """
+        from engine.keywords import KWTag as _KWTag
+        delirium = self._has_delirium(gs)
+        for c in gs.zones.battlefield:
+            if c.name != DRC:
+                continue
+            if delirium:
+                c.power = '3'
+                c.toughness = '3'
+                c.tags.add(_KWTag.FLYING)
+            else:
+                c.power = '1'
+                c.toughness = '1'
+                c.tags.discard(_KWTag.FLYING)
+
+    def _surveil_drc(self, gs: GameState):
+        """Dragon's Rage Channeler: surveil 1 on each noncreature cast.
+
+        Oracle: "Whenever you cast a noncreature spell, surveil 1."
+        Surveil 1 = look at top card of library; put it in graveyard or on top.
+        Heuristic: always put to graveyard (maximizes delirium acceleration).
+        """
+        drcs_on_board = sum(1 for c in gs.zones.battlefield if c.name == DRC)
+        if drcs_on_board > 0 and gs.zones.library:
+            top = gs.zones.library.pop(0)
+            gs.zones.graveyard.append(top)
+
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list:
-        """Attack with everything that can attack."""
+        """Attack with everything that can attack.
+        DRC with delirium (3/3 flying) has its power/toughness updated before
+        combat so the engine uses the correct values.
+        """
+        self._update_drc_delirium(gs)
         attackers = []
         for c in gs.zones.battlefield:
             if c.is_land():
@@ -826,11 +868,13 @@ class IzzetProwessMatchAPL(MatchAPL):
         return None
 
     def end_step_actions(self, gs: GameState, opponent: GameState):
-        """Clean up prowess boosts at end of turn."""
+        """Clean up prowess boosts at end of turn. Update DRC delirium state."""
         for c in self._prowess_boosts:
             if c in gs.zones.battlefield:
                 c.counters = max(0, c.counters - 1)
         self._prowess_boosts = []
+        # DRC delirium may have changed as GY grew this turn (surveil, casts, etc.)
+        self._update_drc_delirium(gs)
 
     def _play_land_if_able(self, gs: GameState):
         """Play best land from hand."""

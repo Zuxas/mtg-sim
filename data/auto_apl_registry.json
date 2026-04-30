@@ -22,5 +22,13 @@
     "generated_date": "2026-04-30",
     "source": "auto_pipeline:gemma",
     "smoke_avg_turns": null
+  },
+  "gruulouroboroid": {
+    "module": "apl.auto_apls.gruul_ouroboroid",
+    "class": "GruulOuroboroidAPL",
+    "deck_file": "decks/auto/gruul_ouroboroid_standard.txt",
+    "generated_date": "2026-04-30",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
   }
 }

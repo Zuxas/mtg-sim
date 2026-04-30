@@ -62,8 +62,24 @@ def test_match_set_deterministic_under_polluted_global_random():
         "pollution of global random leaked through Stage 1.7 guard"
 
 
+def test_n_workers_determinism():
+    """Different n_workers values must produce bit-identical aggregates."""
+    deck = _be_deck()
+    args = dict(apl_a=BorosEnergyAPL(), deck_a=deck,
+                apl_b=BorosEnergyAPL(), deck_b=deck,
+                n=50, seed=42, mix_play_draw=True)
+    r1 = run_match_set(**args, n_workers=1)
+    r4 = run_match_set(**args, n_workers=4)
+    r8 = run_match_set(**args, n_workers=8)
+    assert r1.a_wins == r4.a_wins == r8.a_wins, \
+        f"a_wins not invariant: n1={r1.a_wins} n4={r4.a_wins} n8={r8.a_wins}"
+    assert r1.avg_turns == r4.avg_turns == r8.avg_turns, \
+        f"avg_turns not invariant: n1={r1.avg_turns} n4={r4.avg_turns} n8={r8.avg_turns}"
+
+
 if __name__ == "__main__":
     test_match_set_deterministic_across_consecutive_calls()
     test_match_set_preserves_global_random_state()
     test_match_set_deterministic_under_polluted_global_random()
-    print("ALL 3 TESTS PASS")
+    test_n_workers_determinism()
+    print("ALL 4 TESTS PASS")

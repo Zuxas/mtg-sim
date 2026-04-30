@@ -23,7 +23,7 @@ os.makedirs("data/matchup_jobs", exist_ok=True)
 os.makedirs("logs", exist_ok=True)
 
 
-def launch_all(our_deck, format_name, field, n, cores, seed):
+def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     from format_config import is_combo
 
     tasks = []
@@ -64,6 +64,7 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
                 str(task["seed"]),
                 format_name,
                 "combo" if task["combo"] else "fair",
+                str(inner_workers),
             ]
             log_f = open(log_path, "w", encoding="utf-8")
             proc  = subprocess.Popen(
@@ -156,14 +157,17 @@ def launch_all(our_deck, format_name, field, n, cores, seed):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--deck",   default="Legacy Humans")
-    ap.add_argument("--format", default="legacy")
-    ap.add_argument("--n",      type=int, default=1000)
-    ap.add_argument("--cores",  type=int, default=20)
-    ap.add_argument("--top-n",  type=int, default=20)
-    ap.add_argument("--seed",   type=int, default=42)
+    ap.add_argument("--deck",          default="Legacy Humans")
+    ap.add_argument("--format",        default="legacy")
+    ap.add_argument("--n",             type=int, default=1000)
+    ap.add_argument("--cores",         type=int, default=20)
+    ap.add_argument("--top-n",         type=int, default=20)
+    ap.add_argument("--seed",          type=int, default=42)
+    ap.add_argument("--inner-workers", type=int, default=1,
+                    help="Per-matchup parallel game workers (default 1 = sequential)")
     args = ap.parse_args()
 
     from format_config import get_field
     field = get_field(args.format, args.top_n)
-    launch_all(args.deck, args.format, field, args.n, args.cores, args.seed)
+    launch_all(args.deck, args.format, field, args.n, args.cores, args.seed,
+               inner_workers=args.inner_workers)

@@ -24,6 +24,7 @@ Usage:
 
 from __future__ import annotations
 import random
+import concurrent.futures
 from dataclasses import dataclass, field
 from typing import Optional
 from copy import deepcopy
@@ -888,6 +889,23 @@ def run_match(
     return result
 
 
+def _run_single_match(args):
+    """Module-level worker for ProcessPoolExecutor — must be picklable."""
+    game_seed, apl_a_class, apl_b_class, deck_a, deck_b, on_play, use_combo_sampler = args
+    random.seed(game_seed)
+    fresh_apl_a = apl_a_class()
+    fresh_apl_b = apl_b_class()
+    if use_combo_sampler:
+        rng = random.Random(game_seed)
+        combo_b = ComboKillSampler(getattr(fresh_apl_b, 'name', 'unknown'), rng)
+        return _run_match_with_combo(
+            fresh_apl_a, deck_a, combo_b,
+            on_play=on_play, max_turns=15, rng=rng,
+        )
+    return run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
+                     on_play=on_play, seed=game_seed)
+
+
 def run_match_set(
     apl_a,
     deck_a:    list,
@@ -897,6 +915,7 @@ def run_match_set(
     on_play:   bool = True,
     seed:      int  = 42,
     mix_play_draw: bool = True,
+    n_workers: int  = 1,
 ) -> MatchSetResults:
     """
     Run N matches between two APLs. Returns aggregated results.
@@ -906,55 +925,63 @@ def run_match_set(
     results = MatchSetResults(n_games=n)
     rng = random.Random(seed)
 
-    # Check if B is a combo deck — use sampler for accuracy
     combo_keys = set(ComboKillSampler.KILL_DISTS.keys())
     b_name = getattr(apl_b, 'name', '').lower().replace(' ', '').replace('-','')
     use_combo_sampler = any(k.replace(' ','') == b_name for k in combo_keys)
 
-    # Stage 1.6: instantiate a fresh APL per game to eliminate APL
-    # state leakage. Pre-fix, per-game-mutable APL fields
-    # (BorosEnergy: _cat_died_this_turn, _treasures, _gained_life_this_turn,
-    # _tokens_entered_this_turn, _roles_computed cache; similar in others)
-    # leaked between games even after Stage 1.5's Card deepcopy.
-    # Combined with Stage 1.5, this completes the determinism fix.
     apl_a_class = type(apl_a)
     apl_b_class = type(apl_b)
 
-    # Stage 1.7: scope global random module determinism to this call.
-    # Without this, naked `random.foo()` consumers in engine code
-    # (engine/zones.py:shuffle, engine/opponent.py, engine/race.py,
-    # ~10 sites in engine/card_handlers_verified.py) read from a
-    # subprocess-entropy-initialized global state that differs across
-    # subprocess invocations, breaking determinism even with seeded
-    # rng instances. Empirically: BE mirror n=10 seed=42 produced
-    # avg_turns 5.500 vs 5.800 across two same-process runs without
-    # this guard. Save/restore pattern preserves caller's expectations
-    # about the global random module beyond this function's scope.
+    # Pre-generate per-game seeds and play/draw flags from the seeded rng.
+    # Using per-game seeds (rather than chaining global random across games)
+    # ensures bit-identical results across any n_workers value, because each
+    # game always receives the same (game_seed, on_play) regardless of how
+    # many workers are running. Determinism contract: same (n, seed, n_workers)
+    # => identical aggregate for all n_workers >= 1.
+    game_seeds   = [rng.randint(0, 999999) for _ in range(n)]
+    game_on_plays = [(i % 2 == 0) if mix_play_draw else on_play for i in range(n)]
+
     saved_global_random_state = random.getstate()
-    random.seed(seed)
     try:
-        for i in range(n):
-            game_on_play = (i % 2 == 0) if mix_play_draw else on_play
-
-            fresh_apl_a = apl_a_class()
-            fresh_apl_b = apl_b_class()
-
-            if use_combo_sampler:
-                combo_b = ComboKillSampler(getattr(fresh_apl_b, 'name', 'unknown'), rng)
-                match = _run_match_with_combo(
-                    fresh_apl_a, deck_a, combo_b,
-                    on_play=game_on_play, max_turns=15, rng=rng
-                )
-            else:
-                match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
-                                  on_play=game_on_play,
-                                  seed=rng.randint(0, 999999))
-
-            if match.won:
-                results.a_wins += 1
-            else:
-                results.b_wins += 1
-            results.kill_turns.append(match.kill_turn)
+        if n_workers <= 1:
+            for i in range(n):
+                # Per-game global seed: makes naked random.foo() consumers in
+                # engine code (zones.shuffle, opponent.py, ~10 handler sites)
+                # deterministic for this game independently of other games.
+                random.seed(game_seeds[i])
+                fresh_apl_a = apl_a_class()
+                fresh_apl_b = apl_b_class()
+                if use_combo_sampler:
+                    combo_rng = random.Random(game_seeds[i])
+                    combo_b = ComboKillSampler(
+                        getattr(fresh_apl_b, 'name', 'unknown'), combo_rng)
+                    match = _run_match_with_combo(
+                        fresh_apl_a, deck_a, combo_b,
+                        on_play=game_on_plays[i], max_turns=15, rng=combo_rng,
+                    )
+                else:
+                    match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
+                                      on_play=game_on_plays[i],
+                                      seed=game_seeds[i])
+                if match.won:
+                    results.a_wins += 1
+                else:
+                    results.b_wins += 1
+                results.kill_turns.append(match.kill_turn)
+        else:
+            game_args = [
+                (game_seeds[i], apl_a_class, apl_b_class,
+                 deck_a, deck_b, game_on_plays[i], use_combo_sampler)
+                for i in range(n)
+            ]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
+                matches = list(pool.map(_run_single_match, game_args))
+            for match in matches:
+                if match.won:
+                    results.a_wins += 1
+                else:
+                    results.b_wins += 1
+                results.kill_turns.append(match.kill_turn)
     finally:
         random.setstate(saved_global_random_state)
 

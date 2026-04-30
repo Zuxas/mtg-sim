@@ -172,6 +172,7 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
                     sb_plan_a=sb_plan_a,
                     sb_plan_b=sb_plan_b,
                     n=n, mix_play_draw=True, seed=seed,
+                    n_workers=inner_workers,
                 )
 
                 result.update({
@@ -205,7 +206,8 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed):
         from engine.match_runner import run_match_set
 
         r = run_match_set(our_apl, our_main, opp_apl, opp_main,
-                          n=n, seed=seed, mix_play_draw=True)
+                          n=n, seed=seed, mix_play_draw=True,
+                          n_workers=inner_workers)
         real_g1 = r.win_pct()
         result["g1_source"] = "sim"
     else:
@@ -262,6 +264,7 @@ def main():
     seed        = int(sys.argv[5])
     format_name = sys.argv[6]
     mtype       = sys.argv[7]
+    inner_workers = int(sys.argv[8]) if len(sys.argv) > 8 else 1
 
     out_path = ensure_parent(matchup_job_path(our_deck, opp_name))
 

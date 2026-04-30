@@ -20,6 +20,7 @@ Usage:
 
 from __future__ import annotations
 import random
+import concurrent.futures
 from dataclasses import dataclass, field
 from copy import deepcopy
 from typing import Optional
@@ -162,16 +163,27 @@ def run_bo3(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     return result
 
 
+def _run_single_bo3(args):
+    """Module-level worker for ProcessPoolExecutor — must be picklable."""
+    match_seed, apl_a, deck_a, sb_a, apl_b, deck_b, sb_b, sb_plan_a, sb_plan_b, a_on_play = args
+    random.seed(match_seed)
+    return run_bo3(apl_a, deck_a, sb_a, apl_b, deck_b, sb_b,
+                   sb_plan_a=sb_plan_a, sb_plan_b=sb_plan_b,
+                   a_on_play_g1=a_on_play, seed=match_seed)
+
+
 def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
                 apl_b: MatchAPL, deck_b: list, sb_b: dict,
                 sb_plan_a: tuple = None,
                 sb_plan_b: tuple = None,
                 n: int = 500,
                 mix_play_draw: bool = True,
-                seed: int = 42) -> Bo3SetResults:
+                seed: int = 42,
+                n_workers: int = 1) -> Bo3SetResults:
     """
     Run N Bo3 matches. Returns aggregated results.
     mix_play_draw alternates who is on the play in G1.
+    n_workers > 1 enables within-matchup parallelism via ProcessPoolExecutor.
     """
     results = Bo3SetResults(n_matches=n)
     rng = random.Random(seed)
@@ -184,48 +196,69 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     g3_total = 0
     g3_count = 0
 
-    # Stage 1.7: scope global random module determinism to this call.
-    # Mirror of the run_match_set fix in engine/match_runner.py — naked
-    # `random.foo()` consumers in engine code (zones.shuffle, opponent.py,
-    # race.py, several handler sites) read from a subprocess-entropy-
-    # initialized global state that differs across subprocess invocations,
-    # breaking determinism in bo3 matchups even with seeded rng instances.
+    match_seeds  = [rng.randint(0, 999_999) for _ in range(n)]
+    match_on_plays = [(i % 2 == 0) if mix_play_draw else True for i in range(n)]
+
     saved_global_random_state = random.getstate()
-    random.seed(seed)
     try:
-        for i in range(n):
-            a_on_play = (i % 2 == 0) if mix_play_draw else True
-
-            bo3 = run_bo3(
-                apl_a, deck_a, sb_a,
-                apl_b, deck_b, sb_b,
-                sb_plan_a=sb_plan_a,
-                sb_plan_b=sb_plan_b,
-                a_on_play_g1=a_on_play,
-                seed=rng.randint(0, 999_999)
-            )
-
-            if bo3.winner == 'a':
-                results.a_wins += 1
-            else:
-                results.b_wins += 1
-            results.results.append(bo3)
-
-            # Track per-game stats
-            games = bo3.game_results
-            if len(games) >= 1:
-                g1_total += 1
-                if games[0].winner == 'a':
-                    g1_a_wins += 1
-            if len(games) >= 2:
-                g2_total += 1
-                if games[1].winner == 'a':
-                    g2_a_wins += 1
-            if len(games) >= 3:
-                g3_total += 1
-                g3_count += 1
-                if games[2].winner == 'a':
-                    g3_a_wins += 1
+        if n_workers <= 1:
+            for i in range(n):
+                random.seed(match_seeds[i])
+                bo3 = run_bo3(
+                    apl_a, deck_a, sb_a,
+                    apl_b, deck_b, sb_b,
+                    sb_plan_a=sb_plan_a,
+                    sb_plan_b=sb_plan_b,
+                    a_on_play_g1=match_on_plays[i],
+                    seed=match_seeds[i],
+                )
+                if bo3.winner == 'a':
+                    results.a_wins += 1
+                else:
+                    results.b_wins += 1
+                results.results.append(bo3)
+                games = bo3.game_results
+                if len(games) >= 1:
+                    g1_total += 1
+                    if games[0].winner == 'a':
+                        g1_a_wins += 1
+                if len(games) >= 2:
+                    g2_total += 1
+                    if games[1].winner == 'a':
+                        g2_a_wins += 1
+                if len(games) >= 3:
+                    g3_total += 1
+                    g3_count += 1
+                    if games[2].winner == 'a':
+                        g3_a_wins += 1
+        else:
+            match_args = [
+                (match_seeds[i], apl_a, deck_a, sb_a, apl_b, deck_b, sb_b,
+                 sb_plan_a, sb_plan_b, match_on_plays[i])
+                for i in range(n)
+            ]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
+                bo3_results = list(pool.map(_run_single_bo3, match_args))
+            for bo3 in bo3_results:
+                if bo3.winner == 'a':
+                    results.a_wins += 1
+                else:
+                    results.b_wins += 1
+                results.results.append(bo3)
+                games = bo3.game_results
+                if len(games) >= 1:
+                    g1_total += 1
+                    if games[0].winner == 'a':
+                        g1_a_wins += 1
+                if len(games) >= 2:
+                    g2_total += 1
+                    if games[1].winner == 'a':
+                        g2_a_wins += 1
+                if len(games) >= 3:
+                    g3_total += 1
+                    g3_count += 1
+                    if games[2].winner == 'a':
+                        g3_a_wins += 1
     finally:
         random.setstate(saved_global_random_state)
 

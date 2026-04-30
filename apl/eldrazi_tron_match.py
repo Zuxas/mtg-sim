@@ -47,6 +47,7 @@ class EldraziTronMatchAPL(MatchAPL):
     def __init__(self):
         self._tron_online = False
         self._karn_wishes_used = 0
+        self._tks_on_board_last_turn = 0  # track TKS count for death trigger
 
     def _count_tron_pieces(self, gs):
         """Count unique Tron pieces on battlefield."""
@@ -261,10 +262,25 @@ class EldraziTronMatchAPL(MatchAPL):
                     gs.cast_spell(c)
 
     def declare_attackers(self, gs, opponent):
-        return [c for c in gs.zones.battlefield
-                if not c.is_land() and c.has(Tag.CREATURE)
-                and not getattr(c, 'summoning_sickness', False)
-                and not getattr(c, 'tapped', False)]
+        """Attack with big Eldrazi. Ulamog attack trigger: exile opp top 20.
+        Oracle (Ulamog, the Ceaseless Hunger):
+          "Whenever Ulamog attacks, defending player exiles the top twenty
+           cards of their library."
+        """
+        attackers = [c for c in gs.zones.battlefield
+                     if not c.is_land() and c.has(Tag.CREATURE)
+                     and not getattr(c, 'summoning_sickness', False)
+                     and not getattr(c, 'tapped', False)]
+        for a in attackers:
+            if a.name == ULAMOG and opponent:
+                exiled = min(20, len(opponent.zones.library))
+                for _ in range(exiled):
+                    if opponent.zones.library:
+                        card = opponent.zones.library.pop(0)
+                        opponent.zones.exile.append(card)
+                if exiled > 0:
+                    gs._log(f"  Ulamog attack: exile {exiled} from opp library")
+        return attackers
 
     def declare_blockers(self, gs, opp, attackers):
         assignments = {}
@@ -279,7 +295,22 @@ class EldraziTronMatchAPL(MatchAPL):
         return assignments
 
     def respond_to_spell(self, gs, opponent, spell): return None
-    def end_step_actions(self, gs, opponent): pass
+
+    def end_step_actions(self, gs, opponent):
+        """TKS death trigger: when TKS leaves battlefield, opponent draws a card.
+        Oracle (Thought-Knot Seer):
+          "When this creature enters, target opponent reveals hand; you exile
+           a nonland card. When TKS leaves the battlefield, target opponent
+           draws a card."
+        Track TKS count each turn; each missing TKS = opponent (BE) draws 1.
+        """
+        tks_now = sum(1 for c in gs.zones.battlefield if c.name == TKS)
+        tks_died = max(0, self._tks_on_board_last_turn - tks_now)
+        if tks_died > 0 and opponent:
+            for _ in range(tks_died):
+                opponent.zones.draw(1)
+            gs._log(f"  TKS leaves: opp draws {tks_died} card(s) (oracle trigger)")
+        self._tks_on_board_last_turn = tks_now
 
     def _play_land_if_able(self, gs):
         """Priority: complete Tron > Labyrinth > Temple > other."""

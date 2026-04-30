@@ -102,8 +102,9 @@ APL_REGISTRY = {
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
 
     # ── Standard / Pioneer ──
-    "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_standard.txt"),
-    "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_standard.txt"),
+    "dimirmidrange":   ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_modern.txt"),
+    "dimir":           ("apl.dimir_midrange",   "DimirMidrangeAPL",  "decks/dimir_midrange_modern.txt"),
+    "dimirmidrangestd": ("apl.dimir_midrange",  "DimirMidrangeAPL",  "decks/dimir_midrange_standard.txt"),
     "monogreenlandfall": ("apl.mono_green_landfall", "MonoGreenLandfallAPL", "decks/mono_green_landfall_standard.txt"),
     "standardaggro":   ("apl.standard_aggro",   "StandardAggroAPL",  None),
     "rakdosmidrange":  ("apl.rakdos_midrange",  "RakdosMidrangeAPL", None),
@@ -181,8 +182,8 @@ MATCH_APL_REGISTRY = {
     "yawgmoth":        ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "golariyawgmoth":  ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "uwcontrol":       ("apl.uw_control_match",      "UWControlMatchAPL"),
-    "dimirmidrange":   ("apl.dimir_oculus_match",    "DimirOculusMatchAPL"),
-    "dimir":           ("apl.dimir_oculus_match",    "DimirOculusMatchAPL"),
+    "dimirmidrange":   ("apl.murktide_match",         "MurktideMatchAPL"),   # proxy: both Dimir tempo/control
+    "dimir":           ("apl.murktide_match",         "MurktideMatchAPL"),
     # New 2026-04-29: real-meta gap decks
     "belcher":         ("apl.belcher_match",         "BelcherMatchAPL"),
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),

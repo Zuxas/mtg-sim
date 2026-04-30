@@ -111,8 +111,9 @@ class EldraziTronMatchAPL(MatchAPL):
         if self._count_tron_pieces(gs) < 3:
             for c in list(gs.zones.hand):
                 if c.name == EXP_MAP and avail >= 1:
+                    gs.mana_pool.pay("{1}", 1) if gs.mana_pool.can_pay("{1}", 1) else None
                     gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                    avail -= 1
+                    avail = gs.mana_pool.total()
                     # Simulate finding a Tron piece (draw simulates tutor)
                     gs.zones.draw(1)
                     gs._log(f"  Expedition Map: search for Tron piece ({self._count_tron_pieces(gs)+1}/3)")
@@ -139,9 +140,10 @@ class EldraziTronMatchAPL(MatchAPL):
                 # Dismember: {1}{B/P}{B/P} = 1 mana + 4 life, deals -5/-5
                 for c in list(gs.zones.hand):
                     if c.name == DISMEMBER and avail >= 1:
+                        gs.mana_pool.pay("{1}", 1) if gs.mana_pool.can_pay("{1}", 1) else None
                         gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                         gs.life -= 4  # pay Phyrexian mana
-                        avail -= 1
+                        avail = gs.mana_pool.total()
                         if safe_toughness(target) <= 5 and target in opponent.zones.battlefield:
                             opponent.zones.battlefield.remove(target)
                             opponent.zones.graveyard.append(target)
@@ -185,6 +187,7 @@ class EldraziTronMatchAPL(MatchAPL):
         # 7. Ugin PW ({7}) — cast trigger exile, static exile on colorless cast
         for c in list(gs.zones.hand):
             if c.name == UGIN and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn
                 if opponent:
@@ -194,12 +197,13 @@ class EldraziTronMatchAPL(MatchAPL):
                         opponent.zones.battlefield.remove(t)
                         opponent.zones.exile.append(t)
                         gs._log(f"  Ugin CAST: exile {t.name}")
-                avail -= 7
+                avail = gs.mana_pool.total()
                 break
 
         # 8. Devourer of Destiny ({5}{C}{C}) — cast trigger exile colored permanent
         for c in list(gs.zones.hand):
             if c.name == DEVOURER and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn; c.summoning_sickness = True
                 if opponent:
@@ -209,12 +213,13 @@ class EldraziTronMatchAPL(MatchAPL):
                         opponent.zones.battlefield.remove(t)
                         opponent.zones.exile.append(t)
                         gs._log(f"  Devourer CAST: exile {t.name}")
-                avail -= 7
+                avail = gs.mana_pool.total()
                 break
 
         # 9. Ulamog ({10}) — cast trigger: exile 2 target permanents, indestructible 10/10
         for c in list(gs.zones.hand):
             if c.name == ULAMOG and avail >= 10:
+                gs.mana_pool.flex -= min(10, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn; c.summoning_sickness = True
                 if opponent:
@@ -225,12 +230,14 @@ class EldraziTronMatchAPL(MatchAPL):
                             opponent.zones.battlefield.remove(t)
                             opponent.zones.exile.append(t)
                             gs._log(f"  Ulamog CAST: exile {t.name}")
+                avail = gs.mana_pool.total()
                 break
 
         # 10. Kozilek's Command ({X}{C}{C}) — flexible: tokens, scry+draw, exile creature
         for c in list(gs.zones.hand):
             if c.name == KOZ_CMD and avail >= 3:
                 x_val = avail - 2
+                gs.mana_pool.flex -= min(avail, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                 if opponent:
                     # Mode: exile creature MV <= X

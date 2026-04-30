@@ -126,6 +126,8 @@ class JeskaiControlMatchAPL(MatchAPL):
                     break
 
         # 4. Teferi — lock + -3 bounce best threat or draw
+        # Oracle: "-3: Return up to one target artifact, creature, or enchantment
+        # to its owner's hand. Draw a card."
         for c in list(gs.zones.hand):
             if c.name == TEFERI and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
@@ -134,7 +136,7 @@ class JeskaiControlMatchAPL(MatchAPL):
                     opponent.zones.battlefield.remove(bounce)
                     opponent.zones.hand.append(bounce)
                     gs._log(f"  Teferi -3: bounce {bounce.name}")
-                self._draw(gs, 1)
+                gs.zones.draw(1)  # oracle: draw a card
                 break
 
         # 5. Narset — reduces opponent card draw
@@ -159,12 +161,15 @@ class JeskaiControlMatchAPL(MatchAPL):
         """Block key threats; use Orim's Chant to prevent attacks if available."""
         if not attackers:
             return {}
-        # Orim's Chant: prevent all combat damage from one attacker
+        # Orim's Chant: prevent all combat damage to/from target creature
+        # Oracle: "{W}: Prevent all combat damage that would be dealt to and dealt
+        # by target creature this turn." Pay {W} to remove biggest attacker's damage.
         for c in list(gs.zones.hand):
             if c.name == ORIM and gs.mana_pool.total() >= 1:
+                gs.mana_pool.pay("{W}", 1) if gs.mana_pool.can_pay("{W}", 1) else None
                 biggest = max(attackers, key=lambda a: safe_power(a))
                 gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                gs._log(f"  Orim's Chant: prevent {biggest.name} from attacking")
+                gs._log(f"  Orim's Chant: prevent {biggest.name} combat damage")
                 attackers = [a for a in attackers if a is not biggest]
                 if not attackers:
                     return {}
@@ -206,9 +211,10 @@ class JeskaiControlMatchAPL(MatchAPL):
                         gs.zones.hand.remove(c); gs.zones.exile.append(c)
                         gs._log(f"  Force of Negation: counter {spell.name} (free, pitched {pitch.name})")
                         return c
-        # Counterspell / Force with mana
+        # Counterspell / Force with mana — pay cost before pre-executing
         for c in list(gs.zones.hand):
             if c.name in COUNTERSPELLS and gs.mana_pool.total() >= 2:
+                gs.mana_pool.pay(c.mana_cost, c.cmc)
                 gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                 gs._log(f"  {c.name}: counter {spell.name}")
                 return c

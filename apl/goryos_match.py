@@ -216,8 +216,10 @@ class GoryosMatchAPL(MatchAPL):
                              if x.has(Tag.CREATURE) and not x.is_land()]
                     if opp_cr:
                         t = max(opp_cr, key=lambda x: safe_power(x))
-                        opponent.zones.battlefield.remove(t); opponent.zones.exile.append(t)
-                        gs._log(f"  Blink Solitude: exile {t.name}")
+                        opponent.zones.battlefield.remove(t)
+                        opponent.zones.exile.append(t)
+                        opponent.life += safe_power(t)  # oracle: controller gains life = power
+                        gs._log(f"  Blink Solitude: exile {t.name} (+{safe_power(t)} life to opp)")
                 elif name == ATRAXA:
                     gs.zones.draw(4)
                     gs._log(f"  Blink Atraxa: draw ~4")

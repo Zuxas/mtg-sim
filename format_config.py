@@ -39,7 +39,7 @@ FORMATS = {
         "Belcher": 3.5,       "Goryo's Vengeance": 3.5, "Domain Zoo": 3.4,
         "Neobrand": 3.2,      "Living End": 2.7,    "Grixis Reanimator": 2.3,
         "Dimir Midrange": 2.0, "Esper Blink": 1.8,  "Jeskai Control": 2.2,
-        "Izzet Prowess": 1.7,  "Eldrazi Ramp": 1.6,
+        "Izzet Prowess": 1.7,  "Eldrazi Ramp": 1.6, "5C Humans": 1.5,
     },
     "combo": {
         "amulet titan", "goryo's vengeance", "ruby storm", "living end",

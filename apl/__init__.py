@@ -163,6 +163,8 @@ MATCH_APL_REGISTRY = {
     "goryos":          ("apl.goryos_match",         "GoryosMatchAPL"),
     "humans":          ("apl.humans_match",          "HumansMatchAPL"),
     "legacyhumans":    ("apl.humans_match",          "HumansMatchAPL"),
+    "5chumans":        ("apl.humans_match",          "HumansMatchAPL"),
+    "modernhumans":    ("apl.humans_match",          "HumansMatchAPL"),
     "monored":         ("apl.mono_red_match",        "MonoRedMatchAPL"),
     "monoredaggro":    ("apl.mono_red_match",        "MonoRedMatchAPL"),
     "murktide":        ("apl.murktide_match",        "MurktideMatchAPL"),

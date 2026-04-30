@@ -299,27 +299,52 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             gs.life += 3
             gs._log(f"  PHLAGE ESCAPE: 6/6 permanent + 3 dmg + 3 life")
         else:
-            # Hardcast Phlage from hand (3 damage + 3 life, then sacrifice)
+            # Hardcast Phlage from hand (3 dmg + 3 life ETB, then sacrifice UNLESS Consign counters)
+            # Phase B combo: if Consign in hand AND 1 extra {U} available, counter our own
+            # "sacrifice unless escaped" trigger — Phlage stays as permanent 6/6.
+            # Oracle (Phlage, verified): "When Phlage enters, sacrifice it unless it escaped."
+            # Oracle (Consign, verified): "Counter target triggered ability or colorless spell."
             for c in list(gs.zones.hand):
-                if c.name == PHLAGE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.mana_pool.pay(c.mana_cost, c.cmc)
-                    gs.zones.hand.remove(c)
-                    if opponent:
-                        opp_cr = [x for x in opponent.zones.battlefield
-                                 if not x.is_land() and x.has(Tag.CREATURE) and safe_toughness(x) <= 3]
-                        if opp_cr:
-                            t = max(opp_cr, key=lambda x: safe_power(x))
-                            opponent.zones.battlefield.remove(t)
-                            opponent.zones.graveyard.append(t)
-                            gs._log(f"  Phlage hardcast: kill {t.name} + 3 life (sacrifice)")
-                        else:
-                            gs.damage_dealt += 3
-                            gs._log(f"  Phlage hardcast: 3 face + 3 life (sacrifice)")
+                if c.name != PHLAGE:
+                    continue
+                if not gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    break
+                avail_after = gs.mana_pool.total() - c.cmc
+                consign_card = next((x for x in gs.zones.hand if x.name == CONSIGN), None)
+                use_consign = consign_card is not None and avail_after >= 1
+
+                gs.mana_pool.pay(c.mana_cost, c.cmc)
+                gs.zones.hand.remove(c)
+
+                # ETB: 3 damage to best killable creature (or face) + 3 life
+                kill_log = ""
+                if opponent:
+                    opp_cr = [x for x in opponent.zones.battlefield
+                             if not x.is_land() and x.has(Tag.CREATURE) and safe_toughness(x) <= 3]
+                    if opp_cr:
+                        t = max(opp_cr, key=lambda x: safe_power(x))
+                        opponent.zones.battlefield.remove(t)
+                        opponent.zones.graveyard.append(t)
+                        kill_log = f" kill {t.name}"
                     else:
                         gs.damage_dealt += 3
-                    gs.life += 3
-                    gs.zones.graveyard.append(c)  # sacrifice → GY for escape later
-                    break
+                else:
+                    gs.damage_dealt += 3
+                gs.life += 3
+
+                if use_consign:
+                    # Pay {U} for Consign to counter the sacrifice trigger
+                    gs.mana_pool.pay("{U}", 1) if gs.mana_pool.can_pay("{U}", 1) else None
+                    gs.zones.hand.remove(consign_card)
+                    gs.zones.graveyard.append(consign_card)
+                    gs.zones.battlefield.append(c)
+                    c.turn_entered = gs.turn
+                    c.summoning_sickness = True
+                    gs._log(f"  Phlage+Consign:{kill_log} +3 life, sacrifice countered -> 6/6 stays")
+                else:
+                    gs.zones.graveyard.append(c)  # sacrifice -> GY for escape later
+                    gs._log(f"  Phlage hardcast:{kill_log} +3 life (sacrifice->GY)")
+                break
 
         # 8. Ephemerate on ETB creature (if not used on Solitude already)
         for c in list(gs.zones.hand):
@@ -699,25 +724,43 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
-        """Consign to Memory: counter triggered abilities.
-        Playbook: 'Counter Archon ETB, Snapcaster flashback trigger, 
-        Summoner's Pact upkeep trigger (they lose the game).'
-        Also: Galvanic Discharge as instant-speed removal in response.
+        """Consign to Memory: counter triggered abilities + Replicate for multiple counters.
+
+        Replicate {1} (Oracle, Consign to Memory, verified Scryfall 2026-04-30):
+          "Replicate {1} (When you cast this spell, copy it for each time you paid
+           its replicate cost. You may choose new targets for the copies.)"
+
+        Playbook: counter Archon/Titan ETBs, Summoner's Pact upkeep trigger (they lose),
+        + any time we have extra mana beyond the base {U}, pay {1} per replicate copy
+        to generate additional counters for other pending triggers.
         """
         if not spell or not opponent:
             return None
-        # Consign to Memory — counter triggered abilities or colorless spells
         for c in list(gs.zones.hand):
-            if c.name == CONSIGN and gs.mana_pool.total() >= 1:
-                # Only counter high-value triggers/spells
-                spell_cmc = getattr(spell, 'cmc', 0)
-                if spell_cmc >= 3 or spell.name in ("Archon of Cruelty", "Primeval Titan",
-                    "Emrakul, the Promised End", "Summoner's Pact"):
-                    gs.mana_pool.pay("{U}", 1) if gs.mana_pool.can_pay("{U}", 1) else None
-                    gs.zones.hand.remove(c)
-                    gs.zones.graveyard.append(c)
-                    gs._log(f"  Consign to Memory: counter {spell.name}")
-                    return c
+            if c.name != CONSIGN:
+                continue
+            if gs.mana_pool.total() < 1:
+                continue
+            spell_cmc = getattr(spell, 'cmc', 0)
+            if not (spell_cmc >= 3 or spell.name in ("Archon of Cruelty", "Primeval Titan",
+                    "Emrakul, the Promised End", "Summoner's Pact", "Atraxa, Grand Unifier",
+                    "Griselbrand", "Ulamog, the Defiler")):
+                continue
+            # Base cost: {U}
+            gs.mana_pool.pay("{U}", 1) if gs.mana_pool.can_pay("{U}", 1) else None
+            gs.zones.hand.remove(c)
+            gs.zones.graveyard.append(c)
+            # Replicate: pay {1} per extra copy if we have spare mana
+            # Each copy can counter an additional trigger (same or different targets).
+            extra_mana = gs.mana_pool.total()
+            replicate_copies = min(extra_mana, 3)  # cap at 3 copies (diminishing returns)
+            if replicate_copies > 0:
+                gs.mana_pool.pay(f"{{{replicate_copies}}}", replicate_copies)
+                gs._log(f"  Consign+Replicate x{replicate_copies}: counter {spell.name}"
+                        f" + {replicate_copies} extra trigger(s)")
+            else:
+                gs._log(f"  Consign to Memory: counter {spell.name}")
+            return c
         return None
 
     def end_step_actions(self, gs, opponent):

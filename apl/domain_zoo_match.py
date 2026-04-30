@@ -155,10 +155,12 @@ class DomainZooMatchAPL(MatchAPL):
         # 4. Territorial Kavu ({R}{G}) — size = domain count
         for c in list(gs.zones.hand):
             if c.name == KAVU and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                # Set domain-boosted P/T BEFORE deploying
-                if self._domain_count >= 3:
-                    c.power = str(self._domain_count)
-                    c.toughness = str(self._domain_count)
+                # Oracle: "Territorial Kavu's power and toughness are each equal to
+                # the number of basic land types among lands you control."
+                # P/T = domain_count always (characteristic-based, not +X/+X).
+                # Must set BEFORE cast so engine reads correct P/T during combat.
+                c.power = str(max(1, self._domain_count))
+                c.toughness = str(max(1, self._domain_count))
                 gs.cast_spell(c)
                 gs._log(f"  Kavu: {safe_power(c)}/{safe_toughness(c)} with domain={self._domain_count}")
                 avail = gs.mana_pool.total()

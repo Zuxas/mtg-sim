@@ -242,7 +242,10 @@ class EldraziRampMatchAPL(MatchAPL):
                         gs.zones.hand.remove(c)
                         gs.zones.battlefield.append(c)
                         c.turn_entered = gs.turn
-                        c.summoning_sickness = True  # NO HASTE (flying, trample, prot instants)
+                        # Oracle (Emrakul, verified): "Flying, trample, protection from
+                        # instant spells and from spells with flash, haste."
+                        # Emrakul HAS HASTE -- can attack the turn it's cast.
+                        c.summoning_sickness = False
                         if opponent:
                             opponent.life -= 3
                             gs._log(f"  EMRAKUL CAST! (cost {cost}, -{reduction} types) -> Mindslaver")

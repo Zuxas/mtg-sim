@@ -184,6 +184,7 @@ class DomainZooMatchAPL(MatchAPL):
         other_gy = len(gs.zones.graveyard) - len(gy_phlages)
         if gy_phlages and other_gy >= 5 and avail >= 4:
             phlage = gy_phlages[0]
+            gs.mana_pool.pay("{R}{R}{W}{W}", 4)  # oracle escape cost
             for _ in range(5):
                 non_p = [x for x in gs.zones.graveyard if x.name != PHLAGE]
                 if non_p:
@@ -375,6 +376,7 @@ class DomainZooMatchAPL(MatchAPL):
         if has_ferocious:
             for c in list(gs.zones.hand):
                 if c.name == DENIAL and gs.mana_pool.total() >= 1:
+                    gs.mana_pool.pay("{U}", 1) if gs.mana_pool.can_pay("{U}", 1) else None
                     gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                     gs._log(f"  Stubborn Denial: HARD counter {spell.name} (ferocious)")
                     return c

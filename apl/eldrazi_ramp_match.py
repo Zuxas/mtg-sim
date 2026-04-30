@@ -238,32 +238,31 @@ class EldraziRampMatchAPL(MatchAPL):
                     while avail < cost and self._spawn_tokens > 0:
                         self._spawn_tokens -= 1; avail += 1
                     if avail >= cost:
+                        gs.mana_pool.flex -= min(cost, gs.mana_pool.flex)
                         gs.zones.hand.remove(c)
                         gs.zones.battlefield.append(c)
                         c.turn_entered = gs.turn
                         c.summoning_sickness = True  # NO HASTE (flying, trample, prot instants)
-                        # CAST TRIGGER: Mindslaver — control opponent's next turn
-                        # Realistic: waste some removal, make bad attacks, but opponent still plays
-                        # Competitive data: Emrakul resolving is ~70% to win from that point
-                        # Model as: skip opponent's next productive turn (~3 damage worth of tempo)
                         if opponent:
                             opponent.life -= 3
-                            gs._log(f"  EMRAKUL CAST! (cost {cost}, -{reduction} types) → Mindslaver")
-                        # Trigger K-Return from GY (FREE 5 dmg sweeper)
+                            gs._log(f"  EMRAKUL CAST! (cost {cost}, -{reduction} types) -> Mindslaver")
                         self._trigger_koz_return_from_gy(gs, opponent)
                         avail = gs.mana_pool.total()
                         break
 
         # 7b. World Breaker ({6}{G}) — exile artifact/enchantment/LAND
+        # Oracle (verified): "When you cast this spell, exile target artifact, creature,
+        # enchantment, or land an opponent controls."
         for c in list(gs.zones.hand):
             if c.name == WORLD_BREAKER and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn; c.summoning_sickness = True
-                # CAST trigger: exile target artifact/enchantment/land
                 if opponent:
-                    # Exile best non-land first, then lands
+                    # Oracle: exile artifact, creature, enchantment, or land
                     targets = [x for x in opponent.zones.battlefield
-                               if not x.is_land() and x.has(Tag.CREATURE)]
+                               if not x.is_land() and (x.has(Tag.CREATURE) or
+                               x.has(Tag.ARTIFACT) or x.has(Tag.ENCHANTMENT))]
                     land_targets = [x for x in opponent.zones.battlefield if x.is_land()]
                     if targets:
                         t = max(targets, key=lambda x: safe_power(x))
@@ -280,6 +279,7 @@ class EldraziRampMatchAPL(MatchAPL):
         # 7c. Devourer of Destiny ({5}{C}{C}) — exile colored permanent
         for c in list(gs.zones.hand):
             if c.name == DEVOURER and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn; c.summoning_sickness = True
                 if opponent:
@@ -295,15 +295,18 @@ class EldraziRampMatchAPL(MatchAPL):
         # 7d. Sire of Seven Deaths ({7}) — 7/7 with every keyword + ward pay 7 life
         for c in list(gs.zones.hand):
             if c.name == SIRE and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn; c.summoning_sickness = True
                 self._trigger_koz_return_from_gy(gs, opponent)
                 gs._log(f"  Sire of Seven Deaths: 7/7 all keywords, ward 7 life")
+                avail = gs.mana_pool.total()
                 break
 
         # 7e. Ugin PW ({7}) — cast trigger: exile colored permanent
         for c in list(gs.zones.hand):
             if c.name == UGIN and avail >= 7:
+                gs.mana_pool.flex -= min(7, gs.mana_pool.flex)
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn
                 if opponent:
@@ -312,6 +315,7 @@ class EldraziRampMatchAPL(MatchAPL):
                         t = max(targets, key=lambda x: safe_power(x))
                         opponent.zones.battlefield.remove(t); opponent.zones.exile.append(t)
                         gs._log(f"  Ugin CAST: exile {t.name}")
+                avail = gs.mana_pool.total()
                 break
 
         # 8. Remaining creatures

@@ -111,6 +111,7 @@ class EsperBlinkMatchAPL(MatchAPL):
                 break
 
         # 6. Ephemerate on Solitude/Overlord for double ETB
+        # Oracle (Solitude ETB): "That creature's controller gains life equal to its power."
         if opponent:
             for c in list(gs.zones.hand):
                 if c.name == EPHEMERATE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
@@ -123,6 +124,8 @@ class EsperBlinkMatchAPL(MatchAPL):
                             target = max(opp_creatures, key=lambda x: safe_power(x))
                             opponent.zones.battlefield.remove(target)
                             opponent.zones.exile.append(target)
+                            opponent.life += safe_power(target)  # oracle: controller gains life = power
+                            gs._log(f"  Eph-Solitude: exile {target.name} (+{safe_power(target)} life)")
                     break
 
         # 7. Fill curve
@@ -180,6 +183,18 @@ class EsperBlinkMatchAPL(MatchAPL):
                 return
 
     def respond_to_spell(self, gs, opponent, spell):
+        """Consign to Memory: counter high-value triggered abilities or colorless spells.
+        Oracle (Consign, verified): "Counter target triggered ability or colorless spell."
+        Returns card for engine execution (match_engine.py handles mana payment + removal).
+        Only counters CMC >= 3 or named high-impact threats.
+        """
+        if not spell or not opponent:
+            return None
+        spell_cmc = getattr(spell, 'cmc', 0) if spell else 0
+        if not (spell_cmc >= 3 or (spell and spell.name in (
+                "Archon of Cruelty", "Primeval Titan", "Emrakul, the Promised End",
+                "Atraxa, Grand Unifier", "Summoner's Pact"))):
+            return None
         for c in gs.zones.hand:
             if c.name == CONSIGN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 return c

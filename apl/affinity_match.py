@@ -41,6 +41,8 @@ class IzzetAffinityMatchAPL(MatchAPL):
     def __init__(self):
         self._artifact_count = 0
         self._kappa_counters = 0
+        self._artifacts_cast_this_turn = 0   # for Pinnacle Emissary Drone creation
+        self._munitions_pending = 0          # Weapons Manufacturing Munitions tokens
 
     def _count_artifacts(self, gs):
         """Count artifacts on battlefield for affinity/metalcraft."""
@@ -72,53 +74,77 @@ class IzzetAffinityMatchAPL(MatchAPL):
         self._play_land_if_able(gs)
         gs.tap_lands()
         self._artifact_count = self._count_artifacts(gs)
+        self._artifacts_cast_this_turn = 0
         avail = gs.mana_pool.total()
+
+        pinnacle_on_board = any(c.name == PINNACLE for c in gs.zones.battlefield)
+        weapons_on_board = any(c.name == WEAPONS for c in gs.zones.battlefield)
+
+        def _on_artifact_enter(is_nontoken=True):
+            """Fire ETB triggers when an artifact enters the battlefield."""
+            self._artifact_count += 1
+            self._kappa_counters += 1  # Kappa gets +1/+1 per artifact ETB
+            if weapons_on_board and is_nontoken:
+                self._munitions_pending += 1  # Munitions token created
+
+        def _on_artifact_cast():
+            """Fire cast triggers when an artifact spell is cast."""
+            self._artifacts_cast_this_turn += 1
 
         # 0. Mox Opal — free mana if metalcraft (3+ artifacts)
         for c in list(gs.zones.hand):
             if c.name == MOX_OPAL:
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn
-                self._artifact_count += 1
+                _on_artifact_enter(is_nontoken=True)
                 if self._artifact_count >= 3:
-                    avail += 1  # metalcraft: tap for any color
+                    avail += 1
                 gs._log(f"  Mox Opal (artifacts: {self._artifact_count}, metalcraft: {self._artifact_count >= 3})")
                 break
 
-        # 1. Deploy cheap artifacts (Bauble, Tormod's Crypt, etc.) — fuel affinity + Kappa triggers
+        # 1. Deploy cheap artifacts (free, ETB triggers Kappa + Weapons Manufacturing)
         for c in list(gs.zones.hand):
             if c.name in ARTIFACTS and getattr(c, 'cmc', 0) == 0:
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn
-                self._artifact_count += 1
-                self._kappa_counters += 1  # Kappa gets +1/+1 per artifact ETB
+                _on_artifact_enter(is_nontoken=True)
+                _on_artifact_cast()
                 gs._log(f"  Deploy {c.name} (artifact #{self._artifact_count})")
 
-        # 2. Weapons Manufacturing ({2}) — artifact that creates tokens
+        # 2. Weapons Manufacturing ({2}) — creates Munitions tokens on each artifact entering
+        # Oracle: "Whenever a nontoken artifact you control enters, create a Munitions token
+        # (an artifact token with 'When this token leaves the battlefield, it deals 2 damage')."
         for c in list(gs.zones.hand):
             if c.name == WEAPONS and avail >= 2:
-                gs.cast_spell(c); self._artifact_count += 1
+                gs.cast_spell(c); _on_artifact_enter(); _on_artifact_cast()
                 avail = gs.mana_pool.total()
-                gs._log(f"  Weapons Manufacturing: artifact token engine")
+                gs._log(f"  Weapons Manufacturing: each artifact entering now creates Munitions (+2 dmg on sac)")
                 break
 
         # 3. Emry ({2}{U} with affinity for artifacts) — cast artifacts from GY
+        # Oracle (ETB): "When Emry enters, mill four cards." — puts 4 cards from library to GY
         for c in list(gs.zones.hand):
             if c.name == EMRY:
-                gs.mana_pool.cost_reduction = self._artifact_count  # affinity
+                gs.mana_pool.cost_reduction = self._artifact_count
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
-                    gs._log(f"  Emry: affinity -{self._artifact_count}")
+                    _on_artifact_enter()
+                    # Oracle ETB: mill 4 cards (library -> GY, fills GY for delirium)
+                    for _ in range(min(4, len(gs.zones.library))):
+                        card = gs.zones.library.pop(0)
+                        gs.zones.graveyard.append(card)
+                    gs._log(f"  Emry ETB: affinity, mill 4 -> GY ({len(gs.zones.graveyard)} in GY)")
                 gs.mana_pool.cost_reduction = 0
                 avail = gs.mana_pool.total()
                 break
 
-        # 4. Kappa Cannoneer ({5}{U}, ward {4}) — grows on artifact ETB
+        # 4. Kappa Cannoneer ({5}{U}, ward {4}) — grows on artifact ETB, improvise
         for c in list(gs.zones.hand):
             if c.name == KAPPA:
-                gs.mana_pool.cost_reduction = self._artifact_count  # affinity
+                gs.mana_pool.cost_reduction = self._artifact_count
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
+                    _on_artifact_enter()
                     c.power = str(4 + self._kappa_counters)
                     c.toughness = str(4 + self._kappa_counters)
                     gs._log(f"  Kappa: {safe_power(c)}/{safe_toughness(c)} (affinity -{self._artifact_count}, ward 4)")
@@ -126,21 +152,42 @@ class IzzetAffinityMatchAPL(MatchAPL):
                 avail = gs.mana_pool.total()
                 break
 
-        # 5. Pinnacle Emissary — token flood
+        # 5. Pinnacle Emissary ({3}{U}{R}) — creates 1/1 Drone flying tokens on each artifact cast.
+        # Oracle: "Whenever you cast an artifact spell, create a 1/1 colorless Drone artifact
+        # creature token with flying." Drone tokens ALSO trigger Kappa + Weapons Manufacturing.
         for c in list(gs.zones.hand):
             if c.name == PINNACLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c); avail = gs.mana_pool.total()
+                gs.cast_spell(c)
+                avail = gs.mana_pool.total()
                 break
+        # Create Drones for all artifact casts so far this turn (if Pinnacle now on board
+        # or was already on board). Post-cast is conservative; ideally fires per-cast.
+        pinnacle_on_board = any(c.name == PINNACLE for c in gs.zones.battlefield)
+        if pinnacle_on_board and self._artifacts_cast_this_turn > 0:
+            for _ in range(self._artifacts_cast_this_turn):
+                gs._make_token("Drone Token", "1", "1",
+                               "Artifact Creature — Drone")
+                _on_artifact_enter(is_nontoken=False)  # tokens don't trigger Weapons Mfg
+            gs._log(f"  Pinnacle: {self._artifacts_cast_this_turn} Drone token(s) (flying, artifact)")
 
         # 6. Arcbound Ravager ({2}) — sacrifice artifacts for counters
         for c in list(gs.zones.hand):
             if c.name == RAVAGER and avail >= 2:
-                gs.cast_spell(c); avail = gs.mana_pool.total()
+                gs.cast_spell(c); _on_artifact_enter(); _on_artifact_cast()
+                avail = gs.mana_pool.total()
                 gs._log(f"  Ravager: sac artifacts for +1/+1 counters")
                 break
 
-        # 7. Removal with Metallic Rebuke
-        # (handled in respond_to_spell)
+        # 6b. Weapons Manufacturing Munitions — convert pending Munitions to face damage.
+        # Oracle: "When this token leaves the battlefield, it deals 2 damage to any target."
+        # Sacrifice all Munitions tokens at end of main for damage (aggressive line).
+        if self._munitions_pending > 0:
+            dmg = self._munitions_pending * 2
+            gs.damage_dealt += dmg
+            gs._log(f"  Weapons Mfg Munitions: sac {self._munitions_pending} tokens → {dmg} face")
+            self._munitions_pending = 0
+
+        # 7. Removal with Metallic Rebuke (handled in respond_to_spell)
 
         # 8. Fill curve
         for c in list(gs.zones.hand):

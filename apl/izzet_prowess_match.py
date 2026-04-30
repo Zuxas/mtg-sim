@@ -511,21 +511,51 @@ class IzzetProwessMatchAPL(MatchAPL):
         target = max(must_kill, key=lambda c: safe_power(c))
         target_t = safe_toughness(target)
         
-        # Use Lava Dart on 1-toughness engine pieces (Guide, Ocelot, Ragavan)
-        if target_t <= 1:
-            for c in list(gs.zones.hand):
-                if c.name == LAVA_DART and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.mana_pool.pay(c.mana_cost, c.cmc)
-                    gs.zones.hand.remove(c)
-                    gs.zones.graveyard.append(c)
-                    if target in opponent.zones.battlefield:
-                        opponent.zones.battlefield.remove(target)
-                        opponent.zones.graveyard.append(target)
-                    self._trigger_prowess(gs, LAVA_DART)
-                    self._spells_this_turn += 1
-                    self._check_flurry(gs)
-                    gs._log(f"  Lava Dart → kill {target.name} (engine piece)")
-                    return
+        # Lava Dart: 1 damage each (main cast + flashback = 2 total).
+        # Oracle: "Flashback—Sacrifice a Mountain."
+        # Single Dart kills 1-toughness targets; Dart + flashback kills 2-toughness.
+        dart_in_hand = next((c for c in gs.zones.hand if c.name == LAVA_DART), None)
+        dart_in_gy = next((c for c in gs.zones.graveyard if c.name == LAVA_DART), None)
+        mountains_available = [c for c in gs.zones.battlefield
+                               if c.type_line and 'mountain' in c.type_line.lower()
+                               and not getattr(c, 'tapped', False)]
+
+        if dart_in_hand and target_t <= 1 and gs.mana_pool.can_cast(dart_in_hand.mana_cost, dart_in_hand.cmc):
+            # Single dart kills 1-toughness
+            gs.mana_pool.pay(dart_in_hand.mana_cost, dart_in_hand.cmc)
+            gs.zones.hand.remove(dart_in_hand)
+            gs.zones.graveyard.append(dart_in_hand)
+            if target in opponent.zones.battlefield:
+                opponent.zones.battlefield.remove(target)
+                opponent.zones.graveyard.append(target)
+            self._trigger_prowess(gs, LAVA_DART)
+            self._spells_this_turn += 1
+            self._check_flurry(gs)
+            gs._log(f"  Lava Dart → kill {target.name} (engine piece, 1 toughness)")
+            return
+
+        if dart_in_hand and dart_in_gy and mountains_available and target_t <= 2 and \
+                gs.mana_pool.can_cast(dart_in_hand.mana_cost, dart_in_hand.cmc):
+            # Dart + flashback = 2 damage, kills Guide of Souls (1/2) and similar
+            gs.mana_pool.pay(dart_in_hand.mana_cost, dart_in_hand.cmc)
+            gs.zones.hand.remove(dart_in_hand)
+            gs.zones.graveyard.append(dart_in_hand)
+            self._trigger_prowess(gs, LAVA_DART)
+            self._spells_this_turn += 1
+            self._check_flurry(gs)
+            # Flashback: sacrifice a Mountain
+            mountain = mountains_available[0]
+            gs.zones.battlefield.remove(mountain)
+            gs.zones.graveyard.append(mountain)
+            gs.zones.graveyard.remove(dart_in_gy)
+            gs.zones.exile.append(dart_in_gy)
+            self._trigger_prowess(gs, "Lava Dart flashback")
+            self._spells_this_turn += 1
+            self._check_flurry(gs)
+            if target in opponent.zones.battlefield:
+                opponent.zones.battlefield.remove(target)
+                opponent.zones.graveyard.append(target)
+            gs._log(f"  Lava Dart + flashback → kill {target.name} (2 toughness, -1 Mountain)")
 
         # Use Unholy Heat first (preserves Bolt for face on burst turn)
         # Oracle: 2 damage, or 6 with delirium (4+ card types in GY)

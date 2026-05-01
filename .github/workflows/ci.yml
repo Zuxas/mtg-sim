@@ -6,53 +6,41 @@ on:
   pull_request:
     branches: [main]
 
-# Self-hosted runner has access to Ollama (Gemma) and sibling repos.
-# Each job short-circuits on failure so expensive steps (oracle gate,
-# gauntlet) only run when cheap steps (lint, tests) pass first.
-
-env:
-  # Sibling repo locations on the self-hosted Windows machine.
-  # These are only resolved on the self-hosted runner; cloud runners
-  # will skip jobs that depend on them.
-  MTG_META_DB: ${{ vars.MTG_META_DB || 'E:/vscode ai project/mtg-meta-analyzer/data/mtg_meta.db' }}
-
 jobs:
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 1: Fast lint — APL registry, handler, deck consistency
-  # Runs on every push. Catches structural issues in < 5 seconds.
+  # Job 1: Fast lint — runs on GitHub infrastructure, no local deps needed.
   # ──────────────────────────────────────────────────────────────────────────
   lint:
     name: APL lint
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
       - name: Registry / handler / deck consistency
         run: python scripts/lint_ci.py
-        # Exits non-zero if any ERROR or WARN level finding.
-        # INFO findings (audit:stub markers, orphan decks) are allowed.
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 2: Unit tests — determinism + combat mechanics
-  # Runs after lint. Catches engine regressions.
+  # Job 2: Unit tests — pure Python, runs on GitHub infrastructure.
   # ──────────────────────────────────────────────────────────────────────────
   tests:
     name: Unit tests
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: lint
     steps:
       - uses: actions/checkout@v4
-
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
       - name: Determinism tests (4 checks)
         run: python tests/test_determinism.py
-
       - name: Menace combat tests
         run: python tests/test_menace_combat.py
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 3: AI oracle gate — semantic correctness check on changed APLs
+  # Job 3: AI oracle gate — self-hosted only (needs Ollama + Gemma locally).
   # Only runs on PRs that modify match APL files.
-  # Uses Gemma 12B (local, $0.00) to verify oracle text vs implementation.
   # ──────────────────────────────────────────────────────────────────────────
   oracle-gate:
     name: Oracle verification (AI gate)
@@ -62,7 +50,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # need full history for diff
+          fetch-depth: 0
 
       - name: Identify changed match APLs
         id: changed
@@ -104,10 +92,8 @@ jobs:
           fi
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Job 4: Goldfish baseline guard — ensures engine changes don't silently
-  # shift canonical kill-turn numbers.
-  # Only runs on PRs that touch the engine or canonical APLs.
-  # Expensive (~30s at N=1000). Skipped on docs-only changes.
+  # Job 4: Goldfish baseline guard — self-hosted for speed (N=1000 sim).
+  # Only runs on PRs touching the engine or canonical APLs.
   # ──────────────────────────────────────────────────────────────────────────
   goldfish-guard:
     name: Goldfish baseline guard
@@ -123,14 +109,10 @@ jobs:
       - name: Boros Energy goldfish baseline
         shell: bash
         run: |
-          # Expected: avg kill turn ~T4.40-T4.60 for variant deck
           result=$(python sim.py "Boros Energy" --n 1000 --seed 42 2>&1)
           echo "$result"
-
-          # Extract avg_kill_turn from output
           avg=$(echo "$result" | grep -oP "avg.*?(\d+\.\d+)" | grep -oP "\d+\.\d+" | head -1)
           echo "Avg kill turn: $avg"
-
           python -c "
           avg = float('$avg')
           if avg < 4.0 or avg > 5.2:

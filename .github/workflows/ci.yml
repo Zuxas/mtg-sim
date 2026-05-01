@@ -1,0 +1,140 @@
+name: mtg-sim CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Self-hosted runner has access to Ollama (Gemma) and sibling repos.
+# Each job short-circuits on failure so expensive steps (oracle gate,
+# gauntlet) only run when cheap steps (lint, tests) pass first.
+
+env:
+  # Sibling repo locations on the self-hosted Windows machine.
+  # These are only resolved on the self-hosted runner; cloud runners
+  # will skip jobs that depend on them.
+  MTG_META_DB: ${{ vars.MTG_META_DB || 'E:/vscode ai project/mtg-meta-analyzer/data/mtg_meta.db' }}
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 1: Fast lint — APL registry, handler, deck consistency
+  # Runs on every push. Catches structural issues in < 5 seconds.
+  # ──────────────────────────────────────────────────────────────────────────
+  lint:
+    name: APL lint
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Registry / handler / deck consistency
+        run: python scripts/lint_ci.py
+        # Exits non-zero if any ERROR or WARN level finding.
+        # INFO findings (audit:stub markers, orphan decks) are allowed.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 2: Unit tests — determinism + combat mechanics
+  # Runs after lint. Catches engine regressions.
+  # ──────────────────────────────────────────────────────────────────────────
+  tests:
+    name: Unit tests
+    runs-on: self-hosted
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determinism tests (4 checks)
+        run: python tests/test_determinism.py
+
+      - name: Menace combat tests
+        run: python tests/test_menace_combat.py
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 3: AI oracle gate — semantic correctness check on changed APLs
+  # Only runs on PRs that modify match APL files.
+  # Uses Gemma 12B (local, $0.00) to verify oracle text vs implementation.
+  # ──────────────────────────────────────────────────────────────────────────
+  oracle-gate:
+    name: Oracle verification (AI gate)
+    runs-on: self-hosted
+    needs: tests
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history for diff
+
+      - name: Identify changed match APLs
+        id: changed
+        shell: bash
+        run: |
+          FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD \
+            | grep -E "^apl/.*_match\.py$" || true)
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          if [ -z "$FILES" ]; then
+            echo "No match APLs changed -- oracle gate skipped"
+          else
+            echo "Changed match APLs:"
+            echo "$FILES"
+          fi
+
+      - name: Oracle verify changed APLs
+        if: steps.changed.outputs.files != ''
+        shell: bash
+        env:
+          HARNESS_ROOT: ${{ vars.HARNESS_ROOT || 'E:/vscode ai project/harness' }}
+        run: |
+          PASS=0
+          FAIL=0
+          for f in ${{ steps.changed.outputs.files }}; do
+            echo "--- Verifying $f ---"
+            result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1)
+            echo "$result"
+            if echo "$result" | grep -q " FAIL "; then
+              FAIL=$((FAIL + 1))
+            else
+              PASS=$((PASS + 1))
+            fi
+          done
+          echo ""
+          echo "Oracle gate: $PASS PASS, $FAIL FAIL"
+          if [ $FAIL -gt 0 ]; then
+            echo "::error::Oracle gate failed on $FAIL APL(s). Fix oracle discrepancies before merging."
+            exit 1
+          fi
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Job 4: Goldfish baseline guard — ensures engine changes don't silently
+  # shift canonical kill-turn numbers.
+  # Only runs on PRs that touch the engine or canonical APLs.
+  # Expensive (~30s at N=1000). Skipped on docs-only changes.
+  # ──────────────────────────────────────────────────────────────────────────
+  goldfish-guard:
+    name: Goldfish baseline guard
+    runs-on: self-hosted
+    needs: tests
+    if: |
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.changed_files, 'engine/') ||
+       contains(github.event.pull_request.changed_files, 'apl/boros_energy'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Boros Energy goldfish baseline
+        shell: bash
+        run: |
+          # Expected: avg kill turn ~T4.40-T4.60 for variant deck
+          result=$(python sim.py "Boros Energy" --n 1000 --seed 42 2>&1)
+          echo "$result"
+
+          # Extract avg_kill_turn from output
+          avg=$(echo "$result" | grep -oP "avg.*?(\d+\.\d+)" | grep -oP "\d+\.\d+" | head -1)
+          echo "Avg kill turn: $avg"
+
+          python -c "
+          avg = float('$avg')
+          if avg < 4.0 or avg > 5.2:
+              print(f'FAIL: avg kill turn {avg:.2f} outside expected range [4.0, 5.2]')
+              import sys; sys.exit(1)
+          print(f'PASS: avg kill turn {avg:.2f} within range')
+          "

@@ -1,13 +1,14 @@
-// Izzet Prowess - rpa (top 4, 2026-04-20)
-// Current #1 Standard archetype, 946 decks in 2026
+// Izzet Prowess — PT Secrets of Strixhaven (2026-05-02 update)
+// 99 players / 30.5% of PT field — most-played Standard archetype
+// Key changes vs pre-SOS: +4 Flow State, +4 Colorstorm Stallion,
+// Eddymurk Crab 4x main (was 2x), trimmed pre-SOS flex slots
 4 Boomerang Basics
-2 Bounce Off
 4 Burst Lightning
-2 Eddymurk Crab
-4 Elusive Otter
-7 Island
+4 Colorstorm Stallion
+4 Eddymurk Crab
+4 Flow State
+4 Island
 2 Multiversal Passage
-1 Octopus Form
 4 Opt
 4 Riverpyre Verge
 4 Sleight of Hand
@@ -16,10 +17,10 @@
 4 Steam Vents
 4 Stock Up
 4 Stormchaser's Talent
-2 Wild Ride
+2 Three Steps Ahead
 
 Sideboard
-2 Eddymurk Crab
+2 Elusive Otter
 1 Fire Magic
 2 Get Out
 3 Ral, Crackling Wit

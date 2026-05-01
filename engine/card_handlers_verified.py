@@ -27407,6 +27407,251 @@ _ETB_HANDLERS.update({
 #                             commit-crime / state-triggered path)
 
 
+# ── SOS (Secrets of Strixhaven) handlers — added 2026-05-01 ──────────
+# Cards added for PT SOS meta (Izzet Prowess 30.5%, Izzet Lessons 7.4%).
+
+def _flow_state_spell(gs, card):
+    """Flow State — {1}{U} Sorcery (SOS).
+    Oracle: 'Look at the top three cards of your library. Put one into
+    your hand and the rest on the bottom in any order. If there is an
+    instant card and a sorcery card in your graveyard, instead put two
+    of them into your hand and the rest on the bottom.'
+    """
+    has_instant  = any(c.has(Tag.INSTANT)  for c in gs.zones.graveyard)
+    has_sorcery  = any(c.has(Tag.SORCERY)  for c in gs.zones.graveyard)
+    picks = 2 if (has_instant and has_sorcery) else 1
+    top3 = gs.zones.library[:3]
+    # Simulate: take best picks (highest CMC), bottom the rest
+    sorted3 = sorted(top3, key=lambda c: getattr(c, 'cmc', 0), reverse=True)
+    for c in sorted3[:picks]:
+        gs.zones.library.remove(c)
+        gs.zones.hand.append(c)
+    for c in sorted3[picks:]:
+        gs.zones.library.remove(c)
+        gs.zones.library.append(c)  # bottom
+    gs._log(f"  Flow State: look at top 3, take {picks} "
+            f"({'instant+sorcery in GY' if picks == 2 else 'base'})")
+
+
+def _prismari_charm_spell(gs, card):
+    """Prismari Charm — {U}{R} Instant (SOS).
+    Oracle: 'Choose one -- Surveil 2, then draw a card. OR Prismari Charm
+    deals 1 damage to each of one or two targets. OR Return target nonland
+    permanent to its owner's hand.'
+    Decision: draw (surveil+draw) if hand <= 3; bounce if opponent has
+    big threat; else 1 damage each to 2 smallest opp creatures.
+    """
+    opp = getattr(gs, "_match_opp", None)
+    if len(gs.zones.hand) <= 3:
+        # Mode 1: surveil 2, draw 1
+        for _ in range(2):
+            if gs.zones.library:
+                top = gs.zones.library.pop(0)
+                gs.zones.graveyard.append(top)
+        gs.zones.draw(1)
+        gs._log("  Prismari Charm: surveil 2, draw 1")
+    elif opp:
+        opp_threats = [c for c in opp.zones.battlefield
+                       if not c.is_land() and safe_power(c) >= 4]
+        if opp_threats:
+            # Mode 3: bounce biggest threat
+            target = max(opp_threats, key=lambda c: safe_power(c))
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Prismari Charm: bounce {target.name}")
+        else:
+            # Mode 2: 1 damage each to up to 2 smallest creatures
+            small = sorted([c for c in opp.zones.battlefield
+                            if not c.is_land() and c.has(Tag.CREATURE)
+                            and safe_toughness(c) <= 1],
+                           key=lambda c: safe_power(c))[:2]
+            for t in small:
+                if t in opp.zones.battlefield:
+                    opp.zones.battlefield.remove(t)
+                    opp.zones.graveyard.append(t)
+            gs._log(f"  Prismari Charm: 1 dmg x{len(small)} small creatures")
+    else:
+        gs.zones.draw(1)
+        gs._log("  Prismari Charm: surveil 2, draw 1 (goldfish)")
+
+
+def _traumatic_critique_spell(gs, card):
+    """Traumatic Critique — {X}{U}{R} Instant (SOS).
+    Oracle: 'Traumatic Critique deals X damage to any target. Draw two
+    cards, then discard a card.'
+    Decision: target opponent's highest-power creature (if X >= toughness)
+    else deal face damage. Always draw 2, discard worst.
+    """
+    opp = getattr(gs, "_match_opp", None)
+    x_paid = max(0, gs.mana_pool.total())  # use remaining mana as X
+    if opp:
+        targets = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(Tag.CREATURE)
+                   and safe_toughness(c) <= x_paid]
+        if targets:
+            t = max(targets, key=lambda c: safe_power(c))
+            opp.zones.battlefield.remove(t)
+            opp.zones.graveyard.append(t)
+            gs._log(f"  Traumatic Critique X={x_paid}: kill {t.name}")
+        else:
+            opp.life -= x_paid
+            gs._log(f"  Traumatic Critique X={x_paid}: {x_paid} face damage")
+    # Draw 2, discard 1
+    gs.zones.draw(2)
+    if gs.zones.hand:
+        worst = min(gs.zones.hand, key=lambda c: getattr(c, 'cmc', 0)
+                    if not c.is_land() else 99)
+        gs.zones.hand.remove(worst)
+        gs.zones.graveyard.append(worst)
+    gs._log("  Traumatic Critique: draw 2, discard 1")
+
+
+def _colorstorm_stallion_etb(gs, card):
+    """Colorstorm Stallion — {1}{U}{R} 3/3 (SOS).
+    Oracle: 'Ward {1}, haste. Opus -- Whenever you cast an instant or
+    sorcery spell, this creature gets +1/+1 until end of turn. If five
+    or more mana was spent to cast that spell, create a token that's a
+    copy of this creature.'
+    ETB: enters with haste (summoning_sickness = False). Opus pump is
+    handled by the Prowess/Opus trigger in the APL each spell cast.
+    """
+    card.summoning_sickness = False  # haste
+    try:
+        card.power = str(int(card.power))
+        card.toughness = str(int(card.toughness))
+    except (ValueError, TypeError):
+        card.power = '3'; card.toughness = '3'
+    gs._log("  Colorstorm Stallion ETB: 3/3 haste, ward 1, Opus trigger active")
+
+
+def _impractical_joke_spell(gs, card):
+    """Impractical Joke — {R} Sorcery (SOS).
+    Oracle: 'Damage can't be prevented this turn. Impractical Joke deals
+    3 damage to up to one target creature or planeswalker.'
+    Decision: kill creature with toughness <= 3, else face damage.
+    'Can't prevent' flag is a no-op in sim (no prevention effects modeled).
+    """
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        targets = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(Tag.CREATURE)
+                   and safe_toughness(c) <= 3]
+        if targets:
+            t = max(targets, key=lambda c: safe_power(c))
+            if t in opp.zones.battlefield:
+                opp.zones.battlefield.remove(t)
+                opp.zones.graveyard.append(t)
+            gs._log(f"  Impractical Joke: kill {t.name} (3 dmg, unpreventable)")
+        else:
+            opp.life -= 3
+            gs._log("  Impractical Joke: 3 face (unpreventable)")
+
+
+_SPELL_HANDLERS.update({
+    "Flow State":          _flow_state_spell,
+    "Prismari Charm":      _prismari_charm_spell,
+    "Traumatic Critique":  _traumatic_critique_spell,
+    "Impractical Joke":    _impractical_joke_spell,
+})
+
+_ETB_HANDLERS.update({
+    "Colorstorm Stallion": _colorstorm_stallion_etb,
+})
+
+
+# PT Secrets of Strixhaven batch — 2026-05-02
+# Four handlers for PT top-archetype cards. Fidelity notes per spec
+# harness/specs/2026-05-02-pt-sos-handler-batch.md.
+
+def _tablet_of_discovery_etb(gs, card):
+    """Tablet of Discovery — {2}{R} Artifact (SOS).
+    Oracle: 'When this artifact enters, mill a card. You may play that
+    card this turn. {T}: Add {R}. {T}: Add {R}{R} (instants/sorceries).'
+    Sim model: mill 1 + proxy +1 mana. Cast-from-GY path not modeled
+    (requires zone exception + mana payment). Honest underrate; see
+    IMPERFECTIONS tablet-cast-from-gy-not-modeled.
+    """
+    if gs.zones.library:
+        milled = gs.zones.library.pop(0)
+        gs.zones.graveyard.append(milled)
+        gs._log(f"  Tablet of Discovery ETB: mill {milled.name}, +1 mana proxy")
+    else:
+        gs._log("  Tablet of Discovery ETB: library empty")
+    gs.mana_pool = getattr(gs, 'mana_pool', 0) + 1
+
+
+def _molten_core_maestro_etb(gs, card):
+    """Molten-Core Maestro — {1}{R} 2/2 Goblin Bard (SOS).
+    Oracle: 'Menace. Opus — Whenever you cast an instant or sorcery,
+    put a +1/+1 counter on this creature. If 5+ mana was spent, add
+    {R} equal to its power.'
+    ETB wires menace. Opus (counter + conditional mana) is handled
+    in APL on each spell cast, same pattern as Colorstorm Stallion.
+    See IMPERFECTIONS maestro-opus-trigger-apl-deferred.
+    """
+    from engine.keywords import KWTag
+    card.tags.add(KWTag.MENACE)
+    try:
+        card.power = str(int(getattr(card, 'power', 2)))
+        card.toughness = str(int(getattr(card, 'toughness', 2)))
+    except (ValueError, TypeError):
+        card.power = '2'
+        card.toughness = '2'
+    gs._log("  Molten-Core Maestro ETB: 2/2 menace, Opus deferred to APL")
+
+
+def _professor_dellian_fel_etb(gs, card):
+    """Professor Dellian Fel — {2}{B}{G} Legendary Planeswalker (SOS).
+    Oracle: '+2: Gain 3 life. 0: Draw, lose 1. -3: Destroy creature.
+    -6: Lifegain emblem.'
+    Sim model: one-shot ETB — -3 (kill) if opp creature exists, else
+    0 (draw 1, lose 1). Loyalty tracking and multi-turn tick not modeled.
+    See IMPERFECTIONS planeswalker-loyalty-not-tracked.
+    """
+    opp = getattr(gs, '_match_opp', None)
+    if opp:
+        targets = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(Tag.CREATURE)]
+        if targets:
+            t = max(targets, key=lambda c: safe_power(c))
+            if t in opp.zones.battlefield:
+                opp.zones.battlefield.remove(t)
+                opp.zones.graveyard.append(t)
+            gs._log(f"  Prof. Dellian Fel: -3 destroy {t.name}")
+            return
+    gs.zones.draw(1)
+    gs.life -= 1
+    gs._log("  Prof. Dellian Fel: 0 draw 1, lose 1 life")
+
+
+def _bloom_tender_etb(gs, card):
+    """Bloom Tender — {1}{G} 1/1 Elf Druid (ECL reprint, SOS-legal).
+    Oracle: 'Vivid — {T}: For each color among permanents you control,
+    add one mana of that color.'
+    ETB: 1/1. Tap proxied as +N mana (N = distinct colors on our BF).
+    """
+    try:
+        card.power = '1'
+        card.toughness = '1'
+    except (ValueError, TypeError):
+        pass
+    colors_on_bf = set()
+    for c in gs.zones.battlefield:
+        for col in getattr(c, 'colors', []) or []:
+            colors_on_bf.add(col)
+    n = max(1, len(colors_on_bf))
+    gs.mana_pool = getattr(gs, 'mana_pool', 0) + n
+    gs._log(f"  Bloom Tender ETB: 1/1, +{n} mana ({len(colors_on_bf)} colors on BF)")
+
+
+_ETB_HANDLERS.update({
+    "Tablet of Discovery":   _tablet_of_discovery_etb,
+    "Molten-Core Maestro":   _molten_core_maestro_etb,
+    "Professor Dellian Fel": _professor_dellian_fel_etb,
+    "Bloom Tender":          _bloom_tender_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

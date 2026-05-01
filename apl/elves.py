@@ -103,7 +103,7 @@ class ElvesAPL(BaseAPL):
         for c in list(gs.hand()):
             if c.name == "Natural Order" and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 green_creatures = [p for p in gs.zones.battlefield
-                                   if p.has(Tag.CREATURE) and "G" in p.colors]
+                                   if p.has(Tag.CREATURE) and "G" in (getattr(p, 'colors', None) or [])]
                 if green_creatures:
                     # Sacrifice cheapest, get best creature
                     sac = min(green_creatures, key=lambda c: c.cmc)

@@ -814,7 +814,7 @@ class BorosEnergyAPL(BaseAPL):
                 if "creature" in (c.type_line or "").lower()
             )
             has_red_other = any(
-                ("R" in (c.colors or []))
+                ("R" in (getattr(c, 'colors', None) or []))
                 or "Mountain" in (c.type_line or "")
                 for c in gs.zones.battlefield
                 if c is not card

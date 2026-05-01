@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  issues: write
+
 jobs:
-  # ──────────────────────────────────────────────────────────────────────────
-  # Job 1: Fast lint — runs on GitHub infrastructure, no local deps needed.
-  # ──────────────────────────────────────────────────────────────────────────
   lint:
     name: APL lint
     runs-on: ubuntu-latest
@@ -20,10 +20,32 @@ jobs:
           python-version: '3.x'
       - name: Registry / handler / deck consistency
         run: python scripts/lint_ci.py
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[CI] lint failed — mtg-sim`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'needs-fix', state: 'open',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, labels: ['needs-fix'],
+                body: `**Job:** lint\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nFix before next merge or add to \`harness/IMPERFECTIONS.md\`.`,
+              });
+            }
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Job 2: Unit tests — pure Python, runs on GitHub infrastructure.
-  # ──────────────────────────────────────────────────────────────────────────
   tests:
     name: Unit tests
     runs-on: ubuntu-latest
@@ -37,11 +59,32 @@ jobs:
         run: python tests/test_determinism.py
       - name: Menace combat tests
         run: python tests/test_menace_combat.py
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[CI] tests failed — mtg-sim`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'needs-fix', state: 'open',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, labels: ['needs-fix'],
+                body: `**Job:** tests\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nFix before next merge or add to \`harness/IMPERFECTIONS.md\`.`,
+              });
+            }
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Job 3: AI oracle gate — self-hosted only (needs Ollama + Gemma locally).
-  # Only runs on PRs that modify match APL files.
-  # ──────────────────────────────────────────────────────────────────────────
   oracle-gate:
     name: Oracle verification (AI gate)
     runs-on: self-hosted
@@ -51,7 +94,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Identify changed match APLs
         id: changed
         shell: bash
@@ -65,36 +107,50 @@ jobs:
             echo "Changed match APLs:"
             echo "$FILES"
           fi
-
       - name: Oracle verify changed APLs
         if: steps.changed.outputs.files != ''
         shell: bash
         env:
           HARNESS_ROOT: ${{ vars.HARNESS_ROOT || 'E:/vscode ai project/harness' }}
         run: |
-          PASS=0
-          FAIL=0
+          PASS=0; FAIL=0
           for f in ${{ steps.changed.outputs.files }}; do
             echo "--- Verifying $f ---"
             result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1)
             echo "$result"
-            if echo "$result" | grep -q " FAIL "; then
-              FAIL=$((FAIL + 1))
-            else
-              PASS=$((PASS + 1))
-            fi
+            if echo "$result" | grep -q " FAIL "; then FAIL=$((FAIL+1)); else PASS=$((PASS+1)); fi
           done
-          echo ""
           echo "Oracle gate: $PASS PASS, $FAIL FAIL"
           if [ $FAIL -gt 0 ]; then
-            echo "::error::Oracle gate failed on $FAIL APL(s). Fix oracle discrepancies before merging."
+            echo "::error::Oracle gate failed on $FAIL APL(s)."
             exit 1
           fi
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[CI] oracle-gate failed — mtg-sim`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'needs-fix', state: 'open',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, labels: ['needs-fix'],
+                body: `**Job:** oracle-gate\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nGemma found oracle discrepancy in a changed APL. Fix before merge.`,
+              });
+            }
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Job 4: Goldfish baseline guard — self-hosted for speed (N=1000 sim).
-  # Only runs on PRs touching the engine or canonical APLs.
-  # ──────────────────────────────────────────────────────────────────────────
   goldfish-guard:
     name: Goldfish baseline guard
     runs-on: self-hosted
@@ -105,7 +161,6 @@ jobs:
        contains(github.event.pull_request.changed_files, 'apl/boros_energy'))
     steps:
       - uses: actions/checkout@v4
-
       - name: Boros Energy goldfish baseline
         shell: bash
         run: |
@@ -120,3 +175,28 @@ jobs:
               import sys; sys.exit(1)
           print(f'PASS: avg kill turn {avg:.2f} within range')
           "
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[CI] goldfish-guard failed — mtg-sim`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'needs-fix', state: 'open',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, labels: ['needs-fix'],
+                body: `**Job:** goldfish-guard\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nBoros Energy kill-turn baseline shifted outside [4.0, 5.2]. Engine regression likely.`,
+              });
+            }

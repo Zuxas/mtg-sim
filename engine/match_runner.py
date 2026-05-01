@@ -33,6 +33,7 @@ from engine.game_state import GameState, Phase
 from engine.zones import Zones
 from engine.mana import ManaPool
 from data.card import Card, Tag
+from engine.match_state import MatchSetResults
 
 
 @dataclass
@@ -45,28 +46,6 @@ class MatchResult:
     mulligans_b:   int   = 0
     turn_count:    int   = 0
     snapshots_a:   list  = field(default_factory=list)
-
-
-@dataclass 
-class MatchSetResults:
-    n_games:    int = 0
-    a_wins:     int = 0
-    b_wins:     int = 0
-    avg_turns:  float = 0.0
-    kill_turns: list = field(default_factory=list)
-
-    def win_rate(self) -> float:
-        return self.a_wins / self.n_games if self.n_games else 0.0
-
-    def win_pct(self) -> float:
-        return round(self.win_rate() * 100, 1)
-
-    def kill_turn_distribution(self) -> dict:
-        dist = {}
-        for t in self.kill_turns:
-            dist[t] = dist.get(t, 0) + 1
-        total = len(self.kill_turns)
-        return {t: round(c/total*100, 2) for t,c in sorted(dist.items())} if total else {}
 
 
 class TwoPlayerGameState:

@@ -53,6 +53,16 @@ class MatchSetResults:
     def win_pct_a(self) -> float:
         return round(self.win_rate_a() * 100, 1)
 
+    # Backwards-compatible aliases used by match_runner / goldfish callers
+    def win_rate(self) -> float:
+        return self.win_rate_a()
+
+    def win_pct(self) -> float:
+        return self.win_pct_a()
+
+    def avg_kill_turn(self) -> float:
+        return self.avg_turns
+
     def kill_turn_distribution(self) -> dict:
         dist = {}
         for t in self.kill_turns:

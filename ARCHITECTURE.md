@@ -325,9 +325,15 @@ NOT: combat → main1 → main2 (old broken order)
   TKS/Ulamog, Emrakul haste). Notable per-matchup: Izzet Prowess 37.0% (HARD),
   Jeskai Blink 66.1%, Affinity 83.2%, Eldrazi Tron 90.9%.
   Saved: data/parallel_results_20260501_021659.json. Seed=42 bit-stable confirmed (1k smoke
-  pre-run: 67.8%, within ±1pp noise). Variant 100k corrupted by Affinity crash bug
-  (card.colors AttributeError, fixed 2026-05-01 commits). Variant post-fix 1k: **75.3%**
-  (parallel_results_20260501_025314.json). Variant edge at 1k: +6.9pp. 100k re-run deferred.
+  pre-run: 67.8%, within ±1pp noise). Variant 100k was corrupted by Affinity crash bug
+  (card.colors AttributeError, fixed 2026-05-01 commits); re-run confirmed clean below.
+
+- **Boros Energy Variant Jermey gauntlet (2026-05-01 N=100k seed=42, post-Affinity-crash-fix)**:
+  **75.1% field-weighted** (1,800,000 games, 1300s wall, 18 matchups, zero errors).
+  Supersedes corrupted prior run. Post-fix 1k was 75.3% (+0.2pp noise at 100k).
+  Edge over canonical: **+6.7pp** (75.1% - 68.4%). Mirror match (Boros Energy at 21.2% field
+  weight) is the dominant drag on variant FWR; without mirror, variant edge is larger.
+  Saved: data/parallel_results_20260501_025314.json (1k) + latest parallel_results_20260501_*.json.
 
 - **Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, 17-DECK ALL-FIXES
   -- DEFINITIVE RC DC PRE-PT BASELINE -- SUPERSEDED by 2026-05-01 above)**:

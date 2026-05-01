@@ -119,7 +119,7 @@ INTERACTIVE = {
 AGGRO_OUR = {"aggro","prowess","burn","swiftspear","mono red","gruul","humans"}
 
 
-def _run_fair(result, our_deck, opp_name, format_name, n, seed):
+def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1):
     """
     Fair matchup simulation with REAL sideboarding.
     
@@ -275,7 +275,7 @@ def main():
         if mtype == "combo":
             _run_combo(result, opp_name, format_name, n, seed)
         else:
-            _run_fair(result, our_deck, opp_name, format_name, n, seed)
+            _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers)
 
         result["elapsed"] = round(time.time() - t0, 1)
         print(f"OK  [{result.get('g1_source','?').upper()}] {opp_name}: "

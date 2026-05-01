@@ -53,8 +53,7 @@ from typing import Any
 # Paths
 # ---------------------------------------------------------------------------
 
-PROJECT_ROOT = Path(r"E:\vscode ai project")
-MTG_SIM_ROOT = PROJECT_ROOT / "mtg-sim"
+MTG_SIM_ROOT = Path(__file__).resolve().parent.parent
 APL_INIT     = MTG_SIM_ROOT / "apl" / "__init__.py"
 STUB_DECKS   = MTG_SIM_ROOT / "data" / "stub_decks.py"
 DECKS_DIR    = MTG_SIM_ROOT / "decks"

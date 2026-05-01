@@ -536,6 +536,23 @@ class IzzetProwessMatchAPL(MatchAPL):
             gs._log(f"  Lava Dart → kill {target.name} (engine piece, 1 toughness)")
             return
 
+        if dart_in_gy and not dart_in_hand and mountains_available and target_t <= 1:
+            # Flashback-only: Dart already in GY from prior turn, no Dart in hand.
+            # Oracle: "Flashback—Sacrifice a Mountain." — 1 damage kills 1-toughness targets.
+            mountain = mountains_available[0]
+            gs.zones.battlefield.remove(mountain)
+            gs.zones.graveyard.append(mountain)
+            gs.zones.graveyard.remove(dart_in_gy)
+            gs.zones.exile.append(dart_in_gy)
+            if target in opponent.zones.battlefield:
+                opponent.zones.battlefield.remove(target)
+                opponent.zones.graveyard.append(target)
+            self._trigger_prowess(gs, "Lava Dart flashback")
+            self._spells_this_turn += 1
+            self._check_flurry(gs)
+            gs._log(f"  Lava Dart flashback (GY-only) → kill {target.name} (1 toughness, -1 Mountain)")
+            return
+
         if dart_in_hand and dart_in_gy and mountains_available and target_t <= 2 and \
                 gs.mana_pool.can_cast(dart_in_hand.mana_cost, dart_in_hand.cmc):
             # Dart + flashback = 2 damage, kills Guide of Souls (1/2) and similar

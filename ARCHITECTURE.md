@@ -314,8 +314,23 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
+- **Boros Energy Modern gauntlet (2026-05-01 N=100k seed=42, 18-DECK POST-ORACLE-SPRINT
+  -- CURRENT CANONICAL 100k ANCHOR)**:
+  **68.4% field-weighted** (1,800,000 games, 2651.7s wall, 17 matchups).
+  18-deck real meta. Supersedes 2026-04-29 67.4% as the trusted 100k anchor.
+  Key oracle fixes since 2026-04-29 baseline: JB Phase B (Wrath X, Phlage+Consign,
+  Consign Replicate), Goryo's Vengeance oracle audit (Solitude white-pitch, lifegain),
+  cross-APL sprint (Domain Zoo, Eldrazi Ramp, Esper Blink, Eldrazi Tron, Dimir Mid,
+  Jeskai Control, 5C Humans, Izzet Prowess, BE oracle additions, Affinity, DRC delirium,
+  TKS/Ulamog, Emrakul haste). Notable per-matchup: Izzet Prowess 37.0% (HARD),
+  Jeskai Blink 66.1%, Affinity 83.2%, Eldrazi Tron 90.9%.
+  Saved: data/parallel_results_20260501_021659.json. Seed=42 bit-stable confirmed (1k smoke
+  pre-run: 67.8%, within ±1pp noise). Variant 100k corrupted by Affinity crash bug
+  (card.colors AttributeError, fixed 2026-05-01 commits). Variant post-fix 1k: **75.3%**
+  (parallel_results_20260501_025314.json). Variant edge at 1k: +6.9pp. 100k re-run deferred.
+
 - **Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, 17-DECK ALL-FIXES
-  -- DEFINITIVE RC DC PRE-PT BASELINE)**:
+  -- DEFINITIVE RC DC PRE-PT BASELINE -- SUPERSEDED by 2026-05-01 above)**:
   **67.4% field-weighted** (1,600,000 games, 2238s wall, 16 matchups).
   17-deck real meta, all 2026-04-29 fixes (has_keyword, Affinity blocking,
   Goryo white-pitch, Domain Zoo Scion keywords, Esper Blink Phelia, Living End

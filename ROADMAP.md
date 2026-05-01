@@ -1,6 +1,18 @@
 # MTG-Sim Roadmap
 # What this project should do — organized by layer and priority
 # Status key: [x] done | [-] partial | [ ] not started
+#
+# NOTE: This file was authored when the project was in early development.
+# Many items below marked [ ] are now done. See ARCHITECTURE.md for the
+# authoritative current state. Major milestones not reflected here:
+#   - 2-player match runner with keyword-aware combat (Phase 3 + 3.5 A/B/C)
+#   - 32+ hand-written APLs + 9 auto-generated Standard APLs
+#   - Gauntlet pipeline: 18-deck Modern field, 100k canonical anchor 68.4%
+#   - auto_pipeline (Layer 5): detect + generate + smoke-test + register APLs
+#   - card_specs framework: per-card decision logic extracted from APLs
+#   - Oracle verification tooling (verify_oracle.py)
+#   - CI/CD: GitHub Actions with self-hosted runners
+# Last meaningful update to this file: 2026-05-01
 
 ---
 

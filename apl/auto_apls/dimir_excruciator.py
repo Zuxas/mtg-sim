@@ -1,14 +1,14 @@
-# Auto-generated APL for Boros Convoke (decomposed-qwen2.5-coder draft)
+# Auto-generated APL for Dimir Excruciator (decomposed-qwen2.5-coder draft)
 # 2026-05-01
 
 from data.card import Card, Tag
 from apl.base_apl import BaseAPL
 
-KEY_CARDS = {"Battlefield Forge", "Case of the Gateway Express", "Frontline Rush"}
+KEY_CARDS = {"Doomsday Excruciator", "Requiting Hex", "Kavaero", "Mind-Bitten"}
 
 
-class BorosConvokeAPL(BaseAPL):
-    name = "Boros Convoke"
+class DimirExcruciatorAPL(BaseAPL):
+    name = "Dimir Excruciator"
 
     def keep(self, hand, mulligans, on_play):
         lands = [x for x in hand if x.is_land()]
@@ -16,13 +16,14 @@ class BorosConvokeAPL(BaseAPL):
             return True
         if not lands:
             return False
-        threats = [x for x in hand if x.name in ["Battlefield Forge", "Case of the Gateway Express", "Frontline Rush"]]
+        threats = [x for x in hand if x.name in ['Doomsday Excruciator', 'Requiting Hex', 'Kavaero', 'Mind-Bitten']]
         return len(lands) >= 2 and (threats or mulligans >= 2)
 
     def bottom(self, hand, n):
         excess = sorted([x for x in hand if x.is_land()], key=lambda x: x.name)
-        to_bottom = excess[3:] if len(excess) > 3 else []
-        high_cmc = sorted([x for x in hand if not x.is_land() and x not in to_bottom], key=lambda x: -x.cmc)
+        to_bottom = excess[2:] if len(excess) > 2 else []
+        high_cmc = sorted([x for x in hand if not x.is_land() and x not in to_bottom],
+                          key=lambda x: -x.cmc)
         for s in high_cmc:
             if len(to_bottom) >= n:
                 break
@@ -34,17 +35,20 @@ class BorosConvokeAPL(BaseAPL):
         hand = gs.hand()
         for c in sorted([x for x in hand if not x.is_land()], key=lambda x: x.cmc):
             if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                if c.name == "Battlefield Forge" or c.name == "Case of the Gateway Express":
+                if c.name == "Doomsday Excruciator" or c.name == "Requiting Hex":
                     gs.cast_spell(c)
                     break
-                elif c.has(Tag.CREATURE) and (c.power is not None and c.toughness is not None):
+                elif c.name == "Kavaero" or c.name == "Mind-Bitten":
+                    gs.cast_spell(c)
+                    break
+                else:
                     gs.cast_spell(c)
                     break
 
     def main_phase2(self, gs):
         hand = gs.hand()
-        for c in sorted([x for x in hand if x.has(Tag.INSTANT) or x.has(Tag.SORCERY)], key=lambda x: x.cmc):
+        for c in sorted([x for x in hand if not x.is_land()], key=lambda x: x.cmc):
             if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                if c.name == "Gleeful Demolition" or c.name == "Inspiring Vantage":
+                if c.name == "Deceit" or c.name == "Duress" or c.name == "Strategic Betrayal":
                     gs.cast_spell(c)
                     break

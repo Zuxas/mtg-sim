@@ -10,98 +10,77 @@ class GruulOuroboroidAPL(BaseAPL):
     max_turns = 15
 
     def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
-        # We need at least 2 lands and some early threat/removal.
         lands = [c for c in hand if c.is_land()]
-        creatures = [c for c in hand if c.has(Tag.CREATURE)]
-        removal = [c for c in hand if c.name == "Lightning Strike"]
-
-        if len(hand) < 3:
-            return True # Keep small hands if we can't tell
+        spells = [c for c in hand if not c.is_land()]
         
-        # Must have enough land potential
+        # Must have at least 2 lands to establish a board presence
         if len(lands) < 2:
             return False
-
-        # Prioritize having at least one early threat or removal
-        if creatures or removal:
+        
+        # Prioritize having a mix of threats and interaction
+        threats = [c for c in hand if c.name in ["Emberheart Challenger", "Badgermole Cub", "Pawpatch Recruit"]]
+        
+        # If we have enough lands and at least one threat or utility spell, we keep it.
+        if len(lands) >= 2 and (threats or any(c.name in ["Lightning Strike", "Overprotect", "Hired Claw"] for c in spells)):
             return True
         
-        # If we have few lands but many mulligans, we might keep it.
-        return mulligans >= 2 and len(lands) >= 1
+        # If we are mulliganing, keep it if we have a decent land count.
+        if mulligans > 0 and len(lands) >= 2:
+            return True
+            
+        return False
 
     def bottom(self, hand: list, n: int) -> list:
-        # Identify excess lands (keep the best 3-4)
+        # Sort lands to put the least useful ones (if any) at the top of the bottom list
         lands = [c for c in hand if c.is_land()]
-        to_keep_lands = lands[:min(len(lands), 4)]
-        excess_lands = lands[len(to_keep_lands):]
-
-        # Identify non-land cards to keep (threats, removal)
-        threats = [c for c in hand if c.name in ["Badgermole Cub", "Emberheart Challenger", "Ouroboroid", "Lightning Strike"]]
         
-        # All cards that are not excess lands and not key threats
-        discardable = [c for c in hand if c not in excess_lands and c not in threats]
+        # Identify non-land cards, prioritizing high CMC threats/spells to keep
+        non_lands = [c for c in hand if not c.is_land()]
         
-        # Sort discardable by CMC descending to remove the biggest/most expensive spells first
-        discardable.sort(key=lambda c: c.cmc, reverse=True)
-
-        to_bottom = []
+        # We want to bottom the lowest impact cards first.
+        # Criteria: Low CMC, non-threat, non-utility.
         
-        # Fill the bottom list with excess lands first
-        to_bottom.extend(excess_lands)
+        # Sort by CMC (ascending) and then by name (alphabetical)
+        to_bottom_candidates = sorted(non_lands, key=lambda c: (c.cmc, c.name))
         
-        # Then fill with discardable spells until we hit 'n'
-        for card in discardable:
-            if len(to_bottom) >= n:
-                break
-            to_bottom.append(card)
-            
-        return to_bottom[:n]
+        # If we have too many lands, we might bottom some, but generally, we want to keep the lands.
+        # Since we are limited to n cards, we take the lowest impact ones.
+        
+        return to_bottom_candidates[:n]
 
     def main_phase(self, gs) -> None:
         # 1. Play lands first
         self._play_land_if_able(gs)
         
-        # 2. Prioritize casting cheap, aggressive creatures or removal
-        hand_list = list(gs.hand())
+        # 2. Prioritize casting threats/creatures
+        threats = ["Emberheart Challenger", "Badgermole Cub", "Pawpatch Recruit"]
         
-        # Sort by CMC ascending to cast the cheapest threats first
-        hand_list.sort(key=lambda c: c.cmc)
-
-        for card in hand_list:
-            # Check for basic threats/utility
-            if card.name in ["Badgermole Cub", "Hired Claw", "Pawpatch Recruit"] and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
-            
-            # Use removal if we have a clear threat to deal with (simple heuristic)
-            elif card.name == "Lightning Strike" and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                # Assume we are removing a threat on the board
-                gs.cast_spell(card)
-            
-            # Cast other cheap, castable spells
-            elif gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
+        # Attempt to cast threats in order of lowest cost/highest impact
+        for card in list(gs.hand()):
+            if card.name in threats:
+                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    
+        # 3. Use interaction/utility spells if possible (e.g., Lightning Strike)
+        for card in list(gs.hand()):
+            if card.name in ["Lightning Strike", "Overprotect", "Hired Claw"]:
+                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
 
     def main_phase2(self, gs) -> None:
-        # 1. Deploy major threats (Ouroboroid)
-        ouroboroid = next((c for c in gs.hand() if c.name == "Ouroboroid"), None)
-        if ouroboroid and gs.mana_pool.can_cast(ouroboroid.mana_cost, ouroboroid.cmc):
-            gs.cast_spell(ouroboroid)
-
-        # 2. Deploy remaining threats/utility
-        hand_list = list(gs.hand())
-        hand_list.sort(key=lambda c: c.cmc)
-
-        for card in hand_list:
-            # Only cast if it's not Ouroboroid (already handled) and we can afford it
-            if card.name != "Ouroboroid" and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs.cast_spell(card)
-
-    def _play_land_if_able(self, gs):
-        """Helper to play any land available."""
-        lands = [c for c in gs.hand() if c.is_land()]
-        if lands:
-            # Play the cheapest land first
-            lands.sort(key=lambda c: c.cmc)
-            land_to_play = lands[0]
-            if gs.mana_pool.can_cast(land_to_play.mana_cost, land_to_play.cmc):
-                gs.play_land(land_to_play)
+        # 1. Play remaining lands
+        self._play_land_if_able(gs)
+        
+        # 2. Cast utility/removal spells (e.g., Hexing Squelcher, Impolite Entrance)
+        utility_spells = ["Hexing Squelcher", "Impolite Entrance", "Might of the Meek"]
+        for card in list(gs.hand()):
+            if card.name in utility_spells:
+                if gs.mana_pool.cancast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+        
+        # 3. Cast remaining threats/creatures
+        threats = ["Emberheart Challenger", "Badgermole Cub", "Pawpatch Recruit"]
+        for card in list(gs.hand()):
+            if card.name in threats:
+                if gs.mana_pool.cancast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)

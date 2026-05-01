@@ -297,14 +297,17 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
         gs.life_a      += lifelink_gain
         gs.life_b      += defender_lifelink_gain
         for c in attacker_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
-        for c in defender_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
+        for c in defender_lost:
+            _safe_remove(gs.bf_b, c, "bf_b"); gs.gy_b.append(c)
     else:
         gs.damage_to_a += dmg
         gs.life_a      -= dmg
         gs.life_b      += lifelink_gain
         gs.life_a      += defender_lifelink_gain
-        for c in attacker_lost: gs.bf_b.remove(c); gs.gy_b.append(c)
-        for c in defender_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
+        for c in attacker_lost:
+            _safe_remove(gs.bf_b, c, "bf_b"); gs.gy_b.append(c)
+        for c in defender_lost:
+            _safe_remove(gs.bf_a, c, "bf_a"); gs.gy_a.append(c)
 
     # Main phase 2 (Phase 1 wiring, commit a31f360)
     _run_post_combat_phase(gs, player, apl)
@@ -494,6 +497,27 @@ def _legal_blockers(atk, blockers):
                  or set(b.colors or []) & atk_colors]
 
     return legal
+
+
+def _safe_remove(lst, card, label="list"):
+    """list.remove that uses identity fallback when __eq__ crashes (missing attribute)."""
+    try:
+        lst.remove(card)
+    except AttributeError:
+        # Card.__eq__ failed — a card in the list is missing an attribute (e.g. colors).
+        # Fall back to identity removal so the match can continue.
+        bad = [c for c in lst if not hasattr(c, 'colors')]
+        if bad:
+            import sys
+            print(f"  [WARN] _safe_remove({label}): {len(bad)} card(s) missing .colors: "
+                  f"{[c.name for c in bad]}", file=sys.stderr)
+        for i, c in enumerate(lst):
+            if c is card:
+                lst.pop(i)
+                return
+        # not found by identity either — skip silently
+    except ValueError:
+        pass  # already removed
 
 
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):

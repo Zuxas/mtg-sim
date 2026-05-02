@@ -1,36 +1,34 @@
-// audit:custom_variant — MB=61 (target 60), 1 over. Triage 2026-04-25.
-// Differs from canonical Izzet Prowess (deck#119672, arturcosta
-// 2026-04-20 P1, 60 cards) by 4 unique cards: + Murktide Regent x2,
-// Fiery Islet x2 / - Founding the Third Path, Stomping Ground.
-// Current is Murktide variant vs canonical's Founding splash. Plus
-// 1 extra slot (17 lands is low for Prowess; canonical has 18).
-// Treating as intentional pending source verification.
-// See data/deck_triage_2026-04-25.md.
-4 Dragon's Rage Channeler
-4 Monastery Swiftspear
-4 Slickshot Show-Off
-2 Murktide Regent
-4 Mishra's Bauble
-4 Cori-Steel Cutter
-4 Lightning Bolt
-4 Lava Dart
-4 Mutagenic Growth
-2 Violent Urge
-4 Preordain
-4 Expressive Iteration
-4 Scalding Tarn
-3 Steam Vents
-2 Fiery Islet
-1 Thundering Falls
-2 Bloodstained Mire
-2 Wooded Foothills
-3 Mountain
+// Izzet Prowess - arturcosta (2026-04-29)
+// Event: MTGO Modern Challenge 64 #12840702
+// Source: mtg_meta.db deck_id=133110 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
 
-Sideboard
-4 Consign to Memory
+4 Cori-Steel Cutter
+4 Dragon's Rage Channeler
+4 Expressive Iteration
+4 Lava Dart
+4 Lightning Bolt
+4 Mishra's Bauble
+4 Monastery Swiftspear
+4 Preordain
+4 Scalding Tarn
+4 Slickshot Show-Off
+3 Bloodstained Mire
+3 Mountain
+3 Steam Vents
+3 Wooded Foothills
+2 Founding the Third Path
+2 Mutagenic Growth
+2 Violent Urge
+1 Stomping Ground
+1 Thundering Falls
+
+// Sideboard
+3 Consign to Memory
+3 Unholy Heat
+2 Meltdown
+2 Pick Your Poison
+2 Surgical Extraction
+1 Heritage Reclamation
+1 Murktide Regent
 1 Spell Pierce
-2 Spell Snare
-4 Unholy Heat
-1 Surgical Extraction
-1 Violent Urge
-2 Blood Moon

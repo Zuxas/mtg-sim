@@ -1,0 +1,32 @@
+// audit:auto-generated:Temur Analyst:2026-05-01
+// Source: meta-analyzer DB deck_id=23332, archetype=Temur Analyst
+
+4 Aftermath Analyst
+1 Doppelgang
+4 Escape Tunnel
+4 Evolving Wilds
+4 Fabled Passage
+3 Fires of Victory
+8 Forest
+4 Ill-Timed Explosion
+1 Inspiration from Beyond
+4 Island
+3 Lumra, Bellow of the Woods
+3 Mountain
+4 Nissa, Resurgent Animist
+4 Spelunking
+2 Terramorphic Expanse
+1 Think Twice
+3 Virtue of Strength
+3 Worldsoul's Rage
+
+Sideboard
+3 Bonny Pall, Clearcutter
+1 Doppelgang
+2 Negate
+2 Pyroclasm
+1 Roxanne, Starfall Savant
+1 Sire of Seven Deaths
+2 Three Steps Ahead
+1 Titania, Voice of Gaea
+2 Unable to Scream

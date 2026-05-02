@@ -1,43 +1,45 @@
-// audit:custom_variant — MB=58 (target 60), short by 2. Triage 2026-04-25.
-// Different Yawgmoth build from canonical Golgari Yawgmoth (deck#58461,
-// themeatman 2026-03-22 P1, 60 cards). Current uses Collected Company
-// + Chord of Calling + Eldritch Evolution engine; canonical uses
-// Cauldron + Halflings + Dryad Arbor instead. 31 unique cards differ.
-// Old (pre-Cauldron) variant — likely needs 2 cards added but the
-// archetype has shifted significantly post-Cauldron. Consider replacing
-// with current canonical for sim relevance. See data/deck_triage_2026-04-25.md.
-3 Yawgmoth, Thran Physician
-2 Melira, Sylvok Outcast
-2 Blood Artist
-1 Zulaport Cutthroat
-4 Young Wolf
-4 Geralf's Messenger
-2 Renata, Called to the Hunt
-4 Collected Company
-4 Chord of Calling
-3 Eldritch Evolution
-2 Hapatra, Vizier of Poisons
-2 Grist, the Hunger Tide
-2 Bloodline Cultivator
-1 Postmaster Pell
-3 Overgrown Tomb
-4 Verdant Catacombs
-2 Misty Rainforest
-4 Forest
-2 Swamp
-2 Boseiju, Who Endures
-1 Yavimaya, Cradle of Growth
-1 Urborg, Tomb of Yawgmoth
-1 Westvale Abbey
-1 Castle Locthwain
-1 Nurturing Peatland
+// Golgari Yawgmoth - xerk (2026-04-29)
+// Event: MTGO Modern Challenge 64 #12840702
+// Source: mtg_meta.db deck_id=133100 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
 
-Sideboard
-2 Endurance
+4 Agatha's Soul Cauldron
+4 Badgermole Cub
+4 Delighted Halfling
+4 Malevolent Rumble
+4 Verdant Catacombs
+4 Yawgmoth, Thran Physician
+4 Young Wolf
+3 Overgrown Tomb
+3 Spymaster's Vault
+3 Walking Ballista
+2 Boseiju, Who Endures
+2 Chord of Calling
+2 Forest
+2 Green Sun's Zenith
+2 Grist, the Hunger Tide
+2 Windswept Heath
+1 Dryad Arbor
+1 Endurance
+1 Formidable Speaker
+1 Ignoble Hierarch
+1 Misty Rainforest
+1 Orcish Bowmasters
+1 Strangleroot Geist
+1 Swamp
+1 Underground Mortuary
+1 Virulent Emissary
+1 Wooded Foothills
+
+// Sideboard
+3 Fatal Push
 2 Force of Vigor
-2 Haywire Mite
-2 Fulminator Mage
-1 Reclamation Sage
-3 Thoughtseize
-2 Veil of Summer
-1 Agatha's Soul Cauldron
+2 Thoughtseize
+1 Ashiok, Dream Render
+1 Fulminator Mage
+1 Haywire Mite
+1 Pile On
+1 Scavenging Ooze
+1 Soulless Jailer
+1 Sylvan Safekeeper
+1 Vexing Bauble

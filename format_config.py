@@ -57,29 +57,28 @@ FORMATS = {
 },
 
 "standard": {
-    # Real field shares from mtg_meta.db — 9,806 decks, last 28d (2026-04-29)
-    # Source: meta_analyzer query, paper + MTGO events combined
+    # PT Secrets of Strixhaven Day 1 field (2026-05-01) — 325 players
+    # Source: magic.gg/news/pro-tour-secrets-of-strixhaven-standard-metagame-breakdown
+    # SOS introduced: Flow State, Colorstorm Stallion, Prismari Charm, Traumatic Critique
+    # MAJOR SHIFT from pre-SOS: Izzet Prowess 2.8→30.5%, Mono-Green 2.2→19.1%
+    # Old pillars (Dimir Midrange, Esper Raffine, Mono Red) largely absent from PT top.
     "field": {
-        "Mono Red Aggro":        9.8,
-        "Dimir Midrange":        8.6,
-        "Esper Raffine":         7.7,
-        "Dimir Aggro":           6.4,
-        "Domain Ramp":           4.7,
-        "Grixis Discard":        4.4,
-        "Gruul Aggro":           3.9,
-        "Boros Aggro":           3.6,
-        "Boros Convoke":         3.0,
-        "Izzet Cauldron":        2.9,
-        "Four-Color Overlords":  2.8,
-        "Izzet Prowess":         2.8,
-        "Esper Pixie":           2.6,
-        "Azorius Soldiers":      2.5,
-        "Mono Green Landfall":   2.2,
-        "Jeskai Control":        2.1,
-        "Azorius Control":       1.8,
-        "Azorius Omniscience":   1.6,
-        "Temur Analyst":         1.5,
-        "Simic Jackal":          1.4,
+        "Izzet Prowess":         30.5,  # PT Day 1: 99/325 players — dominant
+        "Mono Green Landfall":   19.1,  # PT Day 1: 62/325 players
+        "Izzet Spellementals":    8.0,  # PT Day 1: 26/325 (needs APL)
+        "Izzet Lessons":          7.4,  # PT Day 1: 24/325 — RC candidate
+        "Azorius Momo":           4.3,  # PT Day 1: 14/325 (needs APL)
+        "Jeskai Control":         3.7,  # PT Day 1
+        "Selesnya Landfall":      3.4,  # PT Day 1 (needs APL)
+        "Izzet Maestro":          2.8,  # PT Day 1 (needs APL)
+        "Azorius Tempo":          2.5,  # PT Day 1 (needs APL)
+        "Golgari Midrange":       2.5,  # PT Day 1 (needs APL)
+        # Residual pre-SOS archetypes — still present but demoted
+        "Azorius Omniscience":    1.5,
+        "Sultai Reanimator":      1.5,
+        "Simic Ouroboroid":       1.2,
+        "Dimir Midrange":         1.0,
+        "Esper Raffine":          0.8,
     },
     "combo": {
         "izzet cauldron", "jeskai oculus", "azorius omniscience",
@@ -122,7 +121,7 @@ FORMATS = {
 def get_format(fmt):
     return FORMATS.get(fmt.lower())
 
-def get_field(fmt, top_n=16):
+def get_field(fmt, top_n=18):
     cfg = get_format(fmt)
     if not cfg:
         raise ValueError(f"Unknown format: {fmt}. Options: {list(FORMATS)}")

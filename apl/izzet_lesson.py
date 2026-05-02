@@ -92,6 +92,34 @@ class IzzetLessonAPL(ControlAPL):
     MULL_MAX_LANDS = 5
 
     # ------------------------------------------------------------------
+    # Gran-Gran static + loot (SOS, 2026-05-01)
+    # ------------------------------------------------------------------
+
+    def _lesson_count_in_gy(self, gs):
+        """Count Lesson cards in our graveyard (for Gran-Gran thresholds)."""
+        return sum(1 for c in gs.zones.graveyard
+                   if 'Lesson' in (getattr(c, 'type_line', '') or '')
+                   or c.name in (FIREBENDING, STORMCHASER, ARTIST))
+
+    def main_phase(self, gs):
+        """Override to apply Gran-Gran static before any spell casting.
+
+        Oracle (Gran-Gran, SOS, verified):
+          'Noncreature spells you cast cost {1} less to cast as long as
+           there are three or more Lesson cards in your graveyard.'
+        Proxy: set mana_pool.cost_reduction = 1 at turn start when
+        Gran-Gran is on board and threshold is met. Resets naturally
+        in mana_pool.empty() at next turn boundary.
+        """
+        gran_on_board = any(c.name == GRAN_GRAN for c in gs.zones.battlefield
+                            if not c.is_land())
+        if gran_on_board and self._lesson_count_in_gy(gs) >= 3:
+            gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+            gs._log("  Gran-Gran static: noncreature spells cost {1} less "
+                    "(3+ Lessons in GY)")
+        super().main_phase(gs)
+
+    # ------------------------------------------------------------------
     # Archetype hooks — level up Classes when mana permits
     # ------------------------------------------------------------------
 

@@ -1,0 +1,44 @@
+// audit:auto-generated:Simic Jackal:2026-05-01
+// Source: meta-analyzer DB deck_id=8229, archetype=Simic Jackal
+
+1 Agonasaur Rex
+2 Ba Sing Se
+1 Bitter Triumph
+4 Blooming Marsh
+1 Deep-Cavern Bat
+1 Disruptive Stormbrood
+1 Fabled Passage
+4 Forest
+3 Hollowmurk Siege
+1 Jenova, Ancient Calamity
+1 Kraven the Hunter
+4 Llanowar Elves
+2 Mikey & Leo, Chaos & Order
+1 Nowhere to Run
+1 Origin of Metalbending
+3 Ouroboroid
+4 Overgrown Tomb
+3 Pawpatch Recruit
+3 Requiting Hex
+1 Restless Cottage
+3 Scavenging Ooze
+2 Shoot the Sheriff
+1 Snakeskin Veil
+1 Strategic Betrayal
+1 Super Shredder
+1 Surrak, Elusive Hunter
+4 Swamp
+1 Tokka & Rahzar, Terrible Twos
+4 Wastewood Verge
+
+Sideboard
+1 Agatha's Soul Cauldron
+1 Day of Black Sun
+3 Duress
+2 Intimidation Tactics
+1 Mai, Scornful Striker
+2 Origin of Metalbending
+1 Requiting Hex
+1 Soul-Guide Lantern
+1 Tokka & Rahzar, Terrible Twos
+2 Torpor Orb

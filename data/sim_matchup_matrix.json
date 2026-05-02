@@ -1,117 +1,82 @@
 {
-  "Legacy Humans": {
-    "Dimir Reanimator": 20.5,
-    "Lotus Combo": 60.5,
-    "Cephalid Breakfast": 14.6,
-    "Sneak And Show": 29.6,
-    "Mono Red Painter": 49.6,
-    "Doomsday": 56.3,
-    "Bant Nadu": 54.3,
-    "Dimir Tempo": 85.1,
-    "Eldrazi Stompy": 32.0,
-    "Izzet Delver": 86.4,
-    "Four-Color": 96.7,
-    "Jeskai Control": 98.7,
-    "Death And Taxes": 72.8,
-    "Mono Red Aggro": 43.8,
-    "Mono Red Prison": 80.0
+  "Izzet Affinity": {
+    "Dimir Tempo": 84.6,
+    "Eldrazi Stompy": 4.2,
+    "Izzet Delver": 81.8,
+    "Death And Taxes": 50.6,
+    "Four-Color": 57.6,
+    "Jeskai Control": 65.8,
+    "Mono Red Aggro": 67.8,
+    "Mono Red Prison": 53.4
+  },
+  "Dimir Tempo": {
+    "Izzet Affinity": 15.4
+  },
+  "Eldrazi Stompy": {
+    "Izzet Affinity": 95.8
+  },
+  "Izzet Delver": {
+    "Izzet Affinity": 18.2
+  },
+  "Death And Taxes": {
+    "Izzet Affinity": 49.4
+  },
+  "Four-Color": {
+    "Izzet Affinity": 42.4
+  },
+  "Jeskai Control": {
+    "Izzet Affinity": 34.2
+  },
+  "Mono Red Aggro": {
+    "Izzet Affinity": 32.2
+  },
+  "Mono Red Prison": {
+    "Izzet Affinity": 46.6
+  },
+  "Izzet Lessons (standard)": {
+    "Roaming Elementals": 0.0,
+    "Superior Doomsday": 1.7,
+    "Azorius Aggro": 3.0,
+    "Mono Green Aggro": 5.6,
+    "Izzet Control": 24.6
   },
   "Boros Energy (modern)": {
-    "Amulet Titan": 52.0,
-    "Izzet Prowess": 56.0,
-    "Izzet Affinity": 54.0,
-    "Goryo's Vengeance": 53.0,
-    "Temur Breach": 58.0,
-    "Eldrazi Ramp": 49.0,
-    "Jeskai Blink": 52.0,
-    "Domain Zoo": 55.0,
-    "Eldrazi Tron": 55.0,
-    "Dimir Murktide": 56.0,
-    "Orzhov Blink": 60.0,
-    "Esper Blink": 53.0,
-    "Grinding Breach": 62.2,
-    "Mono Red Aggro": 89.4
-  },
-  "Izzet Prowess (standard)": {
-    "Dimir Midrange": 61.0,
-    "Mono Red Aggro": 25.0,
-    "Izzet Cauldron": 61.7,
-    "Izzet Lessons": 52.0,
+    "Amulet Titan": 54.0,
+    "Ruby Storm": 50.0,
+    "Goryo's Vengeance": 54.0,
+    "Living End": 51.0,
+    "Grixis Reanimator": 49.0,
     "Jeskai Control": 61.0,
-    "Azorius Control": 79.0,
-    "Esper Pixie": 44.0,
-    "Gruul Aggro": 65.0,
-    "Mono Green Landfall": 54.0,
-    "Jeskai Oculus": 60.5,
-    "Azorius Omniscience": 61.6,
-    "Simic Ouroboroid": 25.0,
-    "Boros Aggro": 70.1,
-    "Sultai Reanimator": 55.0
+    "Esper Blink": 55.0,
+    "Eldrazi Ramp": 46.0,
+    "Belcher": 61.9,
+    "Neobrand": 61.8,
+    "Dimir Midrange": 65.0,
+    "5C Humans": 47.7,
+    "Eldrazi Tron": 85.0,
+    "Affinity": 76.0,
+    "Izzet Prowess": 41.4,
+    "Domain Zoo": 72.9,
+    "Jeskai Blink": 62.9
   },
-  "5C Humans (pioneer)": {
-    "Izzet Phoenix": 61.7,
-    "Azorius Control": 65.0,
-    "Rakdos Aggro": 65.0,
-    "Jund Sacrifice": 69.9,
-    "Enigmatic Incarnation": 62.5,
-    "Lotus Combo": 60.8,
-    "Rakdos Transmogrify": 65.0,
-    "Mono Black Demons": 70.7,
-    "Abzan Greasefang": 61.4,
-    "Mono Green Devotion": 62.4,
-    "Selesnya Company": 53.8,
-    "Rakdos Midrange": 53.5,
-    "Rakdos Demons": 65.0,
-    "Rakdos Prowess": 65.0
-  },
-  "Legacy Humans (legacy)": {
-    "Dimir Reanimator": 20.5,
-    "Lotus Combo": 60.0,
-    "Cephalid Breakfast": 15.8,
-    "Sneak And Show": 30.5,
-    "Mono Red Painter": 47.2,
-    "Doomsday": 55.0,
-    "Bant Nadu": 52.6,
-    "Dimir Tempo": 65.0,
-    "Eldrazi Stompy": 25.0,
-    "Izzet Delver": 65.0,
-    "Death And Taxes": 65.0,
-    "Four-Color": 70.3,
+  "Boros Energy Variant Jermey (modern)": {
+    "Amulet Titan": 62.3,
+    "Ruby Storm": 61.7,
+    "Belcher": 61.9,
+    "Goryo's Vengeance": 62.0,
+    "Neobrand": 61.8,
+    "Living End": 61.9,
+    "Grixis Reanimator": 62.0,
+    "Eldrazi Tron": 96.4,
     "Jeskai Control": 65.0,
-    "Mono Red Aggro": 59.0,
-    "Mono Red Prison": 34.0
-  },
-  "Boros Aggro (standard)": {
-    "Izzet Cauldron": 62.7,
-    "Izzet Lessons": 62.1,
-    "Jeskai Oculus": 62.1,
-    "Azorius Omniscience": 61.8,
-    "Sultai Reanimator": 61.2,
-    "Mono Red Aggro": 25.0,
-    "Dimir Midrange": 25.0,
-    "Jeskai Control": 68.8,
-    "Simic Ouroboroid": 25.0,
-    "Izzet Prowess": 25.9,
-    "Azorius Control": 65.0,
-    "Gruul Aggro": 65.0,
-    "Mono Green Landfall": 42.6
-  },
-  "Gruul Prowess (pioneer)": {
-    "Izzet Phoenix": 61.4,
-    "Enigmatic Incarnation": 61.3,
-    "Lotus Combo": 59.4,
-    "Abzan Greasefang": 61.7,
-    "Mono Green Devotion": 62.1
-  },
-  "Izzet Prowess (pioneer)": {
-    "Abzan Greasefang": 62.5,
-    "Izzet Phoenix": 62.1,
-    "Lotus Combo": 59.1,
-    "Green Devotion": 61.8,
-    "Izzet Lessons": 61.7,
-    "Selesnya Company": 25.0,
-    "Mono Red Aggro": 25.0,
-    "Rakdos Demons": 25.0,
-    "Azorius Control": 53.3
+    "Domain Zoo": 95.8,
+    "Dimir Midrange": 65.0,
+    "Izzet Prowess": 93.1,
+    "Esper Blink": 65.0,
+    "Affinity": 85.4,
+    "Jeskai Blink": 65.0,
+    "Eldrazi Ramp": 78.5,
+    "5C Humans": 48.1,
+    "Boros Energy": 51.1
   }
 }

@@ -1,33 +1,38 @@
-4 Champion of the Parish
-4 Noble Hierarch
-4 Guide of Souls
-4 Thalia's Lieutenant
-4 Coppercoat Vanguard
-4 Meddling Mage
-2 Thalia, Guardian of Thraben
-2 Jirina, Dauntless General
-2 Mantis Rider
-2 Adeline, Resplendent Cathar
-1 Mockingbird
-2 Esper Sentinel
-2 Phantasmal Image
+// 5C Humans - zannty (2026-03-30)
+// Event: MTGO Modern Challenge 32 #12836789
+// Source: mtg_meta.db deck_id=76898 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
+
 4 Aether Vial
 4 Cavern of Souls
+4 Champion of the Parish
+4 Guide of Souls
+4 Meddling Mage
 4 Secluded Courtyard
+4 Thalia's Lieutenant
 4 Unclaimed Territory
-3 Ancient Ziggurat
+3 Aang, Swift Savior
+3 Sylvan Safekeeper
+2 Adeline, Resplendent Cathar
+2 Ancient Ziggurat
+2 Cecil, Dark Knight
+2 Dismember
+2 Jirina, Dauntless General
+2 Mai, Scornful Striker
+2 Makdee and Itla, Skysnarers
 2 Plains
-1 Island
+2 Unsettled Mariner
+2 Witch Enchanter
+1 Ademi of the Silkchutes
 1 Seachrome Coast
 
-Sideboard
-2 Kataki, War's Wage
-2 Sanctifier en-Vec
+// Sideboard
+3 Kataki, War's Wage
+3 Lavinia, Azorius Renegade
 2 Plague Engineer
-2 Dismember
 2 Reflector Mage
-1 Lavinia, Azorius Renegade
-1 Gaddock Teeg
-1 Drannith Magistrate
-1 Clarion Conqueror
-1 Vexing Bauble
+1 Dismember
+1 Grafdigger's Cage
+1 Jirina, Dauntless General
+1 Outland Liberator
+1 Sanctifier en-Vec

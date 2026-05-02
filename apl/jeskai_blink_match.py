@@ -33,9 +33,11 @@ TEFERI     = "Teferi, Time Raveler"
 WRATH      = "Wrath of the Skies"
 MARCH      = "March of Otherworldly Light"
 FABLE      = "Fable of the Mirror-Breaker"
+BOLT       = "Lightning Bolt"
+STRIX      = "Strix Serenade"
 
 ETB_CREATURES = {SOLITUDE, PHLAGE, QUANTUM, CASEY}
-REMOVAL = {SOLITUDE, GALVANIC, PRISMATIC, CONSIGN, MARCH}
+REMOVAL = {SOLITUDE, GALVANIC, PRISMATIC, CONSIGN, MARCH, BOLT}
 
 # Matchup detection: cards that indicate opponent archetype
 PROWESS_INDICATORS = {"Monastery Swiftspear", "Dragon's Rage Channeler", "Slickshot Show-Off",
@@ -70,6 +72,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         self._phelia_exile_returns = []  # list of (card, owner)
         self._treasures = 0  # from Ragavan combat damage
         self._role = "beatdown"  # beatdown, tempo_control, or grind
+        self._fable_chapter = 0  # 0=not played, 1=ch1 fired (on entry), 2=ch2, 3=ch3/transformed
 
     def _detect_role(self, opponent):
         """Detect role from playbook: Beatdown vs Tempo Control vs Grind.
@@ -155,6 +158,40 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             self._blink_best_etb(gs, opponent)
             gs._log(f"  Ephemerate REBOUND: free blink")
 
+        # Spend Ragavan treasures as mana (tap Treasure: add one mana of any color)
+        if self._treasures > 0:
+            use = min(self._treasures, 3)
+            gs.mana_pool.flex += use
+            self._treasures -= use
+
+        # Fable of the Mirror-Breaker saga chapter advancement
+        # Chapters tick "as Saga enters (Ch I) and after your draw step (Ch II, III)."
+        # Ch I fires on ETB via engine. Ch II and III fire on subsequent turns here.
+        fable_on_board = next((c for c in gs.zones.battlefield if c.name == FABLE), None)
+        if fable_on_board and self._fable_chapter == 1:
+            # Chapter II: "You may discard up to two cards. If you do, draw that many."
+            self._fable_chapter = 2
+            worst = sorted(gs.zones.hand, key=lambda c: self._card_value(c))[:2]
+            for w in worst:
+                gs.zones.hand.remove(w)
+                gs.zones.graveyard.append(w)
+            if worst:
+                gs.zones.draw(len(worst))
+            gs._log(f"  Fable II: discard {len(worst)}, draw {len(worst)}")
+        elif fable_on_board and self._fable_chapter == 2:
+            # Chapter III: exile saga, return transformed as Reflection of Kiki-Jiki
+            # Oracle: "{1},{T}: Create a haste copy of target nonlegendary creature, sac next end step."
+            self._fable_chapter = 3
+            gs.zones.battlefield.remove(fable_on_board)
+            gs.zones.exile.append(fable_on_board)
+            from data.card import Card as _Card
+            reflection = _Card("Reflection of Kiki-Jiki", mana_cost=None, cmc=0,
+                               type_line="Enchantment Creature -- Goblin Shaman")
+            reflection.power = '2'; reflection.toughness = '2'
+            reflection.turn_entered = gs.turn; reflection.summoning_sickness = True
+            gs.zones.battlefield.append(reflection)
+            gs._log(f"  Fable III: transform -> Reflection of Kiki-Jiki on battlefield")
+
         avail = gs.mana_pool.total()
 
         # 1. SOLITUDE EVOKE — free creature exile (pitch white card)
@@ -215,6 +252,9 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         avail = gs.mana_pool.total()
 
         # 2. Galvanic Discharge — energy-based removal
+        # Oracle: "Galvanic Discharge deals X damage to target creature or planeswalker,
+        #          where X is 2 plus the number of energy counters you have. You get {E}{E}{E}."
+        # Key: damage = 2 + current_energy. Energy is COUNTED, not SPENT. You also gain 3E.
         if opponent:
             opp_creatures = [c for c in opponent.zones.battlefield
                             if not c.is_land() and c.has(Tag.CREATURE)]
@@ -223,15 +263,45 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     if c.name == GALVANIC and avail >= 1:
                         gs.mana_pool.pay("{R}", 1) if gs.mana_pool.can_pay("{R}", 1) else None
                         gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                        gs.energy = getattr(gs, 'energy', 0) + 3
-                        target = max(opp_creatures, key=lambda x: safe_power(x))
-                        energy_to_spend = min(gs.energy, safe_toughness(target))
-                        gs.energy -= energy_to_spend
-                        if energy_to_spend >= safe_toughness(target):
+                        base_energy = getattr(gs, 'energy', 0)
+                        damage = 2 + base_energy  # oracle: X = 2 + energy you have
+                        gs.energy = base_energy + 3  # gain 3E (energy not spent, just accumulated)
+                        # Target: highest-power creature we can actually kill.
+                        # Don't waste Discharge on something that survives.
+                        killable = [c for c in opp_creatures
+                                    if safe_toughness(c) <= damage]
+                        if killable:
+                            target = max(killable, key=lambda x: safe_power(x))
                             if target in opponent.zones.battlefield:
                                 opponent.zones.battlefield.remove(target)
                                 opponent.zones.graveyard.append(target)
-                            gs._log(f"  Discharge: kill {target.name} (spent {energy_to_spend}E)")
+                            gs._log(f"  Discharge: deal {damage} kill {target.name} "
+                                    f"(energy: {base_energy}+3={gs.energy})")
+                        else:
+                            # Nothing killable — deal to face for pressure
+                            gs.damage_dealt += damage
+                            gs._log(f"  Discharge: deal {damage} face "
+                                    f"(no killable target, energy: {gs.energy})")
+                        avail = gs.mana_pool.total()
+                        break
+
+        # 2b. Lightning Bolt ({R}) — 3 damage to creature or player
+        # Oracle: "Lightning Bolt deals 3 damage to any target."
+        # Use for creature removal first (toughness <= 3), else face damage.
+        if opponent:
+            bolt_targets = [c for c in opponent.zones.battlefield
+                            if not c.is_land() and c.has(Tag.CREATURE)
+                            and safe_toughness(c) <= 3 and safe_power(c) >= 2]
+            if bolt_targets:
+                for c in list(gs.zones.hand):
+                    if c.name == BOLT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.mana_pool.pay("{R}", 1) if gs.mana_pool.can_pay("{R}", 1) else None
+                        gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
+                        target = max(bolt_targets, key=lambda x: safe_power(x))
+                        if target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                        gs._log(f"  Lightning Bolt: kill {target.name}")
                         avail = gs.mana_pool.total()
                         break
 
@@ -240,9 +310,6 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
-                    if name == CASEY:
-                        self._draw(gs, 3)
-                        gs._log(f"  Casey Jones ETB: draw 3 (discard 3 next upkeep)")
                     break
 
         # 4. Quantum Riddler ({3}{U}{U}) — 4/6 flying, ETB draw 1
@@ -272,7 +339,16 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 if opponent:
                     opp_nonlands = [x for x in opponent.zones.battlefield if not x.is_land()]
                     if opp_nonlands:
-                        target = max(opp_nonlands, key=lambda x: safe_power(x))
+                        # Oracle: "-3: Return up to one target artifact, creature, or
+                        # enchantment to its owner's hand. Draw a card."
+                        # Priority: planeswalkers (can't kill, bounce is best answer)
+                        # > highest CMC (most expensive to re-cast) > highest power.
+                        pws = [x for x in opp_nonlands if x.has(Tag.PLANESWALKER)]
+                        if pws:
+                            target = max(pws, key=lambda x: getattr(x, 'cmc', 0))
+                        else:
+                            target = max(opp_nonlands, key=lambda x: (
+                                getattr(x, 'cmc', 0), safe_power(x)))
                         opponent.zones.battlefield.remove(target)
                         opponent.zones.hand.append(target)
                         gs._log(f"  Teferi -3: bounce {target.name} + draw")
@@ -285,6 +361,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         other_gy = len(gs.zones.graveyard) - len(gy_phlages)
         if gy_phlages and other_gy >= 5 and gs.mana_pool.total() >= 4:
             phlage = gy_phlages[0]
+            # Pay escape cost: {R}{R}{W}{W} = 4 mana
+            gs.mana_pool.pay("{R}{R}{W}{W}", 4) if gs.mana_pool.can_pay("{R}{R}{W}{W}", 4) else None
             for _ in range(5):
                 non_phlage = [x for x in gs.zones.graveyard if x.name != PHLAGE]
                 if non_phlage:
@@ -347,14 +425,15 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 break
 
         # 8. Ephemerate on ETB creature (if not used on Solitude already)
+        # Only cast if _blink_best_etb actually finds something useful to blink.
         for c in list(gs.zones.hand):
             if c.name == EPHEMERATE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                self._blink_best_etb(gs, opponent)
-                gs.mana_pool.pay(c.mana_cost, c.cmc)
-                gs.zones.hand.remove(c)
-                gs.zones.exile.append(c)
-                self._ephemerate_rebound = True
-                gs._log(f"  Ephemerate: blink ETB creature (rebound next turn)")
+                if self._blink_best_etb(gs, opponent):
+                    gs.mana_pool.pay(c.mana_cost, c.cmc)
+                    gs.zones.hand.remove(c)
+                    gs.zones.exile.append(c)
+                    self._ephemerate_rebound = True
+                    gs._log(f"  Ephemerate: blink ETB creature (rebound next turn)")
                 break
 
         # 9. Wrath of the Skies — board wipe with optimal X selection
@@ -402,9 +481,13 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 gs.mana_pool.pay(f"{{{x_val}}}{{W}}{{W}}", total_cost)
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
+                # Oracle: "Destroy each artifact, creature, and enchantment with
+                # mana value less than or equal to the amount of energy paid."
                 for zone_gs in [gs, opponent]:
                     killed = [cr for cr in list(zone_gs.zones.battlefield)
-                              if cr.has(Tag.CREATURE) and not cr.is_land()
+                              if not cr.is_land()
+                              and (cr.has(Tag.CREATURE) or cr.has(Tag.ARTIFACT)
+                                   or cr.has(Tag.ENCHANTMENT))
                               and int(getattr(cr, 'cmc', 0)) <= energy_to_spend]
                     for cr in killed:
                         if cr in zone_gs.zones.battlefield:
@@ -529,7 +612,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         for c in list(gs.zones.hand):
             if c.name == FABLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                gs._log(f"  Fable of the Mirror-Breaker: cast (saga ticks Ch1->III)")
+                self._fable_chapter = 1  # Ch I fires on ETB via engine handler
+                gs._log(f"  Fable of the Mirror-Breaker: cast (Ch I: Goblin Shaman token)")
                 break
 
         # 11. Solitude HARDCAST ({3}{W}{W}) — when we have 5+ mana and want to keep cards
@@ -550,6 +634,33 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                             opponent.life += safe_power(target)
                         gs._log(f"  Solitude HARDCAST: exile {target.name} (3/2 lifelink stays)")
                         break
+
+        # 11b. Reflection of Kiki-Jiki ({1}{T}): copy best nonlegendary creature with haste
+        # Oracle: "{1},{T}: Create a token that's a copy of another target nonlegendary
+        #          creature you control, except it has haste. Sacrifice at next end step."
+        reflection = next((c for c in gs.zones.battlefield
+                           if c.name == "Reflection of Kiki-Jiki"
+                           and not getattr(c, 'tapped', False)), None)
+        if reflection and gs.mana_pool.flex >= 1:
+            nonlegendary = [c for c in gs.zones.battlefield
+                            if c.has(Tag.CREATURE) and not c.is_land()
+                            and c != reflection
+                            and 'Legendary' not in (getattr(c, 'type_line', '') or '')]
+            if nonlegendary:
+                best = max(nonlegendary, key=lambda c: (getattr(c, 'cmc', 0), safe_power(c)))
+                gs.mana_pool.flex -= 1
+                reflection.tapped = True
+                from data.card import Card as _Card
+                token = _Card(best.name + " (copy)", mana_cost=None,
+                              cmc=getattr(best, 'cmc', 0),
+                              type_line=getattr(best, 'type_line', 'Token Creature'))
+                token.power = best.power; token.toughness = best.toughness
+                token.summoning_sickness = False  # oracle: it has haste
+                token._finality = True  # sacrifice at next end step
+                gs.zones.battlefield.append(token)
+                # Fire ETB of the copied creature
+                self._blink_best_etb(gs, opponent)
+                gs._log(f"  Reflection of Kiki-Jiki: copy {best.name} with haste")
 
         # 12. Fill remaining mana with creatures
         for c in list(gs.zones.hand):
@@ -575,12 +686,15 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         creature target). Pre-2026-04-29 fix: early-returned after
         targeting any matching name even when the blink did nothing,
         silently skipping the rest of the priority chain.
+
+        Returns True if a blink actually fired, False otherwise.
+        Callers use this to decide whether casting Ephemerate is worthwhile.
         """
         etb_creatures = [c for c in gs.zones.battlefield
                         if c.has(Tag.CREATURE) and not c.is_land()
                         and c.name in ETB_CREATURES]
         if not etb_creatures:
-            return
+            return False
         for name in (SOLITUDE, PHLAGE, QUANTUM, CASEY):
             target = next((c for c in etb_creatures if c.name == name), None)
             if not target:
@@ -597,10 +711,24 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     gs._log(f"  Blink Solitude: exile {t.name}")
                     blinked = True
             elif name == PHLAGE:
+                # Oracle: "Whenever Phlage enters or attacks, it deals 3 damage to
+                # any target and you gain 3 life." — target killable creature first.
                 if opponent:
+                    opp_cr = [x for x in opponent.zones.battlefield
+                              if not x.is_land() and x.has(Tag.CREATURE)
+                              and safe_toughness(x) <= 3]
+                    if opp_cr:
+                        t = max(opp_cr, key=lambda x: safe_power(x))
+                        opponent.zones.battlefield.remove(t)
+                        opponent.zones.graveyard.append(t)
+                        gs._log(f"  Blink Phlage: kill {t.name} + 3 life")
+                    else:
+                        gs.damage_dealt += 3
+                        gs._log(f"  Blink Phlage: 3 face + 3 life")
+                else:
                     gs.damage_dealt += 3
+                    gs._log(f"  Blink Phlage: 3 face + 3 life")
                 gs.life += 3
-                gs._log(f"  Blink Phlage: 3 dmg + 3 life")
                 blinked = True
             elif name == QUANTUM:
                 self._draw(gs, 1)
@@ -612,7 +740,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 gs._log(f"  Blink Casey Jones: draw 3 (pending discards={self._casey_discards_pending})")
                 blinked = True
             if blinked:
-                return  # only return on actual blink; else try next priority
+                return True  # only return on actual blink; else try next priority
+        return False  # no ETB creature found worth blinking
 
     def declare_attackers(self, gs, opponent):
         """Role-aware attack decisions + Phelia/Ragavan/Phlage triggers.
@@ -662,12 +791,17 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             if own_etb:
                 self._blink_best_etb(gs, opponent)
                 self._phelia_counters += 1
-                # Oracle: +1/+1 counter on Phelia when an own permanent was exiled
-                # (Pre-2026-04-29 fix: counter was tracked in _phelia_counters
-                # but never applied to phelia.counters — Phelia stayed a 1/1
-                # forever, losing significant combat damage.)
+                # Oracle: +1/+1 counter on Phelia when the returned card entered
+                # under our control. Update BOTH .counters AND .power/.toughness
+                # because safe_power() reads card.power (string), not .counters.
                 phelia.counters += 1
-                gs._log(f"  Phelia attack: blink own {own_etb[0].name} (Phelia now {phelia.counters} counters)")
+                try:
+                    phelia.power = str(int(phelia.power) + 1)
+                    phelia.toughness = str(int(phelia.toughness) + 1)
+                except (ValueError, TypeError):
+                    pass
+                gs._log(f"  Phelia attack: blink own {own_etb[0].name} "
+                        f"(Phelia now {phelia.power}/{phelia.toughness})")
             elif opponent:
                 # Exile opponent's best creature. Oracle: return at next end
                 # step under owner's control. Pre-2026-04-29 fix: card stayed
@@ -683,15 +817,30 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                     self._phelia_exile_returns.append((target, opponent))
                     gs._log(f"  Phelia attack: exile opponent's {target.name} (returns at end step)")
         
-        # RAGAVAN COMBAT DAMAGE TRIGGER (handled here for logging)
+        # RAGAVAN COMBAT DAMAGE TRIGGER
         # Oracle: "Whenever Ragavan deals combat damage to a player, create a Treasure token
-        #          and exile top card of that player's library. Until end of turn, may cast it."
-        for a in attackers:
-            if a.name == RAGAVAN:
-                # Treasure creation happens on DAMAGE (combat resolution), not here
-                # But we log intent and track treasure anticipation
-                pass
+        #          and exile the top card of that player's library."
+        # Approximate: fires when opponent has no creatures >= 2 power to block Ragavan (2/1).
+        if opponent:
+            for a in attackers:
+                if a.name == RAGAVAN:
+                    opp_blockers = [x for x in opponent.zones.battlefield
+                                    if x.has(Tag.CREATURE) and not x.is_land()
+                                    and safe_power(x) >= 2]
+                    if not opp_blockers:
+                        self._treasures += 1
+                        if opponent.zones.library:
+                            exiled = opponent.zones.library.pop(0)
+                            gs.zones.exile.append(exiled)
+                            gs._log(f"  Ragavan connects: +1 Treasure, exile {exiled.name}")
         
+        # GOBLIN SHAMAN ATTACK TRIGGER (from Fable of the Mirror-Breaker Ch I)
+        # Oracle: "Whenever this token attacks, create a Treasure token."
+        shaman_attacking = sum(1 for a in attackers if 'Goblin Shaman' in (a.name or ''))
+        if shaman_attacking > 0:
+            self._treasures += shaman_attacking
+            gs._log(f"  Goblin Shaman attacks: +{shaman_attacking} Treasure")
+
         # PHLAGE ATTACK TRIGGER: 3 damage + 3 life
         for a in attackers:
             if a.name == PHLAGE:
@@ -712,15 +861,44 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
+        """Role-aware blocking: protect life total without sacrificing key engines.
+        Priority:
+          1. Never block with Quantum Riddler (draw engine, too valuable to trade)
+          2. Block with Solitude first (3/2 lifelink — gain life while trading)
+          3. Assign blockers to biggest attackers first (minimize incoming damage)
+          4. Only block if attacker has power >= 2 (avoid chump-blocking 1/1s)
+        """
         assignments = {}
         if not attackers: return assignments
-        blockers = [c for c in gs.zones.battlefield if c.has(Tag.CREATURE)
-                    and not c.is_land() and not getattr(c, 'tapped', False)
-                    and safe_toughness(c) >= 3]
-        if blockers:
-            biggest = max(attackers, key=lambda c: safe_power(c))
-            if safe_power(biggest) >= 3:
-                assignments[id(biggest)] = [blockers[0]]
+
+        # Eligible blockers: not tapped, not summoning-sick, not precious engines
+        eligible = [c for c in gs.zones.battlefield
+                    if c.has(Tag.CREATURE) and not c.is_land()
+                    and not getattr(c, 'tapped', False)
+                    and not getattr(c, 'summoning_sickness', False)
+                    and c.name != QUANTUM]  # never block with draw engine
+
+        if not eligible: return assignments
+
+        # Sort blockers: Solitude first (lifelink value), then by toughness desc
+        def blocker_priority(c):
+            if c.name == SOLITUDE: return 100
+            if 'Token' in (c.name or ''): return 10  # tokens are expendable
+            return safe_toughness(c)
+        eligible.sort(key=blocker_priority, reverse=True)
+
+        # Sort attackers: biggest first
+        threats = sorted([a for a in attackers if safe_power(a) >= 2],
+                         key=lambda c: safe_power(c), reverse=True)
+
+        used_blockers = set()
+        for atk in threats:
+            for blk in eligible:
+                if id(blk) not in used_blockers:
+                    assignments[id(atk)] = [blk]
+                    used_blockers.add(id(blk))
+                    break  # one blocker per attacker
+
         return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
@@ -736,6 +914,29 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         """
         if not spell or not opponent:
             return None
+
+        # Strix Serenade ({U}) — counter creature/artifact/PW spell
+        # Oracle: "Counter target artifact, creature, or planeswalker spell.
+        #          Its controller creates a 2/2 blue Bird creature token with flying."
+        # Use on high-value threats (CMC >= 3). Note: opponent gets a 2/2 Bird.
+        if (spell.has(Tag.CREATURE) or spell.has(Tag.ARTIFACT) or spell.has(Tag.PLANESWALKER)):
+            spell_cmc = getattr(spell, 'cmc', 0)
+            if spell_cmc >= 3:
+                for c in list(gs.zones.hand):
+                    if c.name == STRIX and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                        gs.mana_pool.pay("{U}", 1) if gs.mana_pool.can_pay("{U}", 1) else None
+                        gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
+                        # Opponent gets a 2/2 Bird token as compensation
+                        if opponent:
+                            from data.card import Card
+                            bird = Card("Bird Token", mana_cost=None, cmc=0,
+                                       type_line="Token Creature — Bird")
+                            bird.power = '2'; bird.toughness = '2'
+                            bird.summoning_sickness = False
+                            opponent.zones.battlefield.append(bird)
+                        gs._log(f"  Strix Serenade: counter {spell.name} (opp gets 2/2 Bird)")
+                        return c
+
         for c in list(gs.zones.hand):
             if c.name != CONSIGN:
                 continue
@@ -775,15 +976,20 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         Phelia exiled in declare_attackers. So opp creatures stayed
         permanently exiled. Now properly returned at end of turn.
         """
-        if not self._phelia_exile_returns:
-            return
         for card, owner in self._phelia_exile_returns:
             if card in owner.zones.exile:
                 owner.zones.exile.remove(card)
                 owner.zones.battlefield.append(card)
-                card.summoning_sickness = False  # was already on the field
+                card.summoning_sickness = False
                 gs._log(f"  Phelia exile return: {card.name} -> opp battlefield")
         self._phelia_exile_returns.clear()
+
+        # Sacrifice Kiki-Jiki copy tokens (they die at beginning of next end step)
+        for card in list(gs.zones.battlefield):
+            if getattr(card, '_finality', False):
+                gs.zones.battlefield.remove(card)
+                gs.zones.graveyard.append(card)
+                gs._log(f"  Kiki copy sacrificed: {card.name}")
 
     def _draw(self, gs, n):
         """Wrapper around gs.zones.draw(n) that applies Quantum Riddler's

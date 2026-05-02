@@ -101,29 +101,35 @@ class MurktideMatchAPL(MatchAPL):
                 break
 
         # 4. Murktide Regent — delve finisher
+        # Oracle: "This creature enters with a +1/+1 counter for each instant and
+        #          sorcery card exiled with it." Base P/T: 3/3.
         for c in list(gs.zones.hand):
             if c.name == MURKTIDE:
                 gy_size = len(gs.zones.graveyard)
                 delve = min(gy_size, 5)
                 effective_cost = 7 - delve
                 if gs.mana_pool.total() >= effective_cost:
-                    # Pay mana
                     to_pay = effective_cost
                     while to_pay > 0 and gs.mana_pool.total() > 0:
                         gs.mana_pool.flex = max(0, gs.mana_pool.flex - 1)
                         to_pay -= 1
-                    # Exile cards for delve
+                    # Exile cards for delve — track instant/sorcery count for P/T
+                    is_count = 0
                     for _ in range(delve):
                         if gs.zones.graveyard:
                             exiled = gs.zones.graveyard.pop(0)
+                            if exiled.has(Tag.INSTANT) or exiled.has(Tag.SORCERY):
+                                is_count += 1
                             gs.zones.exile.append(exiled)
                     gs.zones.hand.remove(c)
                     gs.zones.battlefield.append(c)
                     c.turn_entered = gs.turn
                     c.summoning_sickness = True
-                    c.power = str(8 + delve)
-                    c.toughness = str(8 + delve)
-                    gs._log(f"  Murktide Regent: {c.power}/{c.toughness} (delved {delve})")
+                    # Oracle: 3/3 base + 1/1 per instant/sorcery exiled
+                    c.power = str(3 + is_count)
+                    c.toughness = str(3 + is_count)
+                    gs._log(f"  Murktide Regent: {c.power}/{c.toughness} "
+                            f"(delved {delve}, {is_count} instant/sorcery)")
                 break
 
         # 5. DON'T tap out — hold mana for counterspells
@@ -181,7 +187,6 @@ class MurktideMatchAPL(MatchAPL):
         return None
 
     def declare_attackers(self, gs, opponent):
-        from engine.keywords import KWTag
         attackers = []
         for c in gs.zones.battlefield:
             if c.is_land(): continue
@@ -189,6 +194,24 @@ class MurktideMatchAPL(MatchAPL):
             if getattr(c, 'tapped', False): continue
             if c.has(Tag.CREATURE):
                 attackers.append(c)
+
+        # Ragavan combat damage trigger: "Whenever Ragavan deals combat damage to a
+        # player, create a Treasure token and exile the top card of that player's library."
+        # Approximate: if Ragavan attacks and opponent has no blockers ≥ 2 power to
+        # stop it (Ragavan is 2/1), it likely connects.
+        if opponent:
+            for c in attackers:
+                if c.name == RAGAVAN:
+                    opp_blockers = [x for x in opponent.zones.battlefield
+                                    if x.has(Tag.CREATURE) and not x.is_land()
+                                    and safe_power(x) >= 2]
+                    if not opp_blockers:  # Ragavan connects
+                        self._treasures += 1
+                        if opponent.zones.library:
+                            exiled = opponent.zones.library.pop(0)
+                            gs.zones.exile.append(exiled)
+                        gs._log(f"  Ragavan connects: +1 Treasure, exile top card")
+
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
@@ -205,13 +228,7 @@ class MurktideMatchAPL(MatchAPL):
         return assignments
 
     def end_step_actions(self, gs, opponent):
-        # Ragavan treasure on combat damage
-        from engine.keywords import KWTag
-        ragavans = sum(1 for c in gs.zones.battlefield
-                       if c.name == RAGAVAN
-                       and (not getattr(c, 'summoning_sickness', False)
-                            or KWTag.HASTE in getattr(c, 'tags', set())))
-        self._treasures += ragavans
+        pass  # Ragavan treasure now handled in declare_attackers on combat damage
 
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]

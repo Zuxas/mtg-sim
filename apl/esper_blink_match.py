@@ -40,6 +40,9 @@ class EsperBlinkMatchAPL(MatchAPL):
 
     def __init__(self):
         self._phelia_exile_returns = []  # (card, owner) tuples, returned at end step
+        self._revolt_active = False      # True if a permanent left our battlefield this turn
+        self._flickerwisp_exiles = []    # (card, owner) to return next end step
+        self._finality_creatures = []    # creatures with finality counter, sacrificed at end step
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
@@ -63,7 +66,15 @@ class EsperBlinkMatchAPL(MatchAPL):
 
     def main_phase_match(self, gs, opponent):
         self._play_land_if_able(gs)
-        gs.tap_lands()  # generate mana
+        gs.tap_lands()
+        # Revolt is active if any permanent left our battlefield this turn.
+        # In Esper Blink, Phelia attacks exile permanents and return them.
+        # Ephemerate blinks our own creatures. Revolt is almost always active.
+        # Conservative: set revolt = True if we have Phelia, Ephemerate, or any
+        # creature that was blinked (end step returns signal prior exile).
+        self._revolt_active = bool(self._phelia_exile_returns) or bool(self._flickerwisp_exiles) or any(
+            c.name in (FLICKERWISP, EPHEMERATE) for c in gs.zones.graveyard
+        )
 
         # 1. Thoughtseize T1 — rip their best card
         if opponent and gs.turn <= 2:
@@ -90,11 +101,17 @@ class EsperBlinkMatchAPL(MatchAPL):
         if opponent:
             self._use_fatal_push(gs, opponent)
 
-        # 4. Deploy threats
+        # 4. Deploy threats with ETB triggers
         for name in (PHELIA, QUANTUM, OVERLORD, FLICKERWISP, WITCH, EMPEROR):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
+                    if name == OVERLORD:
+                        self._overlord_etb(gs, opponent)
+                    elif name == FLICKERWISP and opponent:
+                        self._flickerwisp_etb(gs, opponent)
+                    elif name == QUANTUM:
+                        self._draw(gs, 1)  # ETB draw
                     break
 
         # 5. Teferi bounce + draw
@@ -107,7 +124,7 @@ class EsperBlinkMatchAPL(MatchAPL):
                         target = max(opp_nonlands, key=lambda x: safe_power(x))
                         opponent.zones.battlefield.remove(target)
                         opponent.zones.hand.append(target)
-                gs.zones.draw(1)
+                self._draw(gs, 1)  # Teferi -3 draw
                 break
 
         # 6. Ephemerate on Solitude/Overlord for double ETB
@@ -165,9 +182,19 @@ class EsperBlinkMatchAPL(MatchAPL):
         gs._log(f"  Solitude (pitch {pitch.name}) → exile {target.name}")
 
     def _use_fatal_push(self, gs, opponent):
+        """Fatal Push with revolt awareness.
+
+        Oracle (verified Scryfall 2026-04-30):
+          "Destroy target creature if it has mana value 2 or less.
+           Revolt -- Destroy that creature if it has mana value 4 or less instead
+           if a permanent you controlled left the battlefield this turn."
+        In Esper Blink: Phelia exiles on attack, Ephemerate blinks -- revolt
+        is almost always active. Use MV<=4 when revolt_active.
+        """
+        mv_cap = 4 if self._revolt_active else 2
         opp_creatures = [c for c in opponent.zones.battlefield
                          if not c.is_land() and c.has(Tag.CREATURE)
-                         and getattr(c, 'cmc', 0) <= 4]
+                         and getattr(c, 'cmc', 0) <= mv_cap]
         if not opp_creatures: return
         target = max(opp_creatures, key=lambda c: safe_power(c))
         if safe_power(target) < 2: return
@@ -176,10 +203,11 @@ class EsperBlinkMatchAPL(MatchAPL):
                 gs.mana_pool.pay(c.mana_cost, c.cmc)
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
+                self._revolt_active = True
                 if target in opponent.zones.battlefield:
                     opponent.zones.battlefield.remove(target)
                     opponent.zones.graveyard.append(target)
-                gs._log(f"  Fatal Push → kill {target.name}")
+                gs._log(f"  Fatal Push (revolt={self._revolt_active}): kill {target.name} (MV<={mv_cap})")
                 return
 
     def respond_to_spell(self, gs, opponent, spell):
@@ -220,6 +248,31 @@ class EsperBlinkMatchAPL(MatchAPL):
                 self._phelia_exile_returns.append((target, opponent))
                 gs._log(f"  Phelia attack: exile {target.name} (returns at end step)")
 
+        # Emperor of Bones: beginning-of-combat trigger + Adapt 2 chain
+        # Oracle: "At beginning of combat on your turn, exile up to one target card
+        # from a graveyard. {1}{B}: Adapt 2. Whenever +1/+1 counters are put on this
+        # creature, put the exiled card onto the battlefield with haste + finality counter.
+        # Sacrifice it at beginning of next end step."
+        emperor = next((c for c in attackers if c.name == EMPEROR), None)
+        if emperor and not getattr(emperor, '_adapted', False):
+            all_gy = [c for c in gs.zones.graveyard if c.has(Tag.CREATURE)]
+            if opponent:
+                all_gy += [c for c in opponent.zones.graveyard if c.has(Tag.CREATURE)]
+            if all_gy and gs.mana_pool.flex >= 2:
+                exile_target = max(all_gy, key=lambda c: safe_power(c))
+                if exile_target in gs.zones.graveyard:
+                    gs.zones.graveyard.remove(exile_target)
+                elif opponent and exile_target in opponent.zones.graveyard:
+                    opponent.zones.graveyard.remove(exile_target)
+                gs.mana_pool.flex -= min(2, gs.mana_pool.flex)
+                emperor._adapted = True
+                exile_target.summoning_sickness = False  # oracle: it gains haste
+                exile_target._finality = True
+                gs.zones.battlefield.append(exile_target)
+                self._finality_creatures.append(exile_target)
+                attackers.append(exile_target)
+                gs._log(f"  Emperor Adapt: reanimate {exile_target.name} with haste+finality")
+
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
@@ -233,8 +286,51 @@ class EsperBlinkMatchAPL(MatchAPL):
                 assignments[id(biggest)] = [solitudes[0]]
         return assignments
 
+    def _flickerwisp_etb(self, gs, opponent):
+        """Exile another target permanent, return at beginning of next end step.
+        Oracle: 'When Flickerwisp enters, exile another target permanent. Return
+        that card to the battlefield under its owner's control at the beginning
+        of the next end step.'
+        Targets opponent's highest-power permanent to disrupt combat/effects.
+        """
+        if not opponent: return
+        opp_perms = [c for c in opponent.zones.battlefield if not c.is_land()]
+        if not opp_perms:
+            opp_perms = list(opponent.zones.battlefield)
+        if not opp_perms: return
+        target = max(opp_perms, key=lambda x: safe_power(x))
+        opponent.zones.battlefield.remove(target)
+        opponent.zones.exile.append(target)
+        self._flickerwisp_exiles.append((target, opponent))
+        gs._log(f"  Flickerwisp ETB: exile {target.name} (returns next end step)")
+
+    def _overlord_etb(self, gs, opponent):
+        """Each player mills 4, return creature from any GY to hand.
+        Oracle: 'When Overlord of the Balemurk enters, each player mills four
+        cards. Return up to one target creature card from a graveyard to your hand.'
+        """
+        for _ in range(4):
+            if gs.zones.library:
+                gs.zones.graveyard.append(gs.zones.library.pop(0))
+        if opponent:
+            for _ in range(4):
+                if opponent.zones.library:
+                    opponent.zones.graveyard.append(opponent.zones.library.pop(0))
+        our_creatures = [c for c in gs.zones.graveyard if c.has(Tag.CREATURE)]
+        opp_creatures = [c for c in (opponent.zones.graveyard if opponent else [])
+                         if c.has(Tag.CREATURE)]
+        candidates = our_creatures + opp_creatures
+        if not candidates: return
+        target = max(candidates, key=lambda c: safe_power(c))
+        if target in gs.zones.graveyard:
+            gs.zones.graveyard.remove(target)
+        elif opponent and target in opponent.zones.graveyard:
+            opponent.zones.graveyard.remove(target)
+        gs.zones.hand.append(target)
+        gs._log(f"  Overlord ETB: mill 4 each, return {target.name} to hand")
+
     def end_step_actions(self, gs, opponent):
-        """Return Phelia-exiled opponent creatures at end step."""
+        """Return Phelia-exiled and Flickerwisp-exiled permanents at end step."""
         for card, owner in self._phelia_exile_returns:
             if card in owner.zones.exile:
                 owner.zones.exile.remove(card)
@@ -242,6 +338,32 @@ class EsperBlinkMatchAPL(MatchAPL):
                 card.summoning_sickness = False
                 gs._log(f"  Phelia exile return: {card.name} -> opp battlefield")
         self._phelia_exile_returns.clear()
+
+        for card, owner in self._flickerwisp_exiles:
+            if card in owner.zones.exile:
+                owner.zones.exile.remove(card)
+                owner.zones.battlefield.append(card)
+                card.summoning_sickness = False
+                gs._log(f"  Flickerwisp exile return: {card.name} -> opp battlefield")
+        self._flickerwisp_exiles.clear()
+
+        # Finality counter: sacrifice creatures reanimated by Emperor of Bones
+        for card in list(self._finality_creatures):
+            if card in gs.zones.battlefield:
+                gs.zones.battlefield.remove(card)
+                gs.zones.graveyard.append(card)
+                gs._log(f"  Finality sacrifice: {card.name}")
+        self._finality_creatures.clear()
+
+    def _draw(self, gs, n):
+        """Draw with Quantum Riddler static.
+        Oracle: 'As long as you have one or fewer cards in hand, if you would draw
+        one or more cards, you draw that many cards plus one instead.'
+        """
+        quantum_on_board = any(c.name == QUANTUM for c in gs.zones.battlefield)
+        if quantum_on_board and len(gs.zones.hand) <= 1:
+            n += 1
+        gs.zones.draw(n)
 
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]

@@ -1,34 +1,37 @@
-4 Kappa Cannoneer
-4 Pinnacle Emissary
-4 Weapons Manufacturing
-4 Engineered Explosives
-4 Mox Opal
-4 Mishra's Bauble
-3 Emry, Lurker of the Loch
-2 Arcbound Ravager
-2 Metallic Rebuke
-3 Tormod's Crypt
-3 Claws of Gix
-1 Shadowspear
-1 Pithing Needle
-1 Welding Jar
-1 Aether Spellbomb
-1 Skateboard
-4 Urza's Saga
-3 Fiery Islet
-4 Spirebluff Canal
-1 Island
-2 Steam Vents
-1 Shivan Reef
-3 Sink into Stupor // Soporific Springs
+// Affinity - martin_dominguez (2026-04-29)
+// Event: MTGO Modern Challenge 64 #12840702
+// Source: mtg_meta.db deck_id=133093 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
 
-Sideboard
+4 Engineered Explosives
+4 Fiery Islet
+4 Kappa Cannoneer
+4 Mishra's Bauble
+4 Mox Opal
+4 Pinnacle Emissary
+4 Spirebluff Canal
+4 Tormod's Crypt
+4 Urza's Saga
+4 Weapons Manufacturing
+3 Claws of Gix
+3 Metallic Rebuke
+3 Sink into Stupor
+2 Arcbound Ravager
+2 Emry, Lurker of the Loch
+1 Island
+1 Pithing Needle
+1 Shadowspear
+1 Skateboard
+1 Steam Vents
+1 Thoughtcast
+1 Welding Jar
+
+// Sideboard
 3 Damping Sphere
-3 Consign to Memory
-1 Grafdigger's Cage
-2 Whipflare
+2 Consign to Memory
 2 Galvanic Blast
-1 Ashiok, Dream Render
-1 Blood Moon
-1 Reckless Air Strike
+2 Harbinger of the Seas
+2 Mystical Dispute
+2 Whipflare
 1 Swan Song
+1 Vexing Bauble

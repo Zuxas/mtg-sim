@@ -334,6 +334,29 @@ class DomainZooMatchAPL(MatchAPL):
                         gs._log(f"  Phlage attack: 3 face + 3 life ({gs.damage_dealt} total)")
                 gs.life += 3
         
+        # Territorial Kavu attack trigger: "choose one — discard/draw OR exile from GY"
+        # Oracle: "Whenever this creature attacks, choose one: Discard a card, draw a card.
+        #          OR Exile up to one target card from a graveyard."
+        for a in attackers:
+            if a.name == KAVU:
+                # Mode selection: if opponent has valuable GY targets, exile; else draw
+                opp_gy_threats = [c for c in (opponent.zones.graveyard if opponent else [])
+                                  if c.has(Tag.CREATURE) and getattr(c, 'cmc', 0) >= 3]
+                if opp_gy_threats:
+                    # Exile mode: remove best threat from opponent GY
+                    target = max(opp_gy_threats, key=lambda c: getattr(c, 'cmc', 0))
+                    opponent.zones.graveyard.remove(target)
+                    opponent.zones.exile.append(target)
+                    gs._log(f"  Kavu attack trigger: exile {target.name} from opp GY")
+                elif len(gs.zones.hand) > 1:
+                    # Discard/draw mode: filter hand (discard worst, draw new)
+                    worst = min(gs.zones.hand, key=lambda c: getattr(c, 'cmc', 0)
+                                if not c.is_land() else 99)
+                    gs.zones.hand.remove(worst)
+                    gs.zones.graveyard.append(worst)
+                    gs.zones.draw(1)
+                    gs._log(f"  Kavu attack trigger: discard {worst.name}, draw")
+
         # Ragavan combat damage: treasure + exile top card
         for a in attackers:
             if a.name == RAGAVAN:

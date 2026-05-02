@@ -171,11 +171,26 @@ class IzzetAffinityMatchAPL(MatchAPL):
             gs._log(f"  Pinnacle: {self._artifacts_cast_this_turn} Drone token(s) (flying, artifact)")
 
         # 6. Arcbound Ravager ({2}) — sacrifice artifacts for counters
+        # Oracle: "Sacrifice an artifact: Put a +1/+1 counter on this creature.
+        #          Modular 1 (enters with 1 +1/+1 counter)."
         for c in list(gs.zones.hand):
             if c.name == RAVAGER and avail >= 2:
                 gs.cast_spell(c); _on_artifact_enter(); _on_artifact_cast()
+                c.power = '1'; c.toughness = '1'
+                # Modular 1: enters with 1 +1/+1 counter
+                counters = 1
+                # Activate sac ability: sacrifice expendable artifacts (tokens, Baubles, etc.)
+                sac_fodder = [x for x in gs.zones.battlefield
+                              if x.has(Tag.ARTIFACT) and x != c
+                              and x.name not in (KAPPA, PINNACLE, EMRY, RAVAGER)
+                              and not x.has(Tag.CREATURE)]
+                for sac in sac_fodder[:4]:  # sac up to 4 artifacts
+                    gs.zones.battlefield.remove(sac)
+                    gs.zones.graveyard.append(sac)
+                    counters += 1
+                c.power = str(counters); c.toughness = str(counters)
                 avail = gs.mana_pool.total()
-                gs._log(f"  Ravager: sac artifacts for +1/+1 counters")
+                gs._log(f"  Ravager: {counters} counters (modular 1 + {counters-1} sac)")
                 break
 
         # 6b. Weapons Manufacturing Munitions — convert pending Munitions to face damage.

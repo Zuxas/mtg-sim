@@ -20,20 +20,30 @@ from engine.match_engine import run_match
 from engine.bo3_match import run_bo3
 from data.deck import load_deck_from_file
 
+# Auto-register oracle-derived handlers for every card across all
+# matrix decks. Hand-written handlers take precedence.
+from engine.auto_handlers import auto_register_all_standard_matrix
+_auto_stats = auto_register_all_standard_matrix()
+print(f"[auto-handlers] registered {_auto_stats['registered']}, "
+      f"skipped {_auto_stats['skipped_handwritten']} hand-written, "
+      f"{_auto_stats['no_effect']} cards had no parseable effect "
+      f"(per-trigger: {_auto_stats['per_trigger']})")
+
 
 DECKS = [
     ("Boros",     "apl.boros_aggro_standard_match",         "BorosAggroStandardMatchAPL",         "decks/boros_aggro_standard.txt"),
     ("Gruul",     "apl.gruul_aggro_standard_match",         "GruulAggroStandardMatchAPL",         "decks/gruul_aggro_standard.txt"),
     ("MonoR",     "apl.mono_red_aggro_standard_match",      "MonoRedAggroStandardMatchAPL",       "decks/mono_red_aggro_standard.txt"),
-    ("Azorius",   "apl.azorius_aggro_standard_match",       "AzoriusAggroStandardMatchAPL",       "decks/azorius_aggro_standard.txt"),
+    ("Azorius",   "apl.azorius_control_standard_match",     "AzoriusControlStandardMatchAPL",     "decks/azorius_control_standard.txt"),
     ("Prowess",   "apl.izzet_prowess_standard_match",       "IzzetProwessStandardMatchAPL",       "decks/izzet_prowess_standard.txt"),
     ("Dimir",     "apl.dimir_midrange_standard_match",      "DimirMidrangeStandardMatchAPL",      "decks/dimir_midrange_standard.txt"),
     ("MonoG",     "apl.mono_green_landfall_standard_match", "MonoGreenLandfallStandardMatchAPL",  "decks/mono_green_landfall_standard.txt"),
     ("Lesson",    "apl.izzet_lesson_standard_match",        "IzzetLessonStandardMatchAPL",        "decks/izzet_lesson_standard.txt"),
     ("Spell",     "apl.izzet_spellementals_standard_match", "IzzetSpellementalsStandardMatchAPL", "decks/izzet_spellementals_standard.txt"),
     ("Doomsday",  "apl.superior_doomsday_standard_match",   "SuperiorDoomsdayStandardMatchAPL",   "decks/superior_doomsday_standard.txt"),
-    ("Domain",    "apl.domain_ramp_standard_match",         "DomainRampStandardMatchAPL",         "decks/domain_ramp_standard.txt"),
+    ("Sultai",    "apl.sultai_reanimator_standard_match",   "SultaiReanimatorStandardMatchAPL",   "decks/domain_ramp_standard.txt"),
     ("Jeskai",    "apl.jeskai_control_standard_match",      "JeskaiControlStandardMatchAPL",      "decks/jeskai_control_standard.txt"),
+    ("SimCub",    "apl.simic_cub_standard_match",           "SimicCubStandardMatchAPL",           "decks/simic_cub_standard.txt"),
 ]
 
 
@@ -70,9 +80,19 @@ def main():
             for g in range(pairs):
                 try:
                     if mode == "bo3":
-                        r = run_bo3(cls_a(), deck_a, sb_a,
-                                     cls_b(), deck_b, sb_b,
-                                     sb_plan_a=None, sb_plan_b=None,
+                        # Ask each APL instance for its SB plan vs the
+                        # other's ARCHETYPE category. None = no swap.
+                        inst_a = cls_a()
+                        inst_b = cls_b()
+                        opp_b_arch = getattr(inst_b, "ARCHETYPE", "midrange")
+                        opp_a_arch = getattr(inst_a, "ARCHETYPE", "midrange")
+                        sb_plan_a = (inst_a.sb_plan_for(opp_b_arch)
+                                     if hasattr(inst_a, "sb_plan_for") else None)
+                        sb_plan_b = (inst_b.sb_plan_for(opp_a_arch)
+                                     if hasattr(inst_b, "sb_plan_for") else None)
+                        r = run_bo3(inst_a, deck_a, sb_a,
+                                     inst_b, deck_b, sb_b,
+                                     sb_plan_a=sb_plan_a, sb_plan_b=sb_plan_b,
                                      a_on_play_g1=(g % 2 == 0), seed=g)
                     else:
                         r = run_match(cls_a(), deck_a, cls_b(), deck_b, seed=g)

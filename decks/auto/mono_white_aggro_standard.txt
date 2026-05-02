@@ -1,0 +1,37 @@
+// audit:auto-generated:Mono White Aggro:2026-05-01
+// Source: meta-analyzer DB deck_id=10091, archetype=Mono White Aggro
+
+3 Ajani, Outland Chaperone
+2 Bitter Triumph
+4 Bitterbloom Bearer
+4 Bleachbone Verge
+3 Caretaker's Talent
+3 Carrot Cake
+3 Concealed Courtyard
+2 Day of Judgment
+1 Deadly Cover-Up
+3 Elspeth, Storm Slayer
+3 Enduring Innocence
+3 Fountainport
+4 Get Lost
+4 Godless Shrine
+3 Multiversal Passage
+3 Plains
+3 Requiting Hex
+2 Seam Rip
+1 Shadowy Backstreet
+1 Soul-Guide Lantern
+1 Split Up
+2 Sunken Citadel
+2 Swamp
+
+Sideboard
+1 Beza, the Bounding Spring
+1 Duress
+1 Exorcise
+1 Outrageous Robbery
+3 Requisition Raid
+1 Requiting Hex
+2 Rest in Peace
+3 Soul Search
+2 Torpor Orb

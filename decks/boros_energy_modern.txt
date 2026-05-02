@@ -1,34 +1,39 @@
-4 Ragavan, Nimble Pilferer
-4 Ocelot Pride
-4 Guide of Souls
-4 Phlage, Titan of Fire's Fury
+// Boros Energy - renatoaraujo (2026-04-29)
+// Event: MTGO Modern Challenge 64 #12840702
+// Source: mtg_meta.db deck_id=133103 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
+
 4 Ajani, Nacatl Pariah
-2 Seasoned Pyromancer
-1 Ranger-Captain of Eos
-4 Galvanic Discharge
-2 Thraben Charm
-1 Lightning Bolt
-3 Goblin Bombardment
-2 Blood Moon
-2 The Legend of Roku
 4 Arid Mesa
 4 Flooded Strand
+4 Galvanic Discharge
+4 Guide of Souls
+4 Marsh Flats
+4 Ocelot Pride
+4 Phlage, Titan of Fire's Fury
+4 Ragavan, Nimble Pilferer
 3 Arena of Glory
-3 Elegant Parlor
-3 Marsh Flats
-2 Sacred Foundry
+3 Goblin Bombardment
+3 Sacred Foundry
+3 Seasoned Pyromancer
+3 Thraben Charm
+2 Elegant Parlor
 2 Plains
-1 Mountain
-1 Sunbaked Canyon
-
-Sideboard
-2 Obsidian Charmaw
 1 Blood Moon
-3 Wrath of the Skies
+1 Fable of the Mirror-Breaker
+1 Mountain
+1 The Legend of Roku
+1 Voice of Victory
+
+// Sideboard
+2 Obsidian Charmaw
 2 Orim's Chant
-2 Vexing Bauble
+2 Wear // Tear
+2 Wrath of the Skies
+1 Blood Moon
+1 Celestial Purge
+1 Damping Sphere
 1 High Noon
 1 Surgical Extraction
-1 Soul-Guide Lantern
-1 Wear // Tear
 1 The Legend of Roku
+1 Vexing Bauble

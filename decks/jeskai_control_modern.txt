@@ -1,23 +1,45 @@
-// audit:stub reason="representative stub for match APL quality; real list from MTGGoldfish 2026-04-29"
-// Jeskai Control - Modern (MTGGoldfish 2026-04-29)
-// Key cards: Teferi, Narset, Orim's Chant, Solitude, Supreme Verdict
-4 Teferi, Time Raveler
-3 Narset, Parter of Veils
-4 Solitude
-4 Orim's Chant
-2 Supreme Verdict
-4 Counterspell
-4 Force of Negation
-3 Prismatic Ending
-2 Flame of Anor
-4 Opt
-4 Preordain
-3 Snapcaster Mage
+// Jeskai Control - eclipse4343 (2026-04-29)
+// Event: MTGO Modern Challenge 64 #12840702
+// Source: mtg_meta.db deck_id=133116 pulled 2026-04-30
+// Main: 60 | Sideboard: 14
+
+4 Consult the Star Charts
 4 Flooded Strand
-4 Scalding Tarn
-2 Hallowed Fountain
-2 Steam Vents
-2 Sacred Foundry
-4 Island
+4 Galvanic Discharge
+4 Narset, Parter of Veils
+4 Orim's Chant
+3 Arid Mesa
+3 Solitude
+3 Teferi, Time Raveler
+3 Wrath of the Skies
+2 Counterspell
+2 Day's Undoing
+2 Island
+2 Meticulous Archive
+2 Mystic Gate
 2 Plains
-2 Mountain
+2 Scalding Tarn
+1 Elegant Parlor
+1 Force of Negation
+1 Geier Reach Sanitarium
+1 Hall of Storm Giants
+1 Hallowed Fountain
+1 Isochron Scepter
+1 Lórien Revealed
+1 Mistrise Village
+1 Phlage, Titan of Fire's Fury
+1 Prismatic Ending
+1 Spell Snare
+1 Steam Vents
+1 Subtlety
+1 Thundering Falls
+
+// Sideboard
+4 Consign to Memory
+3 Mystical Dispute
+2 Fire Magic
+1 Ashiok, Dream Render
+1 Celestial Purge
+1 Damping Sphere
+1 Spell Snare
+1 Wrath of the Skies

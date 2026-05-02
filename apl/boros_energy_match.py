@@ -550,7 +550,23 @@ class BorosEnergyMatchAPL(MatchAPL):
             attackers.append(c)
             if c.name == VOICE_OF_VICTORY:
                 voices_attacking += 1
-        
+
+        # Ragavan combat damage trigger: "Whenever Ragavan deals combat damage to a
+        # player, create a Treasure token and exile the top card of that player's library."
+        # Approximate: fires when no opp creatures >= 2 power can block.
+        if opponent:
+            for c in attackers:
+                if c.name == RAGAVAN:
+                    opp_blockers = [x for x in opponent.zones.battlefield
+                                    if x.has(Tag.CREATURE) and not x.is_land()
+                                    and safe_power(x) >= 2]
+                    if not opp_blockers:
+                        self._treasures += 1
+                        if opponent.zones.library:
+                            exiled = opponent.zones.library.pop(0)
+                            gs.zones.exile.append(exiled)
+                        gs._log(f"  Ragavan connects: +1 Treasure, exile {exiled.name if opp_blockers == [] and opponent.zones.library else 'top card'}")
+
         # Voice of Victory Mobilize 2: create 2x 1/1 Warriors per Voice attacking
         # Oracle: "create two tapped and attacking 1/1 red Warrior creature tokens.
         #          Sacrifice them at the beginning of the next end step."
@@ -793,15 +809,7 @@ class BorosEnergyMatchAPL(MatchAPL):
         # Reset per-turn trackers
         self._mobilize_tokens = 0
         
-        # Ragavan Treasure — each Ragavan that attacked and wasn't blocked = Treasure
-        # Oracle: "Whenever Ragavan deals combat damage to a player, create a Treasure token"
-        from engine.keywords import KWTag
-        ragavans = sum(1 for c in gs.zones.battlefield
-                       if c.name == RAGAVAN
-                       and not getattr(c, 'summoning_sickness', False))
-        if ragavans > 0:
-            self._treasures += ragavans
-            gs._log(f"  Ragavan: +{ragavans} Treasure(s) ({self._treasures} total)")
+        # Ragavan treasure is now handled in declare_attackers on combat damage.
 
     def _play_land_if_able(self, gs: GameState):
         """Play best land. Fetchland/shockland life costs handled by engine automatically."""

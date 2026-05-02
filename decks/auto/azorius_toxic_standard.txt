@@ -1,0 +1,35 @@
+// audit:auto-generated:Azorius Toxic:2026-05-01
+// Source: meta-analyzer DB deck_id=17362, archetype=Azorius Toxic
+
+3 Adarkar Wastes
+3 Bloated Contaminator
+3 Botanical Sanctum
+4 Crawling Chorus
+2 Experimental Augury
+1 Forest
+1 Island
+3 Jawbone Duelist
+2 Mirrex
+4 Mockingbird
+1 Plains
+3 Razorverge Thicket
+3 Reasonable Doubt
+3 Seachrome Coast
+4 Serum Snare
+4 Shore Up
+3 Skrelv's Hive
+4 Skrelv, Defector Mite
+3 The Seedcore
+4 Venerated Rotpriest
+2 Yavimaya Coast
+
+Sideboard
+1 Bring the Ending
+2 Destroy Evil
+1 Dewdrop Cure
+2 Overprotect
+1 Reasonable Doubt
+2 Ride's End
+2 Sheltered by Ghosts
+2 Surge of Salvation
+2 Tyvar's Stand

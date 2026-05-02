@@ -113,9 +113,18 @@ class AmuletTitanMatchAPL(MatchAPL):
                 break
 
         # 2. Spelunking ({2}{G}) — lands enter untapped + haste
+        # Oracle ETB: "draw a card, then you may put a land card from your hand onto
+        # the battlefield."
         for c in list(gs.zones.hand):
             if c.name == SPELUNKING and avail >= 3:
                 gs.cast_spell(c); self._spelunking_active = True
+                gs.zones.draw(1)  # ETB draw
+                extra = [x for x in gs.zones.hand if x.is_land()]
+                if extra and not gs.land_played:
+                    gs.zones.hand.remove(extra[0])
+                    gs.zones.battlefield.append(extra[0])
+                    extra[0].turn_entered = gs.turn
+                    gs._log(f"  Spelunking ETB: land {extra[0].name} to battlefield")
                 avail = gs.mana_pool.total()
                 gs._log(f"  Spelunking: lands untapped + creatures haste")
                 break
@@ -147,20 +156,29 @@ class AmuletTitanMatchAPL(MatchAPL):
                 gs._log(f"  Rumble: draw 1, 3 to GY, +1 Spawn")
                 break
 
-        # 5. Green Sun's Zenith ({X}{G}) — tutor green creature
+        # 5. Green Sun's Zenith ({X}{G}) — tutor green creature to battlefield
+        # Oracle: "Search library for green creature with mana value X or less, put it
+        # onto the battlefield, then shuffle. Shuffle Green Sun's Zenith into its library."
         for c in list(gs.zones.hand):
-            if c.name == GSZ:
-                x_val = avail - 1
-                if x_val >= 6:  # tutor Titan at X=6
-                    gs.zones.hand.remove(c); gs.zones.library.append(c)  # GSZ shuffles back
-                    gs.zones.draw(1)  # simulate tutoring Titan
-                    avail -= 7
-                    gs._log(f"  GSZ X=6: tutor Primeval Titan")
-                elif x_val >= 0 and avail >= 1:
-                    gs.zones.hand.remove(c); gs.zones.library.append(c)
-                    gs.zones.draw(1)
-                    gs._log(f"  GSZ X={x_val}: tutor creature")
-                    avail = gs.mana_pool.total()
+            if c.name == GSZ and avail >= 1:
+                x_val = avail - 1  # reserve 1 for {G}
+                candidates = [x for x in gs.zones.library
+                              if x.has(Tag.CREATURE) and getattr(x, 'cmc', 0) <= x_val
+                              and 'G' in (getattr(x, 'colors', []) or [])]
+                if candidates:
+                    target = max(candidates, key=lambda x: getattr(x, 'cmc', 0))
+                    cost = getattr(target, 'cmc', 0) + 1  # X = target CMC, +1 for {G}
+                    gs.mana_pool.flex -= min(cost, gs.mana_pool.flex)
+                    gs.zones.hand.remove(c)
+                    gs.zones.library.remove(target)
+                    gs.zones.library.append(c)  # GSZ shuffles back into library
+                    # Put directly onto battlefield (oracle: not into hand)
+                    gs.zones.battlefield.append(target)
+                    target.turn_entered = gs.turn
+                    target.summoning_sickness = not self._has_haste_source(gs)
+                    self._trigger_creature_etb(gs, opponent, target)
+                    avail = gs.mana_pool.total() + self._bounce_land_bonus(gs)
+                    gs._log(f"  GSZ X={x_val}: {target.name} onto battlefield!")
                 break
 
         # 6. Summoner's Pact ({0}) — free tutor, pay next upkeep
@@ -183,10 +201,7 @@ class AmuletTitanMatchAPL(MatchAPL):
                 c.power = '6'; c.toughness = '6'
                 has_haste = self._has_haste_source(gs)
                 c.summoning_sickness = not has_haste
-                # ETB: search 2 lands → battlefield
-                gs.mana_pool.flex += 2  # simulate 2 extra lands
-                gs._log(f"  PRIMEVAL TITAN: 6/6 trample ({'HASTE!' if has_haste else 'no haste'})")
-                gs._log(f"    ETB: 2 lands to battlefield")
+                self._trigger_creature_etb(gs, opponent, c)
                 break
 
         # 8. Scapeshift ({2}{G}{G}) — sacrifice lands, get that many
@@ -207,16 +222,36 @@ class AmuletTitanMatchAPL(MatchAPL):
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
 
+    def _trigger_creature_etb(self, gs, opponent, card):
+        """Fire ETB triggers for key Amulet Titan creatures."""
+        if card.name == TITAN:
+            # Oracle: "When this creature enters or attacks, search your library for up to
+            # two land cards, put them onto the battlefield, then shuffle."
+            # With Amulet: bounce lands enter untapped = extra mana.
+            gs.mana_pool.flex += 2 * (2 if self._amulet_active else 1)
+            has_haste = self._has_haste_source(gs)
+            gs._log(f"  Primeval Titan ETB: 2 lands to battlefield ({'HASTE!' if has_haste else 'no haste'})")
+        elif card.name == COLOSSUS:
+            # Cultivator Colossus: put land from hand → repeat while lands in hand
+            while True:
+                lands_in_hand = [x for x in gs.zones.hand if x.is_land()]
+                if not lands_in_hand: break
+                land = lands_in_hand[0]
+                gs.zones.hand.remove(land)
+                gs.zones.battlefield.append(land)
+                land.turn_entered = gs.turn
+                gs.zones.draw(1)
+                gs._log(f"  Colossus ETB: land {land.name} to battlefield + draw")
+
     def declare_attackers(self, gs, opponent):
-        """Titan attack trigger: search 2 more lands."""
+        """Titan attack trigger: search 2 more lands (same as ETB)."""
         attackers = [c for c in gs.zones.battlefield
                     if not c.is_land() and c.has(Tag.CREATURE)
                     and not getattr(c, 'summoning_sickness', False)
                     and not getattr(c, 'tapped', False)]
         for a in attackers:
             if a.name == TITAN:
-                gs.mana_pool.flex += 2
-                gs._log(f"  Titan attack: 2 more lands to battlefield")
+                self._trigger_creature_etb(gs, opponent, a)
         return attackers
 
     def declare_blockers(self, gs, opp, attackers): return {}

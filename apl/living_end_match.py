@@ -25,22 +25,33 @@ SHARDLESS       = "Shardless Agent"
 CASCADE_SPELLS  = {VIOLENT_OUT, ARDENT_PLEA, SHARDLESS}
 CASCADE_COST    = {VIOLENT_OUT: 3, ARDENT_PLEA: 3, SHARDLESS: 3}
 
-# Cycling creatures — cheap to cycle ({1} or {B/G}), large bodies
+# Cycling creatures — cheap to cycle, large bodies returned by Living End
+# Power values used for P/T estimation after Living End resolves.
 CYCLERS = {
-    "Street Wraith": 3,       # 3/4, cycle {2B}
-    "Monstrous Carabid": 3,   # 3/3, cycle {B/G}
-    "Horror of the Broken Lands": 3,  # 5/3, cycle {B}
+    # Classic package
+    "Street Wraith": 3,               # 3/4, cycle = pay 2 life
+    "Monstrous Carabid": 3,           # 3/3, cycle {B/G}
+    "Horror of the Broken Lands": 5,  # 5/3, cycle {B}
     "Curator of Mysteries": 4,        # 4/4 flying, cycle {U}
-    "Waker of Waves": 5,      # 5/5, cycle {U}
-    "Deadshot Minotaur": 3,   # 3/3, cycle {R/G}
-    "Architects of Will": 2,  # 2/3, cycling {U/B}
-    "Twisted Abomination": 2, # 5/3, cycle {B}
-    "Fierce Empath": 0,       # 1/1, tutor on ETB
+    "Waker of Waves": 5,              # 5/5, cycle {U}
+    "Deadshot Minotaur": 3,           # 3/3, cycle {R/G}
+    "Architects of Will": 2,          # 2/3, cycling {U/B}
+    "Twisted Abomination": 2,         # 5/3, cycle {B}
+    "Fierce Empath": 0,               # 1/1, tutor on ETB
     "Overlord of the Balemurk": 4,    # 4/4, cycling
+    # Modern canonical 2026 package
+    "Generous Ent": 3,                # 4/4 reach, cycle {G}
+    "Striped Riverwinder": 5,         # 5/6 hexproof, cycle {U}
+    "Colossal Skyturtle": 4,          # 4/4 flying, channel/cycle
 }
 
-# Force of Negation protects the cascade
+# Evoke creatures that protect the combo (pitch a colored card, effect + sacrifice)
+SUBTLETY = "Subtlety"   # evoke blue: counter target creature/PW spell
+ENDURANCE = "Endurance" # evoke green: shuffle GY into library (vs GY hate)
+
+# Force of Negation + Commandeer protect cascade
 FON = "Force of Negation"
+COMMANDEER = "Commandeer"  # exile 2 blue cards: gain control of noncreature spell
 
 
 class LivingEndMatchAPL(MatchAPL):
@@ -90,16 +101,23 @@ class LivingEndMatchAPL(MatchAPL):
             # Post-combo: just attack with large creatures
             return
 
-        # STEP 1: Cycle creatures to fill graveyard
-        # Cycling costs 1-2 mana or is free. Model as: move cyclers from hand
-        # to GY (they don't enter battlefield; just get cycled).
+        # STEP 1: Cycle creatures to fill graveyard.
+        # Street Wraith: cycle = Pay 2 life (oracle: "Cycling — Pay 2 life.")
+        # All others: cycle = 1 colored mana (approximate as 1 generic).
         for c in list(gs.zones.hand):
             if c.name in CYCLERS and c in gs.zones.hand:
-                # Pay cycling cost (approximate: 1 mana each)
-                if avail >= 1:
+                if c.name == "Street Wraith":
+                    if gs.life > 2:  # don't cycle to death
+                        gs.life -= 2
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
+                        gs.zones.draw(1)  # cycling draws a card
+                        gs._log(f"  Cycle Street Wraith (pay 2 life)")
+                elif avail >= 1:
                     avail -= 1
                     gs.zones.hand.remove(c)
                     gs.zones.graveyard.append(c)
+                    gs.zones.draw(1)  # cycling draws a card
                     gs._log(f"  Cycle {c.name} to GY")
 
         # STEP 2: Fire cascade when we have mana + cascade spell
@@ -114,11 +132,27 @@ class LivingEndMatchAPL(MatchAPL):
                 gs.cast_spell(cascade)
                 gs._log(f"  {cascade.name}: cascade -> Living End!")
 
-                # Living End resolution:
-                # 1. Both players sacrifice all creatures
-                our_creatures = [c for c in gs.zones.battlefield
+                # Living End resolution (oracle-exact order):
+                # 1. Each player exiles all creature cards from their GY
+                # 2. Each player sacrifices all creatures they control
+                # 3. Each player puts their exiled cards onto the battlefield
+                # Key: step 2 creatures go to GY AFTER the exile, so they do NOT return.
+
+                our_exiled = [c for c in list(gs.zones.graveyard)
+                              if c.has(Tag.CREATURE)]
+                opp_exiled = ([c for c in list(opponent.zones.graveyard)
+                               if c.has(Tag.CREATURE)] if opponent else [])
+
+                for cr in our_exiled:
+                    gs.zones.graveyard.remove(cr)
+                    gs.zones.exile.append(cr)
+                for cr in opp_exiled:
+                    opponent.zones.graveyard.remove(cr)
+                    opponent.zones.exile.append(cr)
+
+                our_creatures = [c for c in list(gs.zones.battlefield)
                                  if c.has(Tag.CREATURE) and not c.is_land()]
-                opp_creatures = ([c for c in opponent.zones.battlefield
+                opp_creatures = ([c for c in list(opponent.zones.battlefield)
                                   if c.has(Tag.CREATURE) and not c.is_land()]
                                  if opponent else [])
 
@@ -126,33 +160,22 @@ class LivingEndMatchAPL(MatchAPL):
                     gs.zones.battlefield.remove(cr)
                     gs.zones.graveyard.append(cr)
                 for cr in opp_creatures:
-                    if opponent:
-                        opponent.zones.battlefield.remove(cr)
-                        opponent.zones.graveyard.append(cr)
+                    opponent.zones.battlefield.remove(cr)
+                    opponent.zones.graveyard.append(cr)
 
-                # 2. Return all creature cards from GY to battlefield
-                our_gy_creatures = [c for c in list(gs.zones.graveyard)
-                                    if c.has(Tag.CREATURE)]
-                for cr in our_gy_creatures:
-                    gs.zones.graveyard.remove(cr)
+                for cr in our_exiled:
+                    gs.zones.exile.remove(cr)
                     gs.zones.battlefield.append(cr)
                     cr.turn_entered = gs.turn
-                    cr.summoning_sickness = True  # entered this turn
-
-                # Opponent's GY creatures come back too (Living End is symmetrical)
-                if opponent:
-                    opp_gy_creatures = [c for c in list(opponent.zones.graveyard)
-                                        if c.has(Tag.CREATURE)]
-                    for cr in opp_gy_creatures:
-                        opponent.zones.graveyard.remove(cr)
-                        opponent.zones.battlefield.append(cr)
-                        cr.turn_entered = gs.turn
+                    cr.summoning_sickness = True
+                for cr in opp_exiled:
+                    opponent.zones.exile.remove(cr)
+                    opponent.zones.battlefield.append(cr)
+                    cr.turn_entered = gs.turn
 
                 self._combo_fired = True
-                our_back = len(our_gy_creatures)
-                opp_back = len(opp_gy_creatures) if opponent else 0
-                gs._log(f"  Living End: wiped {len(opp_creatures)} opp, "
-                        f"returned {our_back} ours / {opp_back} theirs")
+                gs._log(f"  Living End: exiled {len(our_exiled)} ours / {len(opp_exiled)} "
+                        f"theirs, sac'd {len(our_creatures)} ours / {len(opp_creatures)} theirs")
 
     def declare_attackers(self, gs, opponent):
         # Post-combo: attack with all non-summoning-sick creatures
@@ -180,11 +203,13 @@ class LivingEndMatchAPL(MatchAPL):
         return assignments
 
     def respond_to_spell(self, gs, opponent, spell):
-        """Force of Negation — protect cascade from disruption."""
+        """Protect cascade from disruption using FON, Subtlety, or Commandeer."""
         if not spell or not opponent:
             return None
-        # Only protect our own cascade (our life total not at risk from this)
-        # In match context: counter opponent's counterspell targeting our cascade
+        spell_cmc = getattr(spell, 'cmc', 0)
+
+        # Force of Negation: if not our turn, exile blue card to counter noncreature spell
+        # Oracle: "If it's not your turn, you may exile a blue card rather than pay mana cost."
         for c in list(gs.zones.hand):
             if c.name == FON and gs.mana_pool.total() < 2:
                 blue_cards = [x for x in gs.zones.hand if x != c and not x.is_land()
@@ -195,6 +220,37 @@ class LivingEndMatchAPL(MatchAPL):
                     gs.zones.hand.remove(c); gs.zones.exile.append(c)
                     gs._log(f"  Force of Negation: counter {spell.name}")
                     return c
+
+        # Subtlety: evoke blue card to counter creature/planeswalker spells
+        # Oracle: "Evoke — Exile a blue card. Choose up to one target creature/PW spell.
+        #          Its controller puts it on top of their library."
+        if spell.has(Tag.CREATURE):
+            for c in list(gs.zones.hand):
+                if c.name == SUBTLETY:
+                    blue_cards = [x for x in gs.zones.hand if x != c and not x.is_land()
+                                  and 'U' in (getattr(x, 'colors', []) or [])]
+                    if blue_cards:
+                        pitch = blue_cards[0]
+                        gs.zones.hand.remove(pitch); gs.zones.exile.append(pitch)
+                        gs.zones.hand.remove(c); gs.zones.exile.append(c)
+                        # Effect: bounce target creature/PW spell to top of library
+                        gs._log(f"  Subtlety evoke: bounce {spell.name} to library")
+                        return c
+
+        # Commandeer: exile 2 blue cards to steal a high-value noncreature spell
+        # Oracle: "Exile two blue cards: gain control of target noncreature spell."
+        if not spell.has(Tag.CREATURE) and spell_cmc >= 4:
+            for c in list(gs.zones.hand):
+                if c.name == COMMANDEER:
+                    blue_cards = [x for x in gs.zones.hand if x != c and not x.is_land()
+                                  and 'U' in (getattr(x, 'colors', []) or [])]
+                    if len(blue_cards) >= 2:
+                        for pitch in blue_cards[:2]:
+                            gs.zones.hand.remove(pitch); gs.zones.exile.append(pitch)
+                        gs.zones.hand.remove(c); gs.zones.exile.append(c)
+                        gs._log(f"  Commandeer: steal {spell.name}")
+                        return c
+
         return None
 
     def end_step_actions(self, gs, opponent): pass

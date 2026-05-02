@@ -1,0 +1,35 @@
+// audit:auto-generated:Simic Rhythm:2026-05-01
+// Source: meta-analyzer DB deck_id=131271, archetype=Simic Rhythm
+
+1 Archdruid's Charm
+1 Ba Sing Se
+4 Badgermole Cub
+4 Botanical Sanctum
+4 Breeding Pool
+1 Craterhoof Behemoth
+1 Emeritus of Ideation
+6 Forest
+4 Gene Pollinator
+1 Keen-Eyed Curator
+4 Leyline Weaver
+4 Llanowar Elves
+1 Marang River Regent
+3 Mockingbird
+4 Multiversal Passage
+3 Nature's Rhythm
+3 Ouroboroid
+3 Quantum Riddler
+2 Shimmerwilds Growth
+2 Surrak, Elusive Hunter
+4 Willowrush Verge
+
+Sideboard
+1 Ba Sing Se
+3 Bounce Off
+3 Detect Intrusion
+1 Keen-Eyed Curator
+1 Leatherhead, Swamp Stalker
+2 Longstalk Brawl
+1 Shimmerwilds Growth
+2 Soul-Guide Lantern
+1 Wistfulness

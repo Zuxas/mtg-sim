@@ -1,0 +1,27 @@
+// Momo White - Federico Di Credico (14/04/26)
+// Event: Standard Showdown
+// Source: mtg_meta.db deck_id=112338 pulled 2026-05-01
+// Main: 60 | Sideboard: 15
+
+16 Plains
+4 Abandoned Air Temple
+4 Cosmogrand Zenith
+4 Get Lost
+4 Haliya, Guided by Light
+4 Momo, Friendly Flier
+4 Sage of the Skies
+4 Seam Rip
+4 Springleaf Drum
+4 Starfield Shepherd
+3 Nurturing Pixie
+3 Voice of Victory
+1 Curious Farm Animals
+1 Soulstone Sanctuary
+
+// Sideboard
+4 Doorkeeper Thrull
+3 Clarion Conqueror
+3 Sheltered by Ghosts
+2 Requisition Raid
+2 Shardmage's Rescue
+1 Rest in Peace

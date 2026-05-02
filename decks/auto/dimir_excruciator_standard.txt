@@ -1,0 +1,32 @@
+// audit:auto-generated:Dimir Excruciator:2026-05-01
+// Source: meta-analyzer DB deck_id=133082, archetype=Dimir Excruciator
+
+3 Bitter Triumph
+2 Cavern of Souls
+2 Day of Black Sun
+1 Deadly Cover-Up
+4 Deceit
+3 Doomsday Excruciator
+3 Duress
+3 Emeritus of Ideation
+4 Gloomlake Verge
+4 Kavaero, Mind-Bitten
+4 Requiting Hex
+4 Restless Reef
+3 Stock Up
+2 Strategic Betrayal
+11 Swamp
+1 Undercity Sewers
+4 Watery Grave
+2 Winternight Stories
+
+Sideboard
+2 Cruelclaw's Heist
+1 Deadly Cover-Up
+1 Disdainful Stroke
+1 Duress
+2 Flashfreeze
+1 Intimidation Tactics
+4 Oildeep Gearhulk
+2 Qarsi Revenant
+1 Strategic Betrayal

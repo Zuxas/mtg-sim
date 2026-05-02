@@ -1,30 +1,37 @@
-// Izzet Spellementals - arkany1 (top 32, 2026-04-20)
-// Current #4 Standard (~10% meta share)
-3 Abandon Attachments
-1 Abrade
-2 Bounce Off
+// Izzet Spellementals - amaransneak (2026-04-30)
+// Event: MTGO Standard Challenge 32 #12841322
+// Source: mtg_meta.db deck_id=133073 pulled 2026-05-01
+// Main: 60 | Sideboard: 15
+
+7 Island
 4 Burst Lightning
 4 Eddymurk Crab
-1 Glacial Dragonhunt
+4 Flow State
 4 Hearth Elemental
-8 Island
 4 Opt
 4 Riverpyre Verge
-1 Sear
 4 Sleight of Hand
-2 Spell Pierce
-2 Spell Snare
 4 Spirebluff Canal
 4 Steam Vents
-4 Sunderflock
-4 Winternight Stories
+3 Sunderflock
+3 Traumatic Critique
+2 Colorstorm Stallion
+2 Prismari Charm
+2 Spell Snare
+2 Stormcarved Coast
+2 Winternight Stories
+1 Spell Pierce
 
-Sideboard
-1 Fire Magic
-1 Flame Javelin
-2 Get Out
-2 Nimble Larcenist
-2 Pyroclasm
+// Sideboard
+2 Colorstorm Stallion
+2 Ral, Crackling Wit
 2 Soul-Guide Lantern
-2 Tishana's Tidebinder
-3 Torrent of Stone
+1 Annul
+1 Belion, the Parched
+1 Broadside Barrage
+1 Disdainful Stroke
+1 Ill-Timed Explosion
+1 Slagstorm
+1 Sunderflock
+1 The Legend of Kuruk
+1 Wan Shi Tong, Librarian

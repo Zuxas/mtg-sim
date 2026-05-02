@@ -148,12 +148,12 @@ class GoryosMatchAPL(MatchAPL):
                     self._combo_assembled = True
                     # Atraxa ETB: look at top 10, take one of each type (simulate as draw 4)
                     if target.name == ATRAXA:
-                        gs.zones.draw(4)
+                        self._draw(gs, 4)
                         gs._log(f"    Atraxa ETB: draw ~4 from top 10")
                     elif target.name == GRISELBRAND:
                         # Pay 7 life: draw 7
                         if gs.life > 7:
-                            gs.life -= 7; gs.zones.draw(7)
+                            gs.life -= 7; self._draw(gs, 7)
                             gs._log(f"    Griselbrand: pay 7 life, draw 7")
                     # EPHEMERATE to keep permanently!
                     eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
@@ -163,7 +163,7 @@ class GoryosMatchAPL(MatchAPL):
                         gs._log(f"    Ephemerate: {target.name} STAYS permanently (rebound next turn)")
                         # Re-trigger ETB on re-entry
                         if target.name == ATRAXA:
-                            gs.zones.draw(4)
+                            self._draw(gs, 4)
                             gs._log(f"    Atraxa ETB #2: draw ~4 more")
                     avail = gs.mana_pool.total()
                     break
@@ -184,10 +184,10 @@ class GoryosMatchAPL(MatchAPL):
                 avail = gs.mana_pool.total()
                 break
 
-        # 5. Quantum Riddler ({3}{U}{U}) — 4/6 flying, draw 1
+        # 5. Quantum Riddler ({3}{U}{U}) — 4/6 flying, draw 1 (static: +1 draw at <=1 hand)
         for c in list(gs.zones.hand):
             if c.name == QUANTUM and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c); gs.zones.draw(1)
+                gs.cast_spell(c); self._draw(gs, 1)
                 gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
                 break
 
@@ -211,6 +211,16 @@ class GoryosMatchAPL(MatchAPL):
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
 
+    def _draw(self, gs, n):
+        """Draw with Quantum Riddler static.
+        Oracle: 'As long as you have one or fewer cards in hand, if you would draw
+        one or more cards, you draw that many cards plus one instead.'
+        """
+        quantum_on_board = any(c.name == QUANTUM for c in gs.zones.battlefield)
+        if quantum_on_board and len(gs.zones.hand) <= 1:
+            n += 1
+        gs.zones.draw(n)
+
     def _blink_best_etb(self, gs, opponent):
         for name in (SOLITUDE, ATRAXA, QUANTUM):
             cr = next((c for c in gs.zones.battlefield if c.name == name), None)
@@ -228,7 +238,7 @@ class GoryosMatchAPL(MatchAPL):
                     gs.zones.draw(4)
                     gs._log(f"  Blink Atraxa: draw ~4")
                 elif name == QUANTUM:
-                    gs.zones.draw(1)
+                    self._draw(gs, 1)
                     gs._log(f"  Blink Quantum: draw 1")
                 return
 

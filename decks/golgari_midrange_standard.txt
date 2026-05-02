@@ -1,0 +1,42 @@
+// Golgari Midrange - tentaclefan (2026-04-30)
+// Event: MTGO Standard Challenge 32 #12841322
+// Source: mtg_meta.db deck_id=133060 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
+
+4 Badgermole Cub
+4 Blooming Marsh
+4 Llanowar Elves
+4 Overgrown Tomb
+4 Requiting Hex
+4 Unholy Annex // Ritual Chamber
+4 Wastewood Verge
+3 Duress
+3 Forest
+3 Professor Dellian Fel
+3 Swamp
+2 Emeritus of Abundance
+2 Firdoch Core
+2 Keen-Eyed Curator
+2 Maelstrom Pulse
+2 Multiversal Passage
+2 Soulstone Sanctuary
+2 Tragedy Feaster
+1 Ba Sing Se
+1 Intimidation Tactics
+1 Restless Cottage
+1 Shoot the Sheriff
+1 Strategic Betrayal
+1 Witherbloom Charm
+
+// Sideboard
+3 Cruelclaw's Heist
+2 Day of Black Sun
+2 Strategic Betrayal
+1 Decorum Dissertation
+1 Keen-Eyed Curator
+1 Leatherhead, Swamp Stalker
+1 Outrageous Robbery
+1 Professor Dellian Fel
+1 Surrak, Elusive Hunter
+1 The Ooze
+1 Unstoppable Slasher

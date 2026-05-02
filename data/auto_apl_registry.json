@@ -43,7 +43,71 @@
     "module": "apl.auto_apls.boros_convoke",
     "class": "BorosConvokeAPL",
     "deck_file": "decks/auto/boros_convoke_standard.txt",
-    "generated_date": "2026-04-30",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "fourcoloroverlords": {
+    "module": "apl.auto_apls.four_color_overlords",
+    "class": "FourColorOverlordsAPL",
+    "deck_file": "decks/auto/four_color_overlords_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "azoriussoldiers": {
+    "module": "apl.auto_apls.azorius_soldiers",
+    "class": "AzoriusSoldiersAPL",
+    "deck_file": "decks/auto/azorius_soldiers_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "dimirexcruciator": {
+    "module": "apl.auto_apls.dimir_excruciator",
+    "class": "DimirExcruciatorAPL",
+    "deck_file": "decks/auto/dimir_excruciator_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "simicrhythm": {
+    "module": "apl.auto_apls.simic_rhythm",
+    "class": "SimicRhythmAPL",
+    "deck_file": "decks/auto/simic_rhythm_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "monowhiteaggro": {
+    "module": "apl.auto_apls.mono_white_aggro",
+    "class": "MonoWhiteAggroAPL",
+    "deck_file": "decks/auto/mono_white_aggro_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "simicjackal": {
+    "module": "apl.auto_apls.simic_jackal",
+    "class": "SimicJackalAPL",
+    "deck_file": "decks/auto/simic_jackal_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "azoriustoxic": {
+    "module": "apl.auto_apls.azorius_toxic",
+    "class": "AzoriusToxicAPL",
+    "deck_file": "decks/auto/azorius_toxic_standard.txt",
+    "generated_date": "2026-05-01",
+    "source": "auto_pipeline:gemma",
+    "smoke_avg_turns": null
+  },
+  "temuranalyst": {
+    "module": "apl.auto_apls.temur_analyst",
+    "class": "TemurAnalystAPL",
+    "deck_file": "decks/auto/temur_analyst_standard.txt",
+    "generated_date": "2026-05-01",
     "source": "auto_pipeline:gemma",
     "smoke_avg_turns": null
   }

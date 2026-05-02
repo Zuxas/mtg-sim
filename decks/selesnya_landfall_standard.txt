@@ -1,0 +1,32 @@
+// Selesnya Landfall - tarkanmag (27/04/26)
+// Event: MTGO League
+// Source: mtg_meta.db deck_id=129819 pulled 2026-04-30
+// Main: 60 | Sideboard: 15
+
+12 Forest
+4 Badgermole Cub
+4 Earthbender Ascension
+4 Escape Tunnel
+4 Fabled Passage
+4 Llanowar Elves
+4 Mossborn Hydra
+4 Planar Engineering
+4 Sazh's Chocobo
+4 Tifa Lockhart
+3 Ba Sing Se
+2 Bristly Bill, Spine Sower
+2 Royal Treatment
+2 Traveling Chocobo
+1 Plains
+1 Snakeskin Veil
+1 Temple Garden
+
+// Sideboard
+3 Erode
+2 Keen-Eyed Curator
+2 Origin of Metalbending
+2 Sandman, Shifting Scoundrel
+2 Sheltered by Ghosts
+2 Soul-Guide Lantern
+1 Leatherhead, Swamp Stalker
+1 Snakeskin Veil

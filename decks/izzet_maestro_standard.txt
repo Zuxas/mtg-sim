@@ -1,0 +1,36 @@
+// Izzet Maestro - Standard (SOS 2026)
+// Built around Molten-Core Maestro (Opus: grows + generates mana on instants/sorceries)
+// PT SOS Day 1-2 field share: 2.8%, FWR: 30.6% (underperformed badly)
+// audit:custom_variant -- constructed from SOS card pool knowledge
+// Main: 60 | Sideboard: 15
+
+4 Molten-Core Maestro
+4 Gran-Gran
+4 Colorstorm Stallion
+4 Expressive Firedancer
+2 Sanar, Unfinished Genius
+
+4 Vibrant Outburst
+4 Choreographed Sparks
+4 Combustion Technique
+4 Flashback
+3 Firebending Lesson
+2 Stormchaser's Talent
+2 Chase Inspiration
+1 Duel Tactics
+
+4 Spirebluff Canal
+4 Steam Vents
+4 Riverpyre Verge
+3 Mountain
+3 Island
+4 Multiversal Passage
+1 Starting Town
+
+// Sideboard
+3 Abrade
+3 Annul
+3 Slagstorm
+2 Negate
+2 Soul-Guide Lantern
+2 Pyroclasm

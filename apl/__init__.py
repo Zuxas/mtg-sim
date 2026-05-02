@@ -151,6 +151,10 @@ APL_REGISTRY = {
     "golgari":            ("apl.golgari_midrange_standard",   "GolgariMidrangeAPL",   "decks/golgari_midrange_standard.txt"),
     "azoriusmomo":        ("apl.azorius_momo_standard",       "AzoriusMomoAPL",       "decks/azorius_momo_standard.txt"),
     "momo":               ("apl.azorius_momo_standard",       "AzoriusMomoAPL",       "decks/azorius_momo_standard.txt"),
+    "azoriustempo":       ("apl.azorius_tempo_standard",      "AzoriusTempoAPL",      "decks/azorius_tempo_standard.txt"),
+    "tempo":              ("apl.azorius_tempo_standard",      "AzoriusTempoAPL",      "decks/azorius_tempo_standard.txt"),
+    "izzetmaestro":       ("apl.izzet_maestro_standard",      "IzzetMaestroAPL",      "decks/izzet_maestro_standard.txt"),
+    "maestro":            ("apl.izzet_maestro_standard",      "IzzetMaestroAPL",      "decks/izzet_maestro_standard.txt"),
 }
 
 

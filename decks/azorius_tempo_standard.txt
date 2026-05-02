@@ -1,0 +1,37 @@
+// Azorius Tempo - Standard (SOS 2026)
+// Representative build: flash creatures + blue disruption + white removal
+// PT SOS Day 1-2 field share: 2.5%, FWR: 52.3% (5th best)
+// audit:custom_variant -- constructed from SOS card pool knowledge
+// Main: 60 | Sideboard: 15
+
+4 Momo, Friendly Flier
+4 Gran-Gran
+4 Sage of the Skies
+4 Elusive Otter
+4 Voice of Victory
+2 Haliya, Guided by Light
+2 Cosmogrand Zenith
+
+4 Get Lost
+4 Annul
+3 Essence Scatter
+2 No More Lies
+2 Seam Rip
+2 Flow State
+1 Opt
+
+4 Hallowed Fountain
+4 Meticulous Archive
+4 Abandoned Air Temple
+4 Restless Anchorage
+4 Plains
+4 Island
+2 Soulstone Sanctuary
+
+// Sideboard
+4 Doorkeeper Thrull
+3 Sheltered by Ghosts
+3 Flashfreeze
+2 Soul-Guide Lantern
+2 Clarion Conqueror
+1 Rest in Peace

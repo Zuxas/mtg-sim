@@ -131,10 +131,48 @@ TRIGGER_PATTERNS = [
     # ── Landfall variant ─────────────────────────────────────────────
     (re.compile(r"^whenever you (?:play|put) a land,", re.I | re.M), "landfall"),
 
-    # ── Starting turns ───────────────────────────────────────────────
+    # ── Starting turns / combat ──────────────────────────────────────
     (re.compile(r"^at the beginning of (?:each|your) combat(?: on your turn)?,", re.I | re.M), "combat_begin"),
     (re.compile(r"^at the beginning of each (?:other player's|opponent's) (?:upkeep|end step),", re.I | re.M), "upkeep"),
+    (re.compile(r"^at the beginning of your first main phase,", re.I | re.M), "upkeep"),
     (re.compile(r"^the first time (?:you|a source) (?:draws?|deals?) (?:a card|damage) (?:each turn|this turn),", re.I | re.M), "draw_trigger"),
+
+    # ── Named mechanic keywords (DSK / BLB / LCI / DFT / FIN / TLA / SOS) ──
+    # Eerie (DSK): whenever an enchantment you control enters or Room unlocked
+    (re.compile(r"^eerie\s*[—\-]", re.I | re.M), "etb"),
+    # Alliance (LCI): whenever another creature you control enters
+    (re.compile(r"^alliance\s*[—\-]", re.I | re.M), "etb"),
+    # Flurry (DSK): whenever you cast your second spell each turn
+    (re.compile(r"^flurry\s*[—\-]", re.I | re.M), "cast_spell"),
+    # Vivid (various): when this creature enters
+    (re.compile(r"^vivid\s*[—\-]", re.I | re.M), "etb"),
+    # Survival (FIN): at the beginning of your end step, if you gained life
+    (re.compile(r"^survival\s*[—\-]", re.I | re.M), "endstep"),
+    # Firebending N (TLA Avatar): whenever this creature attacks, deal N damage
+    (re.compile(r"^firebending \d+\s*[—\-\(]", re.I | re.M), "attack"),
+    (re.compile(r"^firebending \d+\s*[—\-]", re.I | re.M), "attack"),
+    # Saddle attacks
+    (re.compile(r"^whenever (?:this creature|~) attacks while saddled,", re.I | re.M), "attack"),
+    # Leaves battlefield
+    (re.compile(r"^when (?:this creature|this permanent|~|it) (?:leaves|is removed from) the battlefield,", re.I | re.M), "dies"),
+    # Second draw trigger
+    (re.compile(r"^whenever you draw your second card (?:each turn|this turn),", re.I | re.M), "draw_trigger"),
+    # Expend (DFT racing mechanic)
+    (re.compile(r"^whenever you expend \d+,", re.I | re.M), "cast_spell"),
+    # Whenever an artifact enters under your control
+    (re.compile(r"^whenever an? (?:artifact|equipment) (?:you control )?enters,", re.I | re.M), "etb"),
+    # When enchanted creature is dealt damage / target is dealt damage
+    (re.compile(r"^when(?:ever)? (?:enchanted|equipped) (?:creature|permanent) (?:is|deals|takes),", re.I | re.M), "damage_trigger"),
+    # Whenever you cast a spell with [quality]
+    (re.compile(r"^whenever you cast a spell with (?:mana value|converted mana cost),", re.I | re.M), "cast_spell"),
+    # Another creature you control with [condition]
+    (re.compile(r"^whenever another creature you control (?:with|that has),", re.I | re.M), "etb"),
+    # Prowess reminder text as paragraph starter (strip via keyword_only in pipeline)
+    # Start your engines! (DFT) — mechanical trigger from race
+    (re.compile(r"^start your engines!", re.I | re.M), "etb"),
+    # Limit (FIN) — once per game activation reminder, skip trigger here but register
+    # At the beginning of your next turn
+    (re.compile(r"^at the beginning of your next (?:main phase|upkeep|turn),", re.I | re.M), "upkeep"),
 ]
 
 
@@ -275,6 +313,17 @@ ADAPT_N           = _p(r"\badapt\s+(\d+|\w+)\b")
 CYCLING           = _p(r"\bcycling\s*\{")
 # Level up — activated, no ETB
 LEVEL_UP          = _p(r"\blevel\s+up\s*\{")
+# Enchanted / equipped creature static bonuses
+ENCHANTED_GETS    = _p(r"\benchanted\s+(?:creature|permanent)\s+gets?\s+\+(\d+)/\+(\d+)")
+EQUIPPED_GETS     = _p(r"\bequipped\s+creature\s+gets?\s+\+(\d+)/\+(\d+)")
+# Firebending N damage (TLA Avatar)
+FIREBENDING_DMG   = _p(r"\bfirebending\s+(\d+)\b")
+# "deals damage equal to its power" / "deals X damage to target" variants
+DEALS_POWER_DMG   = _p(r"\bdeals?\s+damage\s+equal\s+to\s+(?:its|their|~'?s?)\s+power\b")
+# "each opponent loses N life" (symmetric drain variant)
+EACH_OPP_LOSES    = _p(r"\beach\s+opponent\s+loses?\s+(\d+|\w+)\s+life\b")
+# "you gain life equal to / you gain N life" broader
+GAIN_LIFE_BROAD   = _p(r"\byou\s+gain\s+(?:life\s+equal\s+to|(\d+|\w+)\s+life)\b")
 
 
 def _qty(m, group=1, default=1):
@@ -537,6 +586,33 @@ def parse_segment(text: str) -> list:
     if EXILE_TGT_SPELL.search(text) and not COUNTER_SPELL.search(text) and not effects:
         effects.append(("scry", {"n": 0}))
 
+    # Enchanted / equipped creature gets +N/+M (aura/equipment bonus)
+    m = ENCHANTED_GETS.search(text) or EQUIPPED_GETS.search(text)
+    if m and not effects:
+        n = int(m.group(1))
+        effects.append(("add_counters", {"n": n, "target": "all_friendly"}))
+
+    # Firebending N (TLA): deal N damage to target creature or player on attack
+    m = FIREBENDING_DMG.search(text)
+    if m and not DAMAGE_ANY.search(text) and not DAMAGE_PLAYER.search(text):
+        n = _qty(m)
+        effects.append(("damage_any", {"n": n}))
+
+    # "deals damage equal to its power" (power-based damage)
+    if DEALS_POWER_DMG.search(text) and not effects:
+        effects.append(("damage_any", {"n": 2}))  # proxy: typical power
+
+    # Each opponent loses N life (drain)
+    m = EACH_OPP_LOSES.search(text)
+    if m and not LOSE_LIFE_N.search(text):
+        effects.append(("lose_life", {"n": _qty(m), "target": "opp"}))
+
+    # Broader gain life (catches "equal to" variants)
+    m = GAIN_LIFE_BROAD.search(text)
+    if m and not GAIN_LIFE_N.search(text):
+        n = _qty(m, default=2)
+        effects.append(("gain_life", {"n": n}))
+
     return effects
 
 
@@ -551,13 +627,33 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
     # Replace pronoun references for easier regex
     text = oracle_text.replace("\r\n", "\n")
     if card_name:
-        # Some cards use their own name; swap in a generic token.
         text = text.replace(card_name, "~")
+
+    # ── Pre-processing ──────────────────────────────────────────────
+    # Modal cards: "Choose one —\n• [mode1]\n• [mode2]"
+    # Strip "Choose one/two/three —" header and treat each bullet as a paragraph.
+    text = re.sub(r"^choose (?:one|two|three|a mode)\s*[—\-]", "", text,
+                  flags=re.I | re.M)
+    # Spree cards: "+ {cost} — [mode]" — strip the cost prefix, keep the effect.
+    text = re.sub(r"^\+\s*\{[^}]+\}\s*[—\-]\s*", "", text, flags=re.M)
+    # Normalize bullet points (•) and em-dashes starting a line to nothing.
+    text = re.sub(r"^[•\-]\s+", "", text, flags=re.M)
+
+    # Strip reminder text in parentheses (e.g. "(You may pay...")  so
+    # mechanic keywords like "Prowess" and "Firebending 1" become bare.
+    text = re.sub(r"\s*\([^)]*\)", "", text)
 
     # Split into lines / logical paragraphs
     paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
 
     for para in paragraphs:
+        # Strip common conditional prefixes so the body can be parsed.
+        # "You may [effect]." → "[effect]."
+        para = re.sub(r"^you may\s+", "", para, flags=re.I)
+        # "If you do, [effect]." → "[effect]."
+        para = re.sub(r"^if you do,\s+", "", para, flags=re.I)
+        # "If [condition], [effect]." — strip only simple "if X," clause.
+        para = re.sub(r"^if [^,]{1,60},\s+", "", para, flags=re.I)
         para_lower = para.lower()
         trigger_assigned = None
         body = para

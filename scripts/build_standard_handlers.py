@@ -125,17 +125,30 @@ SKIP_TYPES = {"Basic Land"}
 def ascii_safe(s):
     return s.replace("\n"," | ").encode("ascii", errors="replace").decode("ascii")
 
+# Regex that matches a trigger word in oracle text.
+# Cards with NO trigger word are pure static abilities — no handler needed.
+HAS_TRIGGER = re.compile(r'\bwhen(?:ever)?\b|\bat the beginning\b|\bat end\b', re.I)
+
 def keyword_only(oracle):
+    """True if oracle text contains only keywords, static abilities, and reminder text."""
+    # Quick win: if there's no trigger word at all, this card has no ETB/spell effect.
+    if not HAS_TRIGGER.search(oracle):
+        return True
+    # Otherwise strip known keywords + reminder text and check if anything's left.
     stripped = re.sub(
         r'\b(flying|haste|vigilance|trample|menace|deathtouch|lifelink|'
         r'first strike|double strike|flash|ward|hexproof|indestructible|'
         r'reach|protection|changeling|convoke|prowess|cascade|cycling|'
         r'kicker|undying|persist|riot|adapt|boast|foretell|learn|'
         r'magecraft|ward \d+|skulk|annihilator \d+|devoid|phasing|'
-        r'defender|banding|shroud|regenerate|fear|landwalk|rampage)'
-        r'|^[A-Z][a-z]+ \d+$',  # "Ward 2", "Annihilator 4" etc.
-        '', oracle, flags=re.IGNORECASE
-    ).strip(' \n|—•(),./')
+        r'defender|banding|shroud|regenerate|fear|landwalk|rampage|'
+        r'equip \{[^}]+\}|equip \d+|crew \d+|saddle \d+|disguise \{[^}]+\}|'
+        r'plot \{[^}]+\}|bargain|ninjutsu \{[^}]+\}|evoke \{[^}]+\}|'
+        r'affinity for \w+|fading \d+|vanishing \d+|plainscycling \{[^}]+\})'
+        r'|\([^)]+\)'  # strip all reminder text in parentheses
+        r'|^[A-Z][a-z]+ \d+$',
+        '', oracle, flags=re.IGNORECASE | re.MULTILINE
+    ).strip(' \n|—•(),./0123456789{} ')
     return not stripped
 
 # ── Process all cards ─────────────────────────────────────────────────────────
@@ -168,13 +181,19 @@ for set_code in STANDARD_SETS:
         if name in ALREADY or name.lower() in ALREADY:
             already.append((name, set_code)); continue
 
-        # No oracle / keyword only
-        if not oracle or keyword_only(oracle):
-            no_effect.append(name); continue
-
         # Lands (engine handles mana production)
         if "Land" in type_line and "Creature" not in type_line:
             skipped.append(name); continue
+
+        is_spell_type = any(t in type_line for t in ("Instant", "Sorcery"))
+
+        # No oracle / keyword only.
+        # Instants and sorceries always have an effect (they resolve as spells),
+        # so only apply keyword_only filtering to permanents.
+        if not oracle:
+            no_effect.append(name); continue
+        if not is_spell_type and keyword_only(oracle):
+            no_effect.append(name); continue
 
         # Oracle parser
         try:

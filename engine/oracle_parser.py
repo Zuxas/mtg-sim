@@ -231,6 +231,20 @@ TRIGGER_PATTERNS = [
     (re.compile(r"^whenever you cast (?:your\s+first\s+)?(?:an?\s+)?spell with \{[Xx]\}\b", re.I | re.M), "cast_spell"),
     # Whenever one or more creatures you control deal combat damage to a player
     (re.compile(r"^whenever one or more creatures you control deal combat damage to (?:a player|an opponent),", re.I | re.M), "combat_damage"),
+    # Whenever an enchantment you control enters (eerie variant without keyword)
+    (re.compile(r"^whenever an? enchantment (?:you control )?enters(?: the battlefield)?,", re.I | re.M), "etb"),
+    # Whenever you tap a land for mana (land tap trigger)
+    (re.compile(r"^whenever you tap (?:a|an) (?:land|basic land) for mana,", re.I | re.M), "cast_spell"),
+    # Whenever this Vehicle attacks
+    (re.compile(r"^whenever (?:this vehicle|~) attacks,", re.I | re.M), "attack"),
+    # Whenever a token you control enters/attacks/dies/is created
+    (re.compile(r"^whenever (?:a|one or more) tokens? you control (?:enters?|attacks?|dies?|is created),", re.I | re.M), "etb"),
+    # Whenever you put one or more counters on a permanent (proliferate-like)
+    (re.compile(r"^whenever you put (?:a|one or more) (?:\+1/\+1\s+)?counters? on (?:a|~|this|target),", re.I | re.M), "etb"),
+    # At the beginning of your draw step / first main phase
+    (re.compile(r"^at the beginning of your (?:draw step|first main phase),", re.I | re.M), "upkeep"),
+    # Whenever a player casts their [Nth] spell each turn
+    (re.compile(r"^whenever (?:a player|you) cast(?:s)? (?:their|your)\s+(?:first|second|third) spell (?:each turn|this turn),", re.I | re.M), "cast_spell"),
     # Whenever this creature becomes tapped
     (re.compile(r"^whenever (?:this creature|~) becomes? tapped,", re.I | re.M), "etb"),
     # Whenever this creature deals damage (broader)
@@ -424,6 +438,24 @@ EXTRA_LAND         = _p(r"\bplay\s+(?:an?\s+)?additional\s+land\b")
 # "each player draws" / "each player discards"
 EACH_PLAYER_DRAWS  = _p(r"\beach\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
 EACH_PLAYER_DISC   = _p(r"\beach\s+player\s+discards?\s+(?:their\s+hand|\d+|\w+\s+cards?)\b")
+# "Tap all creatures [an opponent controls / you don't control]" (board tap/stasis)
+TAP_ALL_CREATURES  = _p(r"\btap\s+all\s+(?:creatures|creatures\s+(?:an\s+opponent\s+controls|you\s+don'?t\s+control))\b")
+# "You get N poison counters" or "target player gets N poison counters"
+POISON_COUNTER     = _p(r"\b(?:you|target\s+player|target\s+opponent)\s+gets?\s+(?:\d+|\w+)\s+poison\s+counters?\b")
+# Return target [enchantment/artifact/permanent] to [hand/library/play]
+RETURN_TGT_BROAD   = _p(r"\breturn\s+target\s+(?:enchantment|artifact|noncreature|instant or sorcery)\s+(?:card\s+)?(?:from\s+(?:your|a)\s+graveyard\s+)?to\s+(?:your|its\s+owner'?s?)\s+hand\b")
+# "Create N [type] tokens" where N >= 2 (multi-token creation not caught)
+CREATE_MULTI_TOKEN = _p(r"\bcreates?\s+(?:two|three|four|five|\d+)\s+(?:\d+/\d+\s+)?(?:\w+\s+){1,4}creature\s+tokens?\b")
+# Investigate multiple times / specific triggers
+INVESTIGATE_N      = _p(r"\binvestigate\s+(?:twice|three\s+times?|\d+\s+times?)\b")
+# You may put [card type] from hand onto battlefield (free play)
+FREE_PLAY          = _p(r"\byou\s+may\s+put\s+(?:a|an|target|\w+)\s+(?:land|creature|artifact|enchantment|permanent)\s+card\s+from\s+(?:your\s+)?hand\s+onto\s+the\s+battlefield\b")
+# "Destroy all [type]" (mass removal variants)
+DESTROY_ALL_TYPE   = _p(r"\bdestroy\s+all\s+(?:artifacts?|enchantments?|nonlands?|noncreature|tokens?)\b")
+# "Exile all cards from all graveyards" (GY wipe)
+EXILE_ALL_GY       = _p(r"\bexile\s+all\s+(?:cards?\s+from|permanents?\s+from)\s+(?:all\s+)?graveyards?\b")
+# "[Creature] can't be the target of spells..." (hexproof-like reminder)
+HEXPROOF_REMINDER  = _p(r"\bcan'?t\s+be\s+the\s+target\s+of\s+spells\b")
 # Role token (WOE): "create a [Wicked/Cursed/Monster/Royal/Sorcerer/Young Hero] Role token"
 ROLE_TOKEN        = _p(r"\bcreates?\s+a\s+(?:wicked|cursed|monster|royal|sorcerer|young hero|instrument of the machine)\s+role\s+token\b")
 # You get an emblem (planeswalker ultimate — register as big effect proxy)
@@ -764,6 +796,40 @@ def parse_segment(text: str) -> list:
     # Put +1/+1 counters on each creature you control (mass pump)
     if PUT_COUNTERS_EACH.search(text) and not ADD_COUNTER.search(text):
         effects.append(("add_counters", {"n": 1, "target": "all_friendly"}))
+
+    # Tap all creatures (board stasis / tap-all effect)
+    if TAP_ALL_CREATURES.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))  # stasis: no goldfish value (no blockers anyway)
+
+    # Poison counters (Phyrexian mechanic — register as damage proxy)
+    m = POISON_COUNTER.search(text)
+    if m and not effects:
+        effects.append(("damage_player", {"n": 2, "target": "opp"}))
+
+    # Return target enchantment/artifact/etc from GY to hand (broader GY recursion)
+    if RETURN_TGT_BROAD.search(text) and not RETURN_GY_HAND.search(text) and not RETURN_GY_HAND2.search(text):
+        effects.append(("return_gy_to_hand", {"filter_type": "any"}))
+
+    # Create N tokens (multi-token creation)
+    m = CREATE_MULTI_TOKEN.search(text)
+    if m and not CREATE_CR_TOKEN.search(text) and not CREATE_COPY_TOKEN.search(text):
+        effects.append(("create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": []}))
+
+    # Investigate N times
+    if INVESTIGATE_N.search(text) and not INVESTIGATE.search(text):
+        effects.append(("draw", {"n": 2}))
+
+    # Free play from hand (put creature/land onto battlefield without paying)
+    if FREE_PLAY.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))  # proxy: playing for free = card advantage
+
+    # Destroy all [type] (mass removal)
+    if DESTROY_ALL_TYPE.search(text) and not DESTROY_ALL_CR.search(text):
+        effects.append(("destroy_all_creatures", {}))
+
+    # Exile all cards from graveyards (GY wipe)
+    if EXILE_ALL_GY.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))  # GY wipe: no direct goldfish value
 
     # Role token (WOE aura tokens)
     if ROLE_TOKEN.search(text) and not effects:

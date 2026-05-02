@@ -203,6 +203,30 @@ TRIGGER_PATTERNS = [
     (re.compile(r"^collect evidence\s+\d+", re.I | re.M), "spell"),
     # Whenever a player discards a card
     (re.compile(r"^whenever (?:a player|an opponent) discards? (?:a|one or more) cards?,", re.I | re.M), "dies"),
+    # Whenever a creature you control attacks alone
+    (re.compile(r"^whenever (?:a creature|one or more creatures) you control attacks? alone,", re.I | re.M), "attack"),
+    # Whenever you cast a spell from [exile / anywhere / a zone]
+    (re.compile(r"^whenever you cast (?:a|an) (?:\w+\s+)*spell from (?:exile|anywhere|your graveyard),", re.I | re.M), "cast_spell"),
+    # At the beginning of each player's draw step
+    (re.compile(r"^at the beginning of each player'?s? (?:draw step|upkeep|turn),", re.I | re.M), "draw_trigger"),
+    # When enchanted creature is dealt damage / destroyed
+    (re.compile(r"^when(?:ever)? enchanted (?:creature|permanent) (?:is dealt|would be dealt) (?:combat )?damage,", re.I | re.M), "damage_trigger"),
+    # Whenever this creature blocks or becomes blocked
+    (re.compile(r"^whenever (?:this creature|~) blocks? or becomes? blocked,?", re.I | re.M), "attack"),
+    # Whenever you discard one or more cards
+    (re.compile(r"^whenever you discard (?:one or more|a) cards?,", re.I | re.M), "dies"),
+    # Whenever a creature is dealt damage (global damage trigger)
+    (re.compile(r"^whenever (?:a|any) creature is dealt damage,", re.I | re.M), "damage_trigger"),
+    # Whenever one or more creatures leave the battlefield
+    (re.compile(r"^whenever one or more creatures? (?:leave|leaves) the battlefield,", re.I | re.M), "dies"),
+    # Whenever you untap one or more permanents
+    (re.compile(r"^whenever you untap (?:one or more|a|an) permanents?,", re.I | re.M), "etb"),
+    # At the beginning of each player's end step
+    (re.compile(r"^at the beginning of (?:each|every) (?:player'?s?\s+)?end step,", re.I | re.M), "endstep"),
+    # Whenever this creature or another [type] you control [action]
+    (re.compile(r"^whenever (?:this creature|~) or another (?:\w+\s+)*(?:you\s+control\s+)?(?:enters?|attacks?|dies?),", re.I | re.M), "etb"),
+    # Whenever a nontoken [type] creature you control
+    (re.compile(r"^whenever a nontoken(?:,\s*non-\w+)?\s+creature you control (?:enters?|attacks?|dies?),", re.I | re.M), "etb"),
     # Whenever this creature becomes tapped
     (re.compile(r"^whenever (?:this creature|~) becomes? tapped,", re.I | re.M), "etb"),
     # Whenever this creature deals damage (broader)
@@ -392,6 +416,16 @@ EXTRA_LAND         = _p(r"\bplay\s+(?:an?\s+)?additional\s+land\b")
 # "each player draws" / "each player discards"
 EACH_PLAYER_DRAWS  = _p(r"\beach\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
 EACH_PLAYER_DISC   = _p(r"\beach\s+player\s+discards?\s+(?:their\s+hand|\d+|\w+\s+cards?)\b")
+# Role token (WOE): "create a [Wicked/Cursed/Monster/Royal/Sorcerer/Young Hero] Role token"
+ROLE_TOKEN        = _p(r"\bcreates?\s+a\s+(?:wicked|cursed|monster|royal|sorcerer|young hero|instrument of the machine)\s+role\s+token\b")
+# You get an emblem (planeswalker ultimate — register as big effect proxy)
+EMBLEM            = _p(r"\byou\s+get\s+an\s+emblem\b")
+# You take an extra turn / additional combat phase
+EXTRA_TURN        = _p(r"\byou\s+(?:take\s+an?\s+extra\s+turn|get\s+an?\s+additional\s+(?:combat|main)\s+phase)\b")
+# It / this becomes a [type] creature until EOT (animating artifacts/lands)
+BECOMES_CREATURE  = _p(r"\b(?:it|~|this (?:permanent|card|artifact|land))\s+becomes?\s+a\s+(?:\d+/\d+\s+)?(?:\w+\s+)*creature\b")
+# "For each [X], [effect]" — scaling effect (gets +N/+M, deals N damage, etc.)
+FOR_EACH_SCALE    = _p(r"\bfor\s+each\s+(?:\w+\s+){1,5}(?:you\s+control|in\s+your|under\s+your|you\s+own|among\s+cards)\b")
 # Exile target permanent/creature from battlefield (removal)
 EXILE_TGT_PERM    = _p(r"\bexile\s+target\s+(?:creature|artifact|enchantment|permanent|nonland permanent|planeswalker)\b")
 # Put on top of library (minor — proxy as scry)
@@ -722,6 +756,26 @@ def parse_segment(text: str) -> list:
     # Put +1/+1 counters on each creature you control (mass pump)
     if PUT_COUNTERS_EACH.search(text) and not ADD_COUNTER.search(text):
         effects.append(("add_counters", {"n": 1, "target": "all_friendly"}))
+
+    # Role token (WOE aura tokens)
+    if ROLE_TOKEN.search(text) and not effects:
+        effects.append(("create_token", {"count": 1, "power": "0", "toughness": "1", "keywords": []}))
+
+    # You get an emblem (planeswalker ultimate — proxy: big damage)
+    if EMBLEM.search(text) and not effects:
+        effects.append(("damage_player", {"n": 5, "target": "opp"}))
+
+    # Extra turn / combat phase (register as big advantage — proxy: draw)
+    if EXTRA_TURN.search(text) and not effects:
+        effects.append(("draw", {"n": 2}))
+
+    # "It/this becomes a creature" (animate permanent — register as counter)
+    if BECOMES_CREATURE.search(text) and not effects:
+        effects.append(("add_counters", {"n": 1, "target": "self"}))
+
+    # For each [X] you control: scaling effect (proxy: +2 to whatever primary effect is)
+    if FOR_EACH_SCALE.search(text) and not effects:
+        effects.append(("add_counters", {"n": 2, "target": "self"}))
 
     # Named token creation (e.g. "create Voja Fenstalker, a legendary 5/5...")
     if CREATE_NAMED_TOKEN.search(text) and not CREATE_CR_TOKEN.search(text):

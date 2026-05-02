@@ -371,6 +371,27 @@ GAIN_CONTROL      = _p(r"\byou\s+gain\s+control\s+of\s+target\b")
 TGT_PLAYER_DRAWS  = _p(r"\btarget\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
 # Return up to N targets to hand (mass bounce)
 RETURN_UP_TO      = _p(r"\breturn\s+(?:up\s+to\s+)?(?:\d+|\w+)\s+target\s+(?:creature|permanent)s?\s+to\s+(?:their|its)\s+owner'?s?\s+hands?\b")
+# Broader bounce: "return target [creature or Vehicle / artifact or creature] to hand"
+BOUNCE_BROAD      = _p(r"\breturn\s+target\s+(?:creature\s+or\s+\w+|\w+\s+or\s+creature|nonland\s+permanent|permanent)\s+(?:(?:you|an\s+opponent|a\s+player|defending\s+player)\s+controls?\s+)?to\s+(?:its|their)\s+owner'?s?\s+hand\b")
+# Self life loss: "you lose N life"
+SELF_LOSE_LIFE    = _p(r"\byou\s+lose\s+(\d+|\w+)\s+life\b")
+# Exile-until-nonland (cascade/discover variant): "exile cards from top until you exile a nonland card"
+EXILE_UNTIL       = _p(r"\bexile\s+cards?\s+from\s+the\s+top\s+of\s+your\s+library\s+until\b")
+# Named token: "create [Name], a legendary N/N ... creature token"
+CREATE_NAMED_TOKEN = _p(r"\bcreates?\s+[A-Z][a-zA-Z',\s]+,\s+a\s+(?:legendary\s+)?(?:\d+)/(?:\d+)\s+.*?creature\s+tokens?\b")
+# +1/+1 counter on a named target (TMNT: "put a +1/+1 counter on Donatello")
+ADD_COUNTER_NAMED  = _p(r"\bputs?\s+(?:a|an|one|\d+)\s+\+1/\+1\s+counters?\s+on\s+[A-Z][a-z]+\b")
+# Discard all / hand and redraw (Wheel of Fortune effect)
+WHEEL_EFFECT       = _p(r"\bdiscard\s+(?:your\s+hand|all\s+cards\s+in\s+your\s+hand),\s+then\s+draws?\b")
+# Gains [keyword] until your next turn (extended grant duration)
+GRANT_KW_NEXT_TURN = _p(r"\bgains?\s+(?:flying|trample|first strike|double strike|deathtouch|lifelink|haste|hexproof|reach|indestructible|menace|vigilance)\s+until\s+your\s+next\s+turn\b")
+# Broader power/toughness debuff: "[creature] gets -N/-0 or -N/-N" (flexible wording)
+DEBUFF_BROAD       = _p(r"\bgets?\s+-(\d+)/-\d+\s+(?:and\s+loses?\s+\w+\s+)?until\s+(?:end\s+of\s+turn|your\s+next\s+turn)\b")
+# Plays an additional land each turn (land bonus)
+EXTRA_LAND         = _p(r"\bplay\s+(?:an?\s+)?additional\s+land\b")
+# "each player draws" / "each player discards"
+EACH_PLAYER_DRAWS  = _p(r"\beach\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
+EACH_PLAYER_DISC   = _p(r"\beach\s+player\s+discards?\s+(?:their\s+hand|\d+|\w+\s+cards?)\b")
 # Exile target permanent/creature from battlefield (removal)
 EXILE_TGT_PERM    = _p(r"\bexile\s+target\s+(?:creature|artifact|enchantment|permanent|nonland permanent|planeswalker)\b")
 # Put on top of library (minor — proxy as scry)
@@ -701,6 +722,54 @@ def parse_segment(text: str) -> list:
     # Put +1/+1 counters on each creature you control (mass pump)
     if PUT_COUNTERS_EACH.search(text) and not ADD_COUNTER.search(text):
         effects.append(("add_counters", {"n": 1, "target": "all_friendly"}))
+
+    # Named token creation (e.g. "create Voja Fenstalker, a legendary 5/5...")
+    if CREATE_NAMED_TOKEN.search(text) and not CREATE_CR_TOKEN.search(text):
+        effects.append(("create_token", {"count": 1, "power": "3", "toughness": "3", "keywords": []}))
+
+    # +1/+1 counter on a named target (TMNT/IP cards)
+    if ADD_COUNTER_NAMED.search(text) and not ADD_COUNTER.search(text) and not ADD_COUNTER_TGT.search(text):
+        effects.append(("add_counters", {"n": 1, "target": "self"}))
+
+    # Self life loss ("you lose N life")
+    m = SELF_LOSE_LIFE.search(text)
+    if m and not LOSE_LIFE_N.search(text):
+        effects.append(("lose_life", {"n": _qty(m), "target": "self"}))
+
+    # Exile-until-nonland (cascade proxy)
+    if EXILE_UNTIL.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Broader bounce (creature or Vehicle, defender controls, etc.)
+    if BOUNCE_BROAD.search(text) and not BOUNCE_TGT.search(text):
+        effects.append(("bounce_to_hand", {}))
+
+    # Wheel effect (discard hand, draw N)
+    if WHEEL_EFFECT.search(text) and not DRAW_DISCARD.search(text):
+        effects.append(("draw", {"n": 4}))  # proxy: net card advantage
+
+    # Extended keyword grant (until your next turn)
+    if GRANT_KW_NEXT_TURN.search(text) and not GRANT_KEYWORD.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
+
+    # Broader debuff (gets -N/-M and loses [keyword])
+    m = DEBUFF_BROAD.search(text)
+    if m and not SHRINK_TGT.search(text) and not DEBUFF_POWER.search(text):
+        n = int(m.group(1))
+        effects.append(("damage_creature", {"n": n, "target": "opp_biggest"}))
+
+    # Extra land drop each turn
+    if EXTRA_LAND.search(text) and not effects:
+        effects.append(("add_mana", {"n": 1}))  # proxy: extra land = extra mana
+
+    # Each player draws N
+    m = EACH_PLAYER_DRAWS.search(text)
+    if m and not DRAW_N.search(text) and not DRAW_ONE_ALT.search(text):
+        effects.append(("draw", {"n": _qty(m)}))
+
+    # Each player discards (Wheel-style mass discard)
+    if EACH_PLAYER_DISC.search(text) and not OPP_DISCARDS.search(text):
+        effects.append(("discard", {"n": 1, "target": "opp"}))
 
     # Keyword grant: "[creature] gains [keyword] until EOT" — register as no-op
     if GRANT_KEYWORD.search(text) and not effects:

@@ -159,7 +159,15 @@ def keyword_only(oracle):
         r'target creature\'?s? owner puts it on top|'
         r'this spell costs \{[^}]+\} (?:less|more) to cast|'
         r'spree \(|bargain \(|limit \(|impending|'
-        r'gain control of target creature until end of turn)'
+        r'gain control of target creature until end of turn|'
+        r'job select\b|'                          # FIN Final Fantasy class selection
+        r'max speed\s*[—\-]|'                     # DFT Aetherdrift racing
+        r'islandcycling \{[^}]+\}|'               # cycling variant keywords
+        r'swampcycling \{[^}]+\}|mountaincycling \{[^}]+\}|'
+        r'forestcycling \{[^}]+\}|plainscycling \{[^}]+\}|'
+        r'instant and sorcery spells you cast|'   # cost-reduction static
+        r'tap enchanted creature|'                 # aura tap-lock
+        r'a deck can have any number)'             # rule override text
         r'|\([^)]+\)'  # strip all reminder text in parentheses
         r'|^[A-Z][a-z]+ \d+$',
         '', oracle, flags=re.IGNORECASE | re.MULTILINE

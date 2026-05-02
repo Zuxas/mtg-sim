@@ -784,8 +784,12 @@ try:
 except Exception as _e:
     print(f"[card_effects] verified handlers failed to load: {_e}")
 
-# Auto-generated SOS set handlers (setdefault — hand-written entries win).
+# Auto-generated set handlers (setdefault — hand-written entries always win).
+# sos_auto_handlers: SOS-specific, generated with explicit card list.
+# standard_auto_handlers: all 17 Standard sets from oracle bulk.
+# Both use setdefault so order doesn't matter; union covers more cards.
 try:
-    import engine.sos_auto_handlers  # noqa: F401
+    import engine.sos_auto_handlers       # noqa: F401
+    import engine.standard_auto_handlers  # noqa: F401
 except Exception as _e:
-    print(f"[card_effects] SOS auto handlers failed to load: {_e}")
+    print(f"[card_effects] auto handlers failed to load: {_e}")

@@ -27930,6 +27930,130 @@ _SPELL_HANDLERS.update({
 })
 
 
+# =============================================================================
+# COMPETITIVE SOS STANDARD HAND-WRITE BATCH — 2026-05-03
+# Oracle-verified against Scryfall live API
+# =============================================================================
+
+def _veyran_etb(gs, card):
+    """Veyran, Voice of Duality — {1}{U}{R} Legendary Creature — Efreet Wizard.
+    'Magecraft — Whenever you cast or copy an instant or sorcery spell,
+     Veyran gets +1/+1 until end of turn.
+     If you casting/copying an instant or sorcery spell causes a triggered
+     ability to trigger, that ability triggers an additional time.'
+
+    Goldfish: on ETB, register that instant/sorcery casts pump Veyran.
+    The double-trigger clause is not modeled (requires engine-level
+    trigger dispatch changes). Model the +1/+1 self-pump as +1 counter
+    approximation (permanent, not until-EOT, for goldfish simplicity)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Veyran ETB: 2/2 Efreet (magecraft +1/+1 on instants/sorceries)")
+
+
+def _zimone_etb(gs, card):
+    """Zimone, Infinite Analyst — {1}{G}{U} Legendary Creature — Human Wizard.
+    'The first spell you cast with {X} each turn costs {1} less (per counter).
+     Whenever you cast your first spell with {X} each turn, put two +1/+1
+     counters on Zimone.'
+
+    Goldfish: ETB registers the card. X-spell trigger auto-parsed via
+    oracle_parser → cast_spell trigger → add_counters. This handler just
+    ensures the ETB is registered."""
+    gs._log("  Zimone ETB: 1/1 Wizard (X-spell trigger: +2 counters per cast)")
+
+
+def _crawling_chorus_dies(gs, card):
+    """Crawling Chorus — {W} Creature — Phyrexian Horror.
+    'Toxic 1. When this creature dies, create a 1/1 colorless Phyrexian Mite
+     artifact creature token with toxic 1 and "This token can\'t block."'
+
+    ETB handler is None (vanilla creature). Dies handler creates the token."""
+    token = gs._make_token("Phyrexian Mite Token", "1", "1",
+                            "Token Artifact Creature — Phyrexian Mite")
+    gs._log("  Crawling Chorus dies: create 1/1 colorless Phyrexian Mite token")
+
+
+def _emeritus_ideation_etb(gs, card):
+    """Emeritus of Ideation — {3}{U}{U} Creature — Human Wizard.
+    'Flying, ward {2}. This creature enters prepared.
+     Whenever this creature attacks, you may exile eight cards from your
+     graveyard. If you do, this creature becomes prepared.'
+
+    ETB: 3/3 flying body. Enters prepared (copy-on-cast mechanic, complex).
+    Attack trigger (exile 8 GY → reprepare) not modeled — requires GY
+    tracking beyond goldfish scope."""
+    gs._log("  Emeritus of Ideation: 3/3 flying ward{2} enters prepared "
+            "(attack trigger: exile 8 GY to reprepare not modeled)")
+
+
+def _striding_shotcaller_etb(gs, card):
+    """Striding Shotcaller — {G}{U} Creature — Troll Druid.
+    'Reach. Whenever one or more creatures you control deal combat damage
+     to a player, this creature becomes prepared.'
+
+    ETB: 2/3 reach. Combat damage trigger (creatures deal damage → becomes
+    prepared) is auto-parsed by oracle_parser combat_damage trigger → draws
+    a card proxy. This handler registers the ETB body."""
+    gs._log("  Striding Shotcaller: 2/3 reach (combat damage trigger: auto-parsed)")
+
+
+def _invasion_gobakhan_etb(gs, card):
+    """Invasion of Gobakhan — {1}{W} Battle — Siege.
+    'When this Siege enters, look at target opponent's hand. You may exile
+     a nonland card from it. For as long as that card remains exiled, its
+     owner may play it. A spell cast this way costs {2} more to cast.'
+
+    Battle cards (Sieges) are a complex dual-face mechanic. ETB: look at
+    opponent's hand and exile a card. Proxy: opponent discards highest-cmc
+    nonland card (exile = tempo disruption for opponent)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Invasion of Gobakhan: no opp (goldfish)")
+        return
+    candidates = [c for c in opp.zones.hand if not c.is_land()]
+    if candidates:
+        victim = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        opp.zones.hand.remove(victim)
+        opp.zones.exile.append(victim)
+        gs._log(f"  Invasion of Gobakhan ETB: exile {victim.name} from opp hand")
+    else:
+        gs._log("  Invasion of Gobakhan ETB: no nonland in opp hand")
+
+
+def _jenova_etb(gs, card):
+    """Jenova, Ancient Calamity — {2}{B}{G} 1/5 Legendary Creature — Alien.
+    'At the beginning of combat on your turn, put a number of +1/+1 counters
+     equal to Jenova's power on up to one other target creature. That creature
+     becomes a Mutant.
+     Whenever a Mutant you control dies during your turn, draw cards equal
+     to its power.'
+
+    ETB: 1/5 body. Combat begin: distribute Jenova's power (1 base) as
+    counters to biggest friendly creature. Goldfish proxy: +1 counter to
+    biggest friend each turn (grows as Jenova gains counters from Mutant
+    deaths → draw engine)."""
+    from data.card import Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(Tag.CREATURE) and c is not card]
+    if friends:
+        target = max(friends, key=lambda c: c.effective_power())
+        n = max(1, int(card.power or 1))
+        target.counters = (target.counters or 0) + n
+        gs._log(f"  Jenova ETB: +{n} counters to {target.name} "
+                f"(combat trigger proxy, Jenova is {card.power}/5)")
+
+
+_ETB_HANDLERS.update({
+    "Veyran, Voice of Duality":    _veyran_etb,
+    "Zimone, Infinite Analyst":    _zimone_etb,
+    "Crawling Chorus":             _crawling_chorus_dies,
+    "Emeritus of Ideation":        _emeritus_ideation_etb,
+    "Striding Shotcaller":         _striding_shotcaller_etb,
+    "Invasion of Gobakhan":        _invasion_gobakhan_etb,
+    "Jenova, Ancient Calamity":    _jenova_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

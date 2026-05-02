@@ -167,7 +167,13 @@ def keyword_only(oracle):
         r'forestcycling \{[^}]+\}|plainscycling \{[^}]+\}|'
         r'instant and sorcery spells you cast|'   # cost-reduction static
         r'tap enchanted creature|'                 # aura tap-lock
-        r'a deck can have any number)'             # rule override text
+        r'a deck can have any number|'              # rule override text
+        r'toxic \d+|'                              # Phyrexian toxic keyword
+        r'oil counter|'                            # Phyrexian oil counter mechanic
+        r'poison counter|'                         # poison counter reminder
+        r'proliferate\b|'                          # keyword in paragraph form
+        r'protection from (?:everything|all|each)|'
+        r'this creature can\'?t (?:be blocked|block))'
         r'|\([^)]+\)'  # strip all reminder text in parentheses
         r'|^[A-Z][a-z]+ \d+$',
         '', oracle, flags=re.IGNORECASE | re.MULTILINE

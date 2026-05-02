@@ -227,6 +227,10 @@ TRIGGER_PATTERNS = [
     (re.compile(r"^whenever (?:this creature|~) or another (?:\w+\s+)*(?:you\s+control\s+)?(?:enters?|attacks?|dies?),", re.I | re.M), "etb"),
     # Whenever a nontoken [type] creature you control
     (re.compile(r"^whenever a nontoken(?:,\s*non-\w+)?\s+creature you control (?:enters?|attacks?|dies?),", re.I | re.M), "etb"),
+    # Whenever you cast your first spell with {X} in its mana cost (Zimone)
+    (re.compile(r"^whenever you cast (?:your\s+first\s+)?(?:an?\s+)?spell with \{[Xx]\}\b", re.I | re.M), "cast_spell"),
+    # Whenever one or more creatures you control deal combat damage to a player
+    (re.compile(r"^whenever one or more creatures you control deal combat damage to (?:a player|an opponent),", re.I | re.M), "combat_damage"),
     # Whenever this creature becomes tapped
     (re.compile(r"^whenever (?:this creature|~) becomes? tapped,", re.I | re.M), "etb"),
     # Whenever this creature deals damage (broader)
@@ -385,6 +389,10 @@ NINJUTSU          = _p(r"\bninjutsu\b")
 ADAPT_N           = _p(r"\badapt\s+(\d+|\w+)\b")
 # Broader pump: "target creature [you control] gets +N/+M [and gains X] until EOT"
 PUMP_TGT_BROAD    = _p(r"\btarget\s+(?:creature|permanent)(?:\s+you\s+control)?\s+gets?\s+\+(\d+)/\+(\d+)")
+# Self-pump by card name: "[Any Name] gets +N/+N until end of turn" (magecraft etc.)
+SELF_NAMED_PUMP   = _p(r"\b[A-Z][a-zA-Z',]+\s+gets?\s+\+(\d+)/\+(\d+)\s+until\s+end\s+of\s+turn\b")
+# Whenever you cast [your first / a] spell with {X} in its mana cost
+CAST_X_SPELL      = _p(r"\bwhenever you cast (?:your\s+first\s+)?(?:an?\s+)?spell with \{[Xx]\}\b")
 # Negative pump: "target creature gets -N/-M until EOT"
 SHRINK_TGT        = _p(r"\btarget\s+(?:creature|permanent)\s+gets?\s+-(\d+)/-(\d+)\b")
 # Copy token: "create a token that's a copy of [target creature]"
@@ -867,6 +875,11 @@ def parse_segment(text: str) -> list:
     # Exile target spell (counter-like effect — register as no-op)
     if EXILE_TGT_SPELL.search(text) and not COUNTER_SPELL.search(text) and not effects:
         effects.append(("scry", {"n": 0}))
+
+    # Self-pump by name: "Veyran gets +1/+1 until EOT" (magecraft self-pump)
+    m = SELF_NAMED_PUMP.search(text)
+    if m and not PUMP_TGT.search(text) and not PUMP_TGT_BROAD.search(text):
+        effects.append(("add_counters", {"n": int(m.group(1)), "target": "self"}))
 
     # Broader pump: target creature gets +N/+M (catches "and gains X" variants)
     m = PUMP_TGT_BROAD.search(text)

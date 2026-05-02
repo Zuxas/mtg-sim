@@ -783,3 +783,9 @@ try:
     import engine.card_handlers_verified  # noqa: F401
 except Exception as _e:
     print(f"[card_effects] verified handlers failed to load: {_e}")
+
+# Auto-generated SOS set handlers (setdefault — hand-written entries win).
+try:
+    import engine.sos_auto_handlers  # noqa: F401
+except Exception as _e:
+    print(f"[card_effects] SOS auto handlers failed to load: {_e}")

@@ -203,6 +203,26 @@ TRIGGER_PATTERNS = [
     (re.compile(r"^collect evidence\s+\d+", re.I | re.M), "spell"),
     # Whenever a player discards a card
     (re.compile(r"^whenever (?:a player|an opponent) discards? (?:a|one or more) cards?,", re.I | re.M), "dies"),
+    # Whenever this creature becomes tapped
+    (re.compile(r"^whenever (?:this creature|~) becomes? tapped,", re.I | re.M), "etb"),
+    # Whenever this creature deals damage (broader)
+    (re.compile(r"^whenever (?:this creature|~) deals damage to (?:a player|an opponent|a creature),", re.I | re.M), "combat_damage"),
+    # Whenever this creature is dealt damage
+    (re.compile(r"^whenever (?:this creature|~) is dealt (?:combat )?damage,", re.I | re.M), "combat_damage"),
+    # Whenever you activate an ability
+    (re.compile(r"^whenever you activate an? (?:ability|loyalty ability),", re.I | re.M), "cast_spell"),
+    # Whenever a Villain/Hero/[type] you control does X
+    (re.compile(r"^whenever (?:a|another)\s+\w+\s+you\s+control\s+(?:attacks?|enters?|dies?),", re.I | re.M), "attack"),
+    # Whenever you attack with one or more [type]
+    (re.compile(r"^whenever you attack with (?:one or more|\d+\+?|at least \d+)\s+\w+s?,", re.I | re.M), "attack"),
+    # Whenever this creature or a [type] you control does X
+    (re.compile(r"^whenever (?:this creature or|~or)?\s*(?:another)?\s*\w+\s+you\s+control\s+attacks?,", re.I | re.M), "attack"),
+    # When this creature deals combat damage (variant without "to player")
+    (re.compile(r"^when (?:this creature|~) deals combat damage(?:\s+to a\s+\w+)?,", re.I | re.M), "combat_damage"),
+    # Whenever you commit a crime (OTJ)
+    (re.compile(r"^whenever you commit a crime,", re.I | re.M), "cast_spell"),
+    # Case cards (MKM) — "To solve, [condition]" style
+    (re.compile(r"^when (?:you|this enchantment) (?:solve|is solved),?", re.I | re.M), "etb"),
 ]
 
 
@@ -375,6 +395,20 @@ RENOWN_N          = _p(r"\brenown\s+(\d+|\w+)\b")
 CYCLING           = _p(r"\bcycling\s*\{")
 # Level up — activated, no ETB
 LEVEL_UP          = _p(r"\blevel\s+up\s*\{")
+# Keyword grant: "gains [keyword] until end of turn" — register as no-op
+GRANT_KEYWORD     = _p(r"\bgains?\s+(?:flying|trample|first strike|double strike|deathtouch|lifelink|haste|hexproof|reach|indestructible|menace|vigilance|ward \{[^}]+\})\s+until\s+(?:end\s+of\s+turn|your\s+next\s+turn)\b")
+# Power debuff: "gets -N/-0 until end of turn" (no toughness change)
+DEBUFF_POWER      = _p(r"\bgets?\s+-(\d+)/-0\s+until\s+(?:end\s+of\s+turn|your\s+next\s+turn)\b")
+# All other creatures get -N/-M (sweeper/debuff)
+DEBUFF_ALL        = _p(r"\b(?:all|each)\s+(?:other\s+)?creatures?\s+(?:get|gets?)\s+-(\d+)/-(\d+)\s+until\s+end\s+of\s+turn\b")
+# Destroy up to one target artifact/enchantment
+DESTROY_TGT_ARTENC = _p(r"\bdestroy\s+(?:up\s+to\s+one\s+)?target\s+(?:artifact|enchantment|noncreature artifact|artifact or enchantment)\b")
+# Return creature CARDS from graveyard (broader than REANIMATE)
+RETURN_CR_CARDS_GY = _p(r"\breturn\s+(?:up\s+to\s+(?:\d+|\w+)\s+)?target\s+creature\s+cards?\s+from\s+(?:your|a|target player's)\s+graveyard\s+to\s+(?:the\s+battlefield|your\s+hand)\b")
+# Loses all abilities until end of turn
+LOSES_ABILITIES   = _p(r"\bloses\s+all\s+abilities\s+until\s+end\s+of\s+turn\b")
+# "Other [type] you control get +N/+M" — lord effect
+OTHER_CREATURES_GET = _p(r"\bother\s+(?:\w+\s+)*creatures?\s+you\s+control\s+gets?\s+\+(\d+)/\+(\d+)\b")
 # Enchanted / equipped creature static bonuses
 ENCHANTED_GETS    = _p(r"\benchanted\s+(?:creature|permanent)\s+gets?\s+\+(\d+)/\+(\d+)")
 EQUIPPED_GETS     = _p(r"\bequipped\s+creature\s+gets?\s+\+(\d+)/\+(\d+)")
@@ -667,6 +701,40 @@ def parse_segment(text: str) -> list:
     # Put +1/+1 counters on each creature you control (mass pump)
     if PUT_COUNTERS_EACH.search(text) and not ADD_COUNTER.search(text):
         effects.append(("add_counters", {"n": 1, "target": "all_friendly"}))
+
+    # Keyword grant: "[creature] gains [keyword] until EOT" — register as no-op
+    if GRANT_KEYWORD.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))  # keyword grant: no goldfish damage value
+
+    # Power debuff: target creature gets -N/-0 until EOT
+    m = DEBUFF_POWER.search(text)
+    if m and not SHRINK_TGT.search(text) and not effects:
+        n = int(m.group(1))
+        effects.append(("damage_creature", {"n": n, "target": "opp_biggest"}))
+
+    # All other creatures get -N/-M (sweeper)
+    m = DEBUFF_ALL.search(text)
+    if m and not DESTROY_ALL_CR.search(text):
+        n = int(m.group(1))
+        effects.append(("damage_creature", {"n": n, "target": "each_opp"}))
+
+    # Destroy target artifact or enchantment
+    if DESTROY_TGT_ARTENC.search(text) and not DESTROY_TGT_CR.search(text):
+        effects.append(("destroy", {"target": "opp_biggest_creature"}))
+
+    # Return creature cards from graveyard to hand or battlefield
+    if RETURN_CR_CARDS_GY.search(text) and not REANIMATE.search(text) and not RETURN_GY_HAND.search(text):
+        effects.append(("return_gy_to_hand", {"filter_type": "creature"}))
+
+    # Other [type] you control get +N/+M (lord effect)
+    m = OTHER_CREATURES_GET.search(text)
+    if m and not PUMP_ALL_CTRL.search(text):
+        n = int(m.group(1))
+        effects.append(("add_counters", {"n": n, "target": "all_friendly"}))
+
+    # Loses all abilities until EOT (control effect — register as no-op)
+    if LOSES_ABILITIES.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
 
     # Gain life for each [X] you control
     m = GAIN_LIFE_COUNT.search(text)

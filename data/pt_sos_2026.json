@@ -5239,5 +5239,458 @@
       "player": "Courtiat, Robin",
       "points": 18
     }
-  ]
+  ],
+  "matchup_matrix": {
+    "Izzet Prowess": {
+      "Mono-Green Landfall": {
+        "w": 42,
+        "l": 60,
+        "wr": 41.2
+      },
+      "Izzet Spellementals": {
+        "w": 14,
+        "l": 23,
+        "wr": 37.8
+      },
+      "Izzet Lessons": {
+        "w": 19,
+        "l": 18,
+        "wr": 51.4
+      },
+      "Azorius Momo": {
+        "w": 10,
+        "l": 8,
+        "wr": 55.6
+      },
+      "Jeskai Control": {
+        "w": 13,
+        "l": 5,
+        "wr": 72.2
+      },
+      "Selesnya Landfall": {
+        "w": 8,
+        "l": 11,
+        "wr": 42.1
+      },
+      "Izzet Maestro": {
+        "w": 10,
+        "l": 3,
+        "wr": 76.9
+      },
+      "Golgari Midrange": {
+        "w": 9,
+        "l": 4,
+        "wr": 69.2
+      },
+      "Azorius Tempo": {
+        "w": 3,
+        "l": 6,
+        "wr": 33.3
+      }
+    },
+    "Mono-Green Landfall": {
+      "Izzet Prowess": {
+        "w": 60,
+        "l": 42,
+        "wr": 58.8
+      },
+      "Izzet Spellementals": {
+        "w": 13,
+        "l": 8,
+        "wr": 61.9
+      },
+      "Izzet Lessons": {
+        "w": 8,
+        "l": 10,
+        "wr": 44.4
+      },
+      "Azorius Momo": {
+        "w": 7,
+        "l": 9,
+        "wr": 43.8
+      },
+      "Jeskai Control": {
+        "w": 6,
+        "l": 5,
+        "wr": 54.5
+      },
+      "Selesnya Landfall": {
+        "w": 6,
+        "l": 5,
+        "wr": 54.5
+      },
+      "Izzet Maestro": {
+        "w": 2,
+        "l": 1,
+        "wr": 66.7
+      },
+      "Golgari Midrange": {
+        "w": 1,
+        "l": 3,
+        "wr": 25.0
+      },
+      "Azorius Tempo": {
+        "w": 1,
+        "l": 3,
+        "wr": 25.0
+      }
+    },
+    "Izzet Spellementals": {
+      "Izzet Prowess": {
+        "w": 23,
+        "l": 14,
+        "wr": 62.2
+      },
+      "Mono-Green Landfall": {
+        "w": 8,
+        "l": 13,
+        "wr": 38.1
+      },
+      "Izzet Lessons": {
+        "w": 6,
+        "l": 4,
+        "wr": 60.0
+      },
+      "Azorius Momo": {
+        "w": 4,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Jeskai Control": {
+        "w": 2,
+        "l": 4,
+        "wr": 33.3
+      },
+      "Selesnya Landfall": {
+        "w": 2,
+        "l": 4,
+        "wr": 33.3
+      },
+      "Izzet Maestro": {
+        "w": 3,
+        "l": 3,
+        "wr": 50.0
+      },
+      "Golgari Midrange": {
+        "w": 1,
+        "l": 1,
+        "wr": 50.0
+      },
+      "Azorius Tempo": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      }
+    },
+    "Izzet Lessons": {
+      "Izzet Prowess": {
+        "w": 18,
+        "l": 19,
+        "wr": 48.6
+      },
+      "Mono-Green Landfall": {
+        "w": 10,
+        "l": 8,
+        "wr": 55.6
+      },
+      "Izzet Spellementals": {
+        "w": 4,
+        "l": 6,
+        "wr": 40.0
+      },
+      "Azorius Momo": {
+        "w": 3,
+        "l": 2,
+        "wr": 60.0
+      },
+      "Jeskai Control": {
+        "w": 3,
+        "l": 3,
+        "wr": 50.0
+      },
+      "Selesnya Landfall": {
+        "w": 2,
+        "l": 1,
+        "wr": 66.7
+      },
+      "Izzet Maestro": {
+        "w": 5,
+        "l": 2,
+        "wr": 71.4
+      },
+      "Golgari Midrange": {
+        "w": 2,
+        "l": 1,
+        "wr": 66.7
+      },
+      "Azorius Tempo": {
+        "w": 4,
+        "l": 2,
+        "wr": 66.7
+      }
+    },
+    "Azorius Momo": {
+      "Izzet Prowess": {
+        "w": 8,
+        "l": 10,
+        "wr": 44.4
+      },
+      "Mono-Green Landfall": {
+        "w": 9,
+        "l": 7,
+        "wr": 56.2
+      },
+      "Izzet Spellementals": {
+        "w": 0,
+        "l": 4,
+        "wr": 0.0
+      },
+      "Izzet Lessons": {
+        "w": 2,
+        "l": 3,
+        "wr": 40.0
+      },
+      "Jeskai Control": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Selesnya Landfall": {
+        "w": 0,
+        "l": 3,
+        "wr": 0.0
+      },
+      "Izzet Maestro": {
+        "w": 1,
+        "l": 1,
+        "wr": 50.0
+      },
+      "Golgari Midrange": {
+        "w": 2,
+        "l": 1,
+        "wr": 66.7
+      },
+      "Azorius Tempo": {
+        "w": 0,
+        "l": 2,
+        "wr": 0.0
+      }
+    },
+    "Jeskai Control": {
+      "Izzet Prowess": {
+        "w": 5,
+        "l": 13,
+        "wr": 27.8
+      },
+      "Mono-Green Landfall": {
+        "w": 5,
+        "l": 6,
+        "wr": 45.5
+      },
+      "Izzet Spellementals": {
+        "w": 4,
+        "l": 2,
+        "wr": 66.7
+      },
+      "Izzet Lessons": {
+        "w": 3,
+        "l": 3,
+        "wr": 50.0
+      },
+      "Azorius Momo": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Selesnya Landfall": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Izzet Maestro": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Golgari Midrange": {
+        "w": 4,
+        "l": 1,
+        "wr": 80.0
+      },
+      "Azorius Tempo": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      }
+    },
+    "Selesnya Landfall": {
+      "Izzet Prowess": {
+        "w": 11,
+        "l": 8,
+        "wr": 57.9
+      },
+      "Mono-Green Landfall": {
+        "w": 5,
+        "l": 6,
+        "wr": 45.5
+      },
+      "Izzet Spellementals": {
+        "w": 4,
+        "l": 2,
+        "wr": 66.7
+      },
+      "Izzet Lessons": {
+        "w": 1,
+        "l": 2,
+        "wr": 33.3
+      },
+      "Azorius Momo": {
+        "w": 3,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Jeskai Control": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Izzet Maestro": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Golgari Midrange": {
+        "w": 2,
+        "l": 1,
+        "wr": 66.7
+      },
+      "Azorius Tempo": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      }
+    },
+    "Izzet Maestro": {
+      "Izzet Prowess": {
+        "w": 3,
+        "l": 10,
+        "wr": 23.1
+      },
+      "Mono-Green Landfall": {
+        "w": 1,
+        "l": 2,
+        "wr": 33.3
+      },
+      "Izzet Spellementals": {
+        "w": 3,
+        "l": 3,
+        "wr": 50.0
+      },
+      "Izzet Lessons": {
+        "w": 2,
+        "l": 5,
+        "wr": 28.6
+      },
+      "Azorius Momo": {
+        "w": 1,
+        "l": 1,
+        "wr": 50.0
+      },
+      "Jeskai Control": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Selesnya Landfall": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Azorius Tempo": {
+        "w": 1,
+        "l": 0,
+        "wr": 100.0
+      }
+    },
+    "Golgari Midrange": {
+      "Izzet Prowess": {
+        "w": 4,
+        "l": 9,
+        "wr": 30.8
+      },
+      "Mono-Green Landfall": {
+        "w": 3,
+        "l": 1,
+        "wr": 75.0
+      },
+      "Izzet Spellementals": {
+        "w": 1,
+        "l": 1,
+        "wr": 50.0
+      },
+      "Izzet Lessons": {
+        "w": 1,
+        "l": 2,
+        "wr": 33.3
+      },
+      "Azorius Momo": {
+        "w": 1,
+        "l": 2,
+        "wr": 33.3
+      },
+      "Jeskai Control": {
+        "w": 1,
+        "l": 4,
+        "wr": 20.0
+      },
+      "Selesnya Landfall": {
+        "w": 1,
+        "l": 2,
+        "wr": 33.3
+      }
+    },
+    "Azorius Tempo": {
+      "Izzet Prowess": {
+        "w": 6,
+        "l": 3,
+        "wr": 66.7
+      },
+      "Mono-Green Landfall": {
+        "w": 3,
+        "l": 1,
+        "wr": 75.0
+      },
+      "Izzet Spellementals": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Izzet Lessons": {
+        "w": 2,
+        "l": 4,
+        "wr": 33.3
+      },
+      "Azorius Momo": {
+        "w": 2,
+        "l": 0,
+        "wr": 100.0
+      },
+      "Jeskai Control": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Selesnya Landfall": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      },
+      "Izzet Maestro": {
+        "w": 0,
+        "l": 1,
+        "wr": 0.0
+      }
+    }
+  },
+  "matchup_matrix_source": "@Azorius, PT SOS 2026, all constructed rounds"
 }

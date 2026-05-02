@@ -270,7 +270,7 @@ RETURN_GY_HAND    = _p(r"\breturn\s+target\s+(?:creature|instant|sorcery|permane
 SCRY_N            = _p(r"\bscry\s+(\d+|\w+)")
 
 # Counter
-COUNTER_SPELL     = _p(r"\bcounter\s+target\s+(?:spell|noncreature spell|creature spell)")
+COUNTER_SPELL     = _p(r"\bcounter\s+target\s+(?:spell|noncreature spell|creature spell|spell unless)")
 
 # ── New Standard mechanics (SOS / UB sets / recent sets) ───────────
 # Surveil N — look at top N, put in GY or top. Goldfish proxy: scry.
@@ -350,7 +350,21 @@ GAIN_CONTROL      = _p(r"\byou\s+gain\s+control\s+of\s+target\b")
 # Target player gains control (opponent steal — proxy: no-op register)
 TGT_PLAYER_DRAWS  = _p(r"\btarget\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
 # Return up to N targets to hand (mass bounce)
-RETURN_UP_TO      = _p(r"\breturn\s+(?:up\s+to\s+)?(?:\d+|\w+)\s+target\s+(?:creature|permanent)s?\s+to\s+(?:their|its)\s+owner'?s?\s+hand\b")
+RETURN_UP_TO      = _p(r"\breturn\s+(?:up\s+to\s+)?(?:\d+|\w+)\s+target\s+(?:creature|permanent)s?\s+to\s+(?:their|its)\s+owner'?s?\s+hands?\b")
+# Exile target permanent/creature from battlefield (removal)
+EXILE_TGT_PERM    = _p(r"\bexile\s+target\s+(?:creature|artifact|enchantment|permanent|nonland permanent|planeswalker)\b")
+# Put on top of library (minor — proxy as scry)
+PUT_TOP_LIB       = _p(r"\bput(?:s)?\s+(?:it|~|target \w+|that \w+)\s+on\s+top\s+of\s+(?:its owner's|your|their)\s+library\b")
+# Put cards into hand from library (tutor proxy)
+TUTOR_TO_HAND     = _p(r"\bsearch\s+your\s+library\s+for\s+(?:a|an|up to \w+)?\s*(?:\w+\s+)*card\s*(?:,|and)")
+# Create a token copy of target creature (clone variant)
+COPY_SPELL_TOKEN  = _p(r"\bcopy\s+(?:of\s+)?(?:that\s+spell|target\s+(?:instant|sorcery|spell))\b")
+# "Put N +1/+1 counters on each" / on target — additional counter variant
+PUT_COUNTERS_EACH = _p(r"\bput\s+(?:a|\d+|\w+)\s+\+1/\+1\s+counters?\s+on\s+each\b")
+# Gain life equal to the number of [X] you control / in play
+GAIN_LIFE_COUNT   = _p(r"\byou\s+gain\s+(?:\d+|\w+)\s+life\s+for\s+each\b")
+# "Search your library for a land card and put it into your hand"
+TUTOR_LAND_HAND   = _p(r"\bsearch\s+your\s+library\s+for\s+(?:a|up to \w+)?\s*(?:basic\s+)?land\s+card\s*(?:and\s+)?put\s+(?:it|(?:that|those) cards?)\s+into\s+your\s+hand\b")
 # Target creature fights target creature (fight effect)
 FIGHT             = _p(r"\btarget\s+creature\s+(?:you\s+control\s+)?fights?\s+(?:target|another)")
 # Bolster N — put N counters on weakest friendly creature
@@ -630,6 +644,35 @@ def parse_segment(text: str) -> list:
     if FREE_CAST_PROXY.search(text) and not effects:
         effects.append(("draw", {"n": 1}))
 
+    # Exile target permanent from battlefield (removal — register)
+    if EXILE_TGT_PERM.search(text) and not EXILE_TGT_CR.search(text):
+        effects.append(("exile", {"target": "opp_biggest_creature"}))
+
+    # Put on top of library (tempo effect — proxy as scry 1)
+    if PUT_TOP_LIB.search(text) and not effects:
+        effects.append(("scry", {"n": 1}))
+
+    # Tutor to hand (search library for specific card)
+    if TUTOR_TO_HAND.search(text) and not SEARCH_BASIC.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Search library for land to hand (ramp variant)
+    if TUTOR_LAND_HAND.search(text) and not SEARCH_BASIC.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Copy a spell (storm/fork effects — proxy: fire the spell again, model as draw)
+    if COPY_SPELL_TOKEN.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Put +1/+1 counters on each creature you control (mass pump)
+    if PUT_COUNTERS_EACH.search(text) and not ADD_COUNTER.search(text):
+        effects.append(("add_counters", {"n": 1, "target": "all_friendly"}))
+
+    # Gain life for each [X] you control
+    m = GAIN_LIFE_COUNT.search(text)
+    if m and not GAIN_LIFE_N.search(text):
+        effects.append(("gain_life", {"n": 2}))  # proxy: 2 life average
+
     # Exile target spell (counter-like effect — register as no-op)
     if EXILE_TGT_SPELL.search(text) and not COUNTER_SPELL.search(text) and not effects:
         effects.append(("scry", {"n": 0}))
@@ -656,6 +699,10 @@ def parse_segment(text: str) -> list:
     m = TGT_PLAYER_DRAWS.search(text)
     if m and not DRAW_N.search(text) and not DRAW_ONE_ALT.search(text):
         effects.append(("draw", {"n": _qty(m)}))
+
+    # Counter target spell (register as no-op — prevents hand-write classification)
+    if COUNTER_SPELL.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))  # counterspell: no goldfish gain
 
     # Return up to N creatures to hand (mass bounce)
     if RETURN_UP_TO.search(text) and not BOUNCE_TGT.search(text):
@@ -748,6 +795,10 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
         para = re.sub(r"^if you do,\s+", "", para, flags=re.I)
         # "If [condition], [effect]." — strip only simple "if X," clause.
         para = re.sub(r"^if [^,]{1,60},\s+", "", para, flags=re.I)
+        # "Until end of turn, [effect]." → "[effect]."
+        para = re.sub(r"^until end of turn,\s+", "", para, flags=re.I)
+        # "It gets +N/+N" → "target creature gets +N/+N"
+        para = re.sub(r"^it\s+(gets?|gains?|has|becomes?)\s+", r"target creature \1 ", para, flags=re.I)
         para_lower = para.lower()
         trigger_assigned = None
         body = para

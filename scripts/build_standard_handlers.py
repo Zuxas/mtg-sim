@@ -153,7 +153,13 @@ def keyword_only(oracle):
         r'enchant (?:creature|permanent|land|artifact|player|enchantment)|'
         r'this creature can\'?t (?:block|attack)|'
         r'this creature attacks (?:each|every) (?:turn|combat)|'
-        r'this (?:creature|permanent) doesn\'?t untap)'
+        r'this (?:creature|permanent) doesn\'?t untap|'
+        r'enchanted creature doesn\'?t untap|'
+        r'enchanted creature (?:attacks?|blocks?) (?:each|every) (?:turn|combat)|'
+        r'target creature\'?s? owner puts it on top|'
+        r'this spell costs \{[^}]+\} (?:less|more) to cast|'
+        r'spree \(|bargain \(|limit \(|impending|'
+        r'gain control of target creature until end of turn)'
         r'|\([^)]+\)'  # strip all reminder text in parentheses
         r'|^[A-Z][a-z]+ \d+$',
         '', oracle, flags=re.IGNORECASE | re.MULTILINE

@@ -145,6 +145,12 @@ APL_REGISTRY = {
     "superiordoomsday":   ("apl.superior_doomsday_standard",  "SuperiorDoomsdayAPL",  "decks/superior_doomsday_standard.txt"),
     "doomsday":           ("apl.superior_doomsday_standard",  "SuperiorDoomsdayAPL",  "decks/superior_doomsday_standard.txt"),
     "azoriusaggro":       ("apl.azorius_aggro_standard",      "AzoriusAggroAPL",      "decks/azorius_aggro_standard.txt"),
+    # ── PT SOS 2026 Standard APLs (2026-05-03) ──────────────────────────
+    "selesnyalandfall":   ("apl.selesnya_landfall_standard",  "SelesnyaLandfallAPL",  "decks/selesnya_landfall_standard.txt"),
+    "golgarimidrange":    ("apl.golgari_midrange_standard",   "GolgariMidrangeAPL",   "decks/golgari_midrange_standard.txt"),
+    "golgari":            ("apl.golgari_midrange_standard",   "GolgariMidrangeAPL",   "decks/golgari_midrange_standard.txt"),
+    "azoriusmomo":        ("apl.azorius_momo_standard",       "AzoriusMomoAPL",       "decks/azorius_momo_standard.txt"),
+    "momo":               ("apl.azorius_momo_standard",       "AzoriusMomoAPL",       "decks/azorius_momo_standard.txt"),
 }
 
 

@@ -521,6 +521,39 @@ def on_landfall(gs):
                 c.counters = 0  # reset to avoid repeat trigger
             else:
                 gs._log(f"  Ascension: quest {c.counters}/4")
+        elif c.name == "Mossborn Hydra":
+            # "Landfall — Whenever a land you control enters, double the
+            # number of +1/+1 counters on this creature."
+            # Enters with 1 counter (handled in ETB). Doubling each land
+            # models the exponential growth correctly.
+            if (c.counters or 0) > 0:
+                c.counters = c.counters * 2
+                gs._log(f"  Mossborn Hydra: landfall double counters "
+                        f"-> {c.counters} ({c.counters}/{c.counters})")
+        elif c.name == "Tifa Lockhart":
+            # "Landfall — Whenever a land you control enters, double
+            # Tifa Lockhart's power until end of turn."
+            # Goldfish: model as permanent doubling via power string
+            # (acceptable approximation — resets next game).
+            try:
+                p = int(c.power)
+                c.power = str(p * 2)
+                gs._log(f"  Tifa Lockhart: landfall double power "
+                        f"-> {c.power}/{c.toughness}")
+            except (ValueError, TypeError):
+                pass
+        elif c.name == "Bristly Bill, Spine Sower":
+            # "Landfall — Whenever a land you control enters, put a +1/+1
+            # counter on target creature you control."
+            # Target: biggest creature on board (best use of the trigger).
+            from data.card import Tag as _Tag
+            friends = [x for x in gs.zones.battlefield
+                       if not x.is_land() and x.has(_Tag.CREATURE)]
+            if friends:
+                target = max(friends, key=lambda x: x.effective_power())
+                target.counters = (target.counters or 0) + 1
+                gs._log(f"  Bristly Bill: landfall +1/+1 on "
+                        f"{target.name}")
 
 
 # Back-compat alias — old code may import LANDFALL_TOKEN / ASCENSION.

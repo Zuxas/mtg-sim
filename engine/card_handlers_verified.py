@@ -27659,6 +27659,18 @@ _ETB_HANDLERS.update({
 
 # ── ETB handlers ─────────────────────────────────────────────────────────────
 
+def _mossborn_hydra_etb(gs, card):
+    """Mossborn Hydra — {2}{G} 0/0 Creature — Elemental Hydra.
+    'Trample. This creature enters with a +1/+1 counter on it.
+     Landfall — Whenever a land you control enters, double the number
+     of +1/+1 counters on this creature.'
+
+    ETB: set initial counter to 1 (base P/T is 0/0 + counters).
+    Landfall doubling is handled in card_effects.on_landfall."""
+    card.counters = (card.counters or 0) + 1
+    gs._log(f"  Mossborn Hydra ETB: enters with 1 counter (1/1 trample)")
+
+
 def _emeritus_of_abundance_etb(gs, card):
     """Emeritus of Abundance — {2}{G} 3/4 Creature — Elf Druid.
     'Vigilance. This creature enters prepared.
@@ -27900,6 +27912,7 @@ def _vibrant_outburst(gs, card):
 
 
 _ETB_HANDLERS.update({
+    "Mossborn Hydra":           _mossborn_hydra_etb,
     "Emeritus of Abundance":    _emeritus_of_abundance_etb,
     "Unholy Annex":             _unholy_annex_etb,
     "Unholy Annex // Ritual Chamber": _unholy_annex_etb,   # DFC combined name

@@ -173,6 +173,36 @@ TRIGGER_PATTERNS = [
     # Limit (FIN) — once per game activation reminder, skip trigger here but register
     # At the beginning of your next turn
     (re.compile(r"^at the beginning of your next (?:main phase|upkeep|turn),", re.I | re.M), "upkeep"),
+    # "at the beginning of combat on your turn" (common variant missed by earlier pattern)
+    (re.compile(r"^at the beginning of combat on your turn,", re.I | re.M), "combat_begin"),
+    # Bargain (WOE) — sacrifice a token/artifact/enchantment for a bonus. Treat as ETB.
+    (re.compile(r"^bargain\s*[—\-]", re.I | re.M), "etb"),
+    # Impending N (DSK/SOS) — countdown, enters with N time counters, becomes creature
+    (re.compile(r"^impending\s+\d+\s*[—\-]", re.I | re.M), "etb"),
+    # Increment (SOS) — cast trigger that scales counter
+    (re.compile(r"^increment\s*[—\-]?", re.I | re.M), "cast_spell"),
+    # Whenever this creature or another creature you control [condition]
+    (re.compile(r"^whenever (?:this creature or another|this or another) creature (?:you control )?(?:enters|attacks|dies),", re.I | re.M), "etb"),
+    # Whenever a creature you control with [quality] attacks
+    (re.compile(r"^whenever a creature you control with (?:the greatest|power|toughness|a \+1/\+1) (?:counter|power|among)?,?", re.I | re.M), "attack"),
+    # Whenever you cast a spell with mana value N or greater
+    (re.compile(r"^whenever you cast a spell with (?:mana value|converted mana cost) \d+\s*(?:or (?:greater|more))?,", re.I | re.M), "cast_spell"),
+    # Whenever this creature attacks while you control [condition]
+    (re.compile(r"^whenever (?:this creature|~) attacks while you control (?:at least )?\d+", re.I | re.M), "attack"),
+    # Bolster N (TDM) — put N counters on weakest creature you control
+    (re.compile(r"^bolster\s+\d+\b", re.I | re.M), "etb"),
+    # Renown N (TDM) — when this deals combat damage to player, put N counters
+    (re.compile(r"^renown\s+\d+\b", re.I | re.M), "combat_damage"),
+    # Whenever this creature becomes blocked
+    (re.compile(r"^whenever (?:this creature|~) becomes blocked,", re.I | re.M), "combat_damage"),
+    # When you discard this card / from hand
+    (re.compile(r"^when(?:ever)? you discard (?:this card|a card),", re.I | re.M), "dies"),
+    # Suspect mechanic (MKM) — "when ~ becomes suspected"
+    (re.compile(r"^when(?:ever)? (?:this creature|~) (?:becomes suspected|is suspected),", re.I | re.M), "etb"),
+    # Collect evidence N (MKM) — pay N worth of cards from GY
+    (re.compile(r"^collect evidence\s+\d+", re.I | re.M), "spell"),
+    # Whenever a player discards a card
+    (re.compile(r"^whenever (?:a player|an opponent) discards? (?:a|one or more) cards?,", re.I | re.M), "dies"),
 ]
 
 
@@ -309,6 +339,24 @@ EXILE_TGT_SPELL   = _p(r"\bexile\s+target\s+spell\b")
 NINJUTSU          = _p(r"\bninjutsu\b")
 # Adapt N (if no +1/+1 counters, put N on it)
 ADAPT_N           = _p(r"\badapt\s+(\d+|\w+)\b")
+# Broader pump: "target creature [you control] gets +N/+M [and gains X] until EOT"
+PUMP_TGT_BROAD    = _p(r"\btarget\s+(?:creature|permanent)(?:\s+you\s+control)?\s+gets?\s+\+(\d+)/\+(\d+)")
+# Negative pump: "target creature gets -N/-M until EOT"
+SHRINK_TGT        = _p(r"\btarget\s+(?:creature|permanent)\s+gets?\s+-(\d+)/-(\d+)\b")
+# Copy token: "create a token that's a copy of [target creature]"
+CREATE_COPY_TOKEN = _p(r"\bcreates?\s+(?:a|one|two|three|\d+)\s+tokens?\s+that'?s?\s+(?:a\s+)?(?:copies?|copy)\s+of")
+# You gain control of target creature (steal effect — proxy: draw 1)
+GAIN_CONTROL      = _p(r"\byou\s+gain\s+control\s+of\s+target\b")
+# Target player gains control (opponent steal — proxy: no-op register)
+TGT_PLAYER_DRAWS  = _p(r"\btarget\s+player\s+draws?\s+(\d+|\w+)\s+cards?\b")
+# Return up to N targets to hand (mass bounce)
+RETURN_UP_TO      = _p(r"\breturn\s+(?:up\s+to\s+)?(?:\d+|\w+)\s+target\s+(?:creature|permanent)s?\s+to\s+(?:their|its)\s+owner'?s?\s+hand\b")
+# Target creature fights target creature (fight effect)
+FIGHT             = _p(r"\btarget\s+creature\s+(?:you\s+control\s+)?fights?\s+(?:target|another)")
+# Bolster N — put N counters on weakest friendly creature
+BOLSTER_N         = _p(r"\bbolster\s+(\d+|\w+)\b")
+# Renown N — put N counters when deals combat damage to player
+RENOWN_N          = _p(r"\brenown\s+(\d+|\w+)\b")
 # Cycling — activated ability, no ETB effect
 CYCLING           = _p(r"\bcycling\s*\{")
 # Level up — activated, no ETB
@@ -586,6 +634,47 @@ def parse_segment(text: str) -> list:
     if EXILE_TGT_SPELL.search(text) and not COUNTER_SPELL.search(text) and not effects:
         effects.append(("scry", {"n": 0}))
 
+    # Broader pump: target creature gets +N/+M (catches "and gains X" variants)
+    m = PUMP_TGT_BROAD.search(text)
+    if m and not PUMP_TGT.search(text):
+        effects.append(("add_counters", {"n": int(m.group(1)), "target": "self"}))
+
+    # Negative pump: target creature gets -N/-M (removal/debuff)
+    m = SHRINK_TGT.search(text)
+    if m and not effects:
+        effects.append(("damage_creature", {"n": int(m.group(1)), "target": "opp_biggest"}))
+
+    # Copy token creation
+    if CREATE_COPY_TOKEN.search(text) and not CREATE_CR_TOKEN.search(text):
+        effects.append(("create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}))
+
+    # Gain control of target creature (steal — goldfish proxy: draw 1)
+    if GAIN_CONTROL.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Target player draws N cards
+    m = TGT_PLAYER_DRAWS.search(text)
+    if m and not DRAW_N.search(text) and not DRAW_ONE_ALT.search(text):
+        effects.append(("draw", {"n": _qty(m)}))
+
+    # Return up to N creatures to hand (mass bounce)
+    if RETURN_UP_TO.search(text) and not BOUNCE_TGT.search(text):
+        effects.append(("bounce_to_hand", {}))
+
+    # Fight: both creatures deal damage to each other
+    if FIGHT.search(text) and not effects:
+        effects.append(("damage_creature", {"n": 2, "target": "opp_biggest"}))
+
+    # Bolster N (put N counters on weakest friendly creature you control)
+    m = BOLSTER_N.search(text)
+    if m and not ADD_COUNTER.search(text) and not ADD_COUNTER_TGT.search(text):
+        effects.append(("add_counters", {"n": _qty(m), "target": "self"}))
+
+    # Renown N (put N +1/+1 counters when deals combat damage to player)
+    m = RENOWN_N.search(text)
+    if m and not ADD_COUNTER.search(text):
+        effects.append(("add_counters", {"n": _qty(m), "target": "self"}))
+
     # Enchanted / equipped creature gets +N/+M (aura/equipment bonus)
     m = ENCHANTED_GETS.search(text) or EQUIPPED_GETS.search(text)
     if m and not effects:
@@ -638,6 +727,11 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
     text = re.sub(r"^\+\s*\{[^}]+\}\s*[—\-]\s*", "", text, flags=re.M)
     # Normalize bullet points (•) and em-dashes starting a line to nothing.
     text = re.sub(r"^[•\-]\s+", "", text, flags=re.M)
+
+    # Strip "As an additional cost to cast this spell, [cost]." — this is a
+    # casting requirement line; the real effect is on subsequent lines.
+    text = re.sub(r"^as an additional cost to cast (?:this spell|~),[^\n]+\n?",
+                  "", text, flags=re.I | re.M)
 
     # Strip reminder text in parentheses (e.g. "(You may pay...")  so
     # mechanic keywords like "Prowess" and "Firebending 1" become bare.

@@ -20,10 +20,14 @@ def _spell(fx):
 _h_greta__sweettooth_scourge = _etb([["gain_life", {"n": 3}]])
 # [woe] {1}: This creature gets +1/-1 until end of turn. | When this creature dies, scry 2
 _h_merfolk_coralsmith = _etb([["scry", {"n": 2}]])
+# [woe] At the beginning of combat on your turn, if you control a creature with power 4 
+_h_boundary_lands_ranger = _etb([["draw", {"n": 1}]])
 # [woe] When this artifact enters, draw a card. | {1}, {T}: Add one mana of any color.
 _h_prophetic_prism = _etb([["draw", {"n": 1}]])
 # [woe] When this creature enters, you may return another target nonland permanent you c
 _h_stockpiling_celebrant = _etb([["scry", {"n": 2}]])
+# [woe] Reach | Whenever you cast a spell with mana value 5 or greater, create a Food toke
+_h_skybeast_tracker = _etb([["gain_life", {"n": 3}]])
 # [woe] When this creature enters, create a Food token. (It's an artifact with "{2}, {T}
 _h_provisions_merchant = _etb([["gain_life", {"n": 3}]])
 # [woe] When this enchantment enters, create a 2/2 white Knight creature token with vigi
@@ -58,6 +62,8 @@ _h_scream_puff = _etb([["gain_life", {"n": 3}]])
 _h_mintstrosity = _etb([["gain_life", {"n": 3}]])
 # [woe] Flying | Ward {2} (Whenever this creature becomes the target of a spell or ability
 _h_archive_dragon = _etb([["scry", {"n": 2}]])
+# [woe] Whenever you cast a spell with mana value 5 or greater, put two +1/+1 counters o
+_h_stormkeld_prowler = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [woe] When this creature enters, create a Treasure token. (It's an artifact with "{T},
 _h_redcap_thief = _etb([["create_treasure", {"n": 1}]])
 # [woe] Menace | Whenever this creature deals combat damage to a player, put a skewer coun
@@ -74,12 +80,16 @@ _h_mephitic_draught = _etb([["draw", {"n": 1}]])
 _h_glorifier_of_suffering = _etb([["add_counters", {"n": 1, "target": "friendly_biggest"}]])
 # [lci] When this creature enters, it explores X times. (To have it explore, reveal the 
 _h_jadelight_spelunker = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [lci] At the beginning of combat on your turn, this creature explores. Then you may ha
+_h_deepfathom_echo = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] Flying | At the beginning of each end step, if you gained 5 or more life this turn
 _h_resplendent_angel = _etb([["create_token", {"count": 1, "power": "4", "toughness": "4", "keywords": ["flying", "vigilance"]}]])
 # [lci] When this creature enters, surveil 2. Then for each card you put on top of your 
 _h_starving_revenant = _etb([["draw", {"n": 1}], ["scry", {"n": 2}]])
 # [lci] When this creature enters, create a Treasure token. (It's an artifact with "{T},
 _h_plundering_pirate = _etb([["create_treasure", {"n": 1}]])
+# [lci] When this creature enters, target creature you control gets +2/+0 and gains inde
+_h_rampaging_spiketail = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [lci] Whenever an artifact you control enters, put a +1/+1 counter on target Pirate yo
 _h_captain_storm__cosmium_raider = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] Trample | When this creature enters, draw a card for each other Dinosaur you contr
@@ -92,6 +102,8 @@ _h_runaway_boulder = _etb([["damage_creature", {"n": 6, "target": "opp_biggest"}
 _h_magmatic_galleon = _etb([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [lci] Flying | When this creature enters, you gain 3 life. | Plainscycling {2} ({2}, Disca
 _h_soaring_sandwing = _etb([["gain_life", {"n": 3}]])
+# [lci] At the beginning of combat on your turn, target creature you control gets +2/+0 
+_h_might_of_the_ancestors = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [lci] When this creature enters, search your library for a basic land card or Cave car
 _h_scampering_surveyor = _etb([["search_basic_land", {"n": 1}]])
 # [lci] When this creature enters, look at the top three cards of your library. You may 
@@ -120,6 +132,8 @@ _h_oltec_cloud_guard = _etb([["create_token", {"count": 1, "power": "1", "toughn
 _h_cavern_stomper = _etb([["scry", {"n": 2}]])
 # [lci] At the beginning of your end step, if you descended this turn, create a Treasure
 _h_enterprising_scallywag = _etb([["create_treasure", {"n": 1}]])
+# [lci] This artifact enters with two +1/+1 counters on it. | Whenever a creature you cont
+_h_explorer_s_cache = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] When this creature enters, you may search your library for a basic land card or 
 _h_compass_gnome = _etb([["search_basic_land", {"n": 1}]])
 # [lci] Double strike | When this creature enters, it explores. (Reveal the top card of yo
@@ -137,7 +151,7 @@ _h_stalactite_stalker = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] When this artifact enters, create two 1/1 colorless Gnome artifact creature toke
 _h_tinker_s_tote = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": []}]])
 # [lci] Other Dinosaurs you control have haste. | When this creature enters, create two 0/
-_h_palani_s_hatcher = _etb([["create_token", {"count": 2, "power": "0", "toughness": "1", "keywords": []}]])
+_h_palani_s_hatcher = _etb([["create_token", {"count": 2, "power": "0", "toughness": "1", "keywords": []}], ["create_token", {"count": 1, "power": "3", "toughness": "3", "keywords": []}]])
 # [lci] Sacrifice this creature: Exile up to four target cards from a single graveyard. 
 _h_digsite_conservator = _etb([["draw", {"n": 1}]])
 # [lci] Flying | Whenever this creature attacks, mill a card. (Put the top card of your li
@@ -200,10 +214,14 @@ _h_benthic_criminologists = _etb([["draw", {"n": 1}]])
 _h_sample_collector = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [mkm] This creature enters tapped. | Disguise {4}{B}{B} (You may cast this card face dow
 _h_alley_assailant = _etb([["gain_life", {"n": 3}], ["lose_life", {"n": 3, "target": "opp"}]])
+# [mkm] Flash | When this enchantment enters, target creature gets -4/-4 until end of turn
+_h_soul_enervation = _etb([["damage_creature", {"n": 4, "target": "opp_biggest"}]])
 # [mkm] When this creature dies, it deals 2 damage to any target. | Disguise {2}{B/R}{B/R}
 _h_shady_informant = _etb([["damage_any", {"n": 2}]])
 # [mkm] When this Case enters, create a 2/1 black Skeleton creature token and suspect it
 _h_case_of_the_stashed_skeleton = _etb([["create_token", {"count": 1, "power": "2", "toughness": "1", "keywords": []}]])
+# [mkm] This creature can't be blocked by creatures with power 3 or greater. | Disguise {1
+_h_exit_specialist = _etb([["bounce_to_hand", {}]])
 # [mkm] When this enchantment enters, create a 1/1 white Human creature token, a 1/1 blu
 _h_a_killer_among_us = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [mkm] When this Case enters, it deals 3 damage to target creature an opponent controls
@@ -224,6 +242,8 @@ _h_undercity_eliminator = _etb([["exile", {"target": "opp_biggest_creature"}]])
 _h_makeshift_binding = _etb([["exile", {"target": "opp_biggest_creature"}], ["gain_life", {"n": 2}]])
 # [mkm] Flying, trample | Whenever this creature deals combat damage to a player, you may 
 _h_incinerator_of_the_guilty = _etb([["damage_creature", {"n": 1, "target": "each_opp"}]])
+# [mkm] At the beginning of combat on your turn, create a 1/1 colorless Thopter artifact
+_h_harried_dronesmith = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
 # [mkm] When this enchantment enters, it deals 3 damage to target creature an opponent c
 _h_blood_spatter_analysis = _etb([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [mkm] Flying, vigilance | At the beginning of your upkeep, investigate once for each opp
@@ -275,15 +295,15 @@ _h_buried_in_the_garden = _etb([["exile", {"target": "opp_biggest_creature"}]])
 # [otj] When this creature enters, you may sacrifice a creature. When you do, target pla
 _h_unscrupulous_contractor = _etb([["draw", {"n": 2}]])
 # [otj] When this creature enters, create a 1/1 red Mercenary creature token with "{T}: 
-_h_prosperity_tycoon = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_prosperity_tycoon = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] When Ertha Jo enters, create a 1/1 red Mercenary creature token with "{T}: Targe
-_h_ertha_jo__frontier_mentor = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_ertha_jo__frontier_mentor = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Flash | At the beginning of your end step, if you haven't cast a spell from your h
 _h_wrangler_of_the_damned = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": ["flying"]}]])
 # [otj] When this creature enters, if you've cast two or more spells this turn, draw a c
 _h_loan_shark = _etb([["draw", {"n": 1}]])
 # [otj] Other outlaws you control have haste. (Assassins, Mercenaries, Pirates, Rogues, 
-_h_hellspur_posse_boss = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_hellspur_posse_boss = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] When this creature enters, if you control a creature with power 4 or greater, dr
 _h_beastbond_outcaster = _etb([["draw", {"n": 1}]])
 # [otj] When this creature enters, you gain 2 life. | {T}: Add one mana of any color.
@@ -297,7 +317,7 @@ _h_frontier_seeker = _etb([["scry", {"n": 5}]])
 # [otj] When this creature enters, creatures you control get +1/+1 and gain vigilance un
 _h_stagecoach_security = _etb([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [otj] When this creature enters, create a 1/1 red Mercenary creature token with "{T}: 
-_h_prickly_pair = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_prickly_pair = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] First strike, lifelink | Whenever this creature attacks while saddled, create a 3/
 _h_seraphic_steed = _etb([["create_token", {"count": 1, "power": "3", "toughness": "3", "keywords": ["flying"]}]])
 # [otj] Whenever this creature attacks, create a 3/1 red Dinosaur creature token if you 
@@ -305,7 +325,7 @@ _h_scalestorm_summoner = _etb([["create_token", {"count": 1, "power": "3", "toug
 # [otj] Flying, vigilance | At the beginning of your end step, if you haven't cast a spell
 _h_jem_lightfoote__sky_explorer = _etb([["draw", {"n": 1}]])
 # [otj] When this creature dies, create a 1/1 red Mercenary creature token with "{T}: Ta
-_h_nezumi_linkbreaker = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_nezumi_linkbreaker = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Trample | When this creature enters, if you control another outlaw, create a Treas
 _h_mine_raider = _etb([["create_treasure", {"n": 1}]])
 # [otj] Lifelink | When this creature dies, draw a card.
@@ -331,7 +351,7 @@ _h_gold_pan = _etb([["create_treasure", {"n": 1}]])
 # [otj] When this creature enters, if a creature died this turn, create a 2/2 blue and b
 _h_rictus_robber = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [otj] When this enchantment enters, exile target nonland permanent an opponent control
-_h_lassoed_by_the_law = _etb([["exile", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_lassoed_by_the_law = _etb([["exile", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] When this creature enters, create a 2/2 blue and black Zombie Rogue creature tok
 _h_outlaw_stitcher = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [otj] When this creature enters, you may discard a card. If you do, draw a card.
@@ -345,17 +365,21 @@ _h_patient_naturalist = _etb([["mill", {"n": 3, "target": "self"}], ["create_tre
 # [otj] Whenever this creature attacks while saddled, it gains first strike until end of
 _h_trained_arynx = _etb([["scry", {"n": 1}]])
 # [otj] Flying | When this creature dies, create a 1/1 red Mercenary creature token with "
-_h_wanted_griffin = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_wanted_griffin = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Trample | When this creature enters, you gain 3 life. | Plot {3}{G} (You may pay {3}
 _h_spinewoods_paladin = _etb([["gain_life", {"n": 3}]])
 # [otj] When Fortune enters, scry 2. | Whenever Fortune attacks while saddled, at end of c
 _h_fortune__loyal_steed = _etb([["scry", {"n": 2}]])
 # [otj] When this enchantment enters, create a 1/1 red Mercenary creature token with "{T
-_h_rakish_crew = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_rakish_crew = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Lifelink | When this creature enters, target player mills two cards. (They put the
 _h_desperate_bloodseeker = _etb([["mill", {"n": 2, "target": "self"}]])
 # [otj] Flash | Flying, lifelink | When this creature enters, destroy target creature an opp
 _h_rooftop_assassin = _etb([["destroy", {"target": "opp_biggest_creature"}]])
+# [otj] At the beginning of combat on your turn, put a +1/+1 counter on target creature.
+_h_ornery_tumblewagg = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [big] At the beginning of combat on your turn, draw a card. Then you may exile an arti
+_h_nexus_of_becoming = _etb([["draw", {"n": 1}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [big] When this enchantment enters, you draw three cards, gain 6 life, and create thre
 _h_greed_s_gambit = _etb([["draw", {"n": 3}], ["create_token", {"count": 3, "power": "2", "toughness": "1", "keywords": ["flying"]}]])
 # [big] Trample | When this creature enters, create two Food tokens. (They're artifacts wi
@@ -368,6 +392,8 @@ _h_generous_plunderer = _etb([["create_treasure", {"n": 1}]])
 _h_pileated_provisioner = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] Flying | At the beginning of your end step, if you gained or lost life this turn, 
 _h_starlit_soothsayer = _etb([["scry", {"n": 1}]])
+# [blb] Trample | Whenever you expend 4, target creature you control gets +1/+1 and gains 
+_h_roughshod_duo = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] Offspring {1}{U} (You may pay an additional {1}{U} as you cast this spell. If yo
 _h_splash_lasher = _etb([["scry", {"n": 0}]])
 # [blb] Flying, vigilance | At the beginning of your end step, if you gained or lost life 
@@ -400,6 +426,8 @@ _h_star_charter = _etb([["scry", {"n": 4}]])
 _h_teapot_slinger = _etb([["damage_player", {"n": 2, "target": "opp"}]])
 # [blb] Reach | When this creature enters, you may forage. If you do, draw a card. (To for
 _h_treetop_sentries = _etb([["draw", {"n": 1}], ["gain_life", {"n": 3}]])
+# [blb] At the beginning of combat on your turn, you may forage. (Exile three cards from
+_h_corpseberry_cultivator = _etb([["gain_life", {"n": 3}]])
 # [blb] Whenever you cast a noncreature spell, put a +1/+1 counter on this creature.
 _h_tempest_angler = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] Whenever you cast a spell, if it's the first instant spell, the first sorcery sp
@@ -410,12 +438,16 @@ _h_bumbleflower_s_sharepot = _etb([["gain_life", {"n": 3}]])
 _h_steampath_charger = _etb([["damage_player", {"n": 1, "target": "opp"}]])
 # [blb] When this creature enters, put a +1/+1 counter on target creature and you gain 1
 _h_sunshower_druid = _etb([["add_counters", {"n": 1, "target": "self"}], ["gain_life", {"n": 1}]])
+# [blb] Offspring {1} (You may pay an additional {1} as you cast this spell. If you do, 
+_h_intrepid_rabbit = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] (Gain the next level as a sorcery to add its ability.) | Whenever a creature you c
 _h_gossip_s_talent = _etb([["scry", {"n": 1}]])
 # [blb] Whenever you expend 4, put a +1/+1 counter on this creature. (You expend 4 as yo
 _h_wandertale_mentor = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] (Gain the next level as a sorcery to add its ability.) | When this Class enters, c
 _h_blacksmith_s_talent = _etb([["add_counters", {"n": 1, "target": "all_friendly"}]])
+# [blb] At the beginning of combat on your turn, each opponent loses 1 life and you gain
+_h_sinister_monolith = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
 # [blb] (Gain the next level as a sorcery to add its ability.) | Whenever one or more crea
 _h_scavenger_s_talent = _etb([["mill", {"n": 2, "target": "self"}]])
 # [blb] At the beginning of your upkeep, return another creature you control to its owne
@@ -434,6 +466,8 @@ _h_fountainport_bell = _etb([["search_basic_land", {"n": 1}]])
 _h_bakersbane_duo = _etb([["gain_life", {"n": 3}]])
 # [blb] When this creature enters, draw a card, then discard a card.
 _h_bellowing_crier = _etb([["draw", {"n": 1}]])
+# [blb] Whenever you attack, target creature you control gets +1/+0 until end of turn. I
+_h_hazardroot_herbalist = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] When this creature enters, exile target creature an opponent controls until this
 _h_driftgloom_coyote = _etb([["exile", {"target": "opp_biggest_creature"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [blb] At the beginning of your upkeep, surveil 1. (Look at the top card of your librar
@@ -452,6 +486,8 @@ _h_innocuous_rat = _etb([["create_token", {"count": 1, "power": "2", "toughness"
 _h_scrabbling_skullcrab = _etb([["mill", {"n": 2, "target": "self"}]])
 # [dsk] Survival ? At the beginning of your second main phase, if this creature is tappe
 _h_cautious_survivor = _etb([["gain_life", {"n": 2}]])
+# [dsk] Whenever this creature attacks, another target creature you control gets +1/+0 a
+_h_hardened_escort = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [dsk] Deathtouch | Whenever this creature enters or attacks, each opponent loses 2 life.
 _h_shroudstomper = _etb([["draw", {"n": 1}], ["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}]])
 # [dsk] When this creature dies, it deals 1 damage to any target and you gain 1 life.
@@ -544,6 +580,10 @@ _h_dragon_trainer = _etb([["create_token", {"count": 1, "power": "4", "toughness
 _h_vampire_gourmand = _etb([["draw", {"n": 1}]])
 # [fdn] When this creature enters, it deals 1 damage to any target.
 _h_skeleton_archer = _etb([["damage_any", {"n": 1}]])
+# [fdn] Whenever you attack, target creature you control gets +1/+0 and gains menace unt
+_h_battlesong_berserker = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [fdn] At the beginning of your upkeep, create a token that's a copy of another target 
+_h_extravagant_replication = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [fdn] When this creature enters, if you control another Elf, create a 1/1 green Elf Wa
 _h_dwynen_s_elite = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [fdn] Whenever another creature you control dies, draw a card if it was attacking. Oth
@@ -552,6 +592,8 @@ _h_garna__bloodfist_of_keld = _etb([["damage_player", {"n": 1, "target": "opp"}]
 _h_wary_thespian = _etb([["scry", {"n": 1}]])
 # [fdn] Flash | When this enchantment enters, exile up to one target nonland permanent an 
 _h_prayer_of_binding = _etb([["gain_life", {"n": 2}]])
+# [fdn] Whenever this creature or another creature you control dies, target opponent los
+_h_vengeful_bloodwitch = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
 # [fdn] Flying | When this creature enters, draw a card, then discard a card.
 _h_icewind_elemental = _etb([["draw", {"n": 1}]])
 # [fdn] Whenever you cast an instant or sorcery spell, create a 5/5 red Dragon creature 
@@ -574,6 +616,8 @@ _h_drogskol_reaver = _etb([["draw", {"n": 1}]])
 _h_stasis_snare = _etb([["exile", {"target": "opp_biggest_creature"}]])
 # [fdn] Landfall ? Whenever a land you control enters, this creature deals 1 damage to e
 _h_spitfire_lagac = _etb([["damage_player", {"n": 1, "target": "opp"}]])
+# [fdn] At the beginning of combat on your turn, you may have target creature get +2/+0 
+_h_battle_rattle_shaman = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [fdn] When this creature enters, you may sacrifice a land. If you do, search your libr
 _h_springbloom_druid = _etb([["search_basic_land", {"n": 2}]])
 # [fdn] Flying | Whenever another creature you control enters, you gain 1 life.
@@ -594,12 +638,16 @@ _h_ajani_s_pridemate = _etb([["add_counters", {"n": 1, "target": "self"}]])
 _h_dauntless_veteran = _etb([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [fdn] Flying | Whenever you gain life, put a +1/+1 counter on this creature. | Whenever yo
 _h_exemplar_of_light = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [fdn] At the beginning of combat on your turn, put a +1/+1 counter on each of up to tw
+_h_zimone__paradox_sculptor = _etb([["add_counters", {"n": 1, "target": "friendly_biggest"}]])
 # [fdn] Flying | When this creature enters or dies, mill two cards. (Put the top two cards
 _h_crow_of_dark_tidings = _etb([["mill", {"n": 2, "target": "self"}]])
 # [fdn] Indestructible (Damage and effects that say "destroy" don't destroy this creatur
 _h_predator_ooze = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [fdn] When this creature enters, create a Treasure token. (It's an artifact with "{T},
 _h_corsair_captain = _etb([["create_treasure", {"n": 1}]])
+# [fdn] At the beginning of combat on your turn, if you control another creature with po
+_h_nessian_hornbeetle = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [fdn] Menace | When this creature enters, create two 1/1 black Rat creature tokens with 
 _h_redcap_gutter_dweller = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": ["\"This token can't block"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [fdn] When this creature enters, return target permanent card from your graveyard to y
@@ -656,6 +704,8 @@ _h_pulse_tracker = _etb([["lose_life", {"n": 1, "target": "opp"}]])
 _h_nimble_thopterist = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
 # [dft] This creature enters with X +1/+1 counters on it. | {4}: Put a +1/+1 counter on th
 _h_marketback_walker = _etb([["draw", {"n": 1}]])
+# [dft] Flash | When this Vehicle enters, target creature you control gets +2/+0 and gains
+_h_burner_rocket = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [dft] When this Vehicle enters, scry 2. (Look at the top two cards of your library, th
 _h_spotcycle_scouter = _etb([["scry", {"n": 2}]])
 # [dft] Whenever this creature attacks while saddled, untap it and put a +1/+1 counter o
@@ -670,6 +720,8 @@ _h_embalmed_ascendant = _etb([["create_token", {"count": 1, "power": "2", "tough
 _h_aatchik__emerald_radian = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [dft] Flying, haste | Whenever this creature attacks while saddled, it deals 2 damage to
 _h_dracosaur_auxiliary = _etb([["damage_any", {"n": 2}]])
+# [dft] Whenever you attack, target creature you control gets +1/+0 and gains deathtouch
+_h_haunted_hellride = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [dft] Start your engines! (If you have no speed, it starts at 1. It increases once on 
 _h_racers__scoreboard = _etb([["draw", {"n": 2}]])
 # [dft] Reach | When this creature enters, you gain 4 life. | Cycling {2} ({2}, Discard this
@@ -740,6 +792,8 @@ _h_teeming_dragonstorm = _etb([["create_token", {"count": 2, "power": "2", "toug
 _h_mardu_devotee = _etb([["scry", {"n": 2}]])
 # [tdm] Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until e
 _h_meticulous_artisan = _etb([["create_treasure", {"n": 1}]])
+# [tdm] Menace (This creature can't be blocked except by two or more creatures.) | When th
+_h_gurmag_rakshasa = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [tdm] Flurry ? Whenever you cast your second spell each turn, this creature deals 2 da
 _h_cori_mountain_stalwart = _etb([["damage_player", {"n": 2, "target": "opp"}], ["gain_life", {"n": 2}]])
 # [tdm] Deathtouch | Mobilize 1 (Whenever this creature attacks, create a tapped and attac
@@ -752,6 +806,8 @@ _h_aegis_sculptor = _etb([["add_counters", {"n": 1, "target": "self"}]])
 _h_skirmish_rhino = _etb([["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}]])
 # [tdm] When this enchantment enters, exile target nonland permanent an opponent control
 _h_stormplain_detainment = _etb([["exile", {"target": "opp_biggest_creature"}]])
+# [tdm] Mobilize 1 (Whenever this creature attacks, create a tapped and attacking 1/1 re
+_h_venerated_stormsinger = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
 # [tdm] When this enchantment enters, each opponent loses 2 life and you gain 2 life. Su
 _h_corroding_dragonstorm = _etb([["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}], ["scry", {"n": 2}]])
 # [tdm] Affinity for creatures (This spell costs {1} less to cast for each creature you 
@@ -774,12 +830,16 @@ _h_betor__kin_to_all = _etb([["draw", {"n": 1}]])
 _h_temur_tawnyback = _etb([["draw", {"n": 1}]])
 # [tdm] Flying | Whenever this creature attacks, if you control a creature with a counter 
 _h_delta_bloodflies = _etb([["lose_life", {"n": 1, "target": "opp"}]])
+# [tdm] At the beginning of combat on your turn, put a +1/+1 counter on another target c
+_h_loxodon_battle_priest = _etb([["add_counters", {"n": 1, "target": "friendly_biggest"}]])
 # [tdm] Equipped creature has haste. | Flurry ? Whenever you cast your second spell each t
 _h_a_cori_steel_cutter = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["prowess"]}]])
 # [tdm] When this creature enters, draw a card if you control a creature with a counter 
 _h_trade_route_envoy = _etb([["add_counters", {"n": 1, "target": "self"}], ["draw", {"n": 1}]])
 # [tdm] When this creature enters, you may search your library for a basic land card, re
 _h_embermouth_sentinel = _etb([["search_basic_land", {"n": 1}]])
+# [tdm] Mobilize 1 (Whenever this creature attacks, create a tapped and attacking 1/1 re
+_h_reigning_victor = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [tdm] Flying, haste | Whenever this creature deals combat damage to a player, you gain 1
 _h_jeskai_shrinekeeper = _etb([["draw", {"n": 1}], ["gain_life", {"n": 1}]])
 # [tdm] Creature spells you cast cost {2} less to cast. | Whenever a creature you control 
@@ -852,6 +912,8 @@ _h_hecteyes = _etb([["discard", {"n": 1, "target": "opp"}]])
 _h_ride_the_shoopuf = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [fin] {T}: Add X mana in any combination of {U} and/or {R}, where X is Vivi Ornitier's
 _h_a_vivi_ornitier = _etb([["damage_player", {"n": 1, "target": "opp"}]])
+# [fin] Reach (This creature can block creatures with flying.) | At the beginning of comba
+_h_rosa__resolute_white_mage = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [fin] Flying, deathtouch | Whenever you cast a noncreature spell, Black Waltz No. 3 deal
 _h_black_waltz_no__3 = _etb([["damage_player", {"n": 2, "target": "opp"}]])
 # [fin] At the beginning of your end step, exile target creature you control, then retur
@@ -870,10 +932,14 @@ _h_magic_pot = _etb([["create_treasure", {"n": 1}]])
 _h_dragoon_s_wyvern = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [fin] Flying | When this creature enters, put a +1/+1 counter on target creature. | Plains
 _h_cloudbound_moogle = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [fin] When Gladiolus Amicitia enters, search your library for a land card, put it onto
+_h_gladiolus_amicitia = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [eoe] Whenever this creature becomes tapped, create a Lander token. (It's an artifact 
 _h_seedship_agrarian = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] When this Spacecraft enters, create a 2/2 colorless Robot artifact creature toke
 _h_wedgelight_rammer = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+# [eoe] Whenever a creature you control with a +1/+1 counter on it dies, draw a card.
+_h_meltstrider_eulogist = _etb([["draw", {"n": 1}]])
 # [eoe] Affinity for Slivers (This spell costs {1} less to cast for each Sliver you cont
 _h_thrumming_hivepool = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": []}]])
 # [eoe] Flying | When this creature enters, surveil 2. (Look at the top two cards of your 
@@ -906,6 +972,8 @@ _h_drix_fatemaker = _etb([["add_counters", {"n": 1, "target": "self"}]])
 _h_frontline_war_rager = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] When this creature enters, create a 1/1 white Human Soldier creature token. | {4}{
 _h_honored_knight_captain = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
+# [eoe] Flash | When this artifact enters, up to one target creature gets -3/-3 until end 
+_h_dubious_delicacy = _etb([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [eoe] Lifelink | At the beginning of your end step, if you control two or more tapped cr
 _h_dawnstrike_vanguard = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] Flying | Whenever an artifact you control enters, put a +1/+1 counter on target cr
@@ -926,12 +994,16 @@ _h_germinating_wurm = _etb([["gain_life", {"n": 2}]])
 _h_codecracker_hound = _etb([["scry", {"n": 2}]])
 # [eoe] When this Spacecraft enters, you may sacrifice a land or Lander. If you do, sear
 _h_larval_scoutlander = _etb([["search_basic_land", {"n": 2}]])
+# [eoe] At the beginning of combat on your turn, target creature you control gets +1/+0 
+_h_molecular_modifier = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] When this Spacecraft enters, it deals 3 damage to any target. | Station (Tap anoth
 _h_debris_field_crusher = _etb([["damage_any", {"n": 3}]])
 # [eoe] At the beginning of your end step, if you control two or more tapped creatures, 
 _h_sunstar_chaplain = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] When this creature enters, destroy up to one other target creature. If that crea
 _h_faller_s_faithful = _etb([["draw", {"n": 2}]])
+# [eoe] When this creature enters, until end of turn, another target creature you contro
+_h_perigee_beckoner = _etb([["add_counters", {"n": 2, "target": "self"}]])
 # [eoe] At the beginning of your end step, if you control two or more tapped creatures, 
 _h_vaultguard_trooper = _etb([["draw", {"n": 2}]])
 # [eoe] When this creature enters, each opponent discards a card.
@@ -950,6 +1022,8 @@ _h_news_helicopter = _etb([["create_token", {"count": 1, "power": "1", "toughnes
 _h_spider_man__brooklyn_visionary = _etb([["search_basic_land", {"n": 1}]])
 # [spm] When this creature enters, draw a card.
 _h_gallant_citizen = _etb([["draw", {"n": 1}]])
+# [spm] Convoke (Your creatures can help cast this spell. Each creature you tap while ca
+_h_web_of_life_and_destiny = _etb([["scry", {"n": 5}]])
 # [spm] When this artifact enters, it deals 5 damage to target creature. | {1}{R}, Discard
 _h_steel_wrecking_ball = _etb([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [spm] When this creature enters, put a +1/+1 counter on each other creature you contro
@@ -968,6 +1042,8 @@ _h_mysterio__master_of_illusion = _etb([["create_token", {"count": 1, "power": "
 _h_wall_crawl = _etb([["gain_life", {"n": 1}], ["create_token", {"count": 1, "power": "2", "toughness": "1", "keywords": ["reach", "then you gain 1 life for each Spider you control"]}]])
 # [spm] When this artifact enters, look at the top five cards of your library. You may r
 _h_pictures_of_spider_man = _etb([["scry", {"n": 5}]])
+# [spm] Trample | Whenever you cast a spell with mana value 4 or greater, put a +1/+1 coun
+_h_lurking_lizards = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [spm] When Tombstone enters, return target Villain card from your graveyard to your ha
 _h_tombstone__career_criminal = _etb([["return_gy_to_hand", {"filter_type": "any"}]])
 # [spm] When this Vehicle enters, you may pay {G}. If you do, search your library for a 
@@ -990,6 +1066,8 @@ _h_aunt_may = _etb([["add_counters", {"n": 1, "target": "self"}], ["gain_life", 
 _h_eerie_gravestone = _etb([["draw", {"n": 1}]])
 # [spm] When this artifact enters, create a Food token. (It's an artifact with "{2}, {T}
 _h_hot_dog_cart = _etb([["gain_life", {"n": 3}]])
+# [spm] Trample | Whenever you cast a spell with mana value 4 or greater, this creature de
+_h_angry_rabble = _etb([["damage_player", {"n": 1, "target": "opp"}]])
 # [spm] Web-slinging {4}{G}{G} (You may cast this spell for {4}{G}{G} if you also return
 _h_spiders_man__heroic_horde = _etb([["gain_life", {"n": 3}], ["create_token", {"count": 2, "power": "2", "toughness": "1", "keywords": ["reach"]}]])
 # [spm] Reach | When this creature enters, you may search your library for a basic land ca
@@ -1055,7 +1133,7 @@ _h_wandering_musicians = _etb([["add_counters", {"n": 1, "target": "all_friendly
 # [tla] When this Equipment enters, create a 1/1 white Ally creature token, then attach 
 _h_kyoshi_battle_fan = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [tla] When Iroh enters, create a Food token. | At the beginning of combat on your turn, 
-_h_iroh__tea_master = _etb([["gain_life", {"n": 3}]])
+_h_iroh__tea_master = _etb([["gain_life", {"n": 3}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [tla] When this creature enters, earthbend 1, then earthbend 1. (To earthbend 1, targe
 _h_dai_li_agents = _etb([["add_mana", {"n": 1}], ["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
 # [tla] When Toph enters, you may discard a card. If you do, return target instant or so
@@ -1172,6 +1250,8 @@ _h_lys_alana_informant = _etb([["scry", {"n": 1}]])
 _h_mudbutton_cursetosser = _etb([["destroy", {"target": "opp_biggest_creature"}]])
 # [ecl] Trample | When this creature enters, create a Treasure token. (It's an artifact wi
 _h_flamekin_gildweaver = _etb([["create_treasure", {"n": 1}]])
+# [ecl] Whenever you cast a spell with mana value 4 or greater, draw a card.
+_h_tanufel_rimespeaker = _etb([["draw", {"n": 1}]])
 # [ecl] At the beginning of your upkeep, surveil 1. (Look at the top card of your librar
 _h_morcant_s_eyes = _etb([["scry", {"n": 1}]])
 # [ecl] Flying | When this creature enters, you may blight 1. If you do, each opponent dis
@@ -1184,6 +1264,8 @@ _h_heirloom_auntie = _etb([["scry", {"n": 1}]])
 _h_merrow_skyswimmer = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [ecl] As an additional cost to cast this spell, behold a Merfolk or pay {2}. (To behol
 _h_silvergill_mentor = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
+# [ecl] Reach | Whenever you cast a spell with mana value 4 or greater, this creature deal
+_h_enraged_flamecaster = _etb([["damage_player", {"n": 2, "target": "opp"}]])
 # [ecl] When this creature enters, look at the top four cards of your library. You may r
 _h_eclipsed_kithkin = _etb([["scry", {"n": 4}]])
 # [ecl] When this creature dies, draw a card.
@@ -1224,6 +1306,8 @@ _h_null_group_biological_assets = _etb([["draw", {"n": 1}]])
 _h_primordial_pachyderm = _etb([["gain_life", {"n": 2}]])
 # [tmt] When this artifact enters, destroy target creature. | {2}, {T}, Sacrifice this art
 _h_anchovy___banana_pizza = _etb([["destroy", {"target": "opp_biggest_creature"}]])
+# [tmt] Trample | At the beginning of combat on your turn, put a +1/+1 counter on Savanti 
+_h_savanti_romero__time_s_exile = _etb([["draw", {"n": 1}]])
 # [tmt] When this artifact enters, draw a card. | {1}, {T}, Sacrifice this artifact: Add o
 _h_omni_cheese_pizza = _etb([["draw", {"n": 1}]])
 # [tmt] Flying | When this creature leaves the battlefield, create a Food token. (It's an 
@@ -1248,6 +1332,8 @@ _h_general_traag__heart_of_stone = _etb([["damage_creature", {"n": 4, "target": 
 _h_sally_pride__lioness_leader = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [tmt] When Jennika enters, create a 2/2 red Mutant creature token. | Plainscycling {2} (
 _h_jennika__bad_apple_big_sister = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+# [tmt] Whenever this creature attacks, another target creature you control gets +1/+0 a
+_h_foot_elite = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [tmt] Flying | When Stockman enters, draw a card, then discard a card. | Islandcycling {2}
 _h_stockman__mad_fly_entist = _etb([["draw", {"n": 1}]])
 # [tmt] Flying | When this Vehicle enters, create a 2/2 red Mutant creature token. | Crew 2 
@@ -1258,12 +1344,16 @@ _h_guac___marshmallow_pizza = _etb([["add_counters", {"n": 2, "target": "self"}]
 _h_baxter_stockman = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [tmt] When Pizza Face enters, create a Food token. | Disappear ? At the beginning of you
 _h_pizza_face__gastromancer = _etb([["gain_life", {"n": 3}]])
+# [tmt] At the beginning of combat on your turn, create a 2/2 red Mutant creature token.
+_h_old_hob__alleycat_blues = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [tmt] When this creature enters, return up to one other target artifact you control to
 _h_nobody = _etb([["scry", {"n": 1}]])
 # [tmt] When Donatello enters, if you control an artifact, draw a card.
 _h_donatello__turtle_techie = _etb([["draw", {"n": 1}]])
 # [tmt] When this creature enters, create a 2/2 red Mutant creature token. | Alliance ? Wh
 _h_mighty_mutanimals = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["add_counters", {"n": 1, "target": "self"}]])
+# [sos] Whenever this creature or another creature you control enters, you gain 1 life.
+_h_bogwater_lumaret = _etb([["gain_life", {"n": 1}]])
 # [sos] When this creature enters, you gain 1 life. | {2}{G}: This creature gets +2/+2 unt
 _h_mindful_biomancer = _etb([["gain_life", {"n": 1}]])
 # [sos] When this creature enters, create a 1/1 white and black Inkling creature token w
@@ -1292,6 +1382,8 @@ _h_tackle_artist = _etb([["add_counters", {"n": 1, "target": "self"}]])
 _h_muse_seeker = _etb([["draw", {"n": 1}]])
 # [sos] When this creature enters, look at the top X cards of your library, where X is t
 _h_stirring_honormancer = _etb([["scry", {"n": 1}]])
+# [sos] Deathtouch | Whenever a creature you control with power or toughness 1 or less die
+_h_arnyn__deathbloom_botanist = _etb([["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}]])
 # [sos] Reach | Opus ? Whenever you cast an instant or sorcery spell, this creature deals 
 _h_thunderdrum_soloist = _etb([["damage_player", {"n": 1, "target": "opp"}]])
 # [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
@@ -1319,7 +1411,7 @@ _h_fractal_tender = _etb([["add_counters", {"n": 1, "target": "self"}], ["create
 # [sos] Flying | This creature enters with X +1/+1 counters on it. | When this creature ente
 _h_pterafractyl = _etb([["gain_life", {"n": 2}]])
 # [sos] When this enchantment enters, create a 0/0 green and blue Fractal creature token
-_h_additive_evolution = _etb([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
+_h_additive_evolution = _etb([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}], ["add_counters", {"n": 1, "target": "self"}]])
 # [sos] This spell costs {3} less to cast if creatures you control have total toughness 
 _h_orysa__tide_choreographer = _etb([["draw", {"n": 2}]])
 # [sos] Ward {1} (Whenever this creature becomes the target of a spell or ability an opp
@@ -1385,6 +1477,8 @@ _h_farsight_ritual = _spell([["scry", {"n": 4}]])
 _h_freeze_in_place = _spell([["scry", {"n": 2}]])
 # [woe] Draw three cards. Create a 1/1 blue Faerie creature token with flying and "This 
 _h_into_the_fae_court = _spell([["draw", {"n": 3}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["flying", "\"This token can block only creatures with flying"]}]])
+# [woe] Bargain (You may sacrifice an artifact, enchantment, or token as you cast this s
+_h_candy_grapple = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [woe] Flick a Coin deals 1 damage to any target. You create a Treasure token. (It's an
 _h_flick_a_coin = _spell([["damage_any", {"n": 1}], ["create_treasure", {"n": 1}], ["draw", {"n": 1}]])
 # [woe] Cut In deals 4 damage to target creature. | Create a Young Hero Role token attache
@@ -1400,13 +1494,15 @@ _h_archon_s_glory = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [woe] Choose one ? | ? Untap target creature. It gets +1/+0 and gains indestructible unt
 _h_moment_of_valor = _spell([["scry", {"n": 0}], ["destroy", {"target": "opp_biggest_creature"}]])
 # [woe] Target creature gets +1/+0 and gains first strike until end of turn. Scry 1.
-_h_kindled_heroism = _spell([["scry", {"n": 1}]])
+_h_kindled_heroism = _spell([["scry", {"n": 1}], ["add_counters", {"n": 1, "target": "self"}]])
 # [woe] Bargain (You may sacrifice an artifact, enchantment, or token as you cast this s
 _h_johann_s_stopgap = _spell([["bounce_to_hand", {}], ["draw", {"n": 1}]])
 # [woe] Look at the top five cards of your library. You may reveal a creature card from 
 _h_commune_with_nature = _spell([["scry", {"n": 5}]])
 # [woe] Exile target creature. If you control an enchantment, scry 2.
 _h_taken_by_nightmares = _spell([["exile", {"target": "opp_biggest_creature"}], ["scry", {"n": 2}]])
+# [woe] Target creature gets +1/+3 and gains reach until end of turn. Untap it.
+_h_leaping_ambush = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [woe] Frantic Firebolt deals X damage to target creature, where X is 2 plus the number
 _h_frantic_firebolt = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]])
 # [woe] Destroy target creature or enchantment. Create a Wicked Role token attached to u
@@ -1415,8 +1511,10 @@ _h_shatter_the_oath = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 _h_rowan_s_grim_search = _spell([["scry", {"n": 4}], ["draw", {"n": 2}]])
 # [lci] Counter target artifact or creature spell. Discover X, where X is that spell's m
 _h_hurl_into_history = _spell([["draw", {"n": 1}]])
+# [lci] Target creature gets +1/+3 and gains flying until end of turn. Untap it.
+_h_acrobatic_leap = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] Target creature you control gets +1/+0 until end of turn. It deals damage equal 
-_h_huatli_s_final_strike = _spell([["damage_any", {"n": 2}]])
+_h_huatli_s_final_strike = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] Choose one ? | ? Destroy target artifact or enchantment. | ? Target creature you con
 _h_over_the_edge = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [lci] This spell costs {3} less to cast if it targets a tapped creature. | Exile target 
@@ -1427,6 +1525,8 @@ _h_malamet_battle_glyph = _spell([["add_counters", {"n": 1, "target": "self"}]])
 _h_brackish_blunder = _spell([["bounce_to_hand", {}]])
 # [lci] Calamitous Cave-In deals X damage to each creature and each planeswalker, where 
 _h_calamitous_cave_in = _spell([["damage_creature", {"n": 1, "target": "each_opp"}]])
+# [lci] Target creature gets +3/+3 and gains trample until end of turn.
+_h_staggering_size = _spell([["add_counters", {"n": 3, "target": "self"}]])
 # [lci] Choose one ? | ? Creatures you control get +1/+1 until end of turn. | ? Creatures yo
 _h_family_reunion = _spell([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [lci] Discover 10. If the discovered card's mana value is less than 10, create a numbe
@@ -1434,7 +1534,9 @@ _h_hit_the_mother_lode = _spell([["draw", {"n": 1}]])
 # [lci] Up to three target creatures can't block this turn. | Discover 4. (Exile cards fro
 _h_daring_discovery = _spell([["draw", {"n": 1}]])
 # [lci] Target creature gets +2/+0 and gains first strike until end of turn. | Create a Tr
-_h_ancestors__aid = _spell([["create_treasure", {"n": 1}]])
+_h_ancestors__aid = _spell([["add_counters", {"n": 2, "target": "self"}], ["create_treasure", {"n": 1}]])
+# [lci] Target creature gets -5/-5 until end of turn. | Descend 4 ? That creature gets -10
+_h_join_the_dead = _spell([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [lci] Return up to one target permanent card from your graveyard to your hand. Discove
 _h_walk_with_the_ancestors = _spell([["draw", {"n": 1}]])
 # [lci] Return target creature card from your graveyard to the battlefield. That creatur
@@ -1460,17 +1562,21 @@ _h_treacherous_greed = _spell([["draw", {"n": 3}], ["gain_life", {"n": 3}], ["lo
 # [mkm] Target opponent reveals their hand. You choose a nonland card from it. Exile tha
 _h_soul_search = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
 # [mkm] Target creature gets +3/+0 and gains first strike until end of turn. Investigate
-_h_the_chase_is_on = _spell([["draw", {"n": 1}]])
+_h_the_chase_is_on = _spell([["draw", {"n": 1}], ["add_counters", {"n": 3, "target": "self"}]])
 # [mkm] This spell costs {3} less to cast if you've sacrificed an artifact this turn. | Th
 _h_suspicious_detonation = _spell([["damage_creature", {"n": 4, "target": "opp_biggest"}]])
 # [mkm] Look at the top five cards of your library, cloak two of them, and put the rest 
 _h_hide_in_plain_sight = _spell([["scry", {"n": 5}]])
 # [mkm] Galvanize deals 3 damage to target creature. If you've drawn two or more cards t
 _h_galvanize = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
+# [mkm] Until end of turn, target creature gets +2/+0 and gains "When this creature dies
+_h_presumed_dead = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [mkm] Target creature gets +2/+2 until end of turn. Investigate. (Create a Clue token.
 _h_auspicious_arrival = _spell([["draw", {"n": 1}], ["add_counters", {"n": 2, "target": "self"}]])
 # [mkm] Create a 0/0 green Ooze creature token with trample. Put X +1/+1 counters on it,
 _h_slime_against_humanity = _spell([["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": ["trample"]}]])
+# [mkm] Target creature gets +3/+3 and gains trample until end of turn.
+_h_fanatical_strength = _spell([["add_counters", {"n": 3, "target": "self"}]])
 # [mkm] Choose one or both ? | ? Destroy target creature. | ? Put a +1/+1 counter on target 
 _h_deadly_complication = _spell([["destroy", {"target": "opp_biggest_creature"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [mkm] Investigate. Creatures your opponents control get -2/-0 until end of turn. If an
@@ -1486,23 +1592,23 @@ _h_officious_interrogation = _spell([["draw", {"n": 1}]])
 # [mkm] Reveal the top five cards of your library and separate them into two piles. An o
 _h_intrude_on_the_mind = _spell([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": ["flying", "then put a +1/+1 counter on it for each card put into your graveyard this way"]}]])
 # [mkm] As an additional cost to cast this spell, you may collect evidence 6. This spell
-_h_bite_down_on_crime = _spell([["damage_any", {"n": 2}]])
+_h_bite_down_on_crime = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [otj] Spree (Choose one or more additional costs.) | + {2}{B} ? Destroy target creature.
-_h_unfortunate_accident = _spell([["destroy", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_unfortunate_accident = _spell([["destroy", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Search your library for up to two basic land cards and/or Desert cards, put them
 _h_map_the_frontier = _spell([["search_basic_land", {"n": 2}]])
 # [otj] Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn in
-_h_take_the_fall = _spell([["draw", {"n": 1}]])
+_h_take_the_fall = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}], ["draw", {"n": 1}]])
 # [otj] Look at the top three cards of your library. You may exile a nonland card from a
 _h_make_your_own_luck = _spell([["scry", {"n": 3}]])
 # [otj] Create a Treasure token. Until end of turn, up to one target creature gets +2/+2
-_h_gold_rush = _spell([["create_treasure", {"n": 1}]])
+_h_gold_rush = _spell([["create_treasure", {"n": 1}], ["add_counters", {"n": 2, "target": "self"}]])
 # [otj] Each player may shuffle their hand and graveyard into their library. Each player
 _h_step_between_worlds = _spell([["draw", {"n": 7}]])
 # [otj] Spree (Choose one or more additional costs.) | + {2} ? Return target creature card
 _h_one_last_job = _spell([["return_gy_to_bf", {"filter_type": "creature"}]])
 # [otj] Return up to one target creature card from your graveyard to your hand. Create a
-_h_mourner_s_surprise = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_mourner_s_surprise = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Creatures you control get +2/+0 until end of turn. If you control an outlaw, exi
 _h_outlaws__fury = _spell([["add_counters", {"n": 2, "target": "all_friendly"}]])
 # [otj] Until end of turn, each creature you control gets +2/+2 and gains trample and "T
@@ -1516,13 +1622,19 @@ _h_hell_to_pay = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]]
 # [otj] Trick Shot deals 6 damage to target creature and 2 damage to up to one other tar
 _h_trick_shot = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [otj] Create X 1/1 red Mercenary creature tokens with "{T}: Target creature you contro
-_h_form_a_posse = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}]])
+_h_form_a_posse = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
+# [otj] Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until 
+_h_desert_s_due = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
+# [otj] Until end of turn, target creature you control gets +1/+1 and target creature an
+_h_skulduggery = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Spree (Choose one or more additional costs.) | + {1} ? Exile target nontoken creat
 _h_getaway_glamer = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [otj] Exile target creature. If it had mana value 3 or less, surveil 2. (Look at the t
 _h_consuming_ashes = _spell([["exile", {"target": "opp_biggest_creature"}], ["scry", {"n": 2}]])
 # [otj] Surveil 3 if you have no cards in hand. Then draw three cards. (To surveil 3, lo
 _h_plan_the_heist = _spell([["draw", {"n": 3}], ["scry", {"n": 3}]])
+# [otj] Target creature you control gets +1/+1 and gains first strike until end of turn.
+_h_quick_draw = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Spree (Choose one or more additional costs.) | + {2}{R} ? Untap all creatures you 
 _h_great_train_heist = _spell([["add_counters", {"n": 1, "target": "all_friendly"}], ["damage_player", {"n": 1, "target": "opp"}]])
 # [otj] Destroy target tapped creature. You gain 2 life.
@@ -1538,7 +1650,7 @@ _h_jailbreak_scheme = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Thunder Salvo deals X damage to target creature, where X is 2 plus the number of
 _h_thunder_salvo = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]])
 # [otj] Target creature you control gets +1/+1 until end of turn. Put a +1/+1 counter on
-_h_throw_from_the_saddle = _spell([["add_counters", {"n": 1, "target": "self"}]])
+_h_throw_from_the_saddle = _spell([["add_counters", {"n": 1, "target": "self"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Create X 2/1 green Varmint creature tokens, where X is the number of creature ca
 _h_rise_of_the_varmints = _spell([["create_token", {"count": 1, "power": "2", "toughness": "1", "keywords": []}]])
 # [otj] This spell costs {1} less to cast if you've committed a crime this turn. (Target
@@ -1551,6 +1663,8 @@ _h_take_up_the_shield = _spell([["add_counters", {"n": 1, "target": "self"}]])
 _h_betrayal_at_the_vault = _spell([["damage_any", {"n": 2}]])
 # [otj] Return target nonland permanent to its owner's hand. If you control a Desert, su
 _h_failed_fording = _spell([["bounce_to_hand", {}], ["scry", {"n": 1}]])
+# [big] Create a token that's a copy of target artifact or creature you control, except 
+_h_molten_duplication = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [blb] Conduct Electricity deals 6 damage to target creature and 2 damage to up to one 
 _h_conduct_electricity = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [blb] Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. I
@@ -1558,11 +1672,11 @@ _h_mind_spiral = _spell([["draw", {"n": 3}]])
 # [blb] Gift a card (You may promise an opponent a gift as you cast this spell. If you d
 _h_wildfire_howl = _spell([["damage_any", {"n": 1}], ["damage_creature", {"n": 2, "target": "each_opp"}]])
 # [blb] Target creature you control gets +1/+0 until end of turn. Then it deals damage e
-_h_rabid_gnaw = _spell([["damage_any", {"n": 2}]])
+_h_rabid_gnaw = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] Playful Shove deals 1 damage to any target. | Draw a card.
 _h_playful_shove = _spell([["damage_any", {"n": 1}], ["draw", {"n": 1}]])
 # [blb] Gift a card (You may promise an opponent a gift as you cast this spell. If you d
-_h_coiling_rebirth = _spell([["return_gy_to_bf", {"filter_type": "creature"}]])
+_h_coiling_rebirth = _spell([["return_gy_to_bf", {"filter_type": "creature"}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [blb] Return up to two target creature cards from your graveyard to your hand. Each op
 _h_hazel_s_nocturne = _spell([["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}]])
 # [blb] Draw X cards.
@@ -1585,6 +1699,8 @@ _h_agate_assault = _spell([["damage_creature", {"n": 4, "target": "opp_biggest"}
 _h_spellgyre = _spell([["draw", {"n": 2}], ["scry", {"n": 2}]])
 # [blb] This spell costs {1} less to cast if you control an Otter. | Draw two cards.
 _h_pearl_of_wisdom = _spell([["draw", {"n": 2}]])
+# [blb] Gift a Food (You may promise an opponent a gift as you cast this spell. If you d
+_h_crumb_and_get_it = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [blb] Gift a card (You may promise an opponent a gift as you cast this spell. If you d
 _h_peerless_recycling = _spell([["return_gy_to_hand", {"filter_type": "creature"}]])
 # [blb] Creatures you control get +2/+1 until end of turn. If you control a Rabbit, scry
@@ -1593,8 +1709,10 @@ _h_rabbit_response = _spell([["scry", {"n": 2}], ["add_counters", {"n": 2, "targ
 _h_diresight = _spell([["draw", {"n": 2}], ["scry", {"n": 2}]])
 # [blb] Target opponent exiles a card from their hand. If this spell was cast from a gra
 _h_ruthless_negotiation = _spell([["draw", {"n": 1}]])
+# [blb] Target creature gets +1/+3 and gains reach until end of turn. Untap it.
+_h_high_stride = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [blb] Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. I
-_h_sazacap_s_brew = _spell([["draw", {"n": 2}]])
+_h_sazacap_s_brew = _spell([["draw", {"n": 2}], ["add_counters", {"n": 2, "target": "self"}]])
 # [blb] Gift a card (You may promise an opponent a gift as you cast this spell. If you d
 _h_consumed_by_greed = _spell([["return_gy_to_hand", {"filter_type": "creature"}]])
 # [blb] Destroy target creature with power or toughness 4 or greater.
@@ -1625,6 +1743,8 @@ _h_commune_with_evil = _spell([["gain_life", {"n": 3}], ["scry", {"n": 4}]])
 _h_vanish_from_sight = _spell([["scry", {"n": 1}]])
 # [dsk] Destroy target creature. If a creature card is put into a graveyard this way, re
 _h_come_back_wrong = _spell([["destroy", {"target": "opp_biggest_creature"}]])
+# [dsk] Target creature gets +2/+2 and gains lifelink until end of turn.
+_h_give_in_to_violence = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [dsk] Choose target creature you control and target creature an opponent controls. | Del
 _h_beastie_beatdown = _spell([["damage_any", {"n": 2}]])
 # [dsk] Create three 1/1 red Gremlin creature tokens. Gremlins you control gain menace, 
@@ -1633,6 +1753,8 @@ _h_midnight_mayhem = _spell([["create_token", {"count": 3, "power": "1", "toughn
 _h_twist_reality = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [dsk] Target creature can't be blocked this turn. | Draw a card.
 _h_enter_the_enigma = _spell([["draw", {"n": 1}]])
+# [dsk] Until end of turn, target creature gets +2/+2, gains flying, and becomes a Horro
+_h_jump_scare = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [dsk] Target creature you control deals damage equal to its power to each other creatu
 _h_waltz_of_rage = _spell([["damage_any", {"n": 2}]])
 # [dsk] Return up to one target nonland permanent to its owner's hand. Manifest dread. (
@@ -1687,10 +1809,14 @@ _h_overrun = _spell([["add_counters", {"n": 3, "target": "all_friendly"}]])
 _h_joraga_invocation = _spell([["add_counters", {"n": 3, "target": "all_friendly"}]])
 # [fdn] Counter target noncreature spell. Its controller creates two Treasure tokens. (T
 _h_an_offer_you_can_t_refuse = _spell([["create_treasure", {"n": 1}]])
+# [fdn] Target creature you control gets +0/+3 and gains hexproof until end of turn. (It
+_h_dive_down = _spell([["add_counters", {"n": 0, "target": "self"}]])
 # [fdn] Search your library for up to two basic land cards and/or Gate cards, put them o
 _h_circuitous_route = _spell([["search_basic_land", {"n": 2}]])
 # [fdn] Seismic Rupture deals 2 damage to each creature without flying.
 _h_seismic_rupture = _spell([["damage_creature", {"n": 2, "target": "each_opp"}]])
+# [fdn] Target creature gets +2/+2 and gains indestructible until end of turn. (Damage a
+_h_adamant_will = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [fdn] Affinity for Cats (This spell costs {1} less to cast for each Cat you control.) | 
 _h_claws_out = _spell([["add_counters", {"n": 2, "target": "all_friendly"}]])
 # [fdn] Incinerating Blast deals 6 damage to target creature. | You may discard a card. If
@@ -1699,6 +1825,8 @@ _h_incinerating_blast = _spell([["damage_creature", {"n": 6, "target": "opp_bigg
 _h_make_a_stand = _spell([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [fdn] Draw a card for each different mana value among nonland permanents you control.
 _h_lunar_insight = _spell([["draw", {"n": 1}]])
+# [fdn] Create a token that's a copy of target creature you control. | Flashback {3}{U} (Y
+_h_self_reflection = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [fdn] Choose one ? | ? Destroy target creature or planeswalker. | ? Return target Zombie c
 _h_deadly_plot = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [fdn] Target creature you control deals damage equal to its power to target creature o
@@ -1724,9 +1852,9 @@ _h_exsanguinate = _spell([["lose_life", {"n": 1, "target": "opp"}], ["gain_life"
 # [fdn] Draw a card for each creature you control with a +1/+1 counter on it. Those crea
 _h_inspiring_call = _spell([["draw", {"n": 1}]])
 # [fdn] Until end of turn, target creature gets +2/+0 and gains "When this creature dies
-_h_fake_your_own_death = _spell([["create_treasure", {"n": 1}]])
+_h_fake_your_own_death = _spell([["create_treasure", {"n": 1}], ["add_counters", {"n": 2, "target": "self"}]])
 # [fdn] Target creature gets -1/-0 until end of turn. | Draw a card.
-_h_fleeting_distraction = _spell([["draw", {"n": 1}]])
+_h_fleeting_distraction = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}], ["draw", {"n": 1}]])
 # [fdn] Mill three cards, then return an instant or sorcery card from your graveyard to 
 _h_inspiration_from_beyond = _spell([["mill", {"n": 3, "target": "self"}]])
 # [fdn] Create two 1/1 white Soldier creature tokens. Until end of turn, creatures you c
@@ -1739,8 +1867,12 @@ _h_luminous_rebuke = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 _h_tribute_to_hunger = _spell([["gain_life", {"n": 2}]])
 # [fdn] Deadly Riposte deals 3 damage to target tapped creature and you gain 2 life.
 _h_deadly_riposte = _spell([["gain_life", {"n": 2}]])
+# [fdn] Target creature gets +1/+0 and gains first strike until end of turn. (It deals c
+_h_kindled_fury = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [fdn] Destroy target creature or enchantment.
 _h_mortify = _spell([["destroy", {"target": "opp_biggest_creature"}]])
+# [fdn] Target creature gets +3/+0 and gains first strike until end of turn. (It deals c
+_h_sure_strike = _spell([["add_counters", {"n": 3, "target": "self"}]])
 # [fdn] Put a +1/+1 counter on target creature you control. Then that creature deals dam
 _h_felling_blow = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [fdn] This spell costs {1} less to cast if you control a Wizard. | Draw three cards.
@@ -1751,6 +1883,8 @@ _h_gallant_strike = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 _h_run_over = _spell([["damage_any", {"n": 2}]])
 # [dft] Choose one ? | ? Destroy target Vehicle. | ? Crash and Burn deals 6 damage to target
 _h_crash_and_burn = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
+# [dft] Target creature gets +4/+4 and gains trample until end of turn.
+_h_bestow_greatness = _spell([["add_counters", {"n": 4, "target": "self"}]])
 # [dft] Affinity for artifacts (This spell costs {1} less to cast for each artifact you 
 _h_voyage_home = _spell([["draw", {"n": 3}]])
 # [dft] Choose target opponent. Create two 1/1 colorless Thopter artifact creature token
@@ -1759,6 +1893,8 @@ _h_haunt_the_network = _spell([["gain_life", {"n": 1}], ["create_token", {"count
 _h_syphon_fuel = _spell([["gain_life", {"n": 2}]])
 # [dft] All creatures and Vehicles lose indestructible until end of turn, then destroy a
 _h_spectacular_pileup = _spell([["destroy_all_creatures", {}]])
+# [dft] Choose one ? | ? Target creature you control fights target creature an opponent co
+_h_plow_through = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [dft] Draw two cards. Each player loses 2 life.
 _h_risky_shortcut = _spell([["draw", {"n": 2}]])
 # [dft] Return target creature or Vehicle card from your graveyard to the battlefield. C
@@ -1775,6 +1911,8 @@ _h_road_rage = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]])
 _h_lightshield_parry = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [dft] Put a +1/+1 counter on target creature. It gains deathtouch and indestructible u
 _h_maximum_overdrive = _spell([["add_counters", {"n": 1, "target": "self"}]])
+# [dft] Target creature gets -1/-1 until end of turn. | Cycling {B} ({B}, Discard this car
+_h_locust_spray = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]])
 # [tdm] As an additional cost to cast this spell, sacrifice a creature. | Exile target cre
 _h_worthy_cost = _spell([["exile", {"target": "opp_biggest_creature"}]])
 # [tdm] Exile target permanent with mana value 3 or greater.
@@ -1841,6 +1979,8 @@ _h_circle_of_power = _spell([["damage_player", {"n": 1, "target": "opp"}], ["dra
 _h_deadly_embrace = _spell([["destroy", {"target": "opp_biggest_creature"}], ["draw", {"n": 1}]])
 # [fin] As an additional cost to cast this spell, discard a card. | Draw two cards. | Flashb
 _h_laughing_mad = _spell([["draw", {"n": 2}]])
+# [fin] Target creature gets -0/-9999 until end of turn.
+_h_overkill = _spell([["damage_creature", {"n": 0, "target": "opp_biggest"}]])
 # [fin] Affinity for Towns (This spell costs {1} less to cast for each Town you control.
 _h_travel_the_overworld = _spell([["draw", {"n": 4}]])
 # [fin] Target opponent sacrifices a creature of their choice. | Create a 0/1 black Wizard
@@ -1849,8 +1989,12 @@ _h_cornered_by_black_mages = _spell([["damage_player", {"n": 1, "target": "opp"}
 _h_resentful_revelation = _spell([["scry", {"n": 3}]])
 # [fin] Tiered (Choose one additional cost.) | ? Blizzard ? {0} ? Return target creature t
 _h_ice_magic = _spell([["bounce_to_hand", {}]])
+# [fin] Until end of turn, target creature gets +1/+0 and gains "When this creature dies
+_h_galuf_s_final_act = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [fin] Light of Judgment deals 6 damage to target creature. Destroy up to one Equipment
 _h_light_of_judgment = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
+# [fin] Kicker?Sacrifice an artifact or creature. (You may sacrifice an artifact or crea
+_h_vayne_s_treachery = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [fin] Destroy target creature. You gain 2 life.
 _h_sephiroth_s_intervention = _spell([["destroy", {"target": "opp_biggest_creature"}], ["gain_life", {"n": 2}]])
 # [fin] For each creature you control, create a 1/2 white Moogle creature token with lif
@@ -1863,12 +2007,20 @@ _h_you_re_not_alone = _spell([["add_counters", {"n": 2, "target": "self"}]])
 _h_call_the_mountain_chocobo = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": ["\"Whenever a land you control enters", "this token gets +1/+0 until end of turn"]}]])
 # [fin] Judgment Bolt deals 5 damage to target creature and X damage to that creature's 
 _h_judgment_bolt = _spell([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
+# [fin] Choose one or more ? | ? Target creature you control fights target creature an opp
+_h_clash_of_the_eikons = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [fin] Search your library for a basic land card or Town card, put it onto the battlefi
 _h_prishe_s_wanderings = _spell([["add_counters", {"n": 1, "target": "self"}], ["search_basic_land", {"n": 1}]])
+# [fin] Target creature gets +3/+3 and gains trample until end of turn.
+_h_blitzball_shot = _spell([["add_counters", {"n": 3, "target": "self"}]])
+# [fin] Create a token that's a copy of target artifact, creature, or land.
+_h_relm_s_sketching = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [fin] Create four 1/1 colorless Hero creature tokens. Then put a +1/+1 counter on each
 _h_the_crystal_s_chosen = _spell([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 4, "power": "1", "toughness": "1", "keywords": []}]])
 # [fin] Create a 2/2 green Bird creature token with "Whenever a land you control enters,
 _h_gysahl_greens = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": ["\"Whenever a land you control enters", "this token gets +1/+0 until end of turn"]}]])
+# [eoe] Target creature gets +3/+0 and gains first strike and reach until end of turn.
+_h_rig_for_war = _spell([["add_counters", {"n": 3, "target": "self"}]])
 # [eoe] As an additional cost to cast this spell, sacrifice an artifact or creature. | Des
 _h_embrace_oblivion = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [eoe] Creatures you control get +2/+0 until end of turn. If it's not your turn, untap 
@@ -1890,7 +2042,7 @@ _h_invasive_maneuvers = _spell([["damage_creature", {"n": 3, "target": "opp_bigg
 # [eoe] Orbital Plunge deals 6 damage to target creature. If excess damage was dealt thi
 _h_orbital_plunge = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [eoe] Target creature you control gets +1/+0 and gains vigilance until end of turn. It
-_h_diplomatic_relations = _spell([["damage_any", {"n": 2}]])
+_h_diplomatic_relations = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] You gain 2 life. Create a Lander token. (It's an artifact with "{2}, {T}, Sacrif
 _h_sami_s_curiosity = _spell([["gain_life", {"n": 2}]])
 # [eoe] Destroy target artifact, enchantment, or creature with flying. Surveil 1. (Look 
@@ -1907,6 +2059,8 @@ _h_bombard = _spell([["damage_creature", {"n": 4, "target": "opp_biggest"}]])
 _h_lost_in_space = _spell([["scry", {"n": 1}]])
 # [eoe] Choose one or both ? | ? Search your library for an artifact card, reveal it, put 
 _h_scour_for_scrap = _spell([["return_gy_to_hand", {"filter_type": "any"}]])
+# [eoe] This spell costs {1} less to cast if it targets a blocking creature. | Target crea
+_h_dark_endurance = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [eoe] Surveil X, where X is the number of artifacts you control. Then draw three cards
 _h_cerebral_download = _spell([["draw", {"n": 3}], ["scry", {"n": 1}]])
 # [spm] This spell costs {2} less to cast if you control a permanent with mana value 4 o
@@ -1915,6 +2069,8 @@ _h_terrific_team_up = _spell([["add_counters", {"n": 1, "target": "all_friendly"
 _h_risky_research = _spell([["draw", {"n": 2}], ["scry", {"n": 2}]])
 # [spm] This spell costs {1} less to cast if it targets a Spider. | Target creature gets +
 _h_grow_extra_arms = _spell([["add_counters", {"n": 4, "target": "self"}]])
+# [spm] Target creature gets -3/-3 until end of turn.
+_h_scorpion_s_sting = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [spm] This spell costs {2} less to cast if you control a Villain. | Destroy target creat
 _h_venom_s_hunger = _spell([["destroy", {"target": "opp_biggest_creature"}], ["gain_life", {"n": 2}]])
 # [spm] Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) | Return 
@@ -1930,7 +2086,11 @@ _h_wisecrack = _spell([["damage_any", {"n": 2}]])
 # [spm] Choose one ? | ? Look Around ? Mill three cards. You may put a permanent card from
 _h_scout_the_city = _spell([["mill", {"n": 3, "target": "self"}], ["gain_life", {"n": 3}], ["destroy", {"target": "opp_biggest_creature"}]])
 # [spm] Target creature gets +2/+2 and gains flying until end of turn. If it's a Spider,
-_h_thwip_ = _spell([["gain_life", {"n": 2}]])
+_h_thwip_ = _spell([["gain_life", {"n": 2}], ["add_counters", {"n": 2, "target": "self"}]])
+# [tla] Choose one ? | ? Create a token that's a copy of target creature you control, exce
+_h_ember_island_production = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+# [tla] As an additional cost to cast this spell, waterbend {X}. (While paying a waterbe
+_h_foggy_swamp_visions = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [tla] Choose target creature. When that creature dies this turn, you earthbend 4. (Tar
 _h_fatal_fissure = _spell([["add_mana", {"n": 4}]])
 # [tla] Exile cards from the top of your library until you exile a nonland card. You may
@@ -1941,6 +2101,8 @@ _h_fire_nation_attacks = _spell([["create_token", {"count": 2, "power": "2", "to
 _h_lost_days = _spell([["draw", {"n": 1}]])
 # [tla] Draw three cards. Then discard a card unless you waterbend {2}. (While paying a 
 _h_waterbending_lesson = _spell([["draw", {"n": 3}]])
+# [tla] Target creature you control gets +2/+2 until end of turn. If that creature is an
+_h_yip_yip_ = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [tla] Choose one ? | ? Target opponent reveals their hand. You choose a nonland permanen
 _h_dai_li_indoctrination = _spell([["add_mana", {"n": 2}]])
 # [tla] Kicker {3} (You may pay an additional {3} as you cast this spell.) | Target creatu
@@ -1963,6 +2125,8 @@ _h_sokka_s_haiku = _spell([["draw", {"n": 1}], ["mill", {"n": 3, "target": "self
 _h_cunning_maneuver = _spell([["add_counters", {"n": 3, "target": "self"}], ["draw", {"n": 1}]])
 # [tla] Look at the top X cards of your library, where X is the number of lands you cont
 _h_seismic_sense = _spell([["scry", {"n": 1}]])
+# [tla] Target creature gets +2/+2 and gains reach until end of turn. Untap it.
+_h_pillar_launch = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [tla] Ozai's Cruelty deals 2 damage to target player. That player discards two cards.
 _h_ozai_s_cruelty = _spell([["damage_player", {"n": 2, "target": "opp"}]])
 # [tla] Each creature you control gains firebending 5 until end of turn. (Whenever it at
@@ -1996,7 +2160,9 @@ _h_zuko_s_conviction = _spell([["return_gy_to_hand", {"filter_type": "creature"}
 # [tla] Earthbend 2. When you do, up to one target creature you control fights target cr
 _h_earth_rumble = _spell([["add_mana", {"n": 2}]])
 # [tla] Choose one or both ? | ? Target creature gets -1/-1 until end of turn. | ? Put a +1/
-_h_azula_always_lies = _spell([["add_counters", {"n": 1, "target": "self"}]])
+_h_azula_always_lies = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}], ["add_counters", {"n": 1, "target": "self"}]])
+# [tla] Target creature you control fights target creature an opponent controls. If the 
+_h_the_last_agni_kai = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [tla] Target creature you control deals damage equal to its power to target creature a
 _h_rocky_rebuke = _spell([["damage_any", {"n": 2}]])
 # [ecl] End-Blaze Epiphany deals X damage to target creature. When that creature dies th
@@ -2005,16 +2171,22 @@ _h_end_blaze_epiphany = _spell([["damage_creature", {"n": 1, "target": "opp_bigg
 _h_thirst_for_identity = _spell([["draw", {"n": 3}]])
 # [ecl] Choose exactly two creatures you control. You draw X cards and the chosen creatu
 _h_spry_and_mighty = _spell([["draw", {"n": 1}]])
+# [ecl] Target creature gets +2/+2 and gains first strike until end of turn. Untap it.
+_h_riverguard_s_reflexes = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [ecl] As an additional cost to cast this spell, blight 1 or pay {3}. (To blight 1, put
 _h_bogslither_s_embrace = _spell([["exile", {"target": "opp_biggest_creature"}]])
 # [ecl] Changeling (This card is every creature type.) | Exile target creature. Its contro
 _h_crib_swap = _spell([["exile", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["changeling"]}]])
 # [ecl] As an additional cost to cast this spell, blight X. X can't be greater than the 
 _h_soul_immolation = _spell([["damage_player", {"n": 1, "target": "opp"}]])
+# [ecl] Choose one ? | ? Target opponent reveals their hand. You choose a nonland permanen
+_h_auntie_s_sentence = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [ecl] As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1
 _h_cinder_strike = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
+# [ecl] Target creature you control gets +2/+2 and gains hexproof until end of turn. (It
+_h_blossoming_defense = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [ecl] Choose two ? | ? Create a token that's a copy of target Kithkin you control. | ? Tar
-_h_brigid_s_command = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
+_h_brigid_s_command = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}], ["add_counters", {"n": 3, "target": "self"}], ["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [ecl] Target creature you control gains deathtouch and lifelink until end of turn. Whe
 _h_scarblade_s_malice = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [ecl] Choose one ? | ? Target creature you control deals damage equal to its power to ta
@@ -2026,7 +2198,7 @@ _h_wanderwine_farewell = _spell([["create_token", {"count": 1, "power": "1", "to
 # [ecl] As an additional cost to cast this spell, you may blight 1. (You may put a -1/-1
 _h_burning_curiosity = _spell([["mill", {"n": 2, "target": "self"}]])
 # [ecl] Choose two ? | ? Create a token that's a copy of target Goblin you control. | ? Crea
-_h_grub_s_command = _spell([["mill", {"n": 5, "target": "self"}]])
+_h_grub_s_command = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["mill", {"n": 5, "target": "self"}]])
 # [ecl] Search your library for a basic land card, put it onto the battlefield tapped, t
 _h_tend_the_sprigs = _spell([["create_token", {"count": 1, "power": "3", "toughness": "4", "keywords": ["reach"]}], ["search_basic_land", {"n": 1}]])
 # [ecl] Tweeze deals 3 damage to any target. You may discard a card. If you do, draw a c
@@ -2041,6 +2213,8 @@ _h_rime_chill = _spell([["scry", {"n": 0}], ["draw", {"n": 1}]])
 _h_unforgiving_aim = _spell([["destroy", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [ecl] Convoke (Your creatures can help cast this spell. Each creature you tap while ca
 _h_unexpected_assistance = _spell([["draw", {"n": 3}]])
+# [ecl] Create a token that's a copy of target creature you control, except it has haste
+_h_kindle_the_inner_flame = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [ecl] Exile target creature you control, then return that card to the battlefield unde
 _h_personify = _spell([["exile", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["changeling"]}]])
 # [ecl] Choose one ? | ? Return target creature card from your graveyard to your hand. | ? R
@@ -2048,15 +2222,17 @@ _h_unbury = _spell([["return_gy_to_hand", {"filter_type": "creature"}]])
 # [ecl] Target creature gets +3/+2 until end of turn. Create a Treasure token. (It's an 
 _h_reckless_ransacking = _spell([["create_treasure", {"n": 1}], ["add_counters", {"n": 3, "target": "self"}]])
 # [ecl] Choose two ? | ? Create a token that's a copy of target Elf you control. | ? Return 
-_h_trystan_s_command = _spell([["destroy", {"target": "opp_biggest_creature"}]])
+_h_trystan_s_command = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["destroy", {"target": "opp_biggest_creature"}]])
 # [ecl] Target creature you control gets +1/+0 until end of turn. It deals damage equal 
-_h_assert_perfection = _spell([["damage_any", {"n": 2}]])
+_h_assert_perfection = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [ecl] Feed the Flames deals 5 damage to target creature. If that creature would die th
 _h_feed_the_flames = _spell([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [ecl] Return target creature card from your graveyard to the battlefield. Then if it i
 _h_dose_of_dawnglow = _spell([["return_gy_to_bf", {"filter_type": "creature"}]])
 # [tmt] Until end of turn, target artifact or creature becomes an artifact creature with
 _h_mind_transfer_protocol = _spell([["draw", {"n": 1}]])
+# [tmt] Kicker?Sacrifice an artifact or creature. (You may sacrifice an artifact or crea
+_h_stomped_by_the_foot = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [tmt] Bot Bashing Time deals 6 damage to target creature. If that creature would die t
 _h_bot_bashing_time = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [tmt] Choose one ? | ? Target player discards two cards. | ? Target player draws two cards
@@ -2076,13 +2252,13 @@ _h_cowabunga_ = _spell([["scry", {"n": 4}]])
 # [tmt] Choose one or both ? | ? Brilliance Unleashed deals 5 damage to target creature. | ?
 _h_brilliance_unleashed = _spell([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [tmt] Choose one ? | ? Create a 1/1 colorless Robot artifact creature token. | ? Target cr
-_h_mouser_attack_ = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
+_h_mouser_attack_ = _spell([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}], ["add_counters", {"n": 3, "target": "self"}]])
 # [tmt] Manhole Missile deals 3 damage to target creature. You may put a card from your 
 _h_manhole_missile = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}], ["draw", {"n": 1}]])
 # [tmt] Target creature gets +1/+3 and gains flying until end of turn. Scry 1. (Look at 
-_h_hamato_guardian_stance = _spell([["scry", {"n": 1}]])
+_h_hamato_guardian_stance = _spell([["scry", {"n": 1}], ["add_counters", {"n": 1, "target": "self"}]])
 # [tmt] Sneak {W}{B} (You may cast this spell for {W}{B} if you also return an unblocked
-_h_karai_s_technique = _spell([["add_counters", {"n": 3, "target": "self"}]])
+_h_karai_s_technique = _spell([["add_counters", {"n": 3, "target": "self"}], ["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [tmt] Sneak {2}{G} (You may cast this spell for {2}{G} if you also return an unblocked
 _h_new_generation_s_technique = _spell([["search_basic_land", {"n": 2}]])
 # [tmt] Sneak {2}{R} (You may cast this spell for {2}{R} if you also return an unblocked
@@ -2090,7 +2266,7 @@ _h_raphael_s_technique = _spell([["draw", {"n": 7}]])
 # [tmt] Exile target creature with mana value 3 or less.
 _h_death_in_the_family = _spell([["exile", {"target": "opp_biggest_creature"}]])
 # [sos] Target creature you control gets +1/+1 until end of turn. You draw a card and ga
-_h_oracle_s_restoration = _spell([["draw", {"n": 1}]])
+_h_oracle_s_restoration = _spell([["draw", {"n": 1}], ["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Destroy target creature with power 3 or greater.
 _h_stand_up_for_yourself = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [sos] Exile target creature you control, then return that card to the battlefield unde
@@ -2101,6 +2277,8 @@ _h_artistic_process = _spell([["damage_creature", {"n": 6, "target": "opp_bigges
 _h_harsh_annotation = _spell([["destroy", {"target": "opp_biggest_creature"}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
 # [sos] Put two +1/+1 counters on target creature. | Infusion ? If you gained life this tu
 _h_efflorescence = _spell([["add_counters", {"n": 1, "target": "self"}]])
+# [sos] Target creature you control gets +1/+0 and gains indestructible until end of tur
+_h_masterful_flourish = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Put a +1/+1 counter on target creature you control, then double the number of +1
 _h_growth_curve = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Converge ? Target player draws X cards, Together as One deals X damage to any ta
@@ -2119,6 +2297,8 @@ _h_snarl_song = _spell([["gain_life", {"n": 1}], ["create_token", {"count": 2, "
 _h_wilt_in_the_heat = _spell([["damage_creature", {"n": 5, "target": "opp_biggest"}]])
 # [sos] You gain 2 life. You may discard a card. If you do, draw two cards. | Flashback {2
 _h_pursue_the_past = _spell([["draw", {"n": 2}], ["gain_life", {"n": 2}]])
+# [sos] Target creature gets +2/+2 and gains first strike until end of turn.
+_h_interjection = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [sos] Until end of turn, any number of target creatures you control each get +1/+0 and
 _h_rabid_attack = _spell([["draw", {"n": 1}], ["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [sos] Stress Dream deals 5 damage to up to one target creature. Look at the top two ca
@@ -2138,9 +2318,13 @@ _h_fractal_anomaly = _spell([["create_token", {"count": 1, "power": "0", "toughn
 # [sos] Return target nonland permanent to its owner's hand. Surveil 1. (Look at the top
 _h_banishing_betrayal = _spell([["bounce_to_hand", {}], ["scry", {"n": 1}]])
 # [sos] Target opponent loses 1 life and you gain 1 life. | Up to one target creature gets
-_h_dissection_practice = _spell([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}], ["add_counters", {"n": 1, "target": "self"}]])
+_h_dissection_practice = _spell([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}], ["add_counters", {"n": 1, "target": "self"}], ["damage_creature", {"n": 1, "target": "opp_biggest"}]])
 # [sos] Exile target nonland permanent and the top card of your library. For each of tho
 _h_suspend_aggression = _spell([["exile", {"target": "opp_biggest_creature"}]])
+# [sos] Create a token that's a copy of target non-Aura permanent you control, except it
+_h_applied_geometry = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+# [sos] Target creature you control gets +0/+10 until end of turn. Then it fights up to 
+_h_chelonian_tackle = _spell([["add_counters", {"n": 0, "target": "self"}]])
 # [sos] Choose up to four. You may choose the same mode more than once. | ? Destroy target
 _h_moment_of_reckoning = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [sos] Each opponent discards a card. You create a 1/1 black and green Pest creature to
@@ -2149,6 +2333,8 @@ _h_send_in_the_pest = _spell([["gain_life", {"n": 1}], ["discard", {"n": 1, "tar
 _h_dig_site_inventory = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Put a +1/+1 counter on each creature target player controls. Target creature gai
 _h_practiced_offense = _spell([["add_counters", {"n": 1, "target": "self"}]])
+# [sos] Target creature you control gets +0/+3 and gains hexproof until end of turn. (It
+_h_chase_inspiration = _spell([["add_counters", {"n": 0, "target": "self"}]])
 # [sos] Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast
 _h_antiquities_on_the_loose = _spell([["create_token", {"count": 2, "power": "2", "toughness": "2", "keywords": []}], ["add_counters", {"n": 1, "target": "friendly_biggest"}]])
 # [sos] Destroy target creature. | Infusion ? If you gained life this turn, that creature'
@@ -2159,6 +2345,8 @@ _h_unsubtle_mockery = _spell([["damage_creature", {"n": 4, "target": "opp_bigges
 _h_lorehold_charm = _spell([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [sos] Return up to one target nonland permanent to its owner's hand. Search your libra
 _h_proctor_s_gaze = _spell([["search_basic_land", {"n": 1}]])
+# [sos] Target creature gets -3/-3 until end of turn.
+_h_last_gasp = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [sos] Choose one ? | ? Destroy target artifact. | ? Glorious Decay deals 4 damage to targe
 _h_glorious_decay = _spell([["damage_creature", {"n": 4, "target": "opp_biggest"}], ["draw", {"n": 1}]])
 # [sos] Exile target creature.
@@ -2174,7 +2362,7 @@ _h_ajani_s_response = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [sos] Target creature gets +1/+1 until end of turn. Draw a card. | Whenever one or more 
 _h_killian_s_confidence = _spell([["draw", {"n": 1}], ["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Target creature you control gets +1/+0 until end of turn if you've cast another 
-_h_burrog_barrage = _spell([["damage_any", {"n": 2}]])
+_h_burrog_barrage = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Return up to two target creature cards from your graveyard to your hand. You gai
 _h_pull_from_the_grave = _spell([["gain_life", {"n": 2}]])
 # [sos] Put two +1/+1 counters on each creature you control. | Paradigm (Then exile this s
@@ -2189,6 +2377,8 @@ _h_rapier_wit = _spell([["draw", {"n": 1}]])
 _h_lumaret_s_favor = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [sos] Until end of turn, creatures you control get +2/+2 and gain menace and "Whenever
 _h_root_manipulation = _spell([["gain_life", {"n": 1}], ["add_counters", {"n": 2, "target": "all_friendly"}]])
+# [sos] Target player creates a token that's a copy of target creature you control. | Para
+_h_echocasting_symposium = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [sos] Choose one ? | ? Put two +1/+1 counters on target creature. | ? Exile target creatur
 _h_silverquill_charm = _spell([["add_counters", {"n": 1, "target": "self"}], ["exile", {"target": "opp_biggest_creature"}], ["gain_life", {"n": 3}], ["lose_life", {"n": 3, "target": "opp"}]])
 # [sos] Destroy target artifact or creature. You gain 1 life.
@@ -2205,8 +2395,10 @@ _h_tome_blast = _spell([["damage_any", {"n": 2}]])
 for _n,_f in {
     "Greta, Sweettooth Scourge": _h_greta__sweettooth_scourge,
     "Merfolk Coralsmith": _h_merfolk_coralsmith,
+    "Boundary Lands Ranger": _h_boundary_lands_ranger,
     "Prophetic Prism": _h_prophetic_prism,
     "Stockpiling Celebrant": _h_stockpiling_celebrant,
+    "Skybeast Tracker": _h_skybeast_tracker,
     "Provisions Merchant": _h_provisions_merchant,
     "Hopeful Vigil": _h_hopeful_vigil,
     "Tangled Colony": _h_tangled_colony,
@@ -2224,6 +2416,7 @@ for _n,_f in {
     "Scream Puff": _h_scream_puff,
     "Mintstrosity": _h_mintstrosity,
     "Archive Dragon": _h_archive_dragon,
+    "Stormkeld Prowler": _h_stormkeld_prowler,
     "Redcap Thief": _h_redcap_thief,
     "Rotisserie Elemental": _h_rotisserie_elemental,
     "Edgewall Pack": _h_edgewall_pack,
@@ -2232,15 +2425,18 @@ for _n,_f in {
     "Mephitic Draught": _h_mephitic_draught,
     "Glorifier of Suffering": _h_glorifier_of_suffering,
     "Jadelight Spelunker": _h_jadelight_spelunker,
+    "Deepfathom Echo": _h_deepfathom_echo,
     "Resplendent Angel": _h_resplendent_angel,
     "Starving Revenant": _h_starving_revenant,
     "Plundering Pirate": _h_plundering_pirate,
+    "Rampaging Spiketail": _h_rampaging_spiketail,
     "Captain Storm, Cosmium Raider": _h_captain_storm__cosmium_raider,
     "Earthshaker Dreadmaw": _h_earthshaker_dreadmaw,
     "Pathfinding Axejaw": _h_pathfinding_axejaw,
     "Runaway Boulder": _h_runaway_boulder,
     "Magmatic Galleon": _h_magmatic_galleon,
     "Soaring Sandwing": _h_soaring_sandwing,
+    "Might of the Ancestors": _h_might_of_the_ancestors,
     "Scampering Surveyor": _h_scampering_surveyor,
     "Sage of Days": _h_sage_of_days,
     "Armored Kincaller": _h_armored_kincaller,
@@ -2255,6 +2451,7 @@ for _n,_f in {
     "Oltec Cloud Guard": _h_oltec_cloud_guard,
     "Cavern Stomper": _h_cavern_stomper,
     "Enterprising Scallywag": _h_enterprising_scallywag,
+    "Explorer's Cache": _h_explorer_s_cache,
     "Compass Gnome": _h_compass_gnome,
     "Kinjalli's Dawnrunner": _h_kinjalli_s_dawnrunner,
     "The Mycotyrant": _h_the_mycotyrant,
@@ -2295,8 +2492,10 @@ for _n,_f in {
     "Benthic Criminologists": _h_benthic_criminologists,
     "Sample Collector": _h_sample_collector,
     "Alley Assailant": _h_alley_assailant,
+    "Soul Enervation": _h_soul_enervation,
     "Shady Informant": _h_shady_informant,
     "Case of the Stashed Skeleton": _h_case_of_the_stashed_skeleton,
+    "Exit Specialist": _h_exit_specialist,
     "A Killer Among Us": _h_a_killer_among_us,
     "Case of the Burning Masks": _h_case_of_the_burning_masks,
     "Forum Familiar": _h_forum_familiar,
@@ -2307,6 +2506,7 @@ for _n,_f in {
     "Undercity Eliminator": _h_undercity_eliminator,
     "Makeshift Binding": _h_makeshift_binding,
     "Incinerator of the Guilty": _h_incinerator_of_the_guilty,
+    "Harried Dronesmith": _h_harried_dronesmith,
     "Blood Spatter Analysis": _h_blood_spatter_analysis,
     "Wojek Investigator": _h_wojek_investigator,
     "Gleaming Geardrake": _h_gleaming_geardrake,
@@ -2373,12 +2573,15 @@ for _n,_f in {
     "Rakish Crew": _h_rakish_crew,
     "Desperate Bloodseeker": _h_desperate_bloodseeker,
     "Rooftop Assassin": _h_rooftop_assassin,
+    "Ornery Tumblewagg": _h_ornery_tumblewagg,
+    "Nexus of Becoming": _h_nexus_of_becoming,
     "Greed's Gambit": _h_greed_s_gambit,
     "Bristlebud Farmer": _h_bristlebud_farmer,
     "Loot, the Key to Everything": _h_loot__the_key_to_everything,
     "Generous Plunderer": _h_generous_plunderer,
     "Pileated Provisioner": _h_pileated_provisioner,
     "Starlit Soothsayer": _h_starlit_soothsayer,
+    "Roughshod Duo": _h_roughshod_duo,
     "Splash Lasher": _h_splash_lasher,
     "Starseer Mentor": _h_starseer_mentor,
     "Wick's Patrol": _h_wick_s_patrol,
@@ -2395,14 +2598,17 @@ for _n,_f in {
     "Star Charter": _h_star_charter,
     "Teapot Slinger": _h_teapot_slinger,
     "Treetop Sentries": _h_treetop_sentries,
+    "Corpseberry Cultivator": _h_corpseberry_cultivator,
     "Tempest Angler": _h_tempest_angler,
     "Alania, Divergent Storm": _h_alania__divergent_storm,
     "Bumbleflower's Sharepot": _h_bumbleflower_s_sharepot,
     "Steampath Charger": _h_steampath_charger,
     "Sunshower Druid": _h_sunshower_druid,
+    "Intrepid Rabbit": _h_intrepid_rabbit,
     "Gossip's Talent": _h_gossip_s_talent,
     "Wandertale Mentor": _h_wandertale_mentor,
     "Blacksmith's Talent": _h_blacksmith_s_talent,
+    "Sinister Monolith": _h_sinister_monolith,
     "Scavenger's Talent": _h_scavenger_s_talent,
     "Mistbreath Elder": _h_mistbreath_elder,
     "Feather of Flight": _h_feather_of_flight,
@@ -2412,6 +2618,7 @@ for _n,_f in {
     "Fountainport Bell": _h_fountainport_bell,
     "Bakersbane Duo": _h_bakersbane_duo,
     "Bellowing Crier": _h_bellowing_crier,
+    "Hazardroot Herbalist": _h_hazardroot_herbalist,
     "Driftgloom Coyote": _h_driftgloom_coyote,
     "Mindwhisker": _h_mindwhisker,
     "Friendly Teddy": _h_friendly_teddy,
@@ -2421,6 +2628,7 @@ for _n,_f in {
     "Innocuous Rat": _h_innocuous_rat,
     "Scrabbling Skullcrab": _h_scrabbling_skullcrab,
     "Cautious Survivor": _h_cautious_survivor,
+    "Hardened Escort": _h_hardened_escort,
     "Shroudstomper": _h_shroudstomper,
     "Fear of Lost Teeth": _h_fear_of_lost_teeth,
     "Razorkin Hordecaller": _h_razorkin_hordecaller,
@@ -2467,10 +2675,13 @@ for _n,_f in {
     "Dragon Trainer": _h_dragon_trainer,
     "Vampire Gourmand": _h_vampire_gourmand,
     "Skeleton Archer": _h_skeleton_archer,
+    "Battlesong Berserker": _h_battlesong_berserker,
+    "Extravagant Replication": _h_extravagant_replication,
     "Dwynen's Elite": _h_dwynen_s_elite,
     "Garna, Bloodfist of Keld": _h_garna__bloodfist_of_keld,
     "Wary Thespian": _h_wary_thespian,
     "Prayer of Binding": _h_prayer_of_binding,
+    "Vengeful Bloodwitch": _h_vengeful_bloodwitch,
     "Icewind Elemental": _h_icewind_elemental,
     "Rite of the Dragoncaller": _h_rite_of_the_dragoncaller,
     "Cat Collector": _h_cat_collector,
@@ -2482,6 +2693,7 @@ for _n,_f in {
     "Drogskol Reaver": _h_drogskol_reaver,
     "Stasis Snare": _h_stasis_snare,
     "Spitfire Lagac": _h_spitfire_lagac,
+    "Battle-Rattle Shaman": _h_battle_rattle_shaman,
     "Springbloom Druid": _h_springbloom_druid,
     "Dazzling Angel": _h_dazzling_angel,
     "Eager Trufflesnout": _h_eager_trufflesnout,
@@ -2492,9 +2704,11 @@ for _n,_f in {
     "Ajani's Pridemate": _h_ajani_s_pridemate,
     "Dauntless Veteran": _h_dauntless_veteran,
     "Exemplar of Light": _h_exemplar_of_light,
+    "Zimone, Paradox Sculptor": _h_zimone__paradox_sculptor,
     "Crow of Dark Tidings": _h_crow_of_dark_tidings,
     "Predator Ooze": _h_predator_ooze,
     "Corsair Captain": _h_corsair_captain,
+    "Nessian Hornbeetle": _h_nessian_hornbeetle,
     "Redcap Gutter-Dweller": _h_redcap_gutter_dweller,
     "Elvish Regrower": _h_elvish_regrower,
     "Ovika, Enigma Goliath": _h_ovika__enigma_goliath,
@@ -2523,6 +2737,7 @@ for _n,_f in {
     "Pulse Tracker": _h_pulse_tracker,
     "Nimble Thopterist": _h_nimble_thopterist,
     "Marketback Walker": _h_marketback_walker,
+    "Burner Rocket": _h_burner_rocket,
     "Spotcycle Scouter": _h_spotcycle_scouter,
     "Brightfield Mustang": _h_brightfield_mustang,
     "Broodheart Engine": _h_broodheart_engine,
@@ -2530,6 +2745,7 @@ for _n,_f in {
     "Embalmed Ascendant": _h_embalmed_ascendant,
     "Aatchik, Emerald Radian": _h_aatchik__emerald_radian,
     "Dracosaur Auxiliary": _h_dracosaur_auxiliary,
+    "Haunted Hellride": _h_haunted_hellride,
     "Racers' Scoreboard": _h_racers__scoreboard,
     "Migrating Ketradon": _h_migrating_ketradon,
     "Gilded Ghoda": _h_gilded_ghoda,
@@ -2565,12 +2781,14 @@ for _n,_f in {
     "Teeming Dragonstorm": _h_teeming_dragonstorm,
     "Mardu Devotee": _h_mardu_devotee,
     "Meticulous Artisan": _h_meticulous_artisan,
+    "Gurmag Rakshasa": _h_gurmag_rakshasa,
     "Cori Mountain Stalwart": _h_cori_mountain_stalwart,
     "Nightblade Brigade": _h_nightblade_brigade,
     "Underfoot Underdogs": _h_underfoot_underdogs,
     "Aegis Sculptor": _h_aegis_sculptor,
     "Skirmish Rhino": _h_skirmish_rhino,
     "Stormplain Detainment": _h_stormplain_detainment,
+    "Venerated Stormsinger": _h_venerated_stormsinger,
     "Corroding Dragonstorm": _h_corroding_dragonstorm,
     "Salt Road Packbeast": _h_salt_road_packbeast,
     "Breaching Dragonstorm": _h_breaching_dragonstorm,
@@ -2582,9 +2800,11 @@ for _n,_f in {
     "Betor, Kin to All": _h_betor__kin_to_all,
     "Temur Tawnyback": _h_temur_tawnyback,
     "Delta Bloodflies": _h_delta_bloodflies,
+    "Loxodon Battle Priest": _h_loxodon_battle_priest,
     "A-Cori-Steel Cutter": _h_a_cori_steel_cutter,
     "Trade Route Envoy": _h_trade_route_envoy,
     "Embermouth Sentinel": _h_embermouth_sentinel,
+    "Reigning Victor": _h_reigning_victor,
     "Jeskai Shrinekeeper": _h_jeskai_shrinekeeper,
     "The Sibsig Ceremony": _h_the_sibsig_ceremony,
     "Wingblade Disciple": _h_wingblade_disciple,
@@ -2621,6 +2841,7 @@ for _n,_f in {
     "Hecteyes": _h_hecteyes,
     "Ride the Shoopuf": _h_ride_the_shoopuf,
     "A-Vivi Ornitier": _h_a_vivi_ornitier,
+    "Rosa, Resolute White Mage": _h_rosa__resolute_white_mage,
     "Black Waltz No. 3": _h_black_waltz_no__3,
     "Y'shtola Rhul": _h_y_shtola_rhul,
     "Dwarven Castle Guard": _h_dwarven_castle_guard,
@@ -2630,8 +2851,10 @@ for _n,_f in {
     "Magic Pot": _h_magic_pot,
     "Dragoon's Wyvern": _h_dragoon_s_wyvern,
     "Cloudbound Moogle": _h_cloudbound_moogle,
+    "Gladiolus Amicitia": _h_gladiolus_amicitia,
     "Seedship Agrarian": _h_seedship_agrarian,
     "Wedgelight Rammer": _h_wedgelight_rammer,
+    "Meltstrider Eulogist": _h_meltstrider_eulogist,
     "Thrumming Hivepool": _h_thrumming_hivepool,
     "Starbreach Whale": _h_starbreach_whale,
     "Thawbringer": _h_thawbringer,
@@ -2648,6 +2871,7 @@ for _n,_f in {
     "Drix Fatemaker": _h_drix_fatemaker,
     "Frontline War-Rager": _h_frontline_war_rager,
     "Honored Knight-Captain": _h_honored_knight_captain,
+    "Dubious Delicacy": _h_dubious_delicacy,
     "Dawnstrike Vanguard": _h_dawnstrike_vanguard,
     "Mm'menon, Uthros Exile": _h_mm_menon__uthros_exile,
     "Nebula Dragon": _h_nebula_dragon,
@@ -2658,9 +2882,11 @@ for _n,_f in {
     "Germinating Wurm": _h_germinating_wurm,
     "Codecracker Hound": _h_codecracker_hound,
     "Larval Scoutlander": _h_larval_scoutlander,
+    "Molecular Modifier": _h_molecular_modifier,
     "Debris Field Crusher": _h_debris_field_crusher,
     "Sunstar Chaplain": _h_sunstar_chaplain,
     "Faller's Faithful": _h_faller_s_faithful,
+    "Perigee Beckoner": _h_perigee_beckoner,
     "Vaultguard Trooper": _h_vaultguard_trooper,
     "Virus Beetle": _h_virus_beetle,
     "Alpharael, Dreaming Acolyte": _h_alpharael__dreaming_acolyte,
@@ -2670,6 +2896,7 @@ for _n,_f in {
     "News Helicopter": _h_news_helicopter,
     "Spider-Man, Brooklyn Visionary": _h_spider_man__brooklyn_visionary,
     "Gallant Citizen": _h_gallant_citizen,
+    "Web of Life and Destiny": _h_web_of_life_and_destiny,
     "Steel Wrecking Ball": _h_steel_wrecking_ball,
     "Web-Warriors": _h_web_warriors,
     "Anti-Venom, Horrifying Healer": _h_anti_venom__horrifying_healer,
@@ -2679,6 +2906,7 @@ for _n,_f in {
     "Mysterio, Master of Illusion": _h_mysterio__master_of_illusion,
     "Wall Crawl": _h_wall_crawl,
     "Pictures of Spider-Man": _h_pictures_of_spider_man,
+    "Lurking Lizards": _h_lurking_lizards,
     "Tombstone, Career Criminal": _h_tombstone__career_criminal,
     "Subway Train": _h_subway_train,
     "Robotics Mastery": _h_robotics_mastery,
@@ -2690,6 +2918,7 @@ for _n,_f in {
     "Aunt May": _h_aunt_may,
     "Eerie Gravestone": _h_eerie_gravestone,
     "Hot Dog Cart": _h_hot_dog_cart,
+    "Angry Rabble": _h_angry_rabble,
     "Spiders-Man, Heroic Horde": _h_spiders_man__heroic_horde,
     "Spider-Bot": _h_spider_bot,
     "Venomized Cat": _h_venomized_cat,
@@ -2781,12 +3010,14 @@ for _n,_f in {
     "Lys Alana Informant": _h_lys_alana_informant,
     "Mudbutton Cursetosser": _h_mudbutton_cursetosser,
     "Flamekin Gildweaver": _h_flamekin_gildweaver,
+    "Tanufel Rimespeaker": _h_tanufel_rimespeaker,
     "Morcant's Eyes": _h_morcant_s_eyes,
     "Dream Seizer": _h_dream_seizer,
     "Luminollusk": _h_luminollusk,
     "Heirloom Auntie": _h_heirloom_auntie,
     "Merrow Skyswimmer": _h_merrow_skyswimmer,
     "Silvergill Mentor": _h_silvergill_mentor,
+    "Enraged Flamecaster": _h_enraged_flamecaster,
     "Eclipsed Kithkin": _h_eclipsed_kithkin,
     "Summit Sentinel": _h_summit_sentinel,
     "Scarblade Scout": _h_scarblade_scout,
@@ -2807,6 +3038,7 @@ for _n,_f in {
     "Null Group Biological Assets": _h_null_group_biological_assets,
     "Primordial Pachyderm": _h_primordial_pachyderm,
     "Anchovy & Banana Pizza": _h_anchovy___banana_pizza,
+    "Savanti Romero, Time's Exile": _h_savanti_romero__time_s_exile,
     "Omni-Cheese Pizza": _h_omni_cheese_pizza,
     "Featherbrained Filcher": _h_featherbrained_filcher,
     "Utrom Scientists": _h_utrom_scientists,
@@ -2819,14 +3051,17 @@ for _n,_f in {
     "General Traag, Heart of Stone": _h_general_traag__heart_of_stone,
     "Sally Pride, Lioness Leader": _h_sally_pride__lioness_leader,
     "Jennika, Bad Apple Big Sister": _h_jennika__bad_apple_big_sister,
+    "Foot Elite": _h_foot_elite,
     "Stockman, Mad Fly-entist": _h_stockman__mad_fly_entist,
     "Turtle Blimp": _h_turtle_blimp,
     "Guac & Marshmallow Pizza": _h_guac___marshmallow_pizza,
     "Baxter Stockman": _h_baxter_stockman,
     "Pizza Face, Gastromancer": _h_pizza_face__gastromancer,
+    "Old Hob, Alleycat Blues": _h_old_hob__alleycat_blues,
     "Nobody": _h_nobody,
     "Donatello, Turtle Techie": _h_donatello__turtle_techie,
     "Mighty Mutanimals": _h_mighty_mutanimals,
+    "Bogwater Lumaret": _h_bogwater_lumaret,
     "Mindful Biomancer": _h_mindful_biomancer,
     "Eager Glyphmage": _h_eager_glyphmage,
     "Colossus of the Blood Age": _h_colossus_of_the_blood_age,
@@ -2841,6 +3076,7 @@ for _n,_f in {
     "Tackle Artist": _h_tackle_artist,
     "Muse Seeker": _h_muse_seeker,
     "Stirring Honormancer": _h_stirring_honormancer,
+    "Arnyn, Deathbloom Botanist": _h_arnyn__deathbloom_botanist,
     "Thunderdrum Soloist": _h_thunderdrum_soloist,
     "Pensive Professor": _h_pensive_professor,
     "Primary Research": _h_primary_research,
@@ -2890,6 +3126,7 @@ for _n,_f in {
     "Farsight Ritual": _h_farsight_ritual,
     "Freeze in Place": _h_freeze_in_place,
     "Into the Fae Court": _h_into_the_fae_court,
+    "Candy Grapple": _h_candy_grapple,
     "Flick a Coin": _h_flick_a_coin,
     "Cut In": _h_cut_in,
     "Plunge into Winter": _h_plunge_into_winter,
@@ -2901,20 +3138,24 @@ for _n,_f in {
     "Johann's Stopgap": _h_johann_s_stopgap,
     "Commune with Nature": _h_commune_with_nature,
     "Taken by Nightmares": _h_taken_by_nightmares,
+    "Leaping Ambush": _h_leaping_ambush,
     "Frantic Firebolt": _h_frantic_firebolt,
     "Shatter the Oath": _h_shatter_the_oath,
     "Rowan's Grim Search": _h_rowan_s_grim_search,
     "Hurl into History": _h_hurl_into_history,
+    "Acrobatic Leap": _h_acrobatic_leap,
     "Huatli's Final Strike": _h_huatli_s_final_strike,
     "Over the Edge": _h_over_the_edge,
     "Quicksand Whirlpool": _h_quicksand_whirlpool,
     "Malamet Battle Glyph": _h_malamet_battle_glyph,
     "Brackish Blunder": _h_brackish_blunder,
     "Calamitous Cave-In": _h_calamitous_cave_in,
+    "Staggering Size": _h_staggering_size,
     "Family Reunion": _h_family_reunion,
     "Hit the Mother Lode": _h_hit_the_mother_lode,
     "Daring Discovery": _h_daring_discovery,
     "Ancestors' Aid": _h_ancestors__aid,
+    "Join the Dead": _h_join_the_dead,
     "Walk with the Ancestors": _h_walk_with_the_ancestors,
     "Defossilize": _h_defossilize,
     "Ancestral Reminiscence": _h_ancestral_reminiscence,
@@ -2931,8 +3172,10 @@ for _n,_f in {
     "Suspicious Detonation": _h_suspicious_detonation,
     "Hide in Plain Sight": _h_hide_in_plain_sight,
     "Galvanize": _h_galvanize,
+    "Presumed Dead": _h_presumed_dead,
     "Auspicious Arrival": _h_auspicious_arrival,
     "Slime Against Humanity": _h_slime_against_humanity,
+    "Fanatical Strength": _h_fanatical_strength,
     "Deadly Complication": _h_deadly_complication,
     "Eliminate the Impossible": _h_eliminate_the_impossible,
     "Audience with Trostani": _h_audience_with_trostani,
@@ -2956,9 +3199,12 @@ for _n,_f in {
     "Hell to Pay": _h_hell_to_pay,
     "Trick Shot": _h_trick_shot,
     "Form a Posse": _h_form_a_posse,
+    "Desert's Due": _h_desert_s_due,
+    "Skulduggery": _h_skulduggery,
     "Getaway Glamer": _h_getaway_glamer,
     "Consuming Ashes": _h_consuming_ashes,
     "Plan the Heist": _h_plan_the_heist,
+    "Quick Draw": _h_quick_draw,
     "Great Train Heist": _h_great_train_heist,
     "Eriette's Lullaby": _h_eriette_s_lullaby,
     "Explosive Derailment": _h_explosive_derailment,
@@ -2973,6 +3219,7 @@ for _n,_f in {
     "Take Up the Shield": _h_take_up_the_shield,
     "Betrayal at the Vault": _h_betrayal_at_the_vault,
     "Failed Fording": _h_failed_fording,
+    "Molten Duplication": _h_molten_duplication,
     "Conduct Electricity": _h_conduct_electricity,
     "Mind Spiral": _h_mind_spiral,
     "Wildfire Howl": _h_wildfire_howl,
@@ -2990,10 +3237,12 @@ for _n,_f in {
     "Agate Assault": _h_agate_assault,
     "Spellgyre": _h_spellgyre,
     "Pearl of Wisdom": _h_pearl_of_wisdom,
+    "Crumb and Get It": _h_crumb_and_get_it,
     "Peerless Recycling": _h_peerless_recycling,
     "Rabbit Response": _h_rabbit_response,
     "Diresight": _h_diresight,
     "Ruthless Negotiation": _h_ruthless_negotiation,
+    "High Stride": _h_high_stride,
     "Sazacap's Brew": _h_sazacap_s_brew,
     "Consumed by Greed": _h_consumed_by_greed,
     "Repel Calamity": _h_repel_calamity,
@@ -3010,10 +3259,12 @@ for _n,_f in {
     "Commune with Evil": _h_commune_with_evil,
     "Vanish from Sight": _h_vanish_from_sight,
     "Come Back Wrong": _h_come_back_wrong,
+    "Give In to Violence": _h_give_in_to_violence,
     "Beastie Beatdown": _h_beastie_beatdown,
     "Midnight Mayhem": _h_midnight_mayhem,
     "Twist Reality": _h_twist_reality,
     "Enter the Enigma": _h_enter_the_enigma,
+    "Jump Scare": _h_jump_scare,
     "Waltz of Rage": _h_waltz_of_rage,
     "Unnerving Grasp": _h_unnerving_grasp,
     "Seized from Slumber": _h_seized_from_slumber,
@@ -3041,12 +3292,15 @@ for _n,_f in {
     "Overrun": _h_overrun,
     "Joraga Invocation": _h_joraga_invocation,
     "An Offer You Can't Refuse": _h_an_offer_you_can_t_refuse,
+    "Dive Down": _h_dive_down,
     "Circuitous Route": _h_circuitous_route,
     "Seismic Rupture": _h_seismic_rupture,
+    "Adamant Will": _h_adamant_will,
     "Claws Out": _h_claws_out,
     "Incinerating Blast": _h_incinerating_blast,
     "Make a Stand": _h_make_a_stand,
     "Lunar Insight": _h_lunar_insight,
+    "Self-Reflection": _h_self_reflection,
     "Deadly Plot": _h_deadly_plot,
     "Bite Down": _h_bite_down,
     "Fleeting Flight": _h_fleeting_flight,
@@ -3067,16 +3321,20 @@ for _n,_f in {
     "Luminous Rebuke": _h_luminous_rebuke,
     "Tribute to Hunger": _h_tribute_to_hunger,
     "Deadly Riposte": _h_deadly_riposte,
+    "Kindled Fury": _h_kindled_fury,
     "Mortify": _h_mortify,
+    "Sure Strike": _h_sure_strike,
     "Felling Blow": _h_felling_blow,
     "Arcane Epiphany": _h_arcane_epiphany,
     "Gallant Strike": _h_gallant_strike,
     "Run Over": _h_run_over,
     "Crash and Burn": _h_crash_and_burn,
+    "Bestow Greatness": _h_bestow_greatness,
     "Voyage Home": _h_voyage_home,
     "Haunt the Network": _h_haunt_the_network,
     "Syphon Fuel": _h_syphon_fuel,
     "Spectacular Pileup": _h_spectacular_pileup,
+    "Plow Through": _h_plow_through,
     "Risky Shortcut": _h_risky_shortcut,
     "Back on Track": _h_back_on_track,
     "Spin Out": _h_spin_out,
@@ -3085,6 +3343,7 @@ for _n,_f in {
     "Road Rage": _h_road_rage,
     "Lightshield Parry": _h_lightshield_parry,
     "Maximum Overdrive": _h_maximum_overdrive,
+    "Locust Spray": _h_locust_spray,
     "Worthy Cost": _h_worthy_cost,
     "Kin-Tree Severance": _h_kin_tree_severance,
     "Narset's Rebuke": _h_narset_s_rebuke,
@@ -3118,20 +3377,27 @@ for _n,_f in {
     "Circle of Power": _h_circle_of_power,
     "Deadly Embrace": _h_deadly_embrace,
     "Laughing Mad": _h_laughing_mad,
+    "Overkill": _h_overkill,
     "Travel the Overworld": _h_travel_the_overworld,
     "Cornered by Black Mages": _h_cornered_by_black_mages,
     "Resentful Revelation": _h_resentful_revelation,
     "Ice Magic": _h_ice_magic,
+    "Galuf's Final Act": _h_galuf_s_final_act,
     "Light of Judgment": _h_light_of_judgment,
+    "Vayne's Treachery": _h_vayne_s_treachery,
     "Sephiroth's Intervention": _h_sephiroth_s_intervention,
     "Moogles' Valor": _h_moogles__valor,
     "Eject": _h_eject,
     "You're Not Alone": _h_you_re_not_alone,
     "Call the Mountain Chocobo": _h_call_the_mountain_chocobo,
     "Judgment Bolt": _h_judgment_bolt,
+    "Clash of the Eikons": _h_clash_of_the_eikons,
     "Prishe's Wanderings": _h_prishe_s_wanderings,
+    "Blitzball Shot": _h_blitzball_shot,
+    "Relm's Sketching": _h_relm_s_sketching,
     "The Crystal's Chosen": _h_the_crystal_s_chosen,
     "Gysahl Greens": _h_gysahl_greens,
+    "Rig for War": _h_rig_for_war,
     "Embrace Oblivion": _h_embrace_oblivion,
     "Zealous Display": _h_zealous_display,
     "Lithobraking": _h_lithobraking,
@@ -3151,10 +3417,12 @@ for _n,_f in {
     "Bombard": _h_bombard,
     "Lost in Space": _h_lost_in_space,
     "Scour for Scrap": _h_scour_for_scrap,
+    "Dark Endurance": _h_dark_endurance,
     "Cerebral Download": _h_cerebral_download,
     "Terrific Team-Up": _h_terrific_team_up,
     "Risky Research": _h_risky_research,
     "Grow Extra Arms": _h_grow_extra_arms,
+    "Scorpion's Sting": _h_scorpion_s_sting,
     "Venom's Hunger": _h_venom_s_hunger,
     "Whoosh!": _h_whoosh_,
     "Prison Break": _h_prison_break,
@@ -3163,11 +3431,14 @@ for _n,_f in {
     "Wisecrack": _h_wisecrack,
     "Scout the City": _h_scout_the_city,
     "Thwip!": _h_thwip_,
+    "Ember Island Production": _h_ember_island_production,
+    "Foggy Swamp Visions": _h_foggy_swamp_visions,
     "Fatal Fissure": _h_fatal_fissure,
     "Solstice Revelations": _h_solstice_revelations,
     "Fire Nation Attacks": _h_fire_nation_attacks,
     "Lost Days": _h_lost_days,
     "Waterbending Lesson": _h_waterbending_lesson,
+    "Yip Yip!": _h_yip_yip_,
     "Dai Li Indoctrination": _h_dai_li_indoctrination,
     "Jet's Brainwashing": _h_jet_s_brainwashing,
     "Zuko's Exile": _h_zuko_s_exile,
@@ -3179,6 +3450,7 @@ for _n,_f in {
     "Sokka's Haiku": _h_sokka_s_haiku,
     "Cunning Maneuver": _h_cunning_maneuver,
     "Seismic Sense": _h_seismic_sense,
+    "Pillar Launch": _h_pillar_launch,
     "Ozai's Cruelty": _h_ozai_s_cruelty,
     "Sozin's Comet": _h_sozin_s_comet,
     "Allies at Last": _h_allies_at_last,
@@ -3196,14 +3468,18 @@ for _n,_f in {
     "Zuko's Conviction": _h_zuko_s_conviction,
     "Earth Rumble": _h_earth_rumble,
     "Azula Always Lies": _h_azula_always_lies,
+    "The Last Agni Kai": _h_the_last_agni_kai,
     "Rocky Rebuke": _h_rocky_rebuke,
     "End-Blaze Epiphany": _h_end_blaze_epiphany,
     "Thirst for Identity": _h_thirst_for_identity,
     "Spry and Mighty": _h_spry_and_mighty,
+    "Riverguard's Reflexes": _h_riverguard_s_reflexes,
     "Bogslither's Embrace": _h_bogslither_s_embrace,
     "Crib Swap": _h_crib_swap,
     "Soul Immolation": _h_soul_immolation,
+    "Auntie's Sentence": _h_auntie_s_sentence,
     "Cinder Strike": _h_cinder_strike,
+    "Blossoming Defense": _h_blossoming_defense,
     "Brigid's Command": _h_brigid_s_command,
     "Scarblade's Malice": _h_scarblade_s_malice,
     "Giantfall": _h_giantfall,
@@ -3218,6 +3494,7 @@ for _n,_f in {
     "Rime Chill": _h_rime_chill,
     "Unforgiving Aim": _h_unforgiving_aim,
     "Unexpected Assistance": _h_unexpected_assistance,
+    "Kindle the Inner Flame": _h_kindle_the_inner_flame,
     "Personify": _h_personify,
     "Unbury": _h_unbury,
     "Reckless Ransacking": _h_reckless_ransacking,
@@ -3226,6 +3503,7 @@ for _n,_f in {
     "Feed the Flames": _h_feed_the_flames,
     "Dose of Dawnglow": _h_dose_of_dawnglow,
     "Mind Transfer Protocol": _h_mind_transfer_protocol,
+    "Stomped by the Foot": _h_stomped_by_the_foot,
     "Bot Bashing Time": _h_bot_bashing_time,
     "Shredder's Revenge": _h_shredder_s_revenge,
     "Tainted Treats": _h_tainted_treats,
@@ -3248,6 +3526,7 @@ for _n,_f in {
     "Artistic Process": _h_artistic_process,
     "Harsh Annotation": _h_harsh_annotation,
     "Efflorescence": _h_efflorescence,
+    "Masterful Flourish": _h_masterful_flourish,
     "Growth Curve": _h_growth_curve,
     "Together as One": _h_together_as_one,
     "Splatter Technique": _h_splatter_technique,
@@ -3257,6 +3536,7 @@ for _n,_f in {
     "Snarl Song": _h_snarl_song,
     "Wilt in the Heat": _h_wilt_in_the_heat,
     "Pursue the Past": _h_pursue_the_past,
+    "Interjection": _h_interjection,
     "Rabid Attack": _h_rabid_attack,
     "Stress Dream": _h_stress_dream,
     "Archaic's Agony": _h_archaic_s_agony,
@@ -3268,15 +3548,19 @@ for _n,_f in {
     "Banishing Betrayal": _h_banishing_betrayal,
     "Dissection Practice": _h_dissection_practice,
     "Suspend Aggression": _h_suspend_aggression,
+    "Applied Geometry": _h_applied_geometry,
+    "Chelonian Tackle": _h_chelonian_tackle,
     "Moment of Reckoning": _h_moment_of_reckoning,
     "Send in the Pest": _h_send_in_the_pest,
     "Dig Site Inventory": _h_dig_site_inventory,
     "Practiced Offense": _h_practiced_offense,
+    "Chase Inspiration": _h_chase_inspiration,
     "Antiquities on the Loose": _h_antiquities_on_the_loose,
     "Foolish Fate": _h_foolish_fate,
     "Unsubtle Mockery": _h_unsubtle_mockery,
     "Lorehold Charm": _h_lorehold_charm,
     "Proctor's Gaze": _h_proctor_s_gaze,
+    "Last Gasp": _h_last_gasp,
     "Glorious Decay": _h_glorious_decay,
     "Wander Off": _h_wander_off,
     "Social Snub": _h_social_snub,
@@ -3292,6 +3576,7 @@ for _n,_f in {
     "Rapier Wit": _h_rapier_wit,
     "Lumaret's Favor": _h_lumaret_s_favor,
     "Root Manipulation": _h_root_manipulation,
+    "Echocasting Symposium": _h_echocasting_symposium,
     "Silverquill Charm": _h_silverquill_charm,
     "Grapple with Death": _h_grapple_with_death,
     "Ancestral Anger": _h_ancestral_anger,

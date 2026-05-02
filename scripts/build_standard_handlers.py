@@ -144,7 +144,16 @@ def keyword_only(oracle):
         r'defender|banding|shroud|regenerate|fear|landwalk|rampage|'
         r'equip \{[^}]+\}|equip \d+|crew \d+|saddle \d+|disguise \{[^}]+\}|'
         r'plot \{[^}]+\}|bargain|ninjutsu \{[^}]+\}|evoke \{[^}]+\}|'
-        r'affinity for \w+|fading \d+|vanishing \d+|plainscycling \{[^}]+\})'
+        r'affinity for \w+|fading \d+|vanishing \d+|plainscycling \{[^}]+\}|'
+        r'cycling \{[^}]+\}|cycling \d+|landcycling \{[^}]+\}|'
+        r'convoke|renown \d+|bolster \d+|riot|adapt \d+|'
+        r'exploit|myriad|rampage \d+|wither|persist|undying|'
+        r'this spell costs \{[^}]+\} (?:less|more)|'
+        r'as an additional cost to cast this spell,[^.]+\.|'
+        r'enchant (?:creature|permanent|land|artifact|player|enchantment)|'
+        r'this creature can\'?t (?:block|attack)|'
+        r'this creature attacks (?:each|every) (?:turn|combat)|'
+        r'this (?:creature|permanent) doesn\'?t untap)'
         r'|\([^)]+\)'  # strip all reminder text in parentheses
         r'|^[A-Z][a-z]+ \d+$',
         '', oracle, flags=re.IGNORECASE | re.MULTILINE

@@ -111,6 +111,19 @@ def _roku_chapter_iii(card, gs):
     gs.transform(card)
 
 
+def _kuruk_chapter_i_ii(card, gs):
+    """The Legend of Kuruk I, II — Scry 2, then draw a card.
+    Goldfish: skip the scry (no reordering model), draw 1."""
+    gs.zones.draw(1)
+    gs._log("  Kuruk (I/II): scry 2, draw 1")
+
+
+def _kuruk_chapter_iii(card, gs):
+    """The Legend of Kuruk III — Exile this Saga, return transformed.
+    Uses gs.transform() — same pattern as Kumano and Roku."""
+    gs.transform(card)
+
+
 SAGA_EFFECTS: dict[str, dict[int, Callable]] = {
     "Kumano Faces Kakkazan": {
         1: _kumano_chapter_i,
@@ -122,12 +135,18 @@ SAGA_EFFECTS: dict[str, dict[int, Callable]] = {
         2: _roku_chapter_ii,
         3: _roku_chapter_iii,
     },
+    "The Legend of Kuruk": {
+        1: _kuruk_chapter_i_ii,
+        2: _kuruk_chapter_i_ii,
+        3: _kuruk_chapter_iii,
+    },
 }
 
 # Optional: per-card explicit final chapter. Defaults to max(chapters).
 SAGA_FINAL_CHAPTER: dict[str, int] = {
     "Kumano Faces Kakkazan": 3,
     "The Legend of Roku":    3,
+    "The Legend of Kuruk":   3,
 }
 
 

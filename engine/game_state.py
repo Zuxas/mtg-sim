@@ -922,6 +922,8 @@ class GameState:
         "copperline gorge", "razorverge thicket", "spirebluff canal",
         "blooming marsh", "concealed courtyard", "inspiring vantage",
         "botanical sanctum",
+        # SOS Standard fast lands
+        "stormcarved coast",        # {U}{R}, enters tapped unless 2+ other lands
     }
 
     def _is_fetch_land(self, card: Card) -> bool:

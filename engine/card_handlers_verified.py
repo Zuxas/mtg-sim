@@ -27652,6 +27652,271 @@ _ETB_HANDLERS.update({
 })
 
 
+# =============================================================================
+# PT SECRETS OF STRIXHAVEN 2026 — SOS STANDARD CARD HANDLERS
+# Oracle-verified against Scryfall bulk data 2026-05-03
+# =============================================================================
+
+# ── ETB handlers ─────────────────────────────────────────────────────────────
+
+def _emeritus_of_abundance_etb(gs, card):
+    """Emeritus of Abundance — {2}{G} 3/4 Creature — Elf Druid.
+    'Vigilance. This creature enters prepared.
+     Whenever this creature attacks, if you control eight or more lands,
+     this creature becomes prepared.'
+
+    'Prepared' allows casting a copy of its spell while prepared — a
+    complex mechanic requiring a copy-on-stack zone. Goldfish: ETB is
+    a vanilla 3/4 vigilance body; prepared state logged but not modeled."""
+    gs._log("  Emeritus of Abundance: 3/4 vigilance enters prepared "
+            "(copy-on-cast mechanic not modeled in goldfish)")
+
+
+def _unholy_annex_etb(gs, card):
+    """Unholy Annex — {2}{B} Enchantment — Room.
+    'At the beginning of your end step, draw a card. If you control a
+     Demon, each opponent loses 2 life and you gain 2 life. Otherwise,
+     you lose 2 life.'
+
+    End-step triggers cannot be hooked from ETB_EFFECTS without engine
+    changes. Approximation: fire the first trigger immediately on ETB
+    (draw 1, lose 2 life — no Demons in most lists). This understates
+    recurring value but registers the card exists."""
+    gs.zones.draw(1)
+    demons = [c for c in gs.zones.battlefield
+              if "Demon" in (getattr(c, "type_line", "") or "")]
+    if demons:
+        opp = getattr(gs, "_match_opp", None)
+        if opp is not None:
+            opp.life -= 2
+        gs.life += 2
+        gs._log("  Unholy Annex (end step approx): draw 1, drain 2 "
+                f"(Demon in play: {demons[0].name})")
+    else:
+        gs.life -= 2
+        gs._log("  Unholy Annex (end step approx): draw 1, lose 2 "
+                "(no Demon)")
+
+
+def _ritual_chamber_etb(gs, card):
+    """Ritual Chamber — {3}{B}{B} Enchantment — Room (unlocked door).
+    'When you unlock this door, create a 6/6 black Demon creature token
+     with flying.'
+
+    The unlock fires when the player pays {3}{B}{B} to open the second
+    door. Modeled as ETB: the moment this permanent enters (unlocked),
+    the Demon token is created."""
+    token = gs._make_token("Demon Token", "6", "6",
+                            "Token Creature — Demon")
+    from engine.keywords import KWTag
+    token.keywords = getattr(token, "keywords", set()) | {KWTag.FLYING}
+    gs._log("  Ritual Chamber (unlocked): create 6/6 black Demon token "
+            "with flying")
+
+
+def _sanar_etb(gs, card):
+    """Sanar, Unfinished Genius — {U}{R} 0/4 Legendary Creature — Goblin Sorcerer.
+    'Sanar enters prepared. (While it's prepared, you may cast a copy
+     of its spell. Doing so unprepares it.)
+     {T}: Create a Treasure token. Activate only if you've cast an
+     instant or sorcery spell this turn.'
+
+    Prepared-on-ETB: complex copy mechanic, not modeled.
+    Tap ability is an activated ability (not ETB), fires if we cast
+    instant/sorcery this turn. Goldfish: ETB is a 0/4 body; Treasure
+    generation logged as potential but not auto-fired here."""
+    gs._log("  Sanar, Unfinished Genius: 0/4 enters prepared "
+            "(T: Treasure if cast instant/sorcery — not auto-fired)")
+
+
+# ── SPELL handlers ────────────────────────────────────────────────────────────
+
+def _erode(gs, card):
+    """Erode — {W} Instant.
+    'Destroy target creature or planeswalker. Its controller may search
+     their library for a basic land card, put it onto the battlefield
+     tapped, then shuffle.'
+
+    Match: destroy opponent's biggest creature; opponent gets a tapped
+    basic from their library. Goldfish: no valid targets, no-op."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Erode: no opp (goldfish no-op)")
+        return
+    threats = [c for c in opp.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE)]
+    if not threats:
+        gs._log("  Erode: no opp creatures to destroy")
+        return
+    target = max(threats, key=lambda c: getattr(c, 'cmc', 0))
+    opp.zones.battlefield.remove(target)
+    opp.zones.graveyard.append(target)
+    # Opponent searches a basic land (tapped)
+    basics = [c for c in opp.zones.library if c.is_land()
+              and "basic" in (c.type_line or "").lower()]
+    if basics:
+        land = basics[0]
+        opp.zones.library.remove(land)
+        opp.zones.battlefield.append(land)
+        land.tapped = True
+        land.turn_entered = opp.turn
+    gs._log(f"  Erode: destroy {target.name}"
+            f"{' / opp searches basic' if basics else ''}")
+
+
+def _planar_engineering(gs, card):
+    """Planar Engineering — {3}{G} Sorcery.
+    'Sacrifice two lands. Search your library for four basic land cards,
+     put them onto the battlefield tapped, then shuffle.'
+
+    Net effect: -2 lands, +4 tapped basics = +2 lands total. Key ramp
+    spell for Selesnya Landfall / Mono-Green Landfall."""
+    from engine.card_effects import on_landfall as _on_lf
+    # Sacrifice 2 lands from battlefield
+    my_lands = [c for c in gs.zones.battlefield if c.is_land()]
+    sacrificed = 0
+    for land in my_lands[:2]:
+        gs.zones.battlefield.remove(land)
+        gs.zones.graveyard.append(land)
+        sacrificed += 1
+    # Search library for 4 basics, put tapped
+    basics = [c for c in gs.zones.library
+              if c.is_land() and "basic" in (c.type_line or "").lower()]
+    found = 0
+    for land in basics[:4]:
+        gs.zones.library.remove(land)
+        gs.zones.battlefield.append(land)
+        land.tapped = True
+        land.turn_entered = gs.turn
+        _on_lf(gs)
+        found += 1
+    gs.zones.shuffle()
+    gs._log(f"  Planar Engineering: sac {sacrificed} lands, "
+            f"put {found} basics tapped (net +{found - sacrificed} lands)")
+
+
+def _witherbloom_charm(gs, card):
+    """Witherbloom Charm — {B}{G} Instant.
+    'Choose one:
+     - You may sacrifice a permanent. If you do, draw two cards.
+     - You gain 5 life.
+     - Destroy target nonland permanent with mana value 2 or less.'
+
+    Match priority: mode 3 if opponent has a small threat, else mode 2.
+    Goldfish: always mode 2 (gain 5 life — no opponent, nothing to sac)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        small = [c for c in opp.zones.battlefield
+                 if not c.is_land() and getattr(c, 'cmc', 99) <= 2]
+        if small:
+            target = max(small, key=lambda c: getattr(c, 'cmc', 0))
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Witherbloom Charm (mode 3): destroy {target.name} "
+                    f"(MV {getattr(target,'cmc',0)})")
+            return
+    gs.life += 5
+    gs._log(f"  Witherbloom Charm (mode 2): gain 5 life "
+            f"(life={gs.life})")
+
+
+# ── Registration ──────────────────────────────────────────────────────────────
+
+_ETB_HANDLERS.update({
+    "Emeritus of Abundance": _emeritus_of_abundance_etb,
+    "Unholy Annex":          _unholy_annex_etb,
+    "Ritual Chamber":        _ritual_chamber_etb,
+    "Sanar, Unfinished Genius": _sanar_etb,
+})
+
+def _tragedy_feaster_etb(gs, card):
+    """Tragedy Feaster — {2}{B}{B} 7/6 Creature — Demon.
+    'Trample. Ward—Discard a card.
+     Infusion — At the beginning of your end step, sacrifice a permanent
+     unless you gained life this turn.'
+
+    ETB: massive 7/6 trample body. Ward triggers at spell-targeting time
+    (opponent discards a card to target it), not on ETB. Infusion end-step
+    constraint: in goldfish there is no end-step hook here, so we flag
+    gs._tragedy_feaster_active; engine would need to check this each turn.
+    Approximation: log the body, note the constraint."""
+    gs._tragedy_feaster_active = True
+    gs._log("  Tragedy Feaster: 7/6 trample ward (infusion end-step "
+            "sacrifice constraint not auto-enforced)")
+
+
+def _decorum_dissertation(gs, card):
+    """Decorum Dissertation — {3}{B}{B} Sorcery — Lesson.
+    'Target player draws two cards and loses 2 life.
+     Paradigm (Then exile this spell. After you first resolve a spell
+     with this name, you may cast a copy from exile without paying its
+     mana cost at the beginning of each of your first main phases.)'
+
+    Match: target opponent (draw 2 and lose 2 life = net card advantage
+    for us, disruption for them). Goldfish: no opponent — draw 2, lose 2
+    life (self-targeting).
+    Paradigm recurrence (free copy each main phase) is not modeled."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        opp.zones.draw(2)
+        opp.life -= 2
+        gs._log(f"  Decorum Dissertation: opp draws 2, loses 2 "
+                f"(opp life={opp.life})")
+    else:
+        gs.zones.draw(2)
+        gs.life -= 2
+        gs._log(f"  Decorum Dissertation: draw 2, lose 2 (life={gs.life})")
+
+
+def _vibrant_outburst(gs, card):
+    """Vibrant Outburst — {U}{R} Instant.
+    'Vibrant Outburst deals 3 damage to any target.
+     Tap up to one target creature.'
+
+    Match: deal 3 to opponent player; tap their biggest untapped creature.
+    Goldfish: deal 3 damage to the dummy."""
+    from engine.match_state import safe_power
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        opp.life -= 3
+        # Tap opponent's biggest untapped creature
+        untapped = [c for c in opp.zones.battlefield
+                    if c.has(Tag.CREATURE) and not c.is_land()
+                    and not getattr(c, 'tapped', False)]
+        if untapped:
+            target = max(untapped, key=lambda c: safe_power(c))
+            target.tapped = True
+            gs._log(f"  Vibrant Outburst: 3 damage to opp "
+                    f"(life={opp.life}), tap {target.name}")
+        else:
+            gs._log(f"  Vibrant Outburst: 3 damage to opp "
+                    f"(life={opp.life}), no creature to tap")
+    else:
+        gs.damage_dealt = getattr(gs, 'damage_dealt', 0) + 3
+        gs._log(f"  Vibrant Outburst: 3 damage "
+                f"(total={gs.damage_dealt})")
+
+
+_ETB_HANDLERS.update({
+    "Emeritus of Abundance":    _emeritus_of_abundance_etb,
+    "Unholy Annex":             _unholy_annex_etb,
+    "Unholy Annex // Ritual Chamber": _unholy_annex_etb,   # DFC combined name
+    "Ritual Chamber":           _ritual_chamber_etb,
+    "Sanar, Unfinished Genius": _sanar_etb,
+    "Tragedy Feaster":          _tragedy_feaster_etb,
+})
+
+_SPELL_HANDLERS.update({
+    "Erode":                   _erode,
+    "Planar Engineering":      _planar_engineering,
+    "Witherbloom Charm":       _witherbloom_charm,
+    "Decorum Dissertation":    _decorum_dissertation,
+    "Vibrant Outburst":        _vibrant_outburst,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

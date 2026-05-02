@@ -92,6 +92,49 @@ TRIGGER_PATTERNS = [
 
     # ── Damage trigger ───────────────────────────────────────────────
     (re.compile(r"^whenever (?:a source|~ or another) deals damage,", re.I | re.M), "damage_trigger"),
+
+    # ── Draw trigger ─────────────────────────────────────────────────
+    (re.compile(r"^whenever you draw a card,", re.I | re.M), "draw_trigger"),
+    (re.compile(r"^whenever (?:a player|you) (?:draws?|draw) (?:a|one or more) cards?,", re.I | re.M), "draw_trigger"),
+
+    # ── Cast triggers (cast spells, ETB-on-cast) ─────────────────────
+    (re.compile(r"^when you cast this spell,", re.I | re.M), "cast_trigger"),
+    (re.compile(r"^when you cast ~,", re.I | re.M), "cast_trigger"),
+    (re.compile(r"^whenever an opponent casts (?:a|their first|an? instant|an? sorcery|a noncreature)? ?spell,", re.I | re.M), "cast_spell"),
+    (re.compile(r"^whenever a player casts a spell,", re.I | re.M), "cast_spell"),
+
+    # ── More ETB variants ─────────────────────────────────────────────
+    (re.compile(r"^whenever (?:another|a) (?:creature|permanent|nonland permanent) (?:you control )?enters(?: the battlefield)?,", re.I | re.M), "etb"),
+    (re.compile(r"^whenever a (?:creature|permanent) enters the battlefield under (?:your|an opponent's) control,", re.I | re.M), "etb"),
+    (re.compile(r"^when this permanent (?:enters|transforms),", re.I | re.M), "etb"),
+
+    # ── Face-up / disguise / morph ───────────────────────────────────
+    (re.compile(r"^when (?:this creature|~) is turned face up,", re.I | re.M), "etb"),
+    (re.compile(r"^when ~ is turned face up or (?:this creature|~) enters,", re.I | re.M), "etb"),
+
+    # ── More attack / combat variants ────────────────────────────────
+    (re.compile(r"^whenever you attack,", re.I | re.M), "attack"),
+    (re.compile(r"^whenever (?:this creature|~) attacks? alone,", re.I | re.M), "attack"),
+    (re.compile(r"^whenever (?:this creature|~) blocks? or becomes? blocked,", re.I | re.M), "attack"),
+    (re.compile(r"^whenever (?:this creature|~) (?:deals|dealt) (?:combat )?damage,", re.I | re.M), "combat_damage"),
+
+    # ── More death / graveyard triggers ──────────────────────────────
+    (re.compile(r"^whenever (?:a nontoken|another nontoken|a|an) (?:creature|permanent) (?:you control |an opponent controls )?(?:is put into a graveyard|dies),", re.I | re.M), "dies"),
+    (re.compile(r"^when ~ (?:is put into|enters) (?:a|the) graveyard(?: from anywhere)?,", re.I | re.M), "dies"),
+
+    # ── Sacrifice / pay triggers ─────────────────────────────────────
+    (re.compile(r"^whenever you sacrifice a (?:permanent|creature|artifact|Food),", re.I | re.M), "dies"),
+
+    # ── Counter / modified triggers ───────────────────────────────────
+    (re.compile(r"^whenever (?:a|one or more) \+1/\+1 (?:counter|counters) (?:is|are) (?:put on|removed from) (?:a creature|~|this creature),", re.I | re.M), "etb"),
+
+    # ── Landfall variant ─────────────────────────────────────────────
+    (re.compile(r"^whenever you (?:play|put) a land,", re.I | re.M), "landfall"),
+
+    # ── Starting turns ───────────────────────────────────────────────
+    (re.compile(r"^at the beginning of (?:each|your) combat(?: on your turn)?,", re.I | re.M), "combat_begin"),
+    (re.compile(r"^at the beginning of each (?:other player's|opponent's) (?:upkeep|end step),", re.I | re.M), "upkeep"),
+    (re.compile(r"^the first time (?:you|a source) (?:draws?|deals?) (?:a card|damage) (?:each turn|this turn),", re.I | re.M), "draw_trigger"),
 ]
 
 
@@ -191,6 +234,47 @@ ADD_COUNTER_TGT   = _p(r"\bputs?\s+(?:a|an|one|two|three|(\d+))\s*\+1/\+1\s+coun
 PUMP_TGT          = _p(r"\btarget\s+creature\s+gets?\s+\+(\d+)/\+(\d+)\s+until\s+end\s+of\s+turn\b")
 # Exile top N of library (mill-to-exile)
 EXILE_TOP_N       = _p(r"\bexile\s+the\s+top\s+(\d+|\w+)\s+cards?\s+of\s+(?:your|target player's)\s+library\b")
+
+# ── More effect patterns ────────────────────────────────────────────
+# Pump all friendly creatures until EOT
+PUMP_ALL_CTRL     = _p(r"\bcreatures\s+you\s+control\s+(?:each\s+)?gets?\s+\+(\d+)/\+(\d+)")
+PUMP_EACH_CTRL    = _p(r"\beach\s+(?:creature|nonland permanent)\s+you\s+control\s+gets?\s+\+(\d+)/\+(\d+)")
+# Exile from a graveyard (GY hate / flash proxy)
+EXILE_FROM_GY     = _p(r"\bexile\s+target\s+(?:card|creature|instant|sorcery|artifact|enchantment)\s+(?:card\s+)?from\s+(?:a|your|their|an opponent's)\s+graveyard\b")
+# Untap target — tap/untap effects (no real goldfish value, register to avoid hand-write)
+UNTAP_TARGET      = _p(r"\buntap\s+(?:target|up to (?:\d+|\w+))\s+(?:creature|permanent)s?\b")
+TAP_UP_TO         = _p(r"\btap\s+up\s+to\s+(\d+|\w+)\s+(?:target\s+)?(?:creature|permanent)s?\b")
+# Attach to creature (equipment / aura — no-op in goldfish)
+ATTACH_TO         = _p(r"\battach\s+(?:~|it|this)\s+to\s+(?:target|a)\s+(?:creature|permanent)\b")
+# Put a [non +1/+1] counter on target (loyalty, -1/-1, charge, etc.)
+COUNTER_ON_TGT    = _p(r"\bputs?\s+(?:a|an|one|\d+)\s+(\w+)\s+counter\s+on\s+(?:target|each|it|~)\b")
+# Return [card type] from GY to hand (broader than RETURN_GY_HAND)
+RETURN_GY_HAND2   = _p(r"\breturn\s+target\s+(?:\w+\s+)?(?:card|permanent|spell)\s+from\s+(?:your|a)\s+graveyard\s+to\s+(?:your|their)\s+hand\b")
+# "Return ~ to its owner's hand" (self-bounce)
+SELF_BOUNCE       = _p(r"\breturn\s+(?:~|it|this\s+(?:creature|permanent|card))\s+to\s+(?:its|your|their)\s+owner'?s?\s+hand\b")
+# Draw then discard (looting)
+DRAW_DISCARD      = _p(r"\bdraws?\s+(?:a|\d+|\w+)\s+cards?\s*,?\s*then\s+discards?\s+(?:a|\d+|\w+)\s+cards?\b")
+DISCARD_DRAW      = _p(r"\bdiscards?\s+(?:a|\d+|\w+)\s+cards?\s*,?\s*(?:then|if (?:you|they) do)\s+draws?\s+(?:that many|a|\d+|\w+)\s+cards?\b")
+# Amass N (zombie army token)
+AMASS_N           = _p(r"\bamass\s+(?:\w+\s+)?(\d+|\w+)\b")
+# Proliferate (add counter to each — goldfish proxy: +1 to biggest)
+PROLIFERATE       = _p(r"\bproliferate\b")
+# Connive N (draw N, discard N, +1/+1 for nonland)
+CONNIVE_N         = _p(r"\bconnive(?:\s+(\d+|\w+))?\b")
+# Exert (tap, doesn't untap next turn, gain bonus — goldfish: just use the bonus)
+# Saga chapter — "I," "II," etc. starters (already handled by SAGA_EFFECTS, skip)
+# "You may cast target card" / free cast proxy → draw 1
+FREE_CAST_PROXY   = _p(r"\byou may cast (?:it|that card|target \w+ card)\s+(?:from exile\s+)?without paying its mana cost\b")
+# "Exile target spell" → counter proxy
+EXILE_TGT_SPELL   = _p(r"\bexile\s+target\s+spell\b")
+# Ninjutsu / similar return+replace (complex, proxy: draw)
+NINJUTSU          = _p(r"\bninjutsu\b")
+# Adapt N (if no +1/+1 counters, put N on it)
+ADAPT_N           = _p(r"\badapt\s+(\d+|\w+)\b")
+# Cycling — activated ability, no ETB effect
+CYCLING           = _p(r"\bcycling\s*\{")
+# Level up — activated, no ETB
+LEVEL_UP          = _p(r"\blevel\s+up\s*\{")
 
 
 def _qty(m, group=1, default=1):
@@ -389,6 +473,69 @@ def parse_segment(text: str) -> list:
     m = EXILE_TOP_N.search(text)
     if m:
         effects.append(("mill", {"n": _qty(m), "target": "self"}))
+
+    # ── Additional effect patterns ────────────────────────────────────
+    # Pump all friendly creatures +N/+M until EOT
+    m = PUMP_ALL_CTRL.search(text) or PUMP_EACH_CTRL.search(text)
+    if m:
+        n = int(m.group(1))
+        effects.append(("add_counters", {"n": n, "target": "all_friendly"}))
+
+    # Return self to hand (self-bounce — register as no-op placeholder)
+    if SELF_BOUNCE.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
+
+    # Return broader card type from GY to hand
+    if RETURN_GY_HAND2.search(text) and not RETURN_GY_HAND.search(text):
+        effects.append(("return_gy_to_hand", {"filter_type": "any"}))
+
+    # Exile from graveyard (GY hate — no goldfish value, register to avoid hand-write)
+    if EXILE_FROM_GY.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
+
+    # Untap target / tap up to N (register, no goldfish combat value)
+    if (UNTAP_TARGET.search(text) or TAP_UP_TO.search(text)) and not effects:
+        effects.append(("scry", {"n": 0}))
+
+    # Draw then discard (looting) — net 0 cards but filters hand
+    m = DRAW_DISCARD.search(text)
+    if m and not DRAW_N.search(text) and not DRAW_ONE_ALT.search(text):
+        effects.append(("draw", {"n": 1}))
+        effects.append(("discard", {"n": 1, "target": "self"}))
+
+    # Discard then draw (rummaging)
+    m = DISCARD_DRAW.search(text)
+    if m and not DRAW_N.search(text) and not DRAW_ONE_ALT.search(text) and not DRAW_DISCARD.search(text):
+        effects.append(("draw", {"n": 1}))
+
+    # Amass N (put +1/+1 on Zombie Army token, create if needed — proxy: counter)
+    m = AMASS_N.search(text)
+    if m and not ADD_COUNTER.search(text):
+        effects.append(("add_counters", {"n": _qty(m), "target": "self"}))
+
+    # Proliferate (put counter on each — proxy: +1 counter on self)
+    if PROLIFERATE.search(text) and not ADD_COUNTER.search(text):
+        effects.append(("add_counters", {"n": 1, "target": "self"}))
+
+    # Connive N (draw N, discard N nonland → +1/+1 per discarded)
+    m = CONNIVE_N.search(text)
+    if m and not DRAW_N.search(text):
+        n = _qty(m, default=1)
+        effects.append(("draw", {"n": n}))
+        effects.append(("add_counters", {"n": 1, "target": "self"}))
+
+    # Adapt N (put N +1/+1 counters if creature has none)
+    m = ADAPT_N.search(text)
+    if m and not ADD_COUNTER.search(text) and not SURVEIL_N.search(text):
+        effects.append(("add_counters", {"n": _qty(m), "target": "self"}))
+
+    # Free cast proxy (cast without paying mana — draw proxy)
+    if FREE_CAST_PROXY.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
+    # Exile target spell (counter-like effect — register as no-op)
+    if EXILE_TGT_SPELL.search(text) and not COUNTER_SPELL.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
 
     return effects
 

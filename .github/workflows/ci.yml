@@ -153,6 +153,39 @@ jobs:
               });
             }
 
+  handler-regen:
+    name: Regenerate standard auto-handlers
+    runs-on: self-hosted
+    needs: tests
+    # Run on every push to main so the generated file stays in sync with
+    # oracle_parser.py. Also catches Scryfall bulk updates.
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need write access to auto-commit the regenerated file
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Regenerate standard_auto_handlers.py
+        shell: bash
+        run: python scripts/build_standard_handlers.py
+      - name: Commit if changed
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --exit-code engine/standard_auto_handlers.py; then
+            echo "standard_auto_handlers.py unchanged -- nothing to commit"
+          else
+            TOTAL=$(python -c "
+import sys; sys.path.insert(0,'.')
+from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
+print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))
+" 2>/dev/null || echo "?")
+            git add engine/standard_auto_handlers.py
+            git commit -m "auto: regenerate standard_auto_handlers.py (total handlers: $TOTAL)"
+            git push
+          fi
+
   goldfish-guard:
     name: Goldfish baseline guard
     runs-on: self-hosted

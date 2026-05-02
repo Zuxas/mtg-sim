@@ -492,6 +492,8 @@ _h_baron_bertram_graywater = _etb([["create_token", {"count": 1, "power": "1", "
 _h_iron_fist_pulverizer = _etb([["damage_player", {"n": 2, "target": "opp"}], ["scry", {"n": 1}]])
 # [otj] Whenever you cast your second spell each turn, create a 1/1 red Mercenary creatu
 _h_brimstone_roundup = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"{T}: Target creature you control gets +1/+0 until end of turn"]}], ["add_counters", {"n": 1, "target": "self"}]])
+# [otj] Deathtouch | Whenever a nontoken creature an opponent controls dies, you may pay {
+_h_vraska__the_silencer = _etb([["scry", {"n": 0}]])
 # [otj] Flying | Whenever you commit a crime, each opponent loses 1 life and you gain 1 li
 _h_raven_of_fell_omens = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
 # [otj] Whenever this creature attacks, target creature defending player controls gets -
@@ -507,7 +509,7 @@ _h_mystical_tether = _etb([["exile", {"target": "opp_biggest_creature"}]])
 # [big] At the beginning of combat on your turn, draw a card. Then you may exile an arti
 _h_nexus_of_becoming = _etb([["draw", {"n": 1}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [big] When this enchantment enters, you draw three cards, gain 6 life, and create thre
-_h_greed_s_gambit = _etb([["draw", {"n": 3}], ["create_token", {"count": 3, "power": "2", "toughness": "1", "keywords": ["flying"]}]])
+_h_greed_s_gambit = _etb([["draw", {"n": 3}], ["create_token", {"count": 3, "power": "2", "toughness": "1", "keywords": ["flying"]}], ["scry", {"n": 0}]])
 # [big] Trample | When this creature enters, create two Food tokens. (They're artifacts wi
 _h_bristlebud_farmer = _etb([["gain_life", {"n": 3}], ["mill", {"n": 3, "target": "self"}]])
 # [big] Ward {1} | At the beginning of your upkeep, exile the top X cards of your library,
@@ -939,7 +941,7 @@ _h_embalmed_ascendant = _etb([["create_token", {"count": 1, "power": "2", "tough
 # [dft] Deathtouch | Whenever this creature attacks while saddled, it gets +0/+3 until end
 _h_venomsac_lagac = _etb([["add_counters", {"n": 0, "target": "self"}]])
 # [dft] When this creature enters, you may sacrifice a creature or Vehicle. When you do,
-_h_gastal_blockbuster = _etb([["destroy", {"target": "opp_biggest_creature"}]])
+_h_gastal_blockbuster = _etb([["scry", {"n": 0}], ["destroy", {"target": "opp_biggest_creature"}]])
 # [dft] When Aatchik enters, create a 1/1 green Insect creature token for each artifact 
 _h_aatchik__emerald_radian = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}], ["lose_life", {"n": 1, "target": "opp"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [dft] Flying, haste | Whenever this creature attacks while saddled, it deals 2 damage to
@@ -1500,6 +1502,8 @@ _h_forecasting_fortune_teller = _etb([["draw", {"n": 1}]])
 _h_flopsie__bumi_s_buddy = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [tla] Menace (This creature can't be blocked except by two or more creatures.) | When th
 _h_mongoose_lizard = _etb([["damage_any", {"n": 1}]])
+# [tla] Whenever this creature attacks, choose target creature an opponent controls. Tap
+_h_vengeful_villagers = _etb([["scry", {"n": 0}]])
 # [tla] When this creature enters, create a 1/1 white Ally creature token.
 _h_kyoshi_warriors = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [tla] At the beginning of your first main phase, choose one that hasn't been chosen an
@@ -2468,7 +2472,7 @@ _h_galuf_s_final_act = _spell([["add_counters", {"n": 1, "target": "self"}]])
 # [fin] Light of Judgment deals 6 damage to target creature. Destroy up to one Equipment
 _h_light_of_judgment = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [fin] Kicker?Sacrifice an artifact or creature. (You may sacrifice an artifact or crea
-_h_vayne_s_treachery = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
+_h_vayne_s_treachery = _spell([["scry", {"n": 0}], ["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [fin] Destroy target creature. You gain 2 life.
 _h_sephiroth_s_intervention = _spell([["destroy", {"target": "opp_biggest_creature"}], ["gain_life", {"n": 2}]])
 # [fin] For each creature you control, create a 1/2 white Moogle creature token with lif
@@ -2533,6 +2537,8 @@ _h_mutinous_massacre = _spell([["scry", {"n": 0}]])
 _h_hymn_of_the_faller = _spell([["draw", {"n": 1}], ["scry", {"n": 1}], ["draw", {"n": 1}]])
 # [eoe] Bombard deals 4 damage to target creature.
 _h_bombard = _spell([["damage_creature", {"n": 4, "target": "opp_biggest"}]])
+# [eoe] You may put an artifact or creature card from your hand onto the battlefield. Th
+_h_terminal_velocity = _spell([["scry", {"n": 0}]])
 # [eoe] Target artifact or creature's owner puts it on their choice of the top or bottom
 _h_lost_in_space = _spell([["scry", {"n": 1}]])
 # [eoe] Choose one or both ? | ? Search your library for an artifact card, reveal it, put 
@@ -2702,7 +2708,7 @@ _h_unforgiving_aim = _spell([["destroy", {"target": "opp_biggest_creature"}], ["
 # [ecl] Convoke (Your creatures can help cast this spell. Each creature you tap while ca
 _h_unexpected_assistance = _spell([["draw", {"n": 3}]])
 # [ecl] Create a token that's a copy of target creature you control, except it has haste
-_h_kindle_the_inner_flame = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+_h_kindle_the_inner_flame = _spell([["scry", {"n": 0}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [ecl] Convoke (Your creatures can help cast this spell. Each creature you tap while ca
 _h_appeal_to_eirdu = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [ecl] As an additional cost to cast this spell, blight 2 or pay {1}. (To blight 2, put
@@ -2724,7 +2730,7 @@ _h_dose_of_dawnglow = _spell([["return_gy_to_bf", {"filter_type": "creature"}]])
 # [tmt] Until end of turn, target artifact or creature becomes an artifact creature with
 _h_mind_transfer_protocol = _spell([["draw", {"n": 1}]])
 # [tmt] Kicker?Sacrifice an artifact or creature. (You may sacrifice an artifact or crea
-_h_stomped_by_the_foot = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}]])
+_h_stomped_by_the_foot = _spell([["scry", {"n": 0}], ["damage_creature", {"n": 2, "target": "opp_biggest"}]])
 # [tmt] Bot Bashing Time deals 6 damage to target creature. If that creature would die t
 _h_bot_bashing_time = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
 # [tmt] Sneak {1}{B} (You may cast this spell for {1}{B} if you also return an unblocked
@@ -2818,7 +2824,7 @@ _h_mathemagics = _spell([["draw", {"n": 1}]])
 # [sos] Look at the top five cards of your library. You may reveal up to two creature an
 _h_zimone_s_experiment = _spell([["scry", {"n": 5}]])
 # [sos] This spell can't be copied. | Choose one or both ? | ? Copy target instant or sorcer
-_h_choreographed_sparks = _spell([["draw", {"n": 1}]])
+_h_choreographed_sparks = _spell([["draw", {"n": 1}], ["scry", {"n": 0}]])
 # [sos] Create a 3/3 blue and red Elemental creature token with flying. | Surveil 2. (Look
 _h_muse_s_encouragement = _spell([["create_token", {"count": 1, "power": "3", "toughness": "3", "keywords": ["flying"]}], ["scry", {"n": 2}]])
 # [sos] Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on i
@@ -3151,6 +3157,7 @@ for _n,_f in {
     "Baron Bertram Graywater": _h_baron_bertram_graywater,
     "Iron-Fist Pulverizer": _h_iron_fist_pulverizer,
     "Brimstone Roundup": _h_brimstone_roundup,
+    "Vraska, the Silencer": _h_vraska__the_silencer,
     "Raven of Fell Omens": _h_raven_of_fell_omens,
     "Spring Splasher": _h_spring_splasher,
     "Rooftop Assassin": _h_rooftop_assassin,
@@ -3655,6 +3662,7 @@ for _n,_f in {
     "Forecasting Fortune Teller": _h_forecasting_fortune_teller,
     "Flopsie, Bumi's Buddy": _h_flopsie__bumi_s_buddy,
     "Mongoose Lizard": _h_mongoose_lizard,
+    "Vengeful Villagers": _h_vengeful_villagers,
     "Kyoshi Warriors": _h_kyoshi_warriors,
     "Zuko, Conflicted": _h_zuko__conflicted,
     "The Spirit Oasis": _h_the_spirit_oasis,
@@ -4174,6 +4182,7 @@ for _n,_f in {
     "Mutinous Massacre": _h_mutinous_massacre,
     "Hymn of the Faller": _h_hymn_of_the_faller,
     "Bombard": _h_bombard,
+    "Terminal Velocity": _h_terminal_velocity,
     "Lost in Space": _h_lost_in_space,
     "Scour for Scrap": _h_scour_for_scrap,
     "Dark Endurance": _h_dark_endurance,

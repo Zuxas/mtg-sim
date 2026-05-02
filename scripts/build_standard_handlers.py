@@ -173,7 +173,19 @@ def keyword_only(oracle):
         r'poison counter|'                         # poison counter reminder
         r'proliferate\b|'                          # keyword in paragraph form
         r'protection from (?:everything|all|each)|'
-        r'this creature can\'?t (?:be blocked|block))'
+        r'this creature can\'?t (?:be blocked|block)|'
+        r'spells you cast cost \{[^}]+\} (?:less|more)|'
+        r'you may cast (?:this card|~) from your graveyard|'
+        r'this permanent (?:enters|is) the battlefield (?:tapped|with)|'
+        r'if you control (?:no|a|an|two or more)|'
+        r'living weapon|'
+        r'partner(?: with \w+)?|'
+        r'commander ninjutsu|'
+        r'offering|'
+        r'dredge \d+|'
+        r'morph \{|'
+        r'megamorph \{|'
+        r'bestow \{)'
         r'|\([^)]+\)'  # strip all reminder text in parentheses
         r'|^[A-Z][a-z]+ \d+$',
         '', oracle, flags=re.IGNORECASE | re.MULTILINE

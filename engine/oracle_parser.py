@@ -456,6 +456,20 @@ DESTROY_ALL_TYPE   = _p(r"\bdestroy\s+all\s+(?:artifacts?|enchantments?|nonlands
 EXILE_ALL_GY       = _p(r"\bexile\s+all\s+(?:cards?\s+from|permanents?\s+from)\s+(?:all\s+)?graveyards?\b")
 # "[Creature] can't be the target of spells..." (hexproof-like reminder)
 HEXPROOF_REMINDER  = _p(r"\bcan'?t\s+be\s+the\s+target\s+of\s+spells\b")
+# Return target [non-creature type] to hand (auras, equipment, etc.)
+RETURN_TGT_TYPE   = _p(r"\breturn\s+target\s+(?:land|enchantment|artifact|spell|instant|sorcery|aura)\s+(?:card\s+)?to\s+(?:its|your|their|a player'?s?)\s+(?:hand|owner'?s?\s+hand)\b")
+# "tap target creature you control" (self-tap, not opponent's)
+TAP_CTRL_CREATURE  = _p(r"\btap\s+target\s+(?:creature|permanent)\s+you\s+control\b")
+# Exile target permanent until [event] (Oblivion Ring style)
+EXILE_UNTIL_EVENT  = _p(r"\bexile\s+target\s+(?:nonland\s+)?(?:creature|artifact|enchantment|permanent)\s+(?:you\s+don'?t\s+control\s+)?until\s+(?:end\s+of\s+turn|this leaves|~ leaves|it leaves)\b")
+# "You may have [creature] assign its combat damage as though it wasn't blocked"
+TRAMPLE_TEXT       = _p(r"\bassign(?:s)?\s+(?:its\s+)?(?:combat\s+)?damage\s+as\s+though\b")
+# "Sacrifice [permanent]" as cost/effect — various forms
+SACRIFICE_PERM     = _p(r"\bsacrifice\s+(?:a|an|target|this|~|all)\s+(?:creature|artifact|enchantment|permanent|land|token|Treasure|Clue|Food)\b")
+# "Put target permanent on top of its owner's library" (broader tuck)
+TUCK_TOP_LIB       = _p(r"\bput\s+(?:it|target\s+\w+)\s+on\s+top\s+of\s+(?:its\s+owner'?s?|your|their)\s+library\b")
+# [Number] target creatures get +N/+M (buff multiple targets)
+MULTI_PUMP         = _p(r"\bup\s+to\s+(?:two|three|\d+)\s+target\s+creatures\s+(?:you\s+control\s+)?gets?\s+\+(\d+)/\+(\d+)\b")
 # Role token (WOE): "create a [Wicked/Cursed/Monster/Royal/Sorcerer/Young Hero] Role token"
 ROLE_TOKEN        = _p(r"\bcreates?\s+a\s+(?:wicked|cursed|monster|royal|sorcerer|young hero|instrument of the machine)\s+role\s+token\b")
 # You get an emblem (planeswalker ultimate — register as big effect proxy)
@@ -830,6 +844,32 @@ def parse_segment(text: str) -> list:
     # Exile all cards from graveyards (GY wipe)
     if EXILE_ALL_GY.search(text) and not effects:
         effects.append(("scry", {"n": 0}))  # GY wipe: no direct goldfish value
+
+    # Return non-creature type to hand
+    if RETURN_TGT_TYPE.search(text) and not BOUNCE_TGT.search(text) and not RETURN_GY_HAND.search(text):
+        effects.append(("bounce_to_hand", {}))
+
+    # Tap target creature you control (self-tap cost/effect)
+    if TAP_CTRL_CREATURE.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))  # self-tap: no goldfish value
+
+    # Exile target permanent until [event] (O-Ring style tempo)
+    if EXILE_UNTIL_EVENT.search(text) and not EXILE_TGT_CR.search(text) and not EXILE_TGT_PERM.search(text):
+        effects.append(("exile", {"target": "opp_biggest_creature"}))
+
+    # Sacrifice a permanent as cost (register as no-op — cost not modeled in goldfish)
+    if SACRIFICE_PERM.search(text) and not effects:
+        effects.append(("scry", {"n": 0}))
+
+    # Tuck to top of library (put on top — tempo play)
+    if TUCK_TOP_LIB.search(text) and not PUT_TOP_LIB.search(text) and not effects:
+        effects.append(("scry", {"n": 1}))
+
+    # Multiple targets get +N/+M (buff up to N creatures)
+    m = MULTI_PUMP.search(text)
+    if m and not PUMP_TGT_BROAD.search(text):
+        n = int(m.group(1))
+        effects.append(("add_counters", {"n": n, "target": "all_friendly"}))
 
     # Role token (WOE aura tokens)
     if ROLE_TOKEN.search(text) and not effects:

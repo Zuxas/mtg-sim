@@ -62,8 +62,16 @@ def main():
             for arch, share in list(field.items())[:args.top_n]:
                 print(f"  {arch:<35} {share*100:.1f}%")
         except Exception as e:
-            print(f"MetaBridge unavailable ({e}), using default field")
-            field = {k: 1/6 for k in ["elves","painter","hogaak","lands","delver","stoneforge"]}
+            print(f"MetaBridge unavailable ({e}), using format_config field")
+            try:
+                from format_config import get_field
+                field_raw = get_field(args.format or "modern", top_n=args.top_n)
+                total = sum(field_raw.values())
+                field = {k: v/total for k, v in field_raw.items()}
+                print(f"  Loaded {len(field)} archetypes from format_config ({args.format})")
+            except Exception as e2:
+                print(f"format_config also failed ({e2}), using stub field")
+                field = {k: 1/6 for k in ["elves","painter","hogaak","lands","delver","stoneforge"]}
 
     # Build opponent kill distributions
     opp_clocks = {}
@@ -156,7 +164,7 @@ def main():
     print("  " + "-"*52)
     for r in sorted(gauntlet.matchups, key=lambda x: -x.match_win_pct):
         diff = r.match_win_pct - r.g1_win_pct
-        arrow = "▲" if diff > 1 else ("▼" if diff < -1 else "≈")
+        arrow = "^" if diff > 1 else ("v" if diff < -1 else "~")
         print(f"  {r.opponent:<28} {r.g1_win_pct:>5.1f}%  {r.match_win_pct:>6.1f}%  "
               f"{diff:>+6.1f}% {arrow}")
 

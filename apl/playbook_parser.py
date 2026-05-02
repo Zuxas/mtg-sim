@@ -274,12 +274,12 @@ def load_all_playbooks(
             if pb.deck_name:
                 results[pb.deck_name] = pb
                 mb_count = sum(pb.mainboard.values())
-                print(f"  ✓ {pb.deck_name:<35} {pb.format_name:<10} "
+                print(f"  OK {pb.deck_name:<35} {pb.format_name:<10} "
                       f"T{pb.kill_turn:<6} {mb_count}main")
             else:
-                print(f"  ? {f.name} — no deck name found")
+                print(f"  ?  {f.name} -- no deck name found")
         except Exception as e:
-            print(f"  ✗ {f.name}: {e}")
+            print(f"  ERR {f.name}: {e}")
 
     # Cache results
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -377,9 +377,9 @@ def load_all_tac_guides(tac_dir: str = None) -> dict[str, PlaybookData]:
             pb = parse_tac_guide(str(f))
             if pb.deck_name:
                 results[pb.deck_name] = pb
-                print(f"  ✓ Tac guide: {pb.deck_name}")
+                print(f"  OK Tac guide: {pb.deck_name}")
         except Exception as e:
-            print(f"  ✗ {f.name}: {e}")
+            print(f"  ERR {f.name}: {e}")
     return results
 
 

@@ -53,17 +53,45 @@ def _to_int(s: str) -> int:
 # ─── Segment splitters ─────────────────────────────────────────────
 
 TRIGGER_PATTERNS = [
-    # (regex to match, trigger name)
+    # ── ETB ───────────────────────────────────────────────────────────
     (re.compile(r"^when (?:this creature|this permanent|this artifact|this enchantment|~|it) enters(?:,| )",
                 re.I | re.M), "etb"),
-    (re.compile(r"^when (?P<n>[A-Za-z'\-, ]+?) enters,", re.I | re.M), "etb"),
+    (re.compile(r"^when (?:this card|a creature you control) enters,", re.I | re.M), "etb"),
+    (re.compile(r"^when (?P<n>[A-Za-z'\-, ]+?) enters(?: the battlefield)?,", re.I | re.M), "etb"),
+    # Room doors (DSK / SOS)
+    (re.compile(r"^when you unlock this door,", re.I | re.M), "etb"),
+
+    # ── Attack ────────────────────────────────────────────────────────
     (re.compile(r"^whenever (?:this creature|this permanent|~|it) attacks,", re.I | re.M), "attack"),
-    (re.compile(r"^whenever (?:this creature|this permanent|~|it) enters or attacks,", re.I | re.M), "etb_or_attack"),
+    (re.compile(r"^whenever (?:this creature|this permanent|~|it) enters or attacks,", re.I | re.M), "etb"),
+    (re.compile(r"^whenever (?:a creature you control|one or more creatures you control) attacks?,", re.I | re.M), "attack"),
+    (re.compile(r"^whenever (?:this creature|~) deals combat damage (?:to a player|to an opponent|to a player or planeswalker),", re.I | re.M), "combat_damage"),
+
+    # ── Cast-spell triggers (Magecraft, Opus, Prowess-style) ──────────
+    (re.compile(r"^infusion\s*[—\-]", re.I | re.M), "endstep"),   # Infusion = end-step trigger
+    (re.compile(r"^opus\s*[—\-]", re.I | re.M), "cast_spell"),
+    (re.compile(r"^whenever you cast an? (?:instant|sorcery|instant or sorcery|noncreature) spell,", re.I | re.M), "cast_spell"),
+    (re.compile(r"^whenever you cast a spell,", re.I | re.M), "cast_spell"),
+    (re.compile(r"^magecraft\s*[—\-]", re.I | re.M), "cast_spell"),
+
+    # ── Upkeep / end step ────────────────────────────────────────────
     (re.compile(r"^at the beginning of your upkeep,", re.I | re.M), "upkeep"),
     (re.compile(r"^at the beginning of (?:your|each) end step,", re.I | re.M), "endstep"),
+    (re.compile(r"^at the beginning of each (?:player'?s?|opponent'?s?) upkeep,", re.I | re.M), "upkeep"),
+
+    # ── Dies ─────────────────────────────────────────────────────────
     (re.compile(r"^when (?:this creature|this permanent|~|it) dies,", re.I | re.M), "dies"),
+    (re.compile(r"^whenever (?:a creature|another creature) (?:you control )?dies,", re.I | re.M), "dies"),
+
+    # ── Landfall ─────────────────────────────────────────────────────
     (re.compile(r"^landfall\s*[—\-]\s*whenever a land (?:you control )?enters,?", re.I | re.M), "landfall"),
-    (re.compile(r"^whenever a land (?:you control )?enters(?: the battlefield under your control)?,", re.I | re.M), "landfall"),
+    (re.compile(r"^whenever a land (?:you control )?enters(?: the battlefield(?:\s+under your control)?)?,", re.I | re.M), "landfall"),
+
+    # ── Life-gain trigger ────────────────────────────────────────────
+    (re.compile(r"^whenever you gain life,", re.I | re.M), "gain_life_trigger"),
+
+    # ── Damage trigger ───────────────────────────────────────────────
+    (re.compile(r"^whenever (?:a source|~ or another) deals damage,", re.I | re.M), "damage_trigger"),
 ]
 
 
@@ -132,6 +160,37 @@ SCRY_N            = _p(r"\bscry\s+(\d+|\w+)")
 
 # Counter
 COUNTER_SPELL     = _p(r"\bcounter\s+target\s+(?:spell|noncreature spell|creature spell)")
+
+# ── New Standard mechanics (SOS / UB sets / recent sets) ───────────
+# Surveil N — look at top N, put in GY or top. Goldfish proxy: scry.
+SURVEIL_N         = _p(r"\bsurveil\s+(\d+|\w+)\b")
+# Investigate — create Clue token (sac for draw). Proxy: draw 1.
+INVESTIGATE       = _p(r"\binvestigate\b")
+# Explore — look at top, if land put in hand, else +1/+1 on creature. Proxy: counter.
+EXPLORE           = _p(r"\bthat (?:creature )?explores\b|\bexplores\b|\bexplore\b")
+# Discover N — cascade-like, cast spell with cmc <= N free. Proxy: draw 1.
+DISCOVER_N        = _p(r"\bdiscover\s+(\d+|\w+)\b")
+# Earthbend N — animate land as N/N creature with haste. Proxy: +flex mana (land attacks).
+EARTHBEND_N       = _p(r"\bearth[- ]?bend\s+(\d+|\w+)\b")
+# Mobilize N — create N 1/1 tapped+attacking tokens on attack.
+MOBILIZE_N        = _p(r"\bmobilize\s+(\d+|\w+)\b")
+# Manifest / Manifest Dread — put face-down 2/2 from library. Proxy: create_token.
+MANIFEST          = _p(r"\bmanifest(?:\s+dread)?\b")
+# Forage (BLB) — sac Food or creature or exile 3 GY cards. Proxy: gain_life 3.
+FORAGE            = _p(r"\bforage\b")
+# Tap target creature (no mana effect in goldfish, register as no-op tap)
+TAP_CREATURE      = _p(r"\btap\s+target\s+(?:creature|permanent)\b")
+# Look at top N cards — library peek, goldfish: scry proxy.
+LOOK_TOP_N        = _p(r"\blook at the top (\d+|\w+) cards?\b")
+# Surveil / scry hybrid "scry 1, then draw" — already caught by SCRY + DRAW separately.
+# Populate — create a copy of a token you control. Proxy: create_token 1/1 if any token.
+POPULATE          = _p(r"\bpopulate\b")
+# Counter on a DIFFERENT target (not self)
+ADD_COUNTER_TGT   = _p(r"\bputs?\s+(?:a|an|one|two|three|(\d+))\s*\+1/\+1\s+counters?\s+on\s+(?:target|another|each|a creature|one or more)")
+# Pump target until end of turn
+PUMP_TGT          = _p(r"\btarget\s+creature\s+gets?\s+\+(\d+)/\+(\d+)\s+until\s+end\s+of\s+turn\b")
+# Exile top N of library (mill-to-exile)
+EXILE_TOP_N       = _p(r"\bexile\s+the\s+top\s+(\d+|\w+)\s+cards?\s+of\s+(?:your|target player's)\s+library\b")
 
 
 def _qty(m, group=1, default=1):
@@ -261,6 +320,76 @@ def parse_segment(text: str) -> list:
     if m:
         effects.append(("scry", {"n": _qty(m)}))
 
+    # ── New Standard mechanics ──────────────────────────────────────
+    # Surveil N (goldfish proxy: scry)
+    m = SURVEIL_N.search(text)
+    if m:
+        effects.append(("scry", {"n": _qty(m)}))
+
+    # Investigate (create Clue = draw 1 proxy)
+    if INVESTIGATE.search(text) and not CREATE_CLUE.search(text):
+        effects.append(("draw", {"n": 1}))
+
+    # Explore (look at top, if land into hand else +1/+1. Proxy: counter)
+    if EXPLORE.search(text):
+        effects.append(("add_counters", {"n": 1, "target": "self"}))
+
+    # Discover N (cascade proxy: draw 1)
+    m = DISCOVER_N.search(text)
+    if m:
+        effects.append(("draw", {"n": 1}))
+
+    # Earthbend N (animate land as N/N attacker. Proxy: +N flex mana)
+    m = EARTHBEND_N.search(text)
+    if m:
+        n = _qty(m)
+        effects.append(("add_mana", {"n": n}))
+
+    # Mobilize N (create N 1/1 tapped attacking tokens on attack)
+    m = MOBILIZE_N.search(text)
+    if m:
+        n = _qty(m)
+        effects.append(("create_token", {
+            "count": n, "power": "1", "toughness": "1", "keywords": ["haste"],
+        }))
+
+    # Manifest / Manifest Dread (face-down 2/2 from top of library)
+    if MANIFEST.search(text):
+        effects.append(("create_token", {
+            "count": 1, "power": "2", "toughness": "2", "keywords": [],
+        }))
+
+    # Forage (BLB: sac food or creature. Proxy: gain 3 life)
+    if FORAGE.search(text) and not GAIN_LIFE_N.search(text):
+        effects.append(("gain_life", {"n": 3}))
+
+    # Populate (create copy of token. Proxy: create 1/1 token)
+    if POPULATE.search(text):
+        effects.append(("create_token", {
+            "count": 1, "power": "1", "toughness": "1", "keywords": [],
+        }))
+
+    # Look at top N (peek proxy: scry)
+    m = LOOK_TOP_N.search(text)
+    if m and not SCRY_N.search(text):
+        effects.append(("scry", {"n": _qty(m)}))
+
+    # Pump target creature +N/+N until EOT
+    m = PUMP_TGT.search(text)
+    if m:
+        n = int(m.group(1))
+        effects.append(("add_counters", {"n": n, "target": "self"}))
+
+    # +1/+1 counter on a target OTHER than self
+    m = ADD_COUNTER_TGT.search(text)
+    if m and not ADD_COUNTER.search(text):
+        effects.append(("add_counters", {"n": _qty(m), "target": "friendly_biggest"}))
+
+    # Exile top N of library (mill-to-exile proxy)
+    m = EXILE_TOP_N.search(text)
+    if m:
+        effects.append(("mill", {"n": _qty(m), "target": "self"}))
+
     return effects
 
 
@@ -300,6 +429,18 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
         if trigger_assigned is None:
             # No trigger prefix — treat as instant/sorcery effect
             trigger_assigned = "spell"
+
+        # Normalize trigger names so the auto-handler generator can use them.
+        # cast_spell / gain_life_trigger / combat_damage / damage_trigger
+        # all model as ETB-like one-time firing at sim time.
+        if trigger_assigned in ("cast_spell", "gain_life_trigger",
+                                "combat_damage", "damage_trigger",
+                                "attack", "combat_begin", "upkeep",
+                                "endstep", "dies", "landfall"):
+            # For auto-handler generation: treat as ETB (fire once per game
+            # when the sim runs through the card). Real engine wiring can
+            # distinguish later; this gives correct *value* in goldfish.
+            trigger_assigned = "etb"
 
         result.setdefault(trigger_assigned, []).extend(effects)
 

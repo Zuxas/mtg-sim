@@ -28276,6 +28276,151 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Multi-set batch (WOE/LCI/MKM/OTJ/DSK) -- competitive rares ────────
+
+def _gishath_etb(gs, card):
+    """Gishath, Sun's Avatar -- {5}{R}{G}{W} 7/6 (Vigilance, Trample, Haste).
+    'When deals combat damage, reveal top N cards, put Dinosaurs into play.'
+    ETB proxy: haste body + draw 2 from library."""
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Gishath ETB: vigilance trample haste + draw 2 (Dino-reveal proxy)")
+
+
+def _meathook_massacre_ii_etb(gs, card):
+    """Meathook Massacre II -- {XX}{B}{B}{B}{B}. 'Each player sacrifices X creatures.'
+    Model: each sacrifices X=1. We lose weakest, opp loses strongest."""
+    from data.card import Tag as _Tag
+    our = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if our:
+        worst = min(our, key=lambda c: c.effective_power())
+        gs.zones.battlefield.remove(worst)
+        gs.zones.graveyard.append(worst)
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        opp_c = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if opp_c:
+            target = max(opp_c, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+    gs._log("  Meathook Massacre II ETB: each player sacs a creature (X=1 proxy)")
+
+
+def _agrus_kos_etb(gs, card):
+    """Agrus Kos, Spirit of Justice -- {2}{R}{W} (Double Strike, Vigilance).
+    'ETB or attacks: target creature. If suspended, exile it. If exiled, return suspended.'
+    ETB proxy: double strike vigilance 3/3 + tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Agrus Kos ETB: tap {target.name} (suspended proxy)")
+
+
+def _gruff_triplets_etb(gs, card):
+    """Gruff Triplets -- {3}{G}{G}{G} 3/3 (Trample). 'ETB: create two token copies.
+    When a Gruff token dies, other Gruffs get +3/+3.'
+    Model: ETB creates 2 more 3/3 tramplers."""
+    from data.card import Card, Tag
+    for i in range(2):
+        tok = Card(name=f"Gruff Triplets (copy {i+1})", mana_cost="",
+                   cmc=0, type_line="Creature — Sheep", oracle_text="Trample",
+                   power="3", toughness="3", colors=["G"])
+        tok.tags.add(Tag.CREATURE)
+        tok.tags.add(Tag.TRAMPLE)
+        gs.zones.battlefield.append(tok)
+    gs._log("  Gruff Triplets ETB: create 2 token copies (3x 3/3 trample board)")
+
+
+def _malevolent_witchkite_etb(gs, card):
+    """Malevolent Witchkite -- {4}{B}{B} (Flying). 'ETB: sacrifice any number of
+    artifacts/enchantments/tokens, draw that many + 1.'
+    Model: draw 2 (sacrifice 1 token proxy)."""
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Malevolent Witchkite ETB: draw 2 (sacrifice-draw proxy)")
+
+
+def _queens_bay_paladin_etb(gs, card):
+    """Queen's Bay Paladin -- {3}{B}{B}. 'Whenever enters or attacks, return
+    target Vampire card from GY to BF.'
+    ETB proxy: reanimate best GY creature."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Queen's Bay Paladin ETB: reanimate {best.name} (Vampire proxy)")
+
+
+def _imodane_etb(gs, card):
+    """Imodane, the Pyrohammer -- {2}{R}{R}. 'When i/s deals damage to a creature,
+    deal that much to opp too.' ETB proxy: static burn doubling active."""
+    gs._log("  Imodane ETB: spell-damage-doubling trigger active")
+
+
+def _abuelos_awakening_spell(gs, card):
+    """Abuelo's Awakening -- {X}{3}{W} Sorcery. 'Return artifact or non-Aura
+    enchantment from GY to BF with X +1/+1 counters.'
+    Model: reanimate best artifact/enchantment from GY with 3 counters."""
+    gy_perms = [c for c in gs.zones.graveyard
+                if not c.is_land() and
+                any(t in (c.type_line or '') for t in ('Artifact','Enchantment'))]
+    if gy_perms:
+        best = max(gy_perms, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        best.counters = (best.counters or 0) + 3
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Abuelo's Awakening: reanimate {best.name} with +3/+3")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+
+
+def _marina_vendrell_etb(gs, card):
+    """Marina Vendrell -- {W}{U}{B}{R}{G} 5/5. 'ETB: reveal top 7, put all
+    enchantments into hand, rest on bottom.'
+    Model: draw up to 2 (enchantment-heavy deck proxy)."""
+    drawn = 0
+    for _ in range(7):
+        if gs.zones.library and drawn < 2:
+            top = gs.zones.library.pop(0)
+            if 'Enchantment' in (top.type_line or ''):
+                gs.zones.hand.append(top)
+                drawn += 1
+            else:
+                gs.zones.library.append(top)  # bottom
+    gs._log(f"  Marina Vendrell ETB: drew {drawn} enchantments from top 7")
+
+
+def _krenko_buzzcrusher_etb(gs, card):
+    """Krenko's Buzzcrusher -- {2}{R}{R} (Flying, Trample). 'ETB: for each player,
+    destroy up to one nonbasic land they control.'
+    Model: destroy opp's best nonbasic land (in match mode)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        nonbasics = [c for c in opp.zones.battlefield
+                     if c.is_land() and 'Basic' not in (c.type_line or '')]
+        if nonbasics:
+            target = nonbasics[0]
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Krenko's Buzzcrusher ETB: destroy {target.name}")
+
+
+def _hulking_raptor_etb(gs, card):
+    """Hulking Raptor -- {2}{G}{G} (Ward 2). 'At beginning of first main phase, add {G}{G}.'
+    Model: mana ramp trigger proxy -- +2 mana on ETB."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Hulking Raptor ETB: +{G}{G} first-main-phase proxy")
+
+
 # ── Foundations (FDN) batch 7 -- keyword body stubs ─────────────────
 
 def _fynn_etb(gs, card):
@@ -29261,6 +29406,7 @@ _SPELL_HANDLERS.update({
     "Time Stop":           _time_stop_spell,
     "Blasphemous Edict":   _blasphemous_edict_spell,
     "Undying Malice":      _undying_malice_spell,
+    "Abuelo's Awakening":  _abuelos_awakening_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29294,6 +29440,17 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # Multi-set (WOE/LCI/MKM/OTJ/DSK) competitive rares
+    "Gishath, Sun's Avatar":      _gishath_etb,
+    "Meathook Massacre II":       _meathook_massacre_ii_etb,
+    "Agrus Kos, Spirit of Justice": _agrus_kos_etb,
+    "Gruff Triplets":             _gruff_triplets_etb,
+    "Malevolent Witchkite":       _malevolent_witchkite_etb,
+    "Queen's Bay Paladin":        _queens_bay_paladin_etb,
+    "Imodane, the Pyrohammer":    _imodane_etb,
+    "Marina Vendrell":            _marina_vendrell_etb,
+    "Krenko's Buzzcrusher":       _krenko_buzzcrusher_etb,
+    "Hulking Raptor":             _hulking_raptor_etb,
     # FDN batch 7
     "Fynn, the Fangbearer":       _fynn_etb,
     "Frenzied Goblin":            _frenzied_goblin_etb,

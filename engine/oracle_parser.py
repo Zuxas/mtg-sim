@@ -472,6 +472,12 @@ TUCK_TOP_LIB       = _p(r"\bput\s+(?:it|target\s+\w+)\s+on\s+top\s+of\s+(?:its\s
 MULTI_PUMP         = _p(r"\bup\s+to\s+(?:two|three|\d+)\s+target\s+creatures\s+(?:you\s+control\s+)?gets?\s+\+(\d+)/\+(\d+)\b")
 # Role token (WOE): "create a [Wicked/Cursed/Monster/Royal/Sorcerer/Young Hero] Role token"
 ROLE_TOKEN        = _p(r"\bcreates?\s+a\s+(?:wicked|cursed|monster|royal|sorcerer|young hero|instrument of the machine)\s+role\s+token\b")
+# Increment (SOS): "Whenever you cast a spell, if mana spent > N, [effect]"
+# Model as a conditional pump trigger -- proxy as scry (card selection value)
+INCREMENT         = _p(r"\bincrement\b")
+# Prepared (SOS): "this creature enters prepared" -- copy-spell trigger
+# Model as a free-cast echo: treat as getting a second copy (big ETB value)
+PREPARED          = _p(r"\bthis (?:creature|card|permanent) enters prepared\b")
 # You get an emblem (planeswalker ultimate — register as big effect proxy)
 EMBLEM            = _p(r"\byou\s+get\s+an\s+emblem\b")
 # You take an extra turn / additional combat phase
@@ -871,6 +877,15 @@ def parse_segment(text: str) -> list:
         n = int(m.group(1))
         effects.append(("add_counters", {"n": n, "target": "all_friendly"}))
 
+    # Increment (SOS): conditional pump on cast -- proxy as scry (card selection)
+    if INCREMENT.search(text) and not effects:
+        effects.append(("scry", {"n": 1}))
+
+    # Prepared (SOS): creature enters prepared = may cast free copy on ETB
+    # Model as a significant ETB value: proxy as draw 1 (copy = card advantage)
+    if PREPARED.search(text) and not effects:
+        effects.append(("draw", {"n": 1}))
+
     # Role token (WOE aura tokens)
     if ROLE_TOKEN.search(text) and not effects:
         effects.append(("create_token", {"count": 1, "power": "0", "toughness": "1", "keywords": []}))
@@ -1085,10 +1100,27 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
     # Normalize bullet points (•) and em-dashes starting a line to nothing.
     text = re.sub(r"^[•\-]\s+", "", text, flags=re.M)
 
+    # Adventure / split cards: oracle text contains both halves separated by
+    # a line beginning with the adventure-spell name (no mana cost on that line
+    # in our DB format). Heuristic: if the text contains a paragraph that is ALL
+    # caps-like word(s) followed only by a card type word ("Instant","Sorcery"),
+    # truncate everything from that separator onward so we parse the creature
+    # half only. Also handle the "\n//\n" literal separator Scryfall uses.
+    if " // " in text or "\n// " in text or text.startswith("// "):
+        # Keep only the part before the "//" split marker
+        text = re.split(r"\s*//\s*", text)[0]
+
     # Strip "As an additional cost to cast this spell, [cost]." — this is a
     # casting requirement line; the real effect is on subsequent lines.
     text = re.sub(r"^as an additional cost to cast (?:this spell|~),[^\n]+\n?",
                   "", text, flags=re.I | re.M)
+
+    # SOS mechanics: replace keyword stubs with concrete effect proxies BEFORE
+    # stripping parens, so the reminder text is used to confirm the pattern.
+    # Increment: conditional +1/+1 on cast -- replace with a pump proxy line.
+    text = re.sub(r"\bIncrement\s*\([^)]*\)", "When this creature enters, put a +1/+1 counter on it.", text, flags=re.I)
+    # Prepared: entering prepared = free copy -- replace with draw proxy.
+    text = re.sub(r"This (?:creature|card|permanent) enters prepared\.", "When this creature enters, draw a card.", text, flags=re.I)
 
     # Strip reminder text in parentheses (e.g. "(You may pay...")  so
     # mechanic keywords like "Prowess" and "Firebending 1" become bare.

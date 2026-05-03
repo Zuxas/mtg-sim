@@ -1770,6 +1770,8 @@ _h_postmortem_professor = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, 
 _h_teacher_s_pest = _etb([["gain_life", {"n": 1}]])
 # [sos] Whenever this creature enters or attacks, you may draw a card. If you do, discar
 _h_stadium_tidalmage = _etb([["draw", {"n": 1}]])
+# [sos] Flash | Flying, trample | Increment (Whenever you cast a spell, if the amount of man
+_h_cuboid_colony = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Flying | When this creature enters, each opponent loses 2 life and you gain 2 life
 _h_sneering_shadewriter = _etb([["gain_life", {"n": 2}], ["lose_life", {"n": 2, "target": "opp"}]])
 # [sos] Reach | When this creature enters, look at the top five cards of your library. You
@@ -1795,21 +1797,29 @@ _h_thunderdrum_soloist = _etb([["damage_player", {"n": 1, "target": "opp"}]])
 # [sos] Infusion ? When this creature enters, target creature an opponent controls gets 
 _h_poisoner_s_apprentice = _etb([["damage_creature", {"n": 4, "target": "opp_biggest"}]])
 # [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
-_h_pensive_professor = _etb([["draw", {"n": 1}]])
+_h_pensive_professor = _etb([["add_counters", {"n": 1, "target": "self"}], ["draw", {"n": 1}]])
 # [sos] When this enchantment enters, return target nonland permanent card with mana val
 _h_primary_research = _etb([["draw", {"n": 1}]])
+# [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
+_h_topiary_lecturer = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Flying, haste | Each instant and sorcery card in your hand has miracle {2}. (You m
 _h_lorehold__the_historian = _etb([["draw", {"n": 1}]])
 # [sos] Flying | Opus ? Whenever you cast an instant or sorcery spell, this creature gets 
 _h_spectacular_skywhale = _etb([["add_counters", {"n": 1, "target": "self"}], ["add_counters", {"n": 3, "target": "self"}]])
 # [sos] Whenever you cast an instant or sorcery spell, you may tap three untapped creatu
 _h_aziza__mage_tower_captain = _etb([["draw", {"n": 1}]])
+# [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
+_h_berta__wise_extrapolator = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Flying, vigilance | Opus ? Whenever you cast an instant or sorcery spell, this cre
 _h_elemental_mascot = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [sos] Reach | Increment (Whenever you cast a spell, if the amount of mana you spent is g
+_h_hungry_graffalon = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] When Ennis enters, exile up to one other target creature you control. Return tha
 _h_ennis__debate_moderator = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Whenever a creature you control dies, each opponent loses 1 life and you gain 1 
 _h_cauldron_of_essence = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "target": "opp"}]])
+# [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
+_h_tester_of_the_tangential = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] When this enchantment enters, create a 2/2 red and white Spirit creature token. | 
 _h_living_history = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["add_counters", {"n": 2, "target": "self"}]])
 # [sos] Trample | Whenever you gain life, put a +1/+1 counter on this creature.
@@ -1821,7 +1831,7 @@ _h_moseo__vein_s_new_dean = _etb([["gain_life", {"n": 1}], ["create_token", {"co
 # [sos] Trample, reach | Converge ? This creature enters with a +1/+1 counter on it for ea
 _h_magmablood_archaic = _etb([["add_counters", {"n": 1, "target": "all_friendly"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Ward {2} | Increment (Whenever you cast a spell, if the amount of mana you spent i
-_h_fractal_tender = _etb([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
+_h_fractal_tender = _etb([["add_counters", {"n": 1, "target": "self"}], ["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
 # [sos] Flying | This creature enters with X +1/+1 counters on it. | When this creature ente
 _h_pterafractyl = _etb([["gain_life", {"n": 2}]])
 # [sos] When this enchantment enters, create a 0/0 green and blue Fractal creature token
@@ -1835,7 +1845,7 @@ _h_exhibition_tidecaller = _etb([["mill", {"n": 3, "target": "self"}]])
 # [sos] When this creature enters, draw a card. Each player loses 1 life. | Repartee ? Whe
 _h_conciliator_s_duelist = _etb([["draw", {"n": 1}]])
 # [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
-_h_ambitious_augmenter = _etb([["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
+_h_ambitious_augmenter = _etb([["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
 # [sos] When this creature enters, create a 1/1 black and green Pest creature token with
 _h_essenceknit_scholar = _etb([["gain_life", {"n": 1}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"Whenever this token attacks", "you gain 1 life"]}], ["draw", {"n": 1}]])
 # [sos] Flying | When this creature enters, surveil 1. (Look at the top card of your libra
@@ -1845,7 +1855,7 @@ _h_strixhaven_skycoach = _etb([["search_basic_land", {"n": 1}]])
 # [sos] Trample | Whenever this creature attacks, you gain 2 life.
 _h_shopkeeper_s_bane = _etb([["gain_life", {"n": 2}]])
 # [sos] Increment (Whenever you cast a spell, if the amount of mana you spent is greater
-_h_textbook_tabulator = _etb([["scry", {"n": 2}]])
+_h_textbook_tabulator = _etb([["add_counters", {"n": 1, "target": "self"}], ["scry", {"n": 2}]])
 # [sos] Repartee ? Whenever you cast an instant or sorcery spell that targets a creature
 _h_snooping_page = _etb([["draw", {"n": 1}]])
 # [sos] Opus ? Whenever you cast an instant or sorcery spell, this creature gets +1/+1 u
@@ -3796,6 +3806,7 @@ for _n,_f in {
     "Postmortem Professor": _h_postmortem_professor,
     "Teacher's Pest": _h_teacher_s_pest,
     "Stadium Tidalmage": _h_stadium_tidalmage,
+    "Cuboid Colony": _h_cuboid_colony,
     "Sneering Shadewriter": _h_sneering_shadewriter,
     "Paradox Surveyor": _h_paradox_surveyor,
     "Ascendant Dustspeaker": _h_ascendant_dustspeaker,
@@ -3810,12 +3821,16 @@ for _n,_f in {
     "Poisoner's Apprentice": _h_poisoner_s_apprentice,
     "Pensive Professor": _h_pensive_professor,
     "Primary Research": _h_primary_research,
+    "Topiary Lecturer": _h_topiary_lecturer,
     "Lorehold, the Historian": _h_lorehold__the_historian,
     "Spectacular Skywhale": _h_spectacular_skywhale,
     "Aziza, Mage Tower Captain": _h_aziza__mage_tower_captain,
+    "Berta, Wise Extrapolator": _h_berta__wise_extrapolator,
     "Elemental Mascot": _h_elemental_mascot,
+    "Hungry Graffalon": _h_hungry_graffalon,
     "Ennis, Debate Moderator": _h_ennis__debate_moderator,
     "Cauldron of Essence": _h_cauldron_of_essence,
+    "Tester of the Tangential": _h_tester_of_the_tangential,
     "Living History": _h_living_history,
     "Pest Mascot": _h_pest_mascot,
     "Blech, Loafing Pest": _h_blech__loafing_pest,

@@ -28054,6 +28054,131 @@ _ETB_HANDLERS.update({
 })
 
 
+# ── SOS Round 12: competitive spell + ETB handlers ──────────────────
+
+def _end_of_the_hunt_spell(gs, card):
+    """End of the Hunt -- {1}{B} Sorcery.
+    'Target opponent exiles the creature or planeswalker they control with
+     the greatest mana value among those they control.'
+    Match: remove opp's highest-CMC creature. Goldfish: no valid targets."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  End of the Hunt: no opp (goldfish no-op)")
+        return
+    threats = [c for c in opp.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE)]
+    if not threats:
+        gs._log("  End of the Hunt: no opp creatures")
+        return
+    target = max(threats, key=lambda c: getattr(c, "cmc", 0) or 0)
+    opp.zones.battlefield.remove(target)
+    opp.zones.exile = getattr(opp.zones, "exile", [])
+    opp.zones.exile.append(target)
+    gs._log(f"  End of the Hunt: exile {target.name} (CMC {target.cmc})")
+
+
+def _render_speechless_spell(gs, card):
+    """Render Speechless -- {2}{W}{B} Sorcery.
+    'Target opponent reveals hand, you choose nonland card, they discard it.
+     Put two +1/+1 counters on up to one target creature you control.'
+    Match: strip opp's best hand card + pump one of our creatures.
+    Goldfish: just pump."""
+    from data.card import Tag as _Tag
+    # Pump our best creature
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        target = max(friends, key=lambda c: c.effective_power())
+        target.counters = (target.counters or 0) + 2
+        gs._log(f"  Render Speechless: +2/+2 counters on {target.name}")
+    # Remove opp's best hand card in match mode
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        best = max(opp.zones.hand, key=lambda c: getattr(c, "cmc", 0) or 0)
+        opp.zones.hand.remove(best)
+        opp.zones.graveyard.append(best)
+        gs._log(f"  Render Speechless: opp discards {best.name}")
+
+
+def _mind_roots_spell(gs, card):
+    """Mind Roots -- {1}{B}{G} Sorcery.
+    'Target player discards two cards. Put up to one land card discarded
+     this way onto the battlefield tapped under your control.'
+    Match: strip two opp hand cards; if one is land, we get it tapped."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and len(opp.zones.hand) >= 2:
+        discarded = opp.zones.hand[:2]
+        opp.zones.hand = opp.zones.hand[2:]
+        for c in discarded:
+            if c.is_land():
+                gs.zones.battlefield.append(c)
+                c.tapped = True
+                gs._log(f"  Mind Roots: gained {c.name} tapped from opp discard")
+            else:
+                opp.zones.graveyard.append(c)
+                gs._log(f"  Mind Roots: opp discards {c.name}")
+    else:
+        gs._log("  Mind Roots: goldfish no-op")
+
+
+def _fractal_mascot_etb(gs, card):
+    """Fractal Mascot -- {4}{G}{U} Creature (Trample).
+    'When this creature enters, tap target creature an opponent controls.
+     Put a stun counter on it.'
+    Match: tap + stun opp's best attacker. Goldfish: no valid targets."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Fractal Mascot ETB: no opp (goldfish no-op)")
+        return
+    threats = [c for c in opp.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and not getattr(c, "tapped", False)]
+    if not threats:
+        gs._log("  Fractal Mascot ETB: no valid targets")
+        return
+    target = max(threats, key=lambda c: c.effective_power())
+    target.tapped = True
+    target.stun_counters = getattr(target, "stun_counters", 0) + 1
+    gs._log(f"  Fractal Mascot ETB: tap + stun {target.name}")
+
+
+def _quandrix_etb(gs, card):
+    """Quandrix, the Proof -- {4}{G}{U} Legendary (Flying, Trample, Cascade).
+    Cascade: when cast, exile until cheaper nonland found, cast it free.
+    Model: free spell proxy = draw 1 + add counters."""
+    from data.card import Tag as _Tag
+    gs.zones.graveyard.append(card)  # spell goes to GY proxy
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Quandrix ETB: cascade proxy -- +2/+2 to best creature")
+
+
+def _prismari_etb(gs, card):
+    """Prismari, the Inspiration -- {5}{U}{R} Legendary (Flying, Storm).
+    'Instant and sorcery spells you cast have storm.'
+    Model: storm scaling = big tempo advantage proxy."""
+    gs._log("  Prismari ETB: storm grant active (proxy -- big finisher)")
+    # Apply a mana acceleration bonus for leftover storm copies
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+
+
+_SPELL_HANDLERS.update({
+    "End of the Hunt":    _end_of_the_hunt_spell,
+    "Render Speechless":  _render_speechless_spell,
+    "Mind Roots":         _mind_roots_spell,
+})
+
+_ETB_HANDLERS.update({
+    "Fractal Mascot":     _fractal_mascot_etb,
+    "Quandrix, the Proof": _quandrix_etb,
+    "Prismari, the Inspiration": _prismari_etb,
+})
+
+
 # Install — hand-written always beats auto-parser
 for name, fn in _SPELL_HANDLERS.items():
     SPELL_EFFECTS[name] = fn

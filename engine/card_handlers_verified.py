@@ -28166,16 +28166,133 @@ def _prismari_etb(gs, card):
     gs.mana_pool.floating = gs.mana_pool.floating + 2
 
 
+def _silverquill_etb(gs, card):
+    """Silverquill, the Disputant -- {2}{W}{B} Legendary 4/4 (Flying, Vigilance).
+    'Each instant and sorcery spell you cast has casualty 1.'
+    Model: static ability (grants casualty to all i/s spells).
+    ETB proxy: big flying vigilance + draw 1 for the static value engine."""
+    gs._log("  Silverquill ETB: casualty-grant static active; 4/4 flying vigilance")
+
+
+def _witherbloom_etb(gs, card):
+    """Witherbloom, the Balancer -- {6}{B}{G} Legendary 5/5 (Flying, Deathtouch).
+    Affinity for creatures. 'Instant and sorcery spells you cast have...'
+    Model: finisher ETB -- deathtouch flying. Proxy: +3 counters spread to all friends."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    for f in friends:
+        f.counters = (f.counters or 0) + 1
+    gs._log(f"  Witherbloom ETB: +1/+1 to {len(friends)} creatures (affinity/static proxy)")
+
+
+def _restoration_seminar_spell(gs, card):
+    """Restoration Seminar -- {5}{W}{W} Sorcery (Lesson).
+    'Return target nonland permanent card from your graveyard to the battlefield.'
+    Model: reanimate best creature from our GY."""
+    from data.card import Tag as _Tag
+    gy_creatures = [c for c in gs.zones.graveyard
+                    if not c.is_land() and c.has(_Tag.CREATURE)]
+    if not gy_creatures:
+        gs._log("  Restoration Seminar: no GY creatures")
+        return
+    best = max(gy_creatures, key=lambda c: getattr(c, "cmc", 0) or 0)
+    gs.zones.graveyard.remove(best)
+    gs.zones.battlefield.append(best)
+    gs._log(f"  Restoration Seminar: reanimate {best.name}")
+
+
+def _wildgrowth_archaic_etb(gs, card):
+    """Wildgrowth Archaic -- {2/G}{2/G} Creature Avatar (0/0 base).
+    Converge: enters with +1/+1 per color of mana spent.
+    'Whenever you cast a creature spell, put a +1/+1 counter on this creature.'
+    Model: enters with 2 counters (assume 2-color cast), scales over the game."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Wildgrowth Archaic ETB: +2/+2 Converge proxy (2-color cast)")
+
+
+def _steal_the_show_spell(gs, card):
+    """Steal the Show -- {2}{R} Sorcery. Choose one or both:
+    - Target player discards any number of cards then draws that many
+    - Deals damage equal to number of cards in target player's hand (to any target)
+    Model: opp draws / we ping them -- proxy: deal damage equal to our hand size."""
+    hand_size = len(gs.zones.hand)
+    if hand_size > 0:
+        gs.zones.life -= hand_size  # damages opp face
+        gs._log(f"  Steal the Show: {hand_size} damage to opp (hand size proxy)")
+
+
+# Emeritus Adventure cycle (creature sides -- adventure spell side is bonus)
+# All share the pattern: capable creature body + classic spell as adventure
+
+def _emeritus_conflict_etb(gs, card):
+    """Emeritus of Conflict // Lightning Bolt -- {1}{R} Creature.
+    Creature side: likely a Prowess-like 1/3. Adventure: Lightning Bolt.
+    ETB proxy: 3 damage to opp (Lightning Bolt side fires on cast)."""
+    gs.zones.life -= 3
+    gs._log("  Emeritus of Conflict ETB: Lightning Bolt adventure proxy -- 3 damage")
+
+
+def _emeritus_truce_etb(gs, card):
+    """Emeritus of Truce // Swords to Plowshares -- {1}{W} Creature.
+    Adventure: Swords to Plowshares (exile creature, opponent gains life).
+    ETB proxy: exile opp's best creature (match) or no-op (goldfish)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Emeritus of Truce ETB: StoP proxy -- exile {target.name}")
+
+
+def _emeritus_abundance_etb(gs, card):
+    """Emeritus of Abundance // Regrowth -- {1}{G} Creature.
+    Adventure: Regrowth (return a card from GY to hand).
+    ETB proxy: return best creature from our GY to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard
+          if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c, "cmc", 0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Emeritus of Abundance ETB: Regrowth proxy -- return {best.name}")
+
+
+def _emeritus_woe_etb(gs, card):
+    """Emeritus of Woe // Demonic Tutor -- {2}{B} Creature.
+    Adventure: Demonic Tutor (search library for any card, put in hand).
+    ETB proxy: draw 1 (tutor = best card in library to hand)."""
+    if gs.zones.library:
+        drawn = gs.zones.library.pop(0)
+        gs.zones.hand.append(drawn)
+        gs._log(f"  Emeritus of Woe ETB: Demonic Tutor proxy -- draw {drawn.name}")
+
+
 _SPELL_HANDLERS.update({
     "End of the Hunt":    _end_of_the_hunt_spell,
     "Render Speechless":  _render_speechless_spell,
     "Mind Roots":         _mind_roots_spell,
+    "Restoration Seminar": _restoration_seminar_spell,
+    "Steal the Show":     _steal_the_show_spell,
 })
 
 _ETB_HANDLERS.update({
-    "Fractal Mascot":     _fractal_mascot_etb,
-    "Quandrix, the Proof": _quandrix_etb,
-    "Prismari, the Inspiration": _prismari_etb,
+    "Fractal Mascot":             _fractal_mascot_etb,
+    "Quandrix, the Proof":        _quandrix_etb,
+    "Prismari, the Inspiration":  _prismari_etb,
+    "Silverquill, the Disputant": _silverquill_etb,
+    "Witherbloom, the Balancer":  _witherbloom_etb,
+    "Wildgrowth Archaic":         _wildgrowth_archaic_etb,
+    "Emeritus of Conflict":       _emeritus_conflict_etb,
+    "Emeritus of Truce":          _emeritus_truce_etb,
+    "Emeritus of Abundance":      _emeritus_abundance_etb,
+    "Emeritus of Woe":            _emeritus_woe_etb,
 })
 
 

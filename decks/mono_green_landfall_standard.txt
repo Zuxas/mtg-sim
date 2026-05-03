@@ -1,26 +1,27 @@
-// Mono Green Landfall — Kritik (placement 1, 2026-04-18)
-// Source: mtg_meta.db deck_id=119915 event='MTGO League'
-1 Archdruid's Charm
-3 Ba Sing Se
-4 Badgermole Cub
+// Mono Green Landfall -- Stefan Schutz (Top 5, PT SOS 2026-05-01)
+// Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
+// PT overall WR: 55.45% (N=514). Beats Prowess 62.7%, loses to Selesnya 34.6%
+// audit:pt_top8
 4 Earthbender Ascension
-3 Escape Tunnel
-3 Esper Origins
-4 Fabled Passage
-15 Forest
+4 Mightform Harmonizer
+4 Escape Tunnel
+4 Ba Sing Se
+4 Sazh's Chocobo
 4 Icetill Explorer
 4 Llanowar Elves
-2 Lumbering Worldwagon
-4 Meltstrider's Resolve
-4 Mightform Harmonizer
-1 Promising Vein
-4 Sazh's Chocobo
+4 Badgermole Cub
+4 Fabled Passage
+3 Meltstrider's Resolve
+2 Edge Rover
+17 Forest
+1 Cavern of Souls
+1 Esper Origins
 
 Sideboard
-1 Archdruid's Charm
-2 Keen-Eyed Curator
-4 Mossborn Hydra
 2 Pawpatch Formation
-3 Sapling Nursery
-1 Scrapshooter
-2 Soul-Guide Lantern
+2 Royal Treatment
+1 Cavern of Souls
+3 Soul-Guide Lantern
+4 Mossborn Hydra
+2 Sapling Nursery
+1 Leatherhead, Swamp Stalker

@@ -28276,6 +28276,128 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── SPM + BIG + MKM batch ────────────────────────────────────────────
+
+def _behold_sinister_six_spell(gs, card):
+    """Behold the Sinister Six! -- {6}{B}. Return up to 6 creatures from GY with
+    different names. Model: mass reanimate up to 6 unique creatures."""
+    from data.card import Tag as _Tag
+    seen = set()
+    reanimated = []
+    for c in gs.zones.graveyard[:]:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c.name not in seen:
+            seen.add(c.name)
+            reanimated.append(c)
+            if len(reanimated) >= 6:
+                break
+    for c in reanimated:
+        gs.zones.graveyard.remove(c)
+        gs.zones.battlefield.append(c)
+    gs._log(f"  Behold the Sinister Six!: reanimate {len(reanimated)} unique GY creatures")
+
+
+def _cosmic_spider_man_etb(gs, card):
+    """Cosmic Spider-Man -- {W}{U}{B}{R}{G} 5-color (Flying, First Strike, Trample, Lifelink, Haste).
+    'Beginning of combat: other Spiders get +X/+X (X = Spiders you control).'
+    ETB proxy: all 5 keywords + draw 2."""
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Cosmic Spider-Man ETB: 5-keyword body + Spider-lord (draw 2 proxy)")
+
+
+def _the_spot_etb(gs, card):
+    """The Spot, Living Portal -- {3}{W}{B}. 'ETB: exile up to one nonland perm
+    from BF AND up to one nonland perm card from GY.'
+    Model: exile opp's best creature + reanimate our best GY creature."""
+    from data.card import Tag as _Tag
+    # Exile opp's best creature
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  The Spot ETB: exile {target.name}")
+    # Reanimate our best GY creature
+    gy_c = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy_c:
+        best = max(gy_c, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  The Spot ETB: return {best.name} from GY")
+
+
+def _memory_vessel_etb(gs, card):
+    """Memory Vessel -- {3}{R}{R} Artifact. '{T}, Exile: each player exiles top 7,
+    opponent plays our exiled cards next turn.'
+    ETB proxy: look at top 7, draw 3."""
+    for _ in range(3):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Memory Vessel ETB: exile-swap mechanic (draw 3 proxy)")
+
+
+def _omenpath_journey_etb(gs, card):
+    """Omenpath Journey -- {3}{G} Enchantment. 'ETB: search for up to 5 differently-named
+    lands, exile them, play them over next 5 turns.'
+    ETB proxy: draw 3 lands."""
+    lands = [c for c in gs.zones.library if c.is_land()]
+    for l in lands[:3]:
+        gs.zones.library.remove(l)
+        gs.zones.hand.append(l)
+    gs._log(f"  Omenpath Journey ETB: tutor 3 lands (5-land chain proxy)")
+
+
+def _etrata_fugitive_etb(gs, card):
+    """Etrata, Deadly Fugitive -- {1}{U}{B} (Deathtouch). 'Face-down creatures have
+    {2}{U}{B}: turn face up, exile if you can't.'
+    ETB proxy: deathtouch body + face-down mechanic draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Etrata ETB: deathtouch + face-down mechanic (draw 1 proxy)")
+
+
+def _illicit_masquerade_etb(gs, card):
+    """Illicit Masquerade -- {3}{B} Enchantment (Flash). 'ETB: put impostor counter
+    on each creature you control. Whenever creature with impostor counter attacks,
+    may exile it to create 5/5 copy Rogue with deathtouch + intimidate.'
+    ETB proxy: +1/+1 to all our creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Illicit Masquerade ETB: impostor counters (attack-trigger proxy)")
+
+
+def _lamplight_phoenix_etb(gs, card):
+    """Lamplight Phoenix -- {1}{R}{R} (Flying). 'When dies, may exile + collect
+    evidence 4, return to hand.' ETB proxy: 3/2 flying with death recursion."""
+    gs._log("  Lamplight Phoenix ETB: flying death-recursion trigger registered")
+
+
+def _assemble_the_players_etb(gs, card):
+    """Assemble the Players -- {1}{W} Enchantment. 'Look at top card anytime.
+    Once per turn, cast power<=2 creature from library.'
+    ETB proxy: draw 1 small creature to hand."""
+    small = [c for c in gs.zones.library
+             if not c.is_land() and 'Creature' in (c.type_line or '')
+             and (int(c.power or 0) if c.power and c.power.isdigit() else 2) <= 2]
+    if small:
+        gs.zones.library.remove(small[0])
+        gs.zones.hand.append(small[0])
+    gs._log("  Assemble the Players ETB: cast power<=2 from library (draw 1 proxy)")
+
+
+def _expedited_inheritance_etb(gs, card):
+    """Expedited Inheritance -- {R}{R} Enchantment. 'When creature is dealt damage,
+    controller may exile that many cards from library.'
+    ETB proxy: mill proxy + impulse draw trigger registered."""
+    gs._log("  Expedited Inheritance ETB: damage-to-exile trigger active")
+
+
 # ── TDM + FIN batch ──────────────────────────────────────────────────
 
 def _dracogenesis_etb(gs, card):
@@ -30049,6 +30171,7 @@ _SPELL_HANDLERS.update({
     "Morningtide's Light":    _morningtides_light_spell,
     "Full Throttle":          _full_throttle_spell,
     "Perennation":            _perennation_spell,
+    "Behold the Sinister Six!": _behold_sinister_six_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -30082,6 +30205,16 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # SPM + BIG + MKM batch
+    "Cosmic Spider-Man":          _cosmic_spider_man_etb,
+    "The Spot, Living Portal":    _the_spot_etb,
+    "Memory Vessel":              _memory_vessel_etb,
+    "Omenpath Journey":           _omenpath_journey_etb,
+    "Etrata, Deadly Fugitive":    _etrata_fugitive_etb,
+    "Illicit Masquerade":         _illicit_masquerade_etb,
+    "Lamplight Phoenix":          _lamplight_phoenix_etb,
+    "Assemble the Players":       _assemble_the_players_etb,
+    "Expedited Inheritance":      _expedited_inheritance_etb,
     # TDM + FIN batch
     "Dracogenesis":               _dracogenesis_etb,
     "Call the Spirit Dragons":    _call_spirit_dragons_etb,

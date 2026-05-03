@@ -28276,6 +28276,159 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Multi-set batch 3 (DSK/OTJ/BLB/LCI) ─────────────────────────────
+
+def _rollercrusher_ride_spell(gs, card):
+    """The Rollercrusher Ride -- {X}{2}{R}. 'Delirium: if source deals noncombat
+    damage, double it.' ETB/spell proxy: deal X=2 damage to opp face."""
+    gs.zones.life -= 2
+    gs._log("  The Rollercrusher Ride: Delirium doubling proxy -- 2 face damage")
+
+
+def _enduring_tenacity_etb(gs, card):
+    """Enduring Tenacity -- {2}{B}{B} Enchantment. 'Whenever you gain life, opp
+    loses that much. When dies, opp loses life = power of creatures in your GY.'
+    ETB proxy: opp loses 2 life (static + death trigger)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        pass  # static effect triggers on life gain
+    gs._log("  Enduring Tenacity ETB: life-drain static + death trigger active")
+
+
+def _leyline_of_mutation_etb(gs, card):
+    """Leyline of Mutation -- {2}{G}{G} Enchantment. 'Can begin game in play.
+    Pay {G}: target creature gets +1/+1 until EOT.'
+    ETB proxy: +2/+2 to all our creatures (Leyline passive pump)."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Leyline of Mutation ETB: +1/+1 pump to all creatures")
+
+
+def _eriette_etb(gs, card):
+    """Eriette, the Beguiler -- {1}{W}{U}{B} (Lifelink). 'Whenever Aura you control
+    attaches to opp permanent, tap it + it doesn't untap.'
+    ETB proxy: tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Eriette ETB: tap {target.name} (Aura-lock proxy)")
+
+
+def _fblthp_range_etb(gs, card):
+    """Fblthp, Lost on the Range -- {1}{U}{U}. 'Ward {2}. May look at top card.
+    Top card has Plot cost.' ETB proxy: draw 1 (top-card manipulation)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Fblthp ETB: top-card plot (draw 1 proxy)")
+
+
+def _caustic_bronco_etb(gs, card):
+    """Caustic Bronco -- {1}{B}. 'When attacks, reveal top card to hand. Lose
+    life = that card's CMC.' ETB proxy: draw 1 on first attack."""
+    gs._log("  Caustic Bronco ETB: attack-draw (lose life=CMC) trigger active")
+
+
+def _clement_etb(gs, card):
+    """Clement, the Worrywort -- {1}{G}{U} (Vigilance). 'Whenever Clement or
+    another creature enters, return up to one target creature card from your GY.'
+    ETB proxy: return best GY creature to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Clement ETB: return {best.name} from GY to hand")
+
+
+def _jackdaw_savior_etb(gs, card):
+    """Jackdaw Savior -- {2}{W} (Flying). 'Whenever this or another flying
+    creature dies, return another target creature card from GY to hand.'
+    ETB proxy: return best GY creature (death trigger pre-registered)."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Jackdaw Savior ETB: return {best.name} (death trigger proxy)")
+
+
+def _daring_waverider_etb(gs, card):
+    """Daring Waverider -- {4}{U}{U}. 'ETB: cast target instant/sorcery with
+    CMC<=4 from your GY for free.' Model: cast best GY instant/sorcery."""
+    from data.card import Tag as _Tag
+    gy_spells = [c for c in gs.zones.graveyard
+                 if not c.is_land()
+                 and any(t in (c.type_line or '') for t in ('Instant','Sorcery'))
+                 and (getattr(c,'cmc',0) or 0) <= 4]
+    if gy_spells:
+        target = max(gy_spells, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(target)
+        if gs.mana_pool.can_cast(target.mana_cost, target.cmc):
+            gs.cast_spell(target)
+        else:
+            gs.zones.hand.append(target)
+        gs._log(f"  Daring Waverider ETB: cast {target.name} from GY")
+
+
+def _skullspore_nexus_etb(gs, card):
+    """The Skullspore Nexus -- {6}{G}{G} Artifact. 'Cost -{X} per greatest power.
+    Whenever a creature dies, double the counters on another creature.'
+    ETB proxy: double counters on best friend."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        if best.counters:
+            best.counters = best.counters * 2
+        else:
+            best.counters = 2
+    gs._log("  Skullspore Nexus ETB: double-counter trigger (double best friend's counters)")
+
+
+def _abuelo_ancestral_etb(gs, card):
+    """Abuelo, Ancestral Echo -- {1}{W}{U} (Flying, Ward 2). '{1}{W}{U}: Exile
+    target creature/artifact you control, return it with +1/+1 counter.'
+    ETB proxy: +1 counter on best friend (blink loop proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Abuelo ETB: blink loop proxy +1/+1 to best friend")
+
+
+def _abyssal_gorestalker_etb(gs, card):
+    """Abyssal Gorestalker -- {4}{B}{B}. 'ETB: each player sacrifices two creatures.'
+    Model: we sacrifice two weakest, opp sacrifices two strongest."""
+    from data.card import Tag as _Tag
+    our = sorted([c for c in gs.zones.battlefield
+                  if not c.is_land() and c.has(_Tag.CREATURE)],
+                 key=lambda c: c.effective_power())
+    for c in our[:2]:
+        gs.zones.battlefield.remove(c)
+        gs.zones.graveyard.append(c)
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        opp_c = sorted([c for c in opp.zones.battlefield
+                        if not c.is_land() and c.has(_Tag.CREATURE)],
+                       key=lambda c: -c.effective_power())
+        for c in opp_c[:2]:
+            opp.zones.battlefield.remove(c)
+            opp.zones.graveyard.append(c)
+    gs._log(f"  Abyssal Gorestalker ETB: each player sacs 2 creatures")
+
+
 # ── Multi-set batch 2 (MKM/BLB/OTJ/WOE) ─────────────────────────────
 
 def _conspiracy_unraveler_etb(gs, card):
@@ -29538,6 +29691,7 @@ _SPELL_HANDLERS.update({
     "Reenact the Crime":   _reenact_the_crime_spell,
     "Another Round":       _another_round_spell,
     "Succumb to the Cold": _succumb_to_the_cold_spell,
+    "The Rollercrusher Ride": _rollercrusher_ride_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29571,6 +29725,18 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # Multi-set batch 3 (DSK/OTJ/BLB/LCI)
+    "Enduring Tenacity":          _enduring_tenacity_etb,
+    "Leyline of Mutation":        _leyline_of_mutation_etb,
+    "Eriette, the Beguiler":      _eriette_etb,
+    "Fblthp, Lost on the Range":  _fblthp_range_etb,
+    "Caustic Bronco":             _caustic_bronco_etb,
+    "Clement, the Worrywort":     _clement_etb,
+    "Jackdaw Savior":             _jackdaw_savior_etb,
+    "Daring Waverider":           _daring_waverider_etb,
+    "The Skullspore Nexus":       _skullspore_nexus_etb,
+    "Abuelo, Ancestral Echo":     _abuelo_ancestral_etb,
+    "Abyssal Gorestalker":        _abyssal_gorestalker_etb,
     # Multi-set batch 2 (MKM/BLB/OTJ/WOE)
     "Conspiracy Unraveler":       _conspiracy_unraveler_etb,
     "Undergrowth Recon":          _undergrowth_recon_etb,

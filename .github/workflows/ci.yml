@@ -14,15 +14,15 @@ jobs:
     name: APL lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - name: Registry / handler / deck consistency
         run: python scripts/lint_ci.py
       - name: Report failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `[CI] lint failed — mtg-sim`;
@@ -51,8 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - name: Install dependencies
@@ -63,7 +63,7 @@ jobs:
         run: python tests/test_menace_combat.py
       - name: Report failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `[CI] tests failed — mtg-sim`;
@@ -93,7 +93,7 @@ jobs:
     needs: tests
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Identify changed match APLs
@@ -129,7 +129,7 @@ jobs:
           fi
       - name: Report failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `[CI] oracle-gate failed — mtg-sim`;
@@ -161,7 +161,7 @@ jobs:
     # oracle_parser.py. Also catches Scryfall bulk updates.
     if: github.event_name == 'push'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # Need write access to auto-commit the regenerated file
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -195,7 +195,7 @@ print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))
       (contains(github.event.pull_request.changed_files, 'engine/') ||
        contains(github.event.pull_request.changed_files, 'apl/boros_energy'))
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Boros Energy goldfish baseline
         shell: bash
         run: |
@@ -212,7 +212,7 @@ print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))
           "
       - name: Report failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = `[CI] goldfish-guard failed — mtg-sim`;

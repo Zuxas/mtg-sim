@@ -328,12 +328,14 @@ NOT: combat → main1 → main2 (old broken order)
   pre-run: 67.8%, within ±1pp noise). Variant 100k was corrupted by Affinity crash bug
   (card.colors AttributeError, fixed 2026-05-01 commits); re-run confirmed clean below.
 
-- **Boros Energy Variant Jermey gauntlet (2026-05-01 N=100k seed=42, post-Affinity-crash-fix)**:
-  **75.1% field-weighted** (1,800,000 games, 1300s wall, 18 matchups, zero errors).
-  Supersedes corrupted prior run. Post-fix 1k was 75.3% (+0.2pp noise at 100k).
+- **Boros Energy Variant Jermey gauntlet (2026-05-02 N=100k seed=42, CLEAN RE-RUN)**:
+  **75.1% field-weighted** (1,800,000 games, 734s wall, 18 matchups, zero errors).
+  Confirms corrupted-run number exactly. Post-fix 1k was 75.3% (+0.2pp noise at 100k).
   Edge over canonical: **+6.7pp** (75.1% - 68.4%). Mirror match (Boros Energy at 21.2% field
   weight) is the dominant drag on variant FWR; without mirror, variant edge is larger.
-  Saved: data/parallel_results_20260501_025314.json (1k) + latest parallel_results_20260501_*.json.
+  Per-matchup highlights: Affinity 96.6%, Eldrazi Tron 99.8%, Izzet Prowess 99.7%,
+  Domain Zoo 99.8%, 5C Humans 52.4% (slight negative), mirror 56.9%.
+  Saved: data/parallel_results_20260502_160027.json. Seed=42 bit-stable confirmed.
 
 - **Boros Energy Modern gauntlet (2026-04-29 N=100k seed=42, 17-DECK ALL-FIXES
   -- DEFINITIVE RC DC PRE-PT BASELINE -- SUPERSEDED by 2026-05-01 above)**:

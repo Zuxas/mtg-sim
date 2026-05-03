@@ -7,7 +7,7 @@ import sys, json, re
 from pathlib import Path
 from collections import defaultdict
 
-REPO = Path(r"E:\vscode ai project\mtg-sim")
+REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 OUT = REPO / "engine" / "standard_auto_handlers.py"
 
@@ -95,7 +95,7 @@ ALREADY = set()  # regenerate ALL auto-parseable cards unconditionally
 # but no need to generate auto versions for them).
 import ast as _ast
 from pathlib import Path as _Path
-_verified_src = (_Path(r"E:\vscode ai project\mtg-sim") / "engine" / "card_handlers_verified.py").read_text(encoding="utf-8")
+_verified_src = (_Path(__file__).resolve().parent.parent / "engine" / "card_handlers_verified.py").read_text(encoding="utf-8")
 _HAND_WRITTEN = set()
 try:
     _tree = _ast.parse(_verified_src)

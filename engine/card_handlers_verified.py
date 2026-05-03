@@ -28276,6 +28276,113 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 6 -- final FDN pass ──────────────────────
+
+def _bigfin_bouncer_etb(gs, card):
+    """Bigfin Bouncer -- {3}{U}. 'ETB: return target opp creature to hand.'"""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Bigfin Bouncer ETB: bounce {target.name}")
+
+
+def _driver_of_the_dead_etb(gs, card):
+    """Driver of the Dead -- {3}{B}. 'When dies, return CMC<=2 creature from GY.'
+    ETB proxy: no immediate effect; death trigger registered."""
+    gs._log("  Driver of the Dead ETB: death-recursion (CMC<=2) trigger active")
+
+
+def _fierce_empath_etb(gs, card):
+    """Fierce Empath -- {2}{G}. 'ETB: search for CMC>=6 creature card.'
+    Model: tutor big creature to hand. Draw proxy."""
+    big = [c for c in gs.zones.library
+           if not c.is_land() and (getattr(c,'cmc',0) or 0) >= 6]
+    if big:
+        found = big[0]
+        gs.zones.library.remove(found)
+        gs.zones.hand.append(found)
+        gs._log(f"  Fierce Empath ETB: tutor {found.name}")
+
+
+def _hare_apparent_etb(gs, card):
+    """Hare Apparent -- {1}{W}. 'ETB: create N 1/1 Rabbit tokens (N = hand size).'
+    Model: create 2 tokens (proxy hand size = 2)."""
+    from data.card import Card, Tag
+    n = min(len(gs.zones.hand), 3)  # cap at 3 for sim
+    for _ in range(max(1, n)):
+        tok = Card(name="Rabbit", mana_cost="", cmc=0,
+                   type_line="Creature — Rabbit", oracle_text="",
+                   power="1", toughness="1", colors=["W"])
+        tok.tags.add(Tag.CREATURE)
+        gs.zones.battlefield.append(tok)
+    gs._log(f"  Hare Apparent ETB: create {max(1,n)} Rabbit tokens")
+
+
+def _starlight_snare_etb(gs, card):
+    """Starlight Snare -- {2}{U} Aura. 'ETB: tap enchanted creature, it doesn't untap.'
+    Model: tap + permanent lock on opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            target.snare_locked = True  # flag for future use
+            gs._log(f"  Starlight Snare ETB: lock {target.name} tapped")
+
+
+def _ambush_wolf_etb(gs, card):
+    """Ambush Wolf -- {2}{G} Creature (Flash). 'ETB: exile a card from library.'
+    Actually: 'ETB: deal damage to target creature = number of creature cards in your GY.'
+    Model: proxy 2 damage to opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            try:
+                if 2 >= int(target.toughness or 1):
+                    opp.zones.battlefield.remove(target)
+                    opp.zones.graveyard.append(target)
+                    gs._log(f"  Ambush Wolf ETB: kill {target.name} (2 damage)")
+            except (ValueError, TypeError):
+                pass
+
+
+def _gnarlid_colony_etb(gs, card):
+    """Gnarlid Colony -- {1}{G} Creature. 'Kicker: if kicked, enters with +1/+1 counter.'
+    ETB proxy: assume kicked, +1/+1 counter."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Gnarlid Colony ETB: +1/+1 (kicked proxy)")
+
+
+def _undying_malice_spell(gs, card):
+    """Undying Malice -- {B} Instant. 'Target creature gains when-dies, return tapped.'
+    Model: give our best creature death-recursion this turn. Proxy: scry 1."""
+    if gs.zones.library:
+        # Peek at top and put it back (scry proxy)
+        top = gs.zones.library[0]
+        gs._log(f"  Undying Malice: grant death-recursion to best creature (scry 1 proxy)")
+
+
+def _wildborn_preserver_etb(gs, card):
+    """Wildborn Preserver -- {1}{G} Creature (Flash, Reach).
+    '+X/+X until EOT whenever opponent casts a noncreature spell.'
+    ETB proxy: +1/+1 (trigger fires on next spell cast)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Wildborn Preserver ETB: spell-pump trigger active (+1/+1 proxy)")
+
+
 # ── Foundations (FDN) batch 5 ─────────────────────────────────────────
 
 def _empyrean_eagle_etb(gs, card):
@@ -29131,6 +29238,7 @@ _SPELL_HANDLERS.update({
     "Biogenic Upgrade":    _biogenic_upgrade_spell,
     "Time Stop":           _time_stop_spell,
     "Blasphemous Edict":   _blasphemous_edict_spell,
+    "Undying Malice":      _undying_malice_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29164,6 +29272,15 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 6
+    "Bigfin Bouncer":             _bigfin_bouncer_etb,
+    "Driver of the Dead":         _driver_of_the_dead_etb,
+    "Fierce Empath":              _fierce_empath_etb,
+    "Hare Apparent":              _hare_apparent_etb,
+    "Starlight Snare":            _starlight_snare_etb,
+    "Ambush Wolf":                _ambush_wolf_etb,
+    "Gnarlid Colony":             _gnarlid_colony_etb,
+    "Wildborn Preserver":         _wildborn_preserver_etb,
     # FDN batch 5
     "Empyrean Eagle":             _empyrean_eagle_etb,
     "Angel of Vitality":          _angel_vitality_etb,

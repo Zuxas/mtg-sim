@@ -1044,6 +1044,8 @@ _h_meticulous_artisan = _etb([["create_treasure", {"n": 1}]])
 _h_gurmag_rakshasa = _etb([["damage_creature", {"n": 2, "target": "opp_biggest"}], ["add_counters", {"n": 2, "target": "self"}]])
 # [tdm] Flurry ? Whenever you cast your second spell each turn, this creature deals 2 da
 _h_cori_mountain_stalwart = _etb([["damage_player", {"n": 2, "target": "opp"}], ["gain_life", {"n": 2}]])
+# [tdm] This creature enters with two +1/+1 counters on it. | Whenever this creature or an
+_h_host_of_the_hereafter = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [tdm] Deathtouch | Mobilize 1 (Whenever this creature attacks, create a tapped and attac
 _h_nightblade_brigade = _etb([["scry", {"n": 1}]])
 # [tdm] When this creature enters, create a 1/1 red Goblin creature token. | {1}, {T}: Tar
@@ -1298,6 +1300,8 @@ _h_germinating_wurm = _etb([["gain_life", {"n": 2}]])
 _h_sunstar_expansionist = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] Flying | Whenever this creature becomes tapped, you may sacrifice another creature
 _h_swarm_culler = _etb([["draw", {"n": 1}]])
+# [eoe] This creature enters with a +1/+1 counter on it. | When this creature dies, put it
+_h_dockworker_drone = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [eoe] Deathtouch | When this creature enters, another target creature you control gains 
 _h_blooming_stinger = _etb([["scry", {"n": 0}]])
 # [eoe] When this creature enters, look at the top two cards of your library. Put one in
@@ -1418,6 +1422,8 @@ _h_venomized_cat = _etb([["mill", {"n": 2, "target": "self"}]])
 _h_common_crook = _etb([["create_treasure", {"n": 1}]])
 # [spm] Web-slinging {2}{W} (You may cast this spell for {2}{W} if you also return a tap
 _h_spider_uk = _etb([["draw", {"n": 1}]])
+# [spm] This creature enters with a +1/+1 counter on it. | When this creature leaves the b
+_h_selfless_police_captain = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [tla] When this creature dies, earthbend 2. (Target land you control becomes a 0/0 cre
 _h_earth_village_ruffians = _etb([["add_mana", {"n": 2}]])
 # [tla] Flash | Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 u
@@ -1845,7 +1851,7 @@ _h_blech__loafing_pest = _etb([["add_counters", {"n": 1, "target": "friendly_big
 # [sos] Flying | When Moseo enters, create a 1/1 black and green Pest creature token with 
 _h_moseo__vein_s_new_dean = _etb([["gain_life", {"n": 1}], ["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": ["\"Whenever this token attacks", "you gain 1 life"]}]])
 # [sos] Trample, reach | Converge ? This creature enters with a +1/+1 counter on it for ea
-_h_magmablood_archaic = _etb([["add_counters", {"n": 1, "target": "all_friendly"}], ["add_counters", {"n": 1, "target": "self"}]])
+_h_magmablood_archaic = _etb([["add_counters", {"n": 1, "target": "self"}], ["add_counters", {"n": 1, "target": "all_friendly"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Ward {2} | Increment (Whenever you cast a spell, if the amount of mana you spent i
 _h_fractal_tender = _etb([["add_counters", {"n": 1, "target": "self"}], ["add_counters", {"n": 1, "target": "self"}], ["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}]])
 # [sos] Flying | This creature enters with X +1/+1 counters on it. | When this creature ente
@@ -3461,6 +3467,7 @@ for _n,_f in {
     "Meticulous Artisan": _h_meticulous_artisan,
     "Gurmag Rakshasa": _h_gurmag_rakshasa,
     "Cori Mountain Stalwart": _h_cori_mountain_stalwart,
+    "Host of the Hereafter": _h_host_of_the_hereafter,
     "Nightblade Brigade": _h_nightblade_brigade,
     "Underfoot Underdogs": _h_underfoot_underdogs,
     "Aegis Sculptor": _h_aegis_sculptor,
@@ -3588,6 +3595,7 @@ for _n,_f in {
     "Germinating Wurm": _h_germinating_wurm,
     "Sunstar Expansionist": _h_sunstar_expansionist,
     "Swarm Culler": _h_swarm_culler,
+    "Dockworker Drone": _h_dockworker_drone,
     "Blooming Stinger": _h_blooming_stinger,
     "Codecracker Hound": _h_codecracker_hound,
     "Larval Scoutlander": _h_larval_scoutlander,
@@ -3648,6 +3656,7 @@ for _n,_f in {
     "Venomized Cat": _h_venomized_cat,
     "Common Crook": _h_common_crook,
     "Spider-UK": _h_spider_uk,
+    "Selfless Police Captain": _h_selfless_police_captain,
     "Earth Village Ruffians": _h_earth_village_ruffians,
     "Ty Lee, Chi Blocker": _h_ty_lee__chi_blocker,
     "Beetle-Headed Merchants": _h_beetle_headed_merchants,

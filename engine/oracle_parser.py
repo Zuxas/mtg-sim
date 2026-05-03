@@ -1123,6 +1123,13 @@ def parse_oracle(oracle_text: str, card_name: Optional[str] = None) -> dict:
     text = re.sub(r"This (?:creature|card|permanent) enters prepared\.", "When this creature enters, draw a card.", text, flags=re.I)
     # Converge: "Converge — [effect]" strip the keyword header (em-dash or en-dash)
     text = re.sub(r"^Converge\s*[—–-]\s*", "", text, flags=re.I | re.M)
+    # "This creature/permanent enters with N +1/+1 counters"
+    # Convert to canonical ETB form the parser understands
+    text = re.sub(
+        r"\bThis (?:creature|permanent|card) enters with (\w+)\s+(\+\d+/\+\d+)\s+counters?\b",
+        lambda m: f"When this creature enters, put {m.group(1)} {m.group(2)} counters on it.",
+        text, flags=re.I
+    )
 
     # Strip reminder text in parentheses (e.g. "(You may pay...")  so
     # mechanic keywords like "Prowess" and "Firebending 1" become bare.

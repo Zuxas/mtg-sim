@@ -28274,6 +28274,162 @@ def _emeritus_woe_etb(gs, card):
         gs._log(f"  Emeritus of Woe ETB: Demonic Tutor proxy -- draw {drawn.name}")
 
 
+# ── Foundations (FDN) reprints -- competitive handlers ────────────────
+
+def _gilded_lotus_etb(gs, card):
+    """Gilded Lotus -- {5} Artifact. {T}: Add three mana of any one color."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Gilded Lotus ETB: +3 mana (proxy tap)")
+
+
+def _heroes_bane_etb(gs, card):
+    """Heroes' Bane -- {3}{G}{G} Creature. Enters with 4 +1/+1 counters."""
+    card.counters = (card.counters or 0) + 4
+    gs._log("  Heroes' Bane ETB: +4/+4 (enter counters)")
+
+
+def _aurelia_etb(gs, card):
+    """Aurelia, the Warleader -- {2}{R}{R}{W}{W} Legendary (Flying, Vigilance, Haste).
+    'First attack: untap all creatures, get additional combat phase.'
+    Model: +1 extra attack = proxy doubling our attack this turn (draw 2)."""
+    gs._log("  Aurelia ETB: flying vigilance haste + extra combat proxy (draw 2)")
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+
+
+def _niv_mizzet_etb(gs, card):
+    """Niv-Mizzet, Visionary -- {2}{U}{U}{R}{R} Legendary 5/5 (Flying).
+    'No max hand size. Whenever source you control deals damage, draw a card.'
+    Model: big flying + draw engine. ETB proxy: draw 2."""
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Niv-Mizzet ETB: draw 2 proxy (flying + draw-on-damage engine)")
+
+
+def _doubling_season_etb(gs, card):
+    """Doubling Season -- {4}{G} Enchantment.
+    'Double tokens and counters under your control.'
+    Model: static doubler -- proxy: double existing counters on all creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and (c.counters or 0) > 0:
+            c.counters = (c.counters or 0) * 2
+    gs._log("  Doubling Season ETB: doubled all creature counters (static proxy)")
+
+
+def _rivers_rebuke_spell(gs, card):
+    """River's Rebuke -- {4}{U}{U} Sorcery.
+    'Return all nonland permanents target player controls to their owner's hand.'
+    Model: bounce all opp nonland permanents -- effectively a board wipe."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        to_bounce = [c for c in list(opp.zones.battlefield) if not c.is_land()]
+        for c in to_bounce:
+            opp.zones.battlefield.remove(c)
+            opp.zones.hand.append(c)
+        gs._log(f"  River's Rebuke: bounce {len(to_bounce)} opp nonland permanents")
+    else:
+        gs._log("  River's Rebuke: goldfish no-op")
+
+
+def _rise_dark_realms_spell(gs, card):
+    """Rise of the Dark Realms -- {7}{B}{B} Sorcery.
+    'Put all creature cards from ALL graveyards onto the battlefield under your control.'
+    Model: reanimate all GY creatures (ours + opp's)."""
+    from data.card import Tag as _Tag
+    ours = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    for c in ours:
+        gs.zones.graveyard.remove(c)
+        gs.zones.battlefield.append(c)
+    opp = getattr(gs, "_match_opp", None)
+    theirs = []
+    if opp:
+        theirs = [c for c in opp.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+        for c in theirs:
+            opp.zones.graveyard.remove(c)
+            gs.zones.battlefield.append(c)
+    gs._log(f"  Rise of the Dark Realms: reanimate {len(ours)+len(theirs)} creatures")
+
+
+def _etali_etb(gs, card):
+    """Etali, Primal Storm -- {4}{R}{R} Legendary 6/6 (Trample).
+    'Whenever Etali attacks, exile top card of each player's library,
+     cast them for free.'
+    Model: big trample + free spells. ETB proxy: cast top 2 library cards."""
+    for _ in range(2):
+        if gs.zones.library:
+            top = gs.zones.library.pop(0)
+            if not top.is_land() and gs.mana_pool.can_cast(top.mana_cost, top.cmc):
+                gs.cast_spell(top)
+            else:
+                gs.zones.graveyard.append(top)
+    gs._log("  Etali ETB: exile+cast top cards proxy")
+
+
+def _thousand_year_storm_etb(gs, card):
+    """Thousand-Year Storm -- {4}{U}{R} Enchantment.
+    'Whenever you cast an instant/sorcery, copy it for each other i/s cast this turn.'
+    Model: storm enchantment -- proxy: +3 mana for chaining spells."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Thousand-Year Storm ETB: storm proxy (+3 mana)")
+
+
+def _voracious_greatshark_etb(gs, card):
+    """Voracious Greatshark -- {3}{U}{U} Creature 5/4 (Flash).
+    'When this creature enters, counter target creature spell.'
+    Model: 5/4 Flash + ETB counter opp's best spell. In match: discard opp's best."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        # Counter = prevent best creature from entering
+        creature_spells = [c for c in opp.zones.hand
+                           if 'Creature' in (c.type_line or '')]
+        if creature_spells:
+            countered = max(creature_spells, key=lambda c: getattr(c, 'cmc', 0) or 0)
+            opp.zones.hand.remove(countered)
+            opp.zones.graveyard.append(countered)
+            gs._log(f"  Voracious Greatshark ETB: counter {countered.name}")
+        else:
+            gs._log("  Voracious Greatshark ETB: no creature spells to counter")
+    else:
+        gs._log("  Voracious Greatshark ETB: goldfish no-op")
+
+
+def _painful_quandary_etb(gs, card):
+    """Painful Quandary -- {3}{B}{B} Enchantment.
+    'Whenever opp casts a spell: lose 5 life or discard a card.'
+    Model: static punishment -- proxy: apply once on ETB (opp discards 1)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        worst = min(opp.zones.hand, key=lambda c: getattr(c, 'cmc', 0) or 0)
+        opp.zones.hand.remove(worst)
+        opp.zones.graveyard.append(worst)
+        gs._log(f"  Painful Quandary ETB: opp discards {worst.name} (Quandary static proxy)")
+
+
+def _aggressive_mammoth_etb(gs, card):
+    """Aggressive Mammoth -- {5}{G}{G} Creature 8/8 (Trample).
+    'Other creatures you control have trample.'
+    Model: 8/8 trample + trample grant. ETB proxy: +3 counters on biggest friend."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Aggressive Mammoth ETB: trample grant proxy (+3 to best friend)")
+
+
+def _mocking_sprite_etb(gs, card):
+    """Mocking Sprite -- {1}{U} Creature (Flying).
+    'Instant and sorcery spells you cast cost {1} less.'
+    Model: static cost reducer. ETB proxy: add 1 mana."""
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    gs._log("  Mocking Sprite ETB: instant/sorcery cost reduction active")
+
+
 def _rancorous_archaic_etb(gs, card):
     """Rancorous Archaic -- {2/G}{2/G} Creature (Trample, Reach).
     Converge: enters with +1/+1 per color spent. 'Whenever you cast a creature
@@ -28523,6 +28679,8 @@ _SPELL_HANDLERS.update({
     "Molten Note":         _molten_note_spell,
     "Procrastinate":       _procrastinate_spell,
     "Divergent Equation":  _divergent_equation_spell,
+    "River's Rebuke":      _rivers_rebuke_spell,
+    "Rise of the Dark Realms": _rise_dark_realms_spell,
     "Fix What's Broken":   _fix_whats_broken_spell,
 })
 
@@ -28543,6 +28701,17 @@ _ETB_HANDLERS.update({
     "Summoned Dromedary":         _summoned_dromedary_etb,
     "Slumbering Trudge":          _slumbering_trudge_etb,
     "Rancorous Archaic":          _rancorous_archaic_etb,
+    "Gilded Lotus":               _gilded_lotus_etb,
+    "Heroes' Bane":               _heroes_bane_etb,
+    "Aurelia, the Warleader":     _aurelia_etb,
+    "Niv-Mizzet, Visionary":      _niv_mizzet_etb,
+    "Doubling Season":            _doubling_season_etb,
+    "Etali, Primal Storm":        _etali_etb,
+    "Thousand-Year Storm":        _thousand_year_storm_etb,
+    "Voracious Greatshark":       _voracious_greatshark_etb,
+    "Painful Quandary":           _painful_quandary_etb,
+    "Aggressive Mammoth":         _aggressive_mammoth_etb,
+    "Mocking Sprite":             _mocking_sprite_etb,
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,

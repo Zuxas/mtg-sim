@@ -8362,5 +8362,545 @@
       "Izzet Lessons 47.8% across 92 matches -- Zhang Top 8 from excellent play, not dominant deck",
       "High draw counts in late rounds from intentional draws between locked players"
     ]
+  },
+  "official_matchup_matrix": {
+    "source": "PT SOS Day 1 + Day 2 official results image",
+    "note": "Draws not counted in WR per footnote; decks that draw more often may be slightly underrated",
+    "overall": {
+      "Izzet Prowess": {
+        "wr": 49.8,
+        "total": 769
+      },
+      "Mono-Green Landfall": {
+        "wr": 55.45,
+        "total": 514
+      },
+      "Izzet Spellementals": {
+        "wr": 50.87,
+        "total": 230
+      },
+      "Izzet Lessons": {
+        "wr": 49.44,
+        "total": 178
+      },
+      "Azorius Momo": {
+        "wr": 38.95,
+        "total": 95
+      },
+      "Jeskai Control": {
+        "wr": 45.36,
+        "total": 97
+      },
+      "Selesnya Landfall": {
+        "wr": 63.81,
+        "total": 105
+      },
+      "Izzet Maestro": {
+        "wr": 33.96,
+        "total": 53
+      },
+      "Golgari Midrange": {
+        "wr": 40.3,
+        "total": 67
+      },
+      "Azorius Tempo": {
+        "wr": 46.77,
+        "total": 62
+      }
+    },
+    "matchups": {
+      "Izzet Prowess": {
+        "Izzet Prowess": null,
+        "Mono-Green Landfall": [
+          37.34,
+          59,
+          99
+        ],
+        "Izzet Spellementals": [
+          44.62,
+          29,
+          36
+        ],
+        "Izzet Lessons": [
+          53.7,
+          29,
+          25
+        ],
+        "Azorius Momo": [
+          59.09,
+          13,
+          9
+        ],
+        "Jeskai Control": [
+          74.07,
+          20,
+          7
+        ],
+        "Selesnya Landfall": [
+          37.14,
+          13,
+          22
+        ],
+        "Izzet Maestro": [
+          75.0,
+          12,
+          4
+        ],
+        "Golgari Midrange": [
+          72.22,
+          13,
+          5
+        ],
+        "Azorius Tempo": [
+          50.0,
+          10,
+          10
+        ]
+      },
+      "Mono-Green Landfall": {
+        "Izzet Prowess": [
+          62.66,
+          99,
+          59
+        ],
+        "Mono-Green Landfall": null,
+        "Izzet Spellementals": [
+          60.53,
+          23,
+          15
+        ],
+        "Izzet Lessons": [
+          58.06,
+          18,
+          13
+        ],
+        "Azorius Momo": [
+          52.38,
+          11,
+          10
+        ],
+        "Jeskai Control": [
+          50.0,
+          10,
+          10
+        ],
+        "Selesnya Landfall": [
+          34.62,
+          9,
+          17
+        ],
+        "Izzet Maestro": [
+          66.67,
+          2,
+          1
+        ],
+        "Golgari Midrange": [
+          50.0,
+          4,
+          4
+        ],
+        "Azorius Tempo": [
+          50.0,
+          4,
+          4
+        ]
+      },
+      "Izzet Spellementals": {
+        "Izzet Prowess": [
+          55.38,
+          36,
+          29
+        ],
+        "Mono-Green Landfall": [
+          39.47,
+          15,
+          23
+        ],
+        "Izzet Spellementals": null,
+        "Izzet Lessons": [
+          66.67,
+          10,
+          5
+        ],
+        "Azorius Momo": [
+          85.71,
+          6,
+          1
+        ],
+        "Jeskai Control": [
+          50.0,
+          5,
+          5
+        ],
+        "Selesnya Landfall": [
+          50.0,
+          6,
+          6
+        ],
+        "Izzet Maestro": [
+          55.56,
+          5,
+          4
+        ],
+        "Golgari Midrange": [
+          50.0,
+          4,
+          4
+        ],
+        "Azorius Tempo": [
+          33.33,
+          1,
+          2
+        ]
+      },
+      "Izzet Lessons": {
+        "Izzet Prowess": [
+          46.3,
+          25,
+          29
+        ],
+        "Mono-Green Landfall": [
+          41.94,
+          13,
+          18
+        ],
+        "Izzet Spellementals": [
+          33.33,
+          5,
+          10
+        ],
+        "Izzet Lessons": null,
+        "Azorius Momo": [
+          44.44,
+          4,
+          5
+        ],
+        "Jeskai Control": [
+          50.0,
+          4,
+          4
+        ],
+        "Selesnya Landfall": [
+          75.0,
+          3,
+          1
+        ],
+        "Izzet Maestro": [
+          75.0,
+          6,
+          2
+        ],
+        "Golgari Midrange": [
+          60.0,
+          3,
+          2
+        ],
+        "Azorius Tempo": [
+          71.43,
+          5,
+          2
+        ]
+      },
+      "Azorius Momo": {
+        "Izzet Prowess": [
+          40.91,
+          9,
+          13
+        ],
+        "Mono-Green Landfall": [
+          47.62,
+          10,
+          11
+        ],
+        "Izzet Spellementals": [
+          14.29,
+          1,
+          6
+        ],
+        "Izzet Lessons": [
+          55.56,
+          5,
+          4
+        ],
+        "Azorius Momo": null,
+        "Jeskai Control": [
+          33.33,
+          1,
+          2
+        ],
+        "Selesnya Landfall": [
+          40.0,
+          2,
+          3
+        ],
+        "Izzet Maestro": [
+          50.0,
+          1,
+          1
+        ],
+        "Golgari Midrange": [
+          60.0,
+          3,
+          2
+        ],
+        "Azorius Tempo": [
+          0.0,
+          0,
+          2
+        ]
+      },
+      "Jeskai Control": {
+        "Izzet Prowess": [
+          25.93,
+          7,
+          20
+        ],
+        "Mono-Green Landfall": [
+          50.0,
+          10,
+          10
+        ],
+        "Izzet Spellementals": [
+          50.0,
+          5,
+          5
+        ],
+        "Izzet Lessons": [
+          50.0,
+          4,
+          4
+        ],
+        "Azorius Momo": [
+          66.67,
+          2,
+          1
+        ],
+        "Jeskai Control": null,
+        "Selesnya Landfall": [
+          0.0,
+          0,
+          2
+        ],
+        "Izzet Maestro": [
+          100.0,
+          2,
+          0
+        ],
+        "Golgari Midrange": [
+          71.43,
+          5,
+          2
+        ],
+        "Azorius Tempo": [
+          50.0,
+          1,
+          1
+        ]
+      },
+      "Selesnya Landfall": {
+        "Izzet Prowess": [
+          62.86,
+          22,
+          13
+        ],
+        "Mono-Green Landfall": [
+          65.38,
+          17,
+          9
+        ],
+        "Izzet Spellementals": [
+          50.0,
+          6,
+          6
+        ],
+        "Izzet Lessons": [
+          25.0,
+          1,
+          3
+        ],
+        "Azorius Momo": [
+          60.0,
+          3,
+          2
+        ],
+        "Jeskai Control": [
+          100.0,
+          2,
+          0
+        ],
+        "Selesnya Landfall": null,
+        "Izzet Maestro": [
+          100.0,
+          1,
+          0
+        ],
+        "Golgari Midrange": [
+          66.67,
+          2,
+          1
+        ],
+        "Azorius Tempo": [
+          75.0,
+          3,
+          1
+        ]
+      },
+      "Izzet Maestro": {
+        "Izzet Prowess": [
+          25.0,
+          4,
+          12
+        ],
+        "Mono-Green Landfall": [
+          33.33,
+          1,
+          2
+        ],
+        "Izzet Spellementals": [
+          44.44,
+          4,
+          5
+        ],
+        "Izzet Lessons": [
+          25.0,
+          2,
+          6
+        ],
+        "Azorius Momo": [
+          50.0,
+          1,
+          1
+        ],
+        "Jeskai Control": [
+          0.0,
+          0,
+          2
+        ],
+        "Selesnya Landfall": [
+          0.0,
+          0,
+          1
+        ],
+        "Izzet Maestro": null,
+        "Golgari Midrange": [
+          0.0,
+          0,
+          1
+        ],
+        "Azorius Tempo": [
+          100.0,
+          1,
+          0
+        ]
+      },
+      "Golgari Midrange": {
+        "Izzet Prowess": [
+          27.78,
+          5,
+          13
+        ],
+        "Mono-Green Landfall": [
+          50.0,
+          4,
+          4
+        ],
+        "Izzet Spellementals": [
+          50.0,
+          4,
+          4
+        ],
+        "Izzet Lessons": [
+          40.0,
+          2,
+          3
+        ],
+        "Azorius Momo": [
+          40.0,
+          2,
+          3
+        ],
+        "Jeskai Control": [
+          28.57,
+          2,
+          5
+        ],
+        "Selesnya Landfall": [
+          33.33,
+          1,
+          2
+        ],
+        "Izzet Maestro": [
+          100.0,
+          1,
+          0
+        ],
+        "Golgari Midrange": null,
+        "Azorius Tempo": [
+          100.0,
+          1,
+          0
+        ]
+      },
+      "Azorius Tempo": {
+        "Izzet Prowess": [
+          50.0,
+          10,
+          10
+        ],
+        "Mono-Green Landfall": [
+          50.0,
+          4,
+          4
+        ],
+        "Izzet Spellementals": [
+          66.67,
+          2,
+          1
+        ],
+        "Izzet Lessons": [
+          28.57,
+          2,
+          5
+        ],
+        "Azorius Momo": [
+          100.0,
+          2,
+          0
+        ],
+        "Jeskai Control": [
+          50.0,
+          1,
+          1
+        ],
+        "Selesnya Landfall": [
+          25.0,
+          1,
+          3
+        ],
+        "Izzet Maestro": [
+          0.0,
+          0,
+          1
+        ],
+        "Golgari Midrange": [
+          0.0,
+          0,
+          1
+        ],
+        "Azorius Tempo": null
+      }
+    },
+    "archetypes": [
+      "Izzet Prowess",
+      "Mono-Green Landfall",
+      "Izzet Spellementals",
+      "Izzet Lessons",
+      "Azorius Momo",
+      "Jeskai Control",
+      "Selesnya Landfall",
+      "Izzet Maestro",
+      "Golgari Midrange",
+      "Azorius Tempo"
+    ]
   }
 }

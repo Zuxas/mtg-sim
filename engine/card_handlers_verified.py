@@ -28274,12 +28274,129 @@ def _emeritus_woe_etb(gs, card):
         gs._log(f"  Emeritus of Woe ETB: Demonic Tutor proxy -- draw {drawn.name}")
 
 
+def _zaffai_etb(gs, card):
+    """Zaffai and the Tempests -- {5}{U}{R} Legendary.
+    'Once per turn, cast an instant/sorcery from hand without paying cost.'
+    Model: big mana advantage -- proxy: cast best spell free this turn (draw 2)."""
+    gs._log("  Zaffai ETB: free-cast static active (proxy: draw 2)")
+    for _ in range(2):
+        if gs.zones.library:
+            drawn = gs.zones.library.pop(0)
+            gs.zones.hand.append(drawn)
+
+
+def _wisdom_of_ages_spell(gs, card):
+    """Wisdom of Ages -- {4}{U}{U}{U} Sorcery.
+    'Return all instants/sorceries from GY to hand. No max hand size.'
+    Model: mass GY recursion of spells -- proxy: draw 2 (spells returned)."""
+    spells_returned = [c for c in gs.zones.graveyard
+                       if not c.is_land() and
+                       any(t in (c.type_line or '') for t in ('Instant','Sorcery'))]
+    for c in spells_returned[:3]:  # cap at 3 for proxy
+        gs.zones.graveyard.remove(c)
+        gs.zones.hand.append(c)
+    gs._log(f"  Wisdom of Ages: returned {len(spells_returned)} spells from GY to hand")
+
+
+def _pox_plague_spell(gs, card):
+    """Pox Plague -- {B}{B}{B}{B}{B} Sorcery.
+    'Each player loses half life, discards half hand, sacrifices half permanents.'
+    Model: heavy symmetrical disruption -- proxy: opp loses 5 life + discards 2."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        life_loss = max(1, len([c for c in opp.zones.battlefield if not c.is_land()]) // 2)
+        # Discard half opp's hand
+        discard_n = len(opp.zones.hand) // 2
+        for _ in range(discard_n):
+            if opp.zones.hand:
+                c = max(opp.zones.hand, key=lambda x: getattr(x,'cmc',0) or 0)
+                opp.zones.hand.remove(c)
+                opp.zones.graveyard.append(c)
+        # Remove half opp permanents (biggest first)
+        opp_perms = [c for c in opp.zones.battlefield if not c.is_land()]
+        for c in opp_perms[:len(opp_perms)//2]:
+            opp.zones.battlefield.remove(c)
+            opp.zones.graveyard.append(c)
+        gs._log(f"  Pox Plague: opp discards {discard_n}, loses {len(opp_perms)//2} permanents")
+    # We also take damage (symmetric)
+    gs.zones.life -= 5
+
+
+def _startled_relic_sloth_etb(gs, card):
+    """Startled Relic Sloth -- {2}{R}{W} Creature (Trample, Lifelink).
+    'Beginning of combat: exile up to one target card from a graveyard.'
+    Model: GY hate on combat trigger. ETB proxy: no-op (combat trigger fires each turn)."""
+    gs._log("  Startled Relic Sloth ETB: trample+lifelink, combat GY exile trigger active")
+
+
+def _aberrant_manawurm_etb(gs, card):
+    """Aberrant Manawurm -- {3}{G} Creature (Trample).
+    'Whenever you cast an instant or sorcery, +X/+0 until EOT where X = mana spent.'
+    Model: gets big when spells are cast. ETB proxy: +2/+0 for average spell cast."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Aberrant Manawurm ETB: +2 power proxy for spell-cast trigger")
+
+
+def _summoned_dromedary_etb(gs, card):
+    """Summoned Dromedary -- {3}{W} Creature (Vigilance).
+    '{1}{W}: Return from GY to hand. Activate as sorcery.'
+    Model: vigilance + GY recursion makes it durable. ETB proxy: standard."""
+    gs._log("  Summoned Dromedary ETB: vigilance + GY-recursion active")
+
+
+def _flashback_spell(gs, card):
+    """Flashback -- {R} Sorcery.
+    'Target instant/sorcery in your GY gains flashback until EOT.'
+    Model: let us recast best spell from GY. Proxy: cast best GY spell free."""
+    from data.card import Tag as _Tag
+    gy_spells = [c for c in gs.zones.graveyard
+                 if not c.is_land() and
+                 any(t in (c.type_line or '') for t in ('Instant','Sorcery'))]
+    if gy_spells:
+        best = max(gy_spells, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        # Re-cast it (goes through its handler)
+        if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
+            gs.cast_spell(best)
+        else:
+            gs.zones.hand.append(best)  # flashback = return to hand proxy
+        gs._log(f"  Flashback: grant flashback to {best.name}")
+
+
+def _slumbering_trudge_etb(gs, card):
+    """Slumbering Trudge -- {X}{G} Creature.
+    'Enters with (3-X) stun counters. If X<=2, enters tapped.'
+    Model: big creature that wakes up over time. Proxy: enters with 2 counters."""
+    # Assume X=3 (fully paid) -- no stun counters, untapped
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Slumbering Trudge ETB: X=3 proxy, no stun counters, +3/+3")
+
+
+def _arcane_omens_spell(gs, card):
+    """Arcane Omens -- {4}{B} Sorcery. Converge.
+    'Target player discards X cards where X = number of colors of mana spent.'
+    Model: opp discards 2 (assume 2-color cast) in match, no-op in goldfish."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and len(opp.zones.hand) >= 2:
+        for _ in range(2):
+            if opp.zones.hand:
+                worst = min(opp.zones.hand, key=lambda c: getattr(c,'cmc',0) or 0)
+                opp.zones.hand.remove(worst)
+                opp.zones.graveyard.append(worst)
+        gs._log("  Arcane Omens: opp discards 2 (Converge=2 proxy)")
+
+
 _SPELL_HANDLERS.update({
     "End of the Hunt":    _end_of_the_hunt_spell,
     "Render Speechless":  _render_speechless_spell,
     "Mind Roots":         _mind_roots_spell,
     "Restoration Seminar": _restoration_seminar_spell,
-    "Steal the Show":     _steal_the_show_spell,
+    "Steal the Show":      _steal_the_show_spell,
+    "Wisdom of Ages":      _wisdom_of_ages_spell,
+    "Pox Plague":          _pox_plague_spell,
+    "Flashback":           _flashback_spell,
+    "Arcane Omens":        _arcane_omens_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -28293,6 +28410,11 @@ _ETB_HANDLERS.update({
     "Emeritus of Truce":          _emeritus_truce_etb,
     "Emeritus of Abundance":      _emeritus_abundance_etb,
     "Emeritus of Woe":            _emeritus_woe_etb,
+    "Zaffai and the Tempests":    _zaffai_etb,
+    "Startled Relic Sloth":       _startled_relic_sloth_etb,
+    "Aberrant Manawurm":          _aberrant_manawurm_etb,
+    "Summoned Dromedary":         _summoned_dromedary_etb,
+    "Slumbering Trudge":          _slumbering_trudge_etb,
 })
 
 

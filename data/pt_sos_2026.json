@@ -75,7 +75,7 @@
     "Byrd, Mike": "Selesnya Landfall",
     "Sigrist, Mike": "Mono-Green Landfall",
     "Stark, Ben": "Selesnya Landfall",
-    "Stefansson, Matthew": "Selesnya Landfall",
+    "Stefansson, Matthew": "Mono-Green Landfall",
     "Magalhaes, Edgar": "Selesnya Landfall",
     "Manfield, Seth": "Selesnya Landfall",
     "masukado, kenta": "Izzet Spellementals",
@@ -84,7 +84,7 @@
     "Morikis, Vasilios": "Izzet Spellementals",
     "MORIYAMA, MASAHIDE": "Izzet Prowess",
     "Mullens, Ryan": "Izzet Prowess",
-    "Nass, Matt": "Izzet Prowess",
+    "Nass, Matt": "Selesnya Ouroboroid",
     "Nielsen, Simon": "Dimir Midrange",
     "Oomkes, Matthew": "Izzet Prowess",
     "Pardee, Samuel": "Rakdos Midrange",
@@ -98,7 +98,11 @@
     "Schnake, Abe": "Izzet Prowess",
     "Wright, Matthew": "Izzet Prowess",
     "Wylde-LaRue, Tristan": "Izzet Prowess",
-    "ZHANG, NEILSON": "Mono-Red Aggro"
+    "ZHANG, NEILSON": "Mono-Red Aggro",
+    "Kominowski, Maxx": "Izzet Spellementals",
+    "Schutz, Stefan": "Mono-Green Landfall",
+    "Faust, Zevin": "Azorius Tempo",
+    "Zhang, Rui": "Izzet Lessons"
   },
   "rounds": {
     "4": [
@@ -4808,7 +4812,615 @@
         "winner": "p2",
         "score": "2-0"
       }
-    ]
+    ],
+    "12": [
+      {
+        "p1": "Tron, Cyprien",
+        "p2": "cammilluzzi, Marco",
+        "winner": "Tron, Cyprien"
+      },
+      {
+        "p1": "Huschenbeth, Arne",
+        "p2": "Morales Macaya, Nicolas",
+        "winner": "Huschenbeth, Arne"
+      },
+      {
+        "p1": "Yang, Yi",
+        "p2": "Cuello, Anthony",
+        "winner": "Yang, Yi"
+      },
+      {
+        "p1": "Chaovarindr, Thirawat",
+        "p2": "Sajgalik, Eduardo",
+        "winner": "Chaovarindr, Thirawat"
+      },
+      {
+        "p1": "Deriu, Nick",
+        "p2": "Ichikawa, Yuuki",
+        "winner": "Deriu, Nick"
+      },
+      {
+        "p1": "Swafford, Eli",
+        "p2": "Calcano, Christian",
+        "winner": "Swafford, Eli"
+      },
+      {
+        "p1": "Roman, Patricio",
+        "p2": "Merjam, Guilherme",
+        "winner": "Roman, Patricio"
+      },
+      {
+        "p1": "Noah, Ma",
+        "p2": "Kuhnke, Prez",
+        "winner": "Noah, Ma"
+      },
+      {
+        "p1": "Courtiat, Robin",
+        "p2": "Goetschel, Daniel",
+        "winner": "Courtiat, Robin"
+      },
+      {
+        "p1": "Perry, Gavin",
+        "p2": "Pratt, Dylan",
+        "winner": "Perry, Gavin"
+      },
+      {
+        "p1": "hara, koki",
+        "p2": "Burkhart, Corey",
+        "winner": "hara, koki"
+      },
+      {
+        "p1": "Roy, Brennan",
+        "p2": "Ozawa, Takeshi",
+        "winner": "Roy, Brennan"
+      },
+      {
+        "p1": "Ferreira, Mateo",
+        "p2": "Green, Paul",
+        "winner": "Ferreira, Mateo"
+      },
+      {
+        "p1": "Marin, Rafael",
+        "p2": "Meagher, Gavin",
+        "winner": "Marin, Rafael"
+      },
+      {
+        "p1": "Mitchell-Rabaey, Jacob",
+        "p2": "Krueger, Will",
+        "winner": "Mitchell-Rabaey, Jacob"
+      },
+      {
+        "p1": "Talbot, Nicholas",
+        "p2": "Nealston, Richard",
+        "winner": "Talbot, Nicholas"
+      },
+      {
+        "p1": "chen, xinrong",
+        "p2": "Detecnik, Davor",
+        "winner": "chen, xinrong"
+      },
+      {
+        "p1": "von Stange, Alexander",
+        "p2": "Rayvich, Maxime",
+        "winner": "von Stange, Alexander"
+      },
+      {
+        "p1": "Elenbogen, Andrew",
+        "p2": "Mirabelli, Aidan",
+        "winner": "Elenbogen, Andrew"
+      },
+      {
+        "p1": "Kaluzny, Matyas",
+        "p2": "Galeotti, Gregorio",
+        "winner": "Kaluzny, Matyas"
+      },
+      {
+        "p1": "Edelson, Adam",
+        "p2": "Yudt, Jack",
+        "winner": "Edelson, Adam"
+      },
+      {
+        "p1": "Astrand, David",
+        "p2": "Rappaport, Max",
+        "winner": "Astrand, David"
+      },
+      {
+        "p1": "Wager, John",
+        "p2": "Okuno, Atsuya",
+        "winner": "Wager, John"
+      },
+      {
+        "p1": "Pastore, Kellen",
+        "p2": "Flynn, Zach",
+        "winner": "Pastore, Kellen"
+      },
+      {
+        "p1": "Kidston, Andrew",
+        "p2": "Odenheimer, Nicholas",
+        "winner": "Kidston, Andrew"
+      },
+      {
+        "p1": "Hosokawa, Yuya",
+        "p2": "Senyuz, Aras",
+        "winner": "Hosokawa, Yuya"
+      },
+      {
+        "p1": "Rockenbach, Bryan",
+        "p2": "Santos Esquici, Victor",
+        "winner": "Rockenbach, Bryan"
+      },
+      {
+        "p1": "Harvey, Clement",
+        "p2": "Sanchez, Francisco",
+        "winner": "Harvey, Clement"
+      },
+      {
+        "p1": "Ramboa, Thierry",
+        "p2": "Dang, Nam",
+        "winner": "Ramboa, Thierry"
+      },
+      {
+        "p1": "Kominowski, Maxx",
+        "p2": "Steuer, Nathan",
+        "winner": "Kominowski, Maxx"
+      },
+      {
+        "p1": "Brozovich, Ryan",
+        "p2": "Normandin, Ryan",
+        "winner": "Brozovich, Ryan"
+      },
+      {
+        "p1": "Zhang, Rui",
+        "p2": "Nass, Matt",
+        "winner": "Zhang, Rui"
+      },
+      {
+        "p1": "Kassis, Eli",
+        "p2": "Crusius, Matheus",
+        "winner": "Kassis, Eli"
+      },
+      {
+        "p1": "Potter, Jack",
+        "p2": "Wright, Matthew",
+        "winner": "Potter, Jack"
+      },
+      {
+        "p1": "Reid, Jason",
+        "p2": "Dubreuil, Eleanor",
+        "winner": "Reid, Jason"
+      },
+      {
+        "p1": "Vetter, Evan",
+        "p2": "Hawkins, Victor",
+        "winner": "Vetter, Evan"
+      },
+      {
+        "p1": "Fauquenoi, Noe",
+        "p2": "Fernandez Torres, Alvaro",
+        "winner": "Fauquenoi, Noe"
+      },
+      {
+        "p1": "Kageyama, Hiroki",
+        "p2": "Zheng, Chang",
+        "winner": "Kageyama, Hiroki"
+      },
+      {
+        "p1": "Stefansson, Matthew",
+        "p2": "Offman, Noe",
+        "winner": "Stefansson, Matthew"
+      },
+      {
+        "p1": "Inoue, Toru",
+        "p2": "Willis, Joshua",
+        "winner": "Inoue, Toru"
+      },
+      {
+        "p1": "Jones, Ben",
+        "p2": "Gobern, Luis",
+        "winner": "Jones, Ben"
+      },
+      {
+        "p1": "Coffey, Oliver",
+        "p2": "Higgins, Evan",
+        "winner": "Coffey, Oliver"
+      },
+      {
+        "p1": "Young, Jack",
+        "p2": "Boulinguiez, Mike",
+        "winner": "Young, Jack"
+      },
+      {
+        "p1": "Wu, Allen",
+        "p2": "Gilbert-Avila, Haven",
+        "winner": "Wu, Allen"
+      },
+      {
+        "p1": "Friedrichsen, Alex",
+        "p2": "Terlizzi, Lorenzo",
+        "winner": "Friedrichsen, Alex"
+      },
+      {
+        "p1": "Tamblyn, Mitchell",
+        "p2": "Dota, Arch",
+        "winner": "Tamblyn, Mitchell"
+      },
+      {
+        "p1": "Sigrist, Mike",
+        "p2": "Kirner, Nathan",
+        "winner": "Sigrist, Mike"
+      },
+      {
+        "p1": "Gan, Steve",
+        "p2": "Fan, Julius",
+        "winner": "Gan, Steve"
+      },
+      {
+        "p1": "Xu, Matt",
+        "p2": "Flores, Pedro",
+        "winner": "Xu, Matt"
+      },
+      {
+        "p1": "Beitler, Jon",
+        "p2": "Zhang, Neilson",
+        "winner": "Beitler, Jon"
+      },
+      {
+        "p1": "Lee, Anthony",
+        "p2": "Schnake, Abe",
+        "winner": "Lee, Anthony"
+      },
+      {
+        "p1": "Fortier, Elliot",
+        "p2": "Buonadonna, Mason",
+        "winner": "Fortier, Elliot"
+      },
+      {
+        "p1": "Mullen, Collins",
+        "p2": "Schwendinger, Lukas",
+        "winner": "Mullen, Collins"
+      },
+      {
+        "p1": "Branis, Antonin",
+        "p2": "Salvatto, Luis",
+        "winner": "Branis, Antonin"
+      },
+      {
+        "p1": "Dominguez, Javier",
+        "p2": "Hamaguchi, Masakuni",
+        "winner": "Dominguez, Javier"
+      },
+      {
+        "p1": "Straub, Devon",
+        "p2": "Hsu, Brendan",
+        "winner": "Straub, Devon"
+      },
+      {
+        "p1": "Cuneo, Andrew",
+        "p2": "Henry, Julien",
+        "winner": "Cuneo, Andrew"
+      },
+      {
+        "p1": "Inglis, David",
+        "p2": "Peral, Marc",
+        "winner": "Inglis, David"
+      },
+      {
+        "p1": "Tomajko, Oliver",
+        "p2": "Duke, Reid",
+        "winner": "Tomajko, Oliver"
+      },
+      {
+        "p1": "Morikis, Vasilios",
+        "p2": "Brace, Adam",
+        "winner": "Morikis, Vasilios"
+      },
+      {
+        "p1": "Condon, Ryan",
+        "p2": "Suorsa, Miitri",
+        "winner": "Condon, Ryan"
+      },
+      {
+        "p1": "Kikidis, Charis",
+        "p2": "Robb, Ian",
+        "winner": "Kikidis, Charis"
+      },
+      {
+        "p1": "Depraz, Jean-Emmanuel",
+        "p2": "Martos, Toni",
+        "winner": "Depraz, Jean-Emmanuel"
+      },
+      {
+        "p1": "French, Mae",
+        "p2": "Moriyama, Masahide",
+        "winner": "French, Mae"
+      },
+      {
+        "p1": "Shibata, Akira",
+        "p2": "Verdierre, Gaetan",
+        "winner": "Shibata, Akira"
+      },
+      {
+        "p1": "Wong, Charles",
+        "p2": "Kuroda, Masashiro",
+        "winner": "Wong, Charles"
+      },
+      {
+        "p1": "Larsen, Christoffer",
+        "p2": "Faust, Zevin",
+        "winner": "Larsen, Christoffer"
+      },
+      {
+        "p1": "Eliatamby, Charles",
+        "p2": "Gonzalo Benito, Jaime",
+        "winner": "Eliatamby, Charles"
+      },
+      {
+        "p1": "Schutz, Stefan",
+        "p2": "Weiss, Daniel",
+        "winner": "Schutz, Stefan"
+      },
+      {
+        "p1": "DeBenedetto-Plummer, Michael",
+        "p2": "Jezyna, Maciej",
+        "winner": "DeBenedetto-Plummer, Michael"
+      },
+      {
+        "p1": "Yamasaki, Yoshitaka",
+        "p2": "Adachi, Junichi",
+        "winner": "Yamasaki, Yoshitaka"
+      },
+      {
+        "p1": "Mullens, Ryan",
+        "p2": "Walker, Austin",
+        "winner": "Mullens, Ryan"
+      },
+      {
+        "p1": "nakamura, shuhei",
+        "p2": "Baker, Christian",
+        "winner": "nakamura, shuhei"
+      },
+      {
+        "p1": "Lobo Melamed, Jonathan",
+        "p2": "Nakashima, Atsushi",
+        "winner": "Lobo Melamed, Jonathan"
+      },
+      {
+        "p1": "Stark, Benjamin",
+        "p2": "Chen, Yang",
+        "winner": "Stark, Benjamin"
+      },
+      {
+        "p1": "Oomkes, Matthew",
+        "p2": "Rohan, Alex",
+        "winner": "Oomkes, Matthew"
+      },
+      {
+        "p1": "Kane, Liam",
+        "p2": "Lee, Shi Tian",
+        "winner": "Kane, Liam"
+      },
+      {
+        "p1": "Hu, Nathan",
+        "p2": "Roylance, Tyson",
+        "winner": "Hu, Nathan"
+      },
+      {
+        "p1": "Porojan, Raul",
+        "p2": "Dsouza, Kenith",
+        "winner": "Porojan, Raul"
+      },
+      {
+        "p1": "Orru, Valentin",
+        "p2": "Dai, Xiangjun",
+        "winner": "Orru, Valentin"
+      },
+      {
+        "p1": "Bertram, Timo",
+        "p2": "Choy, Vincent",
+        "winner": "Bertram, Timo"
+      },
+      {
+        "p1": "Sanfeliu, Josep",
+        "p2": "Wylde-LaRue, Tristan",
+        "winner": "Sanfeliu, Josep"
+      },
+      {
+        "p1": "Paulot, Alexey",
+        "p2": "Jade, Valerie",
+        "winner": "Paulot, Alexey"
+      },
+      {
+        "p1": "Tonole, Quinn",
+        "p2": "Oya, Kazutaka",
+        "winner": "Tonole, Quinn"
+      },
+      {
+        "p1": "Bishara, Mikey",
+        "p2": "De Gaetano, Carlo",
+        "winner": "Bishara, Mikey"
+      },
+      {
+        "p1": "Wosner, Marcus",
+        "p2": "Baumler, Edgar",
+        "winner": "Wosner, Marcus"
+      },
+      {
+        "p1": "Kurtzman, Etai",
+        "p2": "Queralt Garriga, Albert",
+        "winner": "Kurtzman, Etai"
+      },
+      {
+        "p1": "Yu, Muhan",
+        "p2": "Byrd, Mike",
+        "winner": "Yu, Muhan"
+      },
+      {
+        "p1": "Torres, Bernardo",
+        "p2": "Nollen, Dylan",
+        "winner": "Torres, Bernardo"
+      },
+      {
+        "p1": "Smith, Pierre",
+        "p2": "Oswald, Kenny",
+        "winner": "Smith, Pierre"
+      },
+      {
+        "p1": "Martin, Adria",
+        "p2": "gassaway, ryan",
+        "winner": "Martin, Adria"
+      },
+      {
+        "p1": "Zhi, Yimin",
+        "p2": "Garcia, Sergio",
+        "winner": "Zhi, Yimin"
+      },
+      {
+        "p1": "Garcia-Romo, Andy",
+        "p2": "Berrett, George",
+        "winner": "Garcia-Romo, Andy"
+      },
+      {
+        "p1": "Zhang, Wentong",
+        "p2": "Yasooka, Shota",
+        "winner": "Zhang, Wentong"
+      },
+      {
+        "p1": "Liu, Yuchen",
+        "p2": "Lupi, Guglielmo",
+        "winner": "Liu, Yuchen"
+      },
+      {
+        "p1": "Lee, Rick hup beng",
+        "p2": "Nelson, Kye",
+        "winner": "Lee, Rick hup beng"
+      },
+      {
+        "p1": "Rizzi, Mattia",
+        "p2": "Mora, Alejandro",
+        "winner": "Rizzi, Mattia"
+      },
+      {
+        "p1": "Magalhaes, Edgar",
+        "p2": "Araujo, William",
+        "winner": "Magalhaes, Edgar"
+      },
+      {
+        "p1": "masukado, kenta",
+        "p2": "Pardee, Samuel",
+        "winner": "masukado, kenta"
+      },
+      {
+        "p1": "Kral, Christopher",
+        "p2": "Bai, Huaxing",
+        "winner": "Kral, Christopher"
+      }
+    ],
+    "13": {
+      "note": "R13 winners logged",
+      "winners": [
+        "Wu, Allen",
+        "Davis, Derrick",
+        "nakamura, shuhei",
+        "Brace, Adam",
+        "Offman, Noe",
+        "Rappaport, Max",
+        "Vetter, Evan",
+        "De Gaetano, Carlo",
+        "Lupi, Guglielmo",
+        "Del Pivo, Marco",
+        "Porojan, Raul",
+        "Kirner, Nathan",
+        "Lee, Rick hup beng",
+        "Hamaguchi, Masakuni",
+        "Zhang, Rui",
+        "Kurtzman, Etai",
+        "Straub, Devon",
+        "Lee, Anthony",
+        "Roman, Patricio",
+        "Kane, Liam",
+        "Hosokawa, Yuya",
+        "Oya, Kazutaka",
+        "Merjam, Guilherme",
+        "Peral, Marc",
+        "Oswald, Kenny",
+        "Morales Macaya, Nicolas",
+        "Gobern, Luis",
+        "Faust, Zevin",
+        "Sajgalik, Eduardo",
+        "Robb, Ian",
+        "Martin, Adria",
+        "hara, koki",
+        "chen, xinrong",
+        "Buonadonna, Mason",
+        "Odenheimer, Nicholas",
+        "Wright, Matthew",
+        "Astrand, David",
+        "Kidston, Andrew",
+        "Mirabelli, Aidan",
+        "Queralt Garriga, Albert",
+        "cammilluzzi, Marco",
+        "Ichikawa, Yuuki",
+        "Rohan, Alex",
+        "Talbot, Nick",
+        "Green, Paul",
+        "Mitchell-Rabaey, Jacob",
+        "Dominguez, Javier",
+        "Suorsa, Miitri",
+        "Kikidis, Charis",
+        "Henry, Julien",
+        "Flores, Pedro",
+        "Sanfeliu, Josep",
+        "Stark, Ben",
+        "Smith, Pierre",
+        "Flynn, Zach",
+        "Mullens, Ryan",
+        "Inoue, Toru",
+        "Kaluzny, Matyas",
+        "Marin, Rafael",
+        "Kassis, Eli",
+        "Larsen, Christoffer",
+        "Orru, Valentin",
+        "Nealston, Richard",
+        "Torres, Bernardo",
+        "Xu, Matt",
+        "Sigrist, Mike",
+        "Kominowski, Maxx",
+        "Yang, Yi",
+        "Dai, Xiangjun",
+        "Eliatamby, Charles",
+        "Pardee, Samuel",
+        "Chen, Yang",
+        "Higgins, Evan",
+        "Stefansson, Matthew",
+        "Goetschel, Daniel",
+        "Meagher, Gavin",
+        "Jezyna, Maciej",
+        "Rizzi, Mattia",
+        "Yasooka, Shota",
+        "Burkhart, Corey",
+        "Cuneo, Andrew",
+        "Martos, Toni",
+        "Blondiaux, Timothee",
+        "Perry, Gavin",
+        "Dubreuil, Eleanor",
+        "Zhang, Wentong",
+        "Galeotti, Gregorio",
+        "Nass, Matt",
+        "Deriu, Nick",
+        "masukado, kenta",
+        "Cuello, Anthony",
+        "Wosner, Marcus",
+        "Magalhaes, Edgar",
+        "Harvey, Clement",
+        "Gan, Steve",
+        "Willis, Joshua",
+        "Mora, Alejandro",
+        "Inglis, David",
+        "Schnake, Abe",
+        "Fortier, Elliot",
+        "Crusius, Matheus"
+      ]
+    }
   },
   "notes": "R1-R3 Limited (Booster Draft). R4-R8 Standard Constructed. player_archetypes populated from magic.gg spiciest-decklists article (26 players). Bulk of field (299 players) archetype unknown until tagged standings published.",
   "standings_r6": [
@@ -5692,5 +6304,64 @@
       }
     }
   },
-  "matchup_matrix_source": "@Azorius, PT SOS 2026, all constructed rounds"
+  "matchup_matrix_source": "@Azorius, PT SOS 2026, all constructed rounds",
+  "top8": [
+    {
+      "rank": 1,
+      "player": "Zhang, Rui",
+      "archetype": "Izzet Lessons",
+      "country": "China"
+    },
+    {
+      "rank": 2,
+      "player": "Nass, Matt",
+      "archetype": "Selesnya Ouroboroid",
+      "country": "USA"
+    },
+    {
+      "rank": 3,
+      "player": "Kominowski, Maxx",
+      "archetype": "Izzet Spellementals",
+      "country": "USA"
+    },
+    {
+      "rank": 4,
+      "player": "Larsen, Christoffer",
+      "archetype": "Selesnya Landfall",
+      "country": "Denmark"
+    },
+    {
+      "rank": 5,
+      "player": "Schutz, Stefan",
+      "archetype": "Mono-Green Landfall",
+      "country": "Germany"
+    },
+    {
+      "rank": 6,
+      "player": "Steuer, Nathan",
+      "archetype": "Selesnya Landfall",
+      "country": "USA"
+    },
+    {
+      "rank": 7,
+      "player": "Stefansson, Matthew",
+      "archetype": "Mono-Green Landfall",
+      "country": "Canada"
+    },
+    {
+      "rank": 8,
+      "player": "Faust, Zevin",
+      "archetype": "Azorius Tempo",
+      "country": "USA"
+    }
+  ],
+  "top8_archetype_breakdown": {
+    "Selesnya Landfall": 2,
+    "Mono-Green Landfall": 2,
+    "Izzet Lessons": 1,
+    "Izzet Spellementals": 1,
+    "Selesnya Ouroboroid": 1,
+    "Azorius Tempo": 1
+  },
+  "top8_notes": "Izzet Prowess (31% of field) has ZERO Top 8. Landfall strategies dominated (4/8 slots: Selesnya Landfall x2, Mono-Green Landfall x2). Zhang Rui on Izzet Lessons is the 1-seed. Matt Nass piloted Selesnya Ouroboroid -- new archetype not in current sim field. Izzet Spellementals x1, Azorius Tempo x1."
 }

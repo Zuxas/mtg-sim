@@ -28276,6 +28276,132 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Multi-set batch 2 (MKM/BLB/OTJ/WOE) ─────────────────────────────
+
+def _conspiracy_unraveler_etb(gs, card):
+    """Conspiracy Unraveler -- {5}{U}{U} Legendary (Flying). 'Collect Evidence 10
+    alternative cost for spells you cast.' ETB proxy: big flying + draw 3."""
+    for _ in range(3):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Conspiracy Unraveler ETB: free-cast static (draw 3 proxy)")
+
+
+def _undergrowth_recon_etb(gs, card):
+    """Undergrowth Recon -- {1}{G}{G} Enchantment. 'Upkeep: return a land from GY tapped.'
+    ETB proxy: land-recursion engine (proxy: +1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Undergrowth Recon ETB: upkeep land-return active (+1 mana proxy)")
+
+
+def _gisa_hellraiser_etb(gs, card):
+    """Gisa, the Hellraiser -- {3}{B}{B}. 'Ward + Skeleton/Zombie +1/+1 menace + crime trigger.'
+    ETB proxy: tribal lord +1/+1 to all friendly creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Gisa ETB: Skeleton/Zombie lord (+1/+1 to all creatures proxy)")
+
+
+def _bria_etb(gs, card):
+    """Bria, Riptide Rogue -- {2}{U}{R}. 'Prowess. Other creatures you control can't
+    be blocked by creatures with equal or less power.'
+    ETB proxy: Prowess +1/+1 to self."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Bria ETB: Prowess proxy +1/+1")
+
+
+def _serra_redeemer_etb(gs, card):
+    """Serra Redeemer -- {3}{W}{W} (Flying). 'Whenever another creature you control
+    with power 2 or less enters, put 2 +1/+1 counters on it.'
+    ETB proxy: +2/+2 to smallest friendly creature."""
+    from data.card import Tag as _Tag
+    small = [c for c in gs.zones.battlefield
+             if not c.is_land() and c.has(_Tag.CREATURE) and c is not card
+             and c.effective_power() <= 2]
+    if small:
+        target = small[0]
+        target.counters = (target.counters or 0) + 2
+    gs._log("  Serra Redeemer ETB: flying + +2/+2 to power<=2 friend on ETB")
+
+
+def _obeka_etb(gs, card):
+    """Obeka, Splitter of Seconds -- {1}{U}{B}{R} (Menace). 'When deals combat
+    damage, get extra upkeep steps.' ETB proxy: draw 1 (upkeep value proxy)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Obeka ETB: extra-upkeep trigger (draw 1 proxy)")
+
+
+def _specter_of_mortality_etb(gs, card):
+    """Specter of Mortality -- {3}{B}{B} (Flying). 'ETB: exile creature cards from
+    your GY. When dies, put them on bottom of library.'
+    Model: exile GY setup (no immediate effect proxy)."""
+    gs._log("  Specter of Mortality ETB: GY-exile trigger registered")
+
+
+def _succumb_to_the_cold_spell(gs, card):
+    """Succumb to the Cold -- {2}{U} Instant. 'Tap 1-2 target opp creatures + stun.'
+    Model: tap and stun opp's two best creatures (match)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = sorted([c for c in opp.zones.battlefield
+                          if not c.is_land() and c.has(_Tag.CREATURE)],
+                         key=lambda c: -c.effective_power())
+        for t in threats[:2]:
+            t.tapped = True
+            t.stun_counters = getattr(t, 'stun_counters', 0) + 1
+        gs._log(f"  Succumb to the Cold: tap+stun {len(threats[:2])} opp creatures")
+
+
+def _pitiless_carnage_spell(gs, card):
+    """Pitiless Carnage -- {3}{B} Sorcery. 'Sacrifice any permanents, draw that many.'
+    Model: sacrifice weakest creature, draw 1."""
+    from data.card import Tag as _Tag
+    our = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if our:
+        worst = min(our, key=lambda c: c.effective_power())
+        gs.zones.battlefield.remove(worst)
+        gs.zones.graveyard.append(worst)
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Pitiless Carnage: sacrifice weakest creature, draw 1")
+
+
+def _relive_the_past_spell(gs, card):
+    """Relive the Past -- {5}{G}{W} Sorcery. 'Return up to 1 artifact, 1 land,
+    1 non-Aura enchantment from GY to hand.' Model: return 3 GY cards to hand."""
+    returned = 0
+    for card_type in ('Artifact', 'Land', 'Enchantment'):
+        gy = [c for c in gs.zones.graveyard if card_type in (c.type_line or '')]
+        if gy:
+            best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+            gs.zones.graveyard.remove(best)
+            gs.zones.hand.append(best)
+            returned += 1
+    gs._log(f"  Relive the Past: returned {returned} cards from GY to hand")
+
+
+def _reenact_the_crime_spell(gs, card):
+    """Reenact the Crime -- {1}{U}{U}{U} Instant. 'Exile GY card put there this turn,
+    copy it. May cast copy for free.' Model: draw 1 (copy proxy)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Reenact the Crime: copy GY card (draw 1 proxy)")
+
+
+def _another_round_spell(gs, card):
+    """Another Round -- {XX}{2}{W} Sorcery. 'Exile any creatures you control,
+    return them with +1/+1 counters for each.' Model: ETB-trigger loop proxy."""
+    from data.card import Tag as _Tag
+    creatures = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    for c in creatures:
+        c.counters = (c.counters or 0) + 2
+    gs._log(f"  Another Round: re-enter {len(creatures)} creatures with +2/+2 proxy")
+
+
 # ── Multi-set batch (WOE/LCI/MKM/OTJ/DSK) -- competitive rares ────────
 
 def _gishath_etb(gs, card):
@@ -29407,6 +29533,11 @@ _SPELL_HANDLERS.update({
     "Blasphemous Edict":   _blasphemous_edict_spell,
     "Undying Malice":      _undying_malice_spell,
     "Abuelo's Awakening":  _abuelos_awakening_spell,
+    "Pitiless Carnage":    _pitiless_carnage_spell,
+    "Relive the Past":     _relive_the_past_spell,
+    "Reenact the Crime":   _reenact_the_crime_spell,
+    "Another Round":       _another_round_spell,
+    "Succumb to the Cold": _succumb_to_the_cold_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29440,6 +29571,14 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # Multi-set batch 2 (MKM/BLB/OTJ/WOE)
+    "Conspiracy Unraveler":       _conspiracy_unraveler_etb,
+    "Undergrowth Recon":          _undergrowth_recon_etb,
+    "Gisa, the Hellraiser":       _gisa_hellraiser_etb,
+    "Bria, Riptide Rogue":        _bria_etb,
+    "Serra Redeemer":             _serra_redeemer_etb,
+    "Obeka, Splitter of Seconds": _obeka_etb,
+    "Specter of Mortality":       _specter_of_mortality_etb,
     # Multi-set (WOE/LCI/MKM/OTJ/DSK) competitive rares
     "Gishath, Sun's Avatar":      _gishath_etb,
     "Meathook Massacre II":       _meathook_massacre_ii_etb,

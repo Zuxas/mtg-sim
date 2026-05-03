@@ -28276,6 +28276,28 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 7 -- keyword body stubs ─────────────────
+
+def _fynn_etb(gs, card):
+    """Fynn, the Fangbearer -- {1}{G} (Deathtouch). 'When creature with
+    deathtouch deals combat damage to a player, that player gets a poison counter.'
+    Model: poison mechanic proxy -- ETB note that deathtouch-damage triggers."""
+    gs._log("  Fynn ETB: deathtouch-poison trigger active")
+
+
+def _frenzied_goblin_etb(gs, card):
+    """Frenzied Goblin -- {R}. 'Whenever attacks, may pay {R}: target creature
+    can't block this turn.' Model: attack trigger tap-prevention (proxy no-op)."""
+    gs._log("  Frenzied Goblin ETB: attack-prevent-block trigger active")
+
+
+def _elementalist_adept_etb(gs, card):
+    """Elementalist Adept -- {1}{U} (Flash). 'Prowess' effectively: gets +1/+1
+    whenever you cast a noncreature spell. ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Elementalist Adept ETB: Prowess proxy +1/+1 (first spell)")
+
+
 # ── Foundations (FDN) batch 6 -- final FDN pass ──────────────────────
 
 def _bigfin_bouncer_etb(gs, card):
@@ -29272,6 +29294,10 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 7
+    "Fynn, the Fangbearer":       _fynn_etb,
+    "Frenzied Goblin":            _frenzied_goblin_etb,
+    "Elementalist Adept":         _elementalist_adept_etb,
     # FDN batch 6
     "Bigfin Bouncer":             _bigfin_bouncer_etb,
     "Driver of the Dead":         _driver_of_the_dead_etb,

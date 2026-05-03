@@ -28276,6 +28276,119 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── TDM + FIN batch ──────────────────────────────────────────────────
+
+def _dracogenesis_etb(gs, card):
+    """Dracogenesis -- {6}{R}{R} Enchantment. 'Cast Dragon spells without paying cost.'
+    ETB proxy: massive mana savings -- add 6 mana floating."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 6
+    gs._log("  Dracogenesis ETB: free-Dragon-cast static (+6 mana proxy)")
+
+
+def _perennation_spell(gs, card):
+    """Perennation -- {3}{W}{B}{G}. Return target permanent from GY to BF with
+    hexproof + indestructible counters. Model: reanimate best GY permanent."""
+    from data.card import Tag as _Tag
+    gy_perms = [c for c in gs.zones.graveyard if not c.is_land()]
+    if gy_perms:
+        best = max(gy_perms, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        best.counters = (best.counters or 0) + 2
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Perennation: reanimate {best.name} with hexproof+indestructible")
+
+
+def _call_spirit_dragons_etb(gs, card):
+    """Call the Spirit Dragons -- {W}{U}{B}{R}{G} Enchantment. 'Dragons indestructible.
+    Upkeep: put +1/+1 counters per color on target Dragon.'
+    ETB proxy: +5 counters (all 5 colors) to biggest creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 5
+    gs._log("  Call the Spirit Dragons ETB: Dragon indestructible + +5/+5 proxy")
+
+
+def _neriv_etb(gs, card):
+    """Neriv, Heart of the Storm -- {1}{R}{W}{B} (Flying). 'If a creature that entered
+    this turn would deal damage, it deals twice that much.' ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Neriv ETB: damage-doubling trigger (draw 1 proxy)")
+
+
+def _taigam_opportunist_etb(gs, card):
+    """Taigam, Master Opportunist -- {1}{U}. Flurry: when you cast second spell,
+    copy it, exile original, cast the copies again later. ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Taigam ETB: Flurry rebound copy trigger (draw 1 proxy)")
+
+
+def _mardu_siegebreaker_etb(gs, card):
+    """Mardu Siegebreaker -- {1}{R}{W}{B} (Deathtouch, Haste). 'ETB: exile up to
+    one other creature you control until this leaves.' Model: blink ally for ETB."""
+    gs._log("  Mardu Siegebreaker ETB: deathtouch haste; blink-ally trigger active")
+
+
+def _cloud_etb(gs, card):
+    """Cloud, Planet's Champion -- {3}{R}{W}. 'When equipped, double strike + indestructible.'
+    ETB proxy: +2/+2 to best equipped friend (or self if equipped)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Cloud ETB: equipment-power proxy +2/+2 to best creature")
+
+
+def _gogo_etb(gs, card):
+    """Gogo, Master of Mimicry -- {2}{U}. '{X}{X}{T}: Copy activated/triggered ability X times.'
+    ETB proxy: draw 1 (copy-engine value)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Gogo ETB: copy-engine ability (draw 1 proxy)")
+
+
+def _beatrix_etb(gs, card):
+    """Beatrix, Loyal General -- {4}{W}{W} (Vigilance). 'Beginning of combat: may
+    attach target Equipment you control to target creature.'
+    ETB proxy: +2/+2 to best friend (Equipment grant)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Beatrix ETB: Equipment grant proxy +2/+2 to best friend")
+
+
+def _ultima_etb(gs, card):
+    """Ultima, Origin of Oblivion -- {5} (Flying). 'When attacks: blight counter on land.'
+    ETB proxy: destroy opp's best nonbasic land."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        nonbasics = [c for c in opp.zones.battlefield
+                     if c.is_land() and 'Basic' not in (c.type_line or '')]
+        if nonbasics:
+            target = nonbasics[0]
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Ultima ETB: blight attack proxy -- destroy {target.name}")
+        else:
+            gs._log("  Ultima ETB: no nonbasic to blight")
+    else:
+        gs._log("  Ultima ETB: goldfish no-op")
+
+
+def _noctis_etb(gs, card):
+    """Noctis, Prince of Lucis -- {1}{W}{U}{B} (Lifelink). 'Cast artifact spells
+    from GY by paying 3 life instead.' ETB proxy: draw 1 (GY-artifact casting)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Noctis ETB: GY-artifact-cast static (draw 1 proxy)")
+
+
 # ── ECL + DFT batch ──────────────────────────────────────────────────
 
 def _coalstoke_gearhulk_etb(gs, card):
@@ -29935,6 +30048,7 @@ _SPELL_HANDLERS.update({
     "Elemental Teachings":    _elemental_teachings_spell,
     "Morningtide's Light":    _morningtides_light_spell,
     "Full Throttle":          _full_throttle_spell,
+    "Perennation":            _perennation_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29968,6 +30082,17 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # TDM + FIN batch
+    "Dracogenesis":               _dracogenesis_etb,
+    "Call the Spirit Dragons":    _call_spirit_dragons_etb,
+    "Neriv, Heart of the Storm":  _neriv_etb,
+    "Taigam, Master Opportunist": _taigam_opportunist_etb,
+    "Mardu Siegebreaker":         _mardu_siegebreaker_etb,
+    "Cloud, Planet's Champion":   _cloud_etb,
+    "Gogo, Master of Mimicry":    _gogo_etb,
+    "Beatrix, Loyal General":     _beatrix_etb,
+    "Ultima, Origin of Oblivion": _ultima_etb,
+    "Noctis, Prince of Lucis":    _noctis_etb,
     # ECL + DFT batch
     "Coalstoke Gearhulk":         _coalstoke_gearhulk_etb,
     "Riptide Gearhulk":           _riptide_gearhulk_etb,

@@ -1,32 +1,34 @@
-// Selesnya Landfall - tarkanmag (27/04/26)
-// Event: MTGO League
-// Source: mtg_meta.db deck_id=129819 pulled 2026-04-30
-// Main: 60 | Sideboard: 15
-
-12 Forest
-4 Badgermole Cub
+// Selesnya Landfall -- Christoffer Larsen (Top 4, PT SOS 2026-05-01)
+// Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
+// PT overall WR: 63.81% (N=105). Beats Prowess 62.9%, Mono-Green 65.4%
+// Loses to Izzet Lessons 25% (only major negative matchup).
+// audit:pt_top8
 4 Earthbender Ascension
-4 Escape Tunnel
-4 Fabled Passage
-4 Llanowar Elves
-4 Mossborn Hydra
-4 Planar Engineering
+4 Mightform Harmonizer
 4 Sazh's Chocobo
-4 Tifa Lockhart
+4 Badgermole Cub
+4 Llanowar Elves
+4 Fabled Passage
+4 Erode
+4 Hushwood Verge
+3 Escape Tunnel
 3 Ba Sing Se
-2 Bristly Bill, Spine Sower
-2 Royal Treatment
-2 Traveling Chocobo
-1 Plains
-1 Snakeskin Veil
-1 Temple Garden
+2 Surrak, Elusive Hunter
+2 Lumbering Worldwagon
+2 Bushwhack
+2 Temple Garden
+2 Plains
+10 Forest
+1 Keen-Eyed Curator
+1 Icetill Explorer
 
-// Sideboard
-3 Erode
-2 Keen-Eyed Curator
-2 Origin of Metalbending
-2 Sandman, Shifting Scoundrel
-2 Sheltered by Ghosts
-2 Soul-Guide Lantern
-1 Leatherhead, Swamp Stalker
-1 Snakeskin Veil
+Sideboard
+3 Mossborn Hydra
+3 Sheltered by Ghosts
+2 Dyadrine, Synthesis Amalgam
+2 Snakeskin Veil
+1 Icetill Explorer
+1 Kutzil, Malamet Exemplar
+1 Mossborn Hydra
+1 Restoration Magic
+1 Voice of Victory

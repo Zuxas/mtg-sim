@@ -28274,6 +28274,54 @@ def _emeritus_woe_etb(gs, card):
         gs._log(f"  Emeritus of Woe ETB: Demonic Tutor proxy -- draw {drawn.name}")
 
 
+def _rancorous_archaic_etb(gs, card):
+    """Rancorous Archaic -- {2/G}{2/G} Creature (Trample, Reach).
+    Converge: enters with +1/+1 per color spent. 'Whenever you cast a creature
+    spell, put a +1/+1 counter on this creature.' Model: enters with 2 counters."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Rancorous Archaic ETB: +2/+2 Converge proxy (2-color cast)")
+
+
+def _procrastinate_spell(gs, card):
+    """Procrastinate -- {X}{U} Sorcery.
+    'Tap target creature. Put twice X stun counters on it.'
+    Model: tap + effectively remove for X turns. Proxy: tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE) and not getattr(c, "tapped", False)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Procrastinate: tap {target.name} (stun proxy)")
+    else:
+        gs._log("  Procrastinate: goldfish no-op")
+
+
+def _molten_note_spell(gs, card):
+    """Molten Note -- {2}{R} Sorcery.
+    'Deals damage to target creature = amount of mana spent to cast it.'
+    Model: deals 2 damage to opp's best creature (proxy mana spent = 2)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            try:
+                toughness = int(target.toughness or 1)
+            except (ValueError, TypeError):
+                toughness = 2
+            if 2 >= toughness:  # kills it
+                opp.zones.battlefield.remove(target)
+                opp.zones.graveyard.append(target)
+                gs._log(f"  Molten Note: kill {target.name} (2 damage >= {toughness} toughness)")
+            else:
+                gs._log(f"  Molten Note: ping {target.name} for 2 (survives)")
+
+
 def _divergent_equation_spell(gs, card):
     """Divergent Equation -- {X}{U} Instant.
     'Return up to X target instant and/or sorcery cards from GY to hand.'
@@ -28472,6 +28520,8 @@ _SPELL_HANDLERS.update({
     "Pox Plague":          _pox_plague_spell,
     "Flashback":           _flashback_spell,
     "Arcane Omens":        _arcane_omens_spell,
+    "Molten Note":         _molten_note_spell,
+    "Procrastinate":       _procrastinate_spell,
     "Divergent Equation":  _divergent_equation_spell,
     "Fix What's Broken":   _fix_whats_broken_spell,
 })
@@ -28492,6 +28542,7 @@ _ETB_HANDLERS.update({
     "Aberrant Manawurm":          _aberrant_manawurm_etb,
     "Summoned Dromedary":         _summoned_dromedary_etb,
     "Slumbering Trudge":          _slumbering_trudge_etb,
+    "Rancorous Archaic":          _rancorous_archaic_etb,
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,

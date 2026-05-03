@@ -1836,6 +1836,8 @@ _h_cauldron_of_essence = _etb([["gain_life", {"n": 1}], ["lose_life", {"n": 1, "
 _h_tester_of_the_tangential = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] When this enchantment enters, create a 2/2 red and white Spirit creature token. | 
 _h_living_history = _etb([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}], ["add_counters", {"n": 2, "target": "self"}]])
+# [sos] Converge ? When this creature enters, exile target nonland permanent an opponent
+_h_sundering_archaic = _etb([["exile", {"target": "opp_biggest_creature"}]])
 # [sos] Trample | Whenever you gain life, put a +1/+1 counter on this creature.
 _h_pest_mascot = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, an
@@ -1884,6 +1886,8 @@ _h_zealous_lorecaster = _etb([["return_gy_to_hand", {"filter_type": "any"}]])
 _h_mica__reader_of_ruins = _etb([["draw", {"n": 1}]])
 # [sos] Vigilance | When this creature enters, surveil 2. (Look at the top two cards of yo
 _h_imperious_inkmage = _etb([["scry", {"n": 2}]])
+# [sos] Vigilance | Converge ? When this creature enters, you may draw X cards, where X is
+_h_transcendent_archaic = _etb([["draw", {"n": 1}]])
 
 # [woe] You may discard a card. If you do, draw two cards. | Create a Wicked Role token at
 _h_witch_s_mark = _spell([["draw", {"n": 2}], ["create_token", {"count": 1, "power": "0", "toughness": "1", "keywords": []}]])
@@ -3853,6 +3857,7 @@ for _n,_f in {
     "Cauldron of Essence": _h_cauldron_of_essence,
     "Tester of the Tangential": _h_tester_of_the_tangential,
     "Living History": _h_living_history,
+    "Sundering Archaic": _h_sundering_archaic,
     "Pest Mascot": _h_pest_mascot,
     "Blech, Loafing Pest": _h_blech__loafing_pest,
     "Moseo, Vein's New Dean": _h_moseo__vein_s_new_dean,
@@ -3877,6 +3882,7 @@ for _n,_f in {
     "Zealous Lorecaster": _h_zealous_lorecaster,
     "Mica, Reader of Ruins": _h_mica__reader_of_ruins,
     "Imperious Inkmage": _h_imperious_inkmage,
+    "Transcendent Archaic": _h_transcendent_archaic,
 }.items(): ETB_EFFECTS.setdefault(_n,_f)
 
 for _n,_f in {

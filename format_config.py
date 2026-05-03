@@ -57,28 +57,28 @@ FORMATS = {
 },
 
 "standard": {
-    # PT Secrets of Strixhaven Day 1 field (2026-05-01) — 325 players
-    # Source: magic.gg/news/pro-tour-secrets-of-strixhaven-standard-metagame-breakdown
-    # SOS introduced: Flow State, Colorstorm Stallion, Prismari Charm, Traumatic Critique
-    # MAJOR SHIFT from pre-SOS: Izzet Prowess 2.8→30.5%, Mono-Green 2.2→19.1%
-    # Old pillars (Dimir Midrange, Esper Raffine, Mono Red) largely absent from PT top.
+    # PT Secrets of Strixhaven FINAL field (2026-05-01/02) — 481 players (Day 1+2)
+    # Source: PT SOS official results + meta-analyzer DB cross-ref
+    # Official matchup matrix: Selesnya Landfall 63.81%, Mono-Green 55.45%, Prowess 49.80%
+    # Top 8: Selesnya Landfall x2, Mono-Green x2, Lessons x1, Spellementals x1,
+    #         Ouroboroid x1, Azorius Tempo x1. Prowess: 0 Top 8 from 31% of field.
     "field": {
-        "Izzet Prowess":         30.5,  # PT Day 1: 99/325 players — dominant
-        "Mono Green Landfall":   19.1,  # PT Day 1: 62/325 players
-        "Izzet Spellementals":    8.0,  # PT Day 1: 26/325 (needs APL)
-        "Izzet Lessons":          7.4,  # PT Day 1: 24/325 — RC candidate
-        "Azorius Momo":           4.3,  # PT Day 1: 14/325 (needs APL)
-        "Jeskai Control":         3.7,  # PT Day 1
-        "Selesnya Landfall":      3.4,  # PT Day 1 (needs APL)
-        "Izzet Maestro":          2.8,  # PT Day 1 (needs APL)
-        "Azorius Tempo":          2.5,  # PT Day 1 (needs APL)
-        "Golgari Midrange":       2.5,  # PT Day 1 (needs APL)
-        # Residual pre-SOS archetypes — still present but demoted
+        "Izzet Prowess":         31.4,  # 151/481 — dominant field share, 49.8% WR
+        "Mono Green Landfall":   18.1,  # 87/481 — 55.45% WR, 2x Top 8
+        "Izzet Spellementals":    7.1,  # 34/481 — 50.87% WR, 1x Top 8
+        "Golgari Midrange":       6.0,  # 29/481 — 40.30% WR (up from Day 1 config)
+        "Selesnya Landfall":      5.4,  # 26/481 — 63.81% WR, BEST DECK, 2x Top 8
+        "Izzet Lessons":          5.0,  # 24/481 — 49.44% WR, 1x Top 8 (Zhang)
+        "Jeskai Control":         3.3,  # 16/481 — 45.36% WR
+        "Dimir Excruciator":      3.1,  # 15/481 — new archetype
+        "Azorius Momo":           2.9,  # 14/481 — 38.95% WR
+        "Azorius Blink":          2.5,  # 12/481
+        "Izzet Maestro":          1.9,  # 9/481 — 33.96% WR, worst performing
+        "Azorius Tempo":          2.5,  # 62 total matches — 1x Top 8 (Faust)
+        # Smaller share archetypes retained for field completeness
         "Azorius Omniscience":    1.5,
         "Sultai Reanimator":      1.5,
         "Simic Ouroboroid":       1.2,
-        "Dimir Midrange":         1.0,
-        "Esper Raffine":          0.8,
     },
     "combo": {
         "izzet cauldron", "jeskai oculus", "azorius omniscience",

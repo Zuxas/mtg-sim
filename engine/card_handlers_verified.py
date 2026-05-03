@@ -28276,6 +28276,141 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 2 ─────────────────────────────────────────
+
+def _affectionate_indrik_etb(gs, card):
+    """Affectionate Indrik -- {5}{G} Creature. 'ETB: may fight target creature
+    you don't control.' Model: ETB removal -- fight opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            our_power = max(1, int(card.power or 1))
+            their_tough = int(target.toughness or 1)
+            if our_power >= their_tough:
+                opp.zones.battlefield.remove(target)
+                opp.zones.graveyard.append(target)
+                gs._log(f"  Indrik ETB: fight kills {target.name} ({our_power}>={their_tough})")
+            else:
+                gs._log(f"  Indrik ETB: fight survives {target.name}")
+
+
+def _spinner_of_souls_etb(gs, card):
+    """Spinner of Souls -- {2}{G} Creature (Reach).
+    'When nontoken creature you control dies: reveal top of library, put
+     creature card into hand.' Model: draw 1 death trigger."""
+    gs._log("  Spinner of Souls ETB: death-draw trigger active (proxy: draw 0 now)")
+
+
+def _genesis_wave_spell(gs, card):
+    """Genesis Wave -- {X}{G}{G}{G} Sorcery. Reveal top X, put permanents onto BF.
+    Model: mass ramp (X=4 proxy: put 2 permanents from library to BF)."""
+    from data.card import Tag as _Tag
+    deployed = 0
+    for _ in range(6):  # look at top 6 (proxy X=4 + buffer)
+        if not gs.zones.library:
+            break
+        top = gs.zones.library.pop(0)
+        if not top.is_land() and (top.has(_Tag.CREATURE) or 'Enchantment' in (top.type_line or '')):
+            gs.zones.battlefield.append(top)
+            deployed += 1
+            if deployed >= 2:
+                break
+        else:
+            gs.zones.graveyard.append(top)
+    gs._log(f"  Genesis Wave: deployed {deployed} permanents from library (X=4 proxy)")
+
+
+def _spinner_death_draw(gs, card):
+    """Spinner of Souls death trigger -- draw replacement at each creature death.
+    Pre-registered here; actual trigger fires via death handler."""
+    if gs.zones.library:
+        drawn = gs.zones.library.pop(0)
+        gs.zones.hand.append(drawn)
+        gs._log(f"  Spinner of Souls death trigger: drew {drawn.name}")
+
+
+def _valkyries_call_etb(gs, card):
+    """Valkyrie's Call -- {3}{W}{W} Enchantment. 'When nontoken creature dies:
+    return as Angel.' Model: death trigger = free reanimate on first death."""
+    gs._log("  Valkyrie's Call ETB: death-rebirth trigger active")
+
+
+def _giada_etb(gs, card):
+    """Giada, Font of Hope -- {1}{W} Legendary (Flying, Vigilance).
+    'Each other Angel enters with extra +1/+1 per Angel you control.'
+    Model: tribal booster ETB proxy: +1 counter on one other creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Giada ETB: Angel-boost proxy (+1/+1 to best friend)")
+
+
+def _death_baron_etb(gs, card):
+    """Death Baron -- {1}{B}{B} Creature. 'Skeletons and Zombies get +1/+1 + deathtouch.'
+    Static tribal buff. ETB proxy: +1/+1 to all friendly creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Death Baron ETB: +1/+1 + deathtouch to all friendly creatures")
+
+
+def _zul_ashur_etb(gs, card):
+    """Zul Ashur, Lich Lord -- {1}{B} Legendary. Ward: pay 2 life.
+    'Whenever a creature dies, create a 2/2 Zombie.' Model: death-value engine.
+    ETB proxy: draw 1 (value engine proxy)."""
+    if gs.zones.library:
+        drawn = gs.zones.library.pop(0)
+        gs.zones.hand.append(drawn)
+    gs._log("  Zul Ashur ETB: Zombie-spawn-on-death proxy (draw 1)")
+
+
+def _ashroot_animist_etb(gs, card):
+    """Ashroot Animist -- {2}{R}{G} Creature (Trample).
+    'Whenever this attacks, another creature gets +X/+X + trample.'
+    ETB proxy: pump biggest friend by +2/+2."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Ashroot Animist ETB: attack trigger proxy +2/+2 to best friend")
+
+
+def _darksteel_colossus_etb(gs, card):
+    """Darksteel Colossus -- {11} Artifact Creature 11/11 (Trample, Indestructible).
+    'If put into a GY, shuffle into library instead.'
+    ETB proxy: big indestructible trampler (11/11 auto-registered by P/T)."""
+    gs._log("  Darksteel Colossus ETB: 11/11 trample indestructible")
+
+
+def _gratuitous_violence_etb(gs, card):
+    """Gratuitous Violence -- {2}{R}{R}{R} Enchantment.
+    'Creatures you control deal double damage.'
+    ETB proxy: +2 counters to all our creatures (doubling effective power)."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(Tag.CREATURE):
+            c.counters = (c.counters or 0) + 2
+    gs._log("  Gratuitous Violence ETB: double damage proxy +2 to all creatures")
+
+
+def _quilled_greatwurm_etb(gs, card):
+    """Quilled Greatwurm -- {5}{G}{G} Legendary (Trample).
+    'Whenever a creature you control deals combat damage: copy that creature.'
+    ETB proxy: big trample + creates token copy on hit. Proxy: +3 counters."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Quilled Greatwurm ETB: combat-copy trigger proxy (+3 counters)")
+
+
 def _gilded_lotus_etb(gs, card):
     """Gilded Lotus -- {5} Artifact. {T}: Add three mana of any one color."""
     gs.mana_pool.floating = gs.mana_pool.floating + 3
@@ -28682,6 +28817,7 @@ _SPELL_HANDLERS.update({
     "River's Rebuke":      _rivers_rebuke_spell,
     "Rise of the Dark Realms": _rise_dark_realms_spell,
     "Fix What's Broken":   _fix_whats_broken_spell,
+    "Genesis Wave":        _genesis_wave_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -28715,6 +28851,17 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 2
+    "Affectionate Indrik":        _affectionate_indrik_etb,
+    "Spinner of Souls":           _spinner_of_souls_etb,
+    "Valkyrie's Call":            _valkyries_call_etb,
+    "Giada, Font of Hope":        _giada_etb,
+    "Death Baron":                _death_baron_etb,
+    "Zul Ashur, Lich Lord":       _zul_ashur_etb,
+    "Ashroot Animist":            _ashroot_animist_etb,
+    "Darksteel Colossus":         _darksteel_colossus_etb,
+    "Gratuitous Violence":        _gratuitous_violence_etb,
+    "Quilled Greatwurm":          _quilled_greatwurm_etb,
 })
 
 

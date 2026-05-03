@@ -1,0 +1,31 @@
+// Selesnya Ouroboroid -- Matt Nass (#2 seed, PT SOS 2026-05-01)
+// Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
+// New archetype -- not in prior field configs. PT WR: 57.1% (N=7, small sample)
+// Game plan: Ouroboroid pumps whole board at combat start; Sage copies on cast
+// audit:pt_top8
+4 Hushwood Verge
+4 Starting Town
+4 Abandoned Air Temple
+4 Temple Garden
+4 Llanowar Elves
+4 Pawpatch Recruit
+4 Badgermole Cub
+4 Ouroboroid
+4 Sage of the Skies
+4 Keen-Eyed Curator
+3 Brightglass Gearhulk
+3 Erode
+3 Seam Rip
+2 Meltstrider's Resolve
+1 Nurturing Pixie
+6 Forest
+2 Plains
+
+Sideboard
+1 Craterhoof Behemoth
+1 Focus Fire
+1 Insidious Fungus
+3 Rest in Peace
+2 Spider Manifestation
+4 Nature's Rhythm
+3 Sheltered by Ghosts

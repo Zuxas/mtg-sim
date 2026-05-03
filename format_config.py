@@ -75,10 +75,10 @@ FORMATS = {
         "Azorius Blink":          2.5,  # 12/481
         "Izzet Maestro":          1.9,  # 9/481 — 33.96% WR, worst performing
         "Azorius Tempo":          2.5,  # 62 total matches — 1x Top 8 (Faust)
+        "Selesnya Ouroboroid":    1.5,  # Nass #2 seed -- new archetype, small sample
         # Smaller share archetypes retained for field completeness
         "Azorius Omniscience":    1.5,
         "Sultai Reanimator":      1.5,
-        "Simic Ouroboroid":       1.2,
     },
     "combo": {
         "izzet cauldron", "jeskai oculus", "azorius omniscience",

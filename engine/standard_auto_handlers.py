@@ -245,7 +245,7 @@ _h_vitu_ghazi_inspector = _etb([["add_counters", {"n": 1, "target": "self"}], ["
 # [mkm] Disguise {2}{W} (You may cast this card face down for {3} as a 2/2 creature with
 _h_essence_of_antiquity = _etb([["scry", {"n": 0}]])
 # [mkm] When this creature enters, return up to one other target creature to its owner's
-_h_hotshot_investigators = _etb([["draw", {"n": 1}]])
+_h_hotshot_investigators = _etb([["bounce_to_hand", {}], ["draw", {"n": 1}]])
 # [mkm] Flying | When this creature dies, investigate. (Create a Clue token. It's an artif
 _h_cold_case_cracker = _etb([["draw", {"n": 1}]])
 # [mkm] Flying, vigilance | Disguise {W/U}{W/U} (You may cast this card face down for {3} 
@@ -480,6 +480,8 @@ _h_luxurious_locomotive = _etb([["create_treasure", {"n": 1}]])
 _h_lazav__familiar_stranger = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [otj] Trample | When this creature enters, you gain 3 life. | Plot {3}{G} (You may pay {3}
 _h_spinewoods_paladin = _etb([["gain_life", {"n": 3}]])
+# [otj] When this creature enters, return up to one target tapped creature to its owner'
+_h_peerless_ropemaster = _etb([["bounce_to_hand", {}]])
 # [otj] When Fortune enters, scry 2. | Whenever Fortune attacks while saddled, at end of c
 _h_fortune__loyal_steed = _etb([["scry", {"n": 2}]])
 # [otj] When this enchantment enters, create a 1/1 red Mercenary creature token with "{T
@@ -1382,6 +1384,8 @@ _h_tombstone__career_criminal = _etb([["return_gy_to_hand", {"filter_type": "any
 _h_subway_train = _etb([["search_basic_land", {"n": 1}]])
 # [spm] Whenever a Spider you control enters, draw a card. This ability triggers only on
 _h_mary_jane_watson = _etb([["draw", {"n": 1}]])
+# [spm] When Spider-Byte enters, return up to one target nonland permanent to its owner'
+_h_spider_byte__web_warden = _etb([["bounce_to_hand", {}]])
 # [spm] Flash | Enchant creature | When this Aura enters, create two 1/1 colorless Robot art
 _h_robotics_mastery = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
 # [spm] Flying, vigilance | Whenever this creature attacks, mill a card. (Put the top card
@@ -1492,6 +1496,8 @@ _h_toph__hardheaded_teacher = _etb([["return_gy_to_hand", {"filter_type": "any"}
 _h_treetop_freedom_fighters = _etb([["create_token", {"count": 1, "power": "1", "toughness": "1", "keywords": []}]])
 # [tla] Defender | When this creature enters, mill two cards. (Put the top two cards of yo
 _h_platypus_bear = _etb([["mill", {"n": 2, "target": "self"}]])
+# [tla] When this Vehicle enters, return up to one other target nonland permanent to its
+_h_invasion_submersible = _etb([["bounce_to_hand", {}]])
 # [tla] When Southern Air Temple enters, put X +1/+1 counters on each creature you contr
 _h_southern_air_temple = _etb([["add_counters", {"n": 1, "target": "all_friendly"}], ["add_counters", {"n": 1, "target": "self"}]])
 # [tla] When this enchantment enters, create a Clue token. (It's an artifact with "{2}, 
@@ -1626,6 +1632,8 @@ _h_eclipsed_merrow = _etb([["scry", {"n": 4}]])
 _h_crossroads_watcher = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [ecl] When this enchantment enters, you may blight 1. If you do, create two 1/1 black 
 _h_boggart_mischief = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": []}]])
+# [ecl] When this creature enters, return up to one other target creature to its owner's
+_h_rimekin_recluse = _etb([["bounce_to_hand", {}]])
 # [ecl] At the beginning of your first main phase, you may blight 1. If you do, create a
 _h_scuzzback_scrounger = _etb([["create_treasure", {"n": 1}]])
 # [ecl] Whenever this creature becomes tapped, create a 1/1 blue and black Faerie creatu
@@ -1704,10 +1712,14 @@ _h_primordial_pachyderm = _etb([["gain_life", {"n": 2}]])
 _h_anchovy___banana_pizza = _etb([["destroy", {"target": "opp_biggest_creature"}]])
 # [tmt] Trample | At the beginning of combat on your turn, put a +1/+1 counter on Savanti 
 _h_savanti_romero__time_s_exile = _etb([["draw", {"n": 1}], ["add_counters", {"n": 1, "target": "self"}]])
+# [tmt] When this Equipment enters, return up to one other target nonland permanent to i
+_h_bespoke_b_ = _etb([["bounce_to_hand", {}]])
 # [tmt] When this artifact enters, draw a card. | {1}, {T}, Sacrifice this artifact: Add o
 _h_omni_cheese_pizza = _etb([["draw", {"n": 1}]])
 # [tmt] Flying | When this creature leaves the battlefield, create a Food token. (It's an 
 _h_featherbrained_filcher = _etb([["gain_life", {"n": 3}]])
+# [tmt] When Metalhead enters, return up to one other target artifact or creature to its
+_h_metalhead = _etb([["bounce_to_hand", {}]])
 # [tmt] When this creature enters, tap up to one target creature and put a stun counter 
 _h_utrom_scientists = _etb([["scry", {"n": 0}]])
 # [tmt] (Gain the next level as a sorcery to add its ability.) | When this Class enters, e
@@ -1812,6 +1824,8 @@ _h_aziza__mage_tower_captain = _etb([["draw", {"n": 1}]])
 _h_berta__wise_extrapolator = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] Flying, vigilance | Opus ? Whenever you cast an instant or sorcery spell, this cre
 _h_elemental_mascot = _etb([["add_counters", {"n": 1, "target": "self"}]])
+# [sos] When this creature enters, return up to one other target creature to its owner's
+_h_matterbending_mage = _etb([["bounce_to_hand", {}]])
 # [sos] Reach | Increment (Whenever you cast a spell, if the amount of mana you spent is g
 _h_hungry_graffalon = _etb([["add_counters", {"n": 1, "target": "self"}]])
 # [sos] When Ennis enters, exile up to one other target creature you control. Return tha
@@ -2220,7 +2234,7 @@ _h_jump_scare = _spell([["add_counters", {"n": 2, "target": "self"}]])
 # [dsk] Target creature you control deals damage equal to its power to each other creatu
 _h_waltz_of_rage = _spell([["damage_any", {"n": 2}]])
 # [dsk] Return up to one target nonland permanent to its owner's hand. Manifest dread. (
-_h_unnerving_grasp = _spell([["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
+_h_unnerving_grasp = _spell([["bounce_to_hand", {}], ["create_token", {"count": 1, "power": "2", "toughness": "2", "keywords": []}]])
 # [dsk] This spell costs {3} less to cast if it targets a tapped creature. | Destroy targe
 _h_seized_from_slumber = _spell([["destroy", {"target": "opp_biggest_creature"}]])
 # [dsk] Manifest dread. (Look at the top two cards of your library. Put one onto the bat
@@ -2872,7 +2886,7 @@ _h_unsubtle_mockery = _spell([["damage_creature", {"n": 4, "target": "opp_bigges
 # [sos] Choose one ? | ? Each opponent sacrifices a nontoken artifact of their choice. | ? R
 _h_lorehold_charm = _spell([["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [sos] Return up to one target nonland permanent to its owner's hand. Search your libra
-_h_proctor_s_gaze = _spell([["search_basic_land", {"n": 1}]])
+_h_proctor_s_gaze = _spell([["bounce_to_hand", {}], ["search_basic_land", {"n": 1}]])
 # [sos] Target creature gets -3/-3 until end of turn.
 _h_last_gasp = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 # [sos] Search your library for a creature card, reveal it, put it into your hand or gra
@@ -3161,6 +3175,7 @@ for _n,_f in {
     "Luxurious Locomotive": _h_luxurious_locomotive,
     "Lazav, Familiar Stranger": _h_lazav__familiar_stranger,
     "Spinewoods Paladin": _h_spinewoods_paladin,
+    "Peerless Ropemaster": _h_peerless_ropemaster,
     "Fortune, Loyal Steed": _h_fortune__loyal_steed,
     "Rakish Crew": _h_rakish_crew,
     "Desperate Bloodseeker": _h_desperate_bloodseeker,
@@ -3612,6 +3627,7 @@ for _n,_f in {
     "Tombstone, Career Criminal": _h_tombstone__career_criminal,
     "Subway Train": _h_subway_train,
     "Mary Jane Watson": _h_mary_jane_watson,
+    "Spider-Byte, Web Warden": _h_spider_byte__web_warden,
     "Robotics Mastery": _h_robotics_mastery,
     "Mysterio's Phantasm": _h_mysterio_s_phantasm,
     "Web Up": _h_web_up,
@@ -3667,6 +3683,7 @@ for _n,_f in {
     "Toph, Hardheaded Teacher": _h_toph__hardheaded_teacher,
     "Treetop Freedom Fighters": _h_treetop_freedom_fighters,
     "Platypus-Bear": _h_platypus_bear,
+    "Invasion Submersible": _h_invasion_submersible,
     "Southern Air Temple": _h_southern_air_temple,
     "Air Nomad Legacy": _h_air_nomad_legacy,
     "Forecasting Fortune Teller": _h_forecasting_fortune_teller,
@@ -3734,6 +3751,7 @@ for _n,_f in {
     "Eclipsed Merrow": _h_eclipsed_merrow,
     "Crossroads Watcher": _h_crossroads_watcher,
     "Boggart Mischief": _h_boggart_mischief,
+    "Rimekin Recluse": _h_rimekin_recluse,
     "Scuzzback Scrounger": _h_scuzzback_scrounger,
     "Pestered Wellguard": _h_pestered_wellguard,
     "Champion of the Path": _h_champion_of_the_path,
@@ -3773,8 +3791,10 @@ for _n,_f in {
     "Primordial Pachyderm": _h_primordial_pachyderm,
     "Anchovy & Banana Pizza": _h_anchovy___banana_pizza,
     "Savanti Romero, Time's Exile": _h_savanti_romero__time_s_exile,
+    "Bespoke B\u014d": _h_bespoke_b_,
     "Omni-Cheese Pizza": _h_omni_cheese_pizza,
     "Featherbrained Filcher": _h_featherbrained_filcher,
+    "Metalhead": _h_metalhead,
     "Utrom Scientists": _h_utrom_scientists,
     "Party Dude": _h_party_dude,
     "Dimensional Exile": _h_dimensional_exile,
@@ -3827,6 +3847,7 @@ for _n,_f in {
     "Aziza, Mage Tower Captain": _h_aziza__mage_tower_captain,
     "Berta, Wise Extrapolator": _h_berta__wise_extrapolator,
     "Elemental Mascot": _h_elemental_mascot,
+    "Matterbending Mage": _h_matterbending_mage,
     "Hungry Graffalon": _h_hungry_graffalon,
     "Ennis, Debate Moderator": _h_ennis__debate_moderator,
     "Cauldron of Essence": _h_cauldron_of_essence,

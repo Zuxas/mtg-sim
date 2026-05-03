@@ -292,7 +292,7 @@ EXILE_ALL_CR      = _p(r"\bexile\s+all\s+creatures\b")
 ADD_COUNTER       = _p(r"\bputs?\s+(?:a|an|one|two|three|(\d+))\s*\+1/\+1\s+counter(?:s)?\s+on\s+(?:this|it|~|target|itself|each creature)")
 
 # Bounce
-BOUNCE_TGT        = _p(r"\breturn\s+target\s+(?:creature|nonland\s+permanent|permanent)\s+to\s+(?:its|their)\s+owner'?s?\s+hand\b")
+BOUNCE_TGT        = _p(r"\breturn\s+(?:up\s+to\s+\w+\s+(?:other\s+)?)?(?:target|a)\s+(?:\w+\s+){0,3}(?:creature|nonland\s+permanent|permanent)\s+to\s+(?:its|their|your)\s+owner'?s?\s+hand\b")
 
 # Card draw
 DRAW_N            = _p(r"\bdraws?\s+(\d+|\w+)\s+cards?\b")

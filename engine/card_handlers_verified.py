@@ -28274,6 +28274,81 @@ def _emeritus_woe_etb(gs, card):
         gs._log(f"  Emeritus of Woe ETB: Demonic Tutor proxy -- draw {drawn.name}")
 
 
+def _divergent_equation_spell(gs, card):
+    """Divergent Equation -- {X}{U} Instant.
+    'Return up to X target instant and/or sorcery cards from GY to hand.'
+    Model: GY recursion of up to 2 spells (proxy X=2)."""
+    spells = [c for c in gs.zones.graveyard
+              if not c.is_land() and
+              any(t in (c.type_line or '') for t in ('Instant','Sorcery'))]
+    for c in spells[:2]:
+        gs.zones.graveyard.remove(c)
+        gs.zones.hand.append(c)
+    gs._log(f"  Divergent Equation: returned {min(2,len(spells))} spells from GY (X=2 proxy)")
+
+
+def _fix_whats_broken_spell(gs, card):
+    """Fix What's Broken -- {2}{W}{B} Sorcery. Pay X life.
+    'Return each artifact and creature card in your GY with CMC <= X to BF.'
+    Model: mass GY recursion for permanent cards. Proxy: reanimate best 2 creatures."""
+    from data.card import Tag as _Tag
+    gy_creatures = sorted(
+        [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)],
+        key=lambda c: getattr(c,'cmc',0) or 0, reverse=True
+    )
+    for c in gy_creatures[:2]:
+        gs.zones.graveyard.remove(c)
+        gs.zones.battlefield.append(c)
+    gs._log(f"  Fix What's Broken: reanimate {min(2,len(gy_creatures))} creatures (X proxy)")
+
+
+def _abstract_paintmage_etb(gs, card):
+    """Abstract Paintmage -- {U}{R} Creature.
+    'At the beginning of your first main phase, add {U}{R} for instants/sorceries.'
+    Model: mana ramp trigger -- proxy: add 2 to mana pool on ETB."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Abstract Paintmage ETB: +{U}{R} mana proxy (first main phase trigger)")
+
+
+def _practiced_scrollsmith_etb(gs, card):
+    """Practiced Scrollsmith -- {2}{R}{W} Creature (First strike).
+    'When this creature enters, exile target noncreature, nonland card from a GY.'
+    Model: GY hate ETB. In match mode, target opp's best noncreature GY card."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        targets = [c for c in opp.zones.graveyard
+                   if not c.is_land() and 'Creature' not in (c.type_line or '')]
+        if targets:
+            best = max(targets, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.graveyard.remove(best)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(best)
+            gs._log(f"  Practiced Scrollsmith ETB: exile {best.name} from opp GY")
+
+
+def _biblioplex_tomekeeper_etb(gs, card):
+    """Biblioplex Tomekeeper -- {4} Artifact Creature.
+    'When this creature enters, choose up to one:
+     - Target creature becomes prepared.
+     - Return target creature card from GY to hand.'
+    Model: ETB with flexible effect. Proxy: return best GY creature to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Biblioplex Tomekeeper ETB: return {best.name} from GY to hand")
+    else:
+        # Mode 2: target creature becomes prepared -- proxy: +1/+1 counter
+        friends = [c for c in gs.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+        if friends:
+            target = max(friends, key=lambda c: c.effective_power())
+            target.counters = (target.counters or 0) + 1
+            gs._log(f"  Biblioplex Tomekeeper ETB: prepared proxy +1/+1 on {target.name}")
+
+
 def _zaffai_etb(gs, card):
     """Zaffai and the Tempests -- {5}{U}{R} Legendary.
     'Once per turn, cast an instant/sorcery from hand without paying cost.'
@@ -28397,6 +28472,8 @@ _SPELL_HANDLERS.update({
     "Pox Plague":          _pox_plague_spell,
     "Flashback":           _flashback_spell,
     "Arcane Omens":        _arcane_omens_spell,
+    "Divergent Equation":  _divergent_equation_spell,
+    "Fix What's Broken":   _fix_whats_broken_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -28415,6 +28492,9 @@ _ETB_HANDLERS.update({
     "Aberrant Manawurm":          _aberrant_manawurm_etb,
     "Summoned Dromedary":         _summoned_dromedary_etb,
     "Slumbering Trudge":          _slumbering_trudge_etb,
+    "Abstract Paintmage":         _abstract_paintmage_etb,
+    "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
+    "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
 })
 
 

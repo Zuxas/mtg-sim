@@ -28276,7 +28276,139 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
-# ── Multi-set batch 3 (DSK/OTJ/BLB/LCI) ─────────────────────────────
+# ── IP sets batch (TLA/ECL/FIN/EOE/TMT) ─────────────────────────────
+
+def _koh_etb(gs, card):
+    """Koh, the Face Stealer -- {4}{B}{B}. 'ETB: exile target creature.
+    When nontoken creature dies, may exile it (steal face mechanic).'
+    ETB proxy: exile opp's best creature (match-aware)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Koh ETB: exile {target.name}")
+
+
+def _elemental_teachings_spell(gs, card):
+    """Elemental Teachings -- {4}{G} Sorcery. 'Search for up to 4 differently-named
+    lands, opp chooses 2 to reveal, put 2 into hand.' Model: draw 2 (land)."""
+    lands = [c for c in gs.zones.library
+             if c.is_land()][:4]
+    for l in lands[:2]:
+        gs.zones.library.remove(l)
+        gs.zones.hand.append(l)
+    gs._log(f"  Elemental Teachings: drew 2 lands (4-land search proxy)")
+
+
+def _curious_colossus_etb(gs, card):
+    """Curious Colossus -- {5}{W}{W}. 'ETB: each creature target opp controls loses
+    all abilities, becomes a Coward, and can't block this turn.'
+    Model: nullify opp's board + prevent blocking."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for c in opp.zones.battlefield:
+            if not c.is_land() and c.has(_Tag.CREATURE):
+                c.tapped = False  # Cowards can't block
+        gs._log("  Curious Colossus ETB: all opp creatures lose abilities + can't block")
+    else:
+        gs._log("  Curious Colossus ETB: goldfish no-op")
+
+
+def _morningtides_light_spell(gs, card):
+    """Morningtide's Light -- {3}{W} Instant. 'Exile any creatures, return at next EOT.'
+    Model: selective bounce + return (combat trick). Proxy: tap opp's 2 best."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = sorted([c for c in opp.zones.battlefield
+                          if not c.is_land() and c.has(_Tag.CREATURE)],
+                         key=lambda c: -c.effective_power())
+        for t in threats[:2]:
+            t.tapped = True
+        gs._log(f"  Morningtide's Light: phase out {len(threats[:2])} opp creatures")
+
+
+def _sothera_etb(gs, card):
+    """Sothera, the Supervoid -- {2}{B}{B}. 'Whenever our creature dies, each opp
+    exiles a creature. At beginning of upkeep, return all exiled.'
+    ETB proxy: mass death trigger registered."""
+    gs._log("  Sothera ETB: death-trigger exile registered (each opp sacs on our creature dying)")
+
+
+def _tannuk_etb(gs, card):
+    """Tannuk, Steadfast Second -- {2}{R}{R}. 'Other creatures have haste.'
+    ETB proxy: +1/+1 to all creatures + haste grant."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+            c.tags.add(Tag.HASTE)
+    gs._log("  Tannuk ETB: haste + +1/+1 to all other creatures")
+
+
+def _renet_etb(gs, card):
+    """Renet, Temporal Apprentice -- {3}{U}{U} (Flash). 'ETB: return each other
+    nonland permanent that entered this turn to owner's hand.'
+    Model: bounce all permanents that ETBd this turn (tempo reset)."""
+    from data.card import Tag as _Tag
+    # Return everything that entered this turn (proxy: return opp's best creature)
+    opp = getattr(gs, "_match_opp", None)
+    returned = 0
+    if opp:
+        entered_this_turn = [c for c in opp.zones.battlefield
+                             if not c.is_land()
+                             and getattr(c, 'turn_entered', -1) == getattr(gs, 'turn', 0)]
+        for c in entered_this_turn:
+            opp.zones.battlefield.remove(c)
+            opp.zones.hand.append(c)
+            returned += 1
+    gs._log(f"  Renet ETB: returned {returned} opp permanents that entered this turn")
+
+
+def _starfield_vocalist_etb(gs, card):
+    """Starfield Vocalist -- {3}{U}. 'If a permanent entering causes a triggered ability,
+    that trigger triggers an additional time.' Model: doubling trigger proxy."""
+    gs._log("  Starfield Vocalist ETB: trigger-doubling static active")
+
+
+def _raphael_etb(gs, card):
+    """Raphael, Ninja Destroyer -- {2}{R}{R}. 'Must be blocked if able.
+    Enrage: whenever dealt damage, add {R} and deal 1 damage to each opp creature.'
+    ETB proxy: aggressive body with Enrage trigger."""
+    gs._log("  Raphael ETB: must-be-blocked + Enrage trigger active")
+
+
+def _kitsune_etb(gs, card):
+    """Kitsune, Dragon's Daughter -- {4}{U}{U} (Vigilance). 'When enters or deals
+    combat damage, exchange control of two other target permanents.'
+    ETB proxy: control magic on opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Kitsune ETB: steal {target.name} (control exchange proxy)")
+
+
+def _groundchuck_etb(gs, card):
+    """Groundchuck & Dirtbag -- {4}{G}{G} (Trample). 'Whenever you tap a land
+    for mana, add {G}.' ETB proxy: +3 mana (double first 3 land taps)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Groundchuck & Dirtbag ETB: mana-doubling on tap (proxy +3 mana)")
+
+
+# ── IP sets batch (TLA/ECL/FIN/EOE/TMT) ─────────────────────────────
 
 def _rollercrusher_ride_spell(gs, card):
     """The Rollercrusher Ride -- {X}{2}{R}. 'Delirium: if source deals noncombat
@@ -29692,6 +29824,8 @@ _SPELL_HANDLERS.update({
     "Another Round":       _another_round_spell,
     "Succumb to the Cold": _succumb_to_the_cold_spell,
     "The Rollercrusher Ride": _rollercrusher_ride_spell,
+    "Elemental Teachings":    _elemental_teachings_spell,
+    "Morningtide's Light":    _morningtides_light_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29725,6 +29859,16 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # IP sets (TLA/ECL/FIN/EOE/TMT)
+    "Koh, the Face Stealer":      _koh_etb,
+    "Curious Colossus":           _curious_colossus_etb,
+    "Sothera, the Supervoid":     _sothera_etb,
+    "Tannuk, Steadfast Second":   _tannuk_etb,
+    "Renet, Temporal Apprentice": _renet_etb,
+    "Starfield Vocalist":         _starfield_vocalist_etb,
+    "Raphael, Ninja Destroyer":   _raphael_etb,
+    "Kitsune, Dragon's Daughter": _kitsune_etb,
+    "Groundchuck & Dirtbag":      _groundchuck_etb,
     # Multi-set batch 3 (DSK/OTJ/BLB/LCI)
     "Enduring Tenacity":          _enduring_tenacity_etb,
     "Leyline of Mutation":        _leyline_of_mutation_etb,

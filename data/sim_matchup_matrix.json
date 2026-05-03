@@ -34,11 +34,18 @@
     "Izzet Affinity": 46.6
   },
   "Izzet Lessons (standard)": {
-    "Roaming Elementals": 0.0,
-    "Superior Doomsday": 1.7,
-    "Azorius Aggro": 3.0,
-    "Mono Green Aggro": 5.6,
-    "Izzet Control": 24.6
+    "Jeskai Control": 57.0,
+    "Azorius Omniscience": 61.4,
+    "Sultai Reanimator": 46.0,
+    "Azorius Momo": 2.9,
+    "Azorius Tempo": 11.3,
+    "Izzet Prowess": 8.2,
+    "Selesnya Landfall": 7.2,
+    "Izzet Maestro": 9.9,
+    "Mono Green Landfall": 15.1,
+    "Golgari Midrange": 28.9,
+    "Simic Ouroboroid": 12.5,
+    "Izzet Spellementals": 19.6
   },
   "Boros Energy (modern)": {
     "Amulet Titan": 54.0,
@@ -78,5 +85,19 @@
     "Eldrazi Ramp": 78.5,
     "5C Humans": 48.1,
     "Boros Energy": 51.1
+  },
+  "Selesnya Landfall (standard)": {
+    "Mono Green Landfall": 34.0,
+    "Izzet Lessons": 53.0,
+    "Jeskai Control": 60.0,
+    "Azorius Omniscience": 61.4,
+    "Sultai Reanimator": 52.0,
+    "Izzet Spellementals": 85.2,
+    "Izzet Prowess": 88.0,
+    "Golgari Midrange": 61.4,
+    "Azorius Tempo": 74.1,
+    "Azorius Momo": 63.2,
+    "Izzet Maestro": 50.6,
+    "Simic Ouroboroid": 60.9
   }
 }

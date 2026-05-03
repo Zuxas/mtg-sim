@@ -155,6 +155,10 @@ APL_REGISTRY = {
     "tempo":              ("apl.azorius_tempo_standard",      "AzoriusTempoAPL",      "decks/azorius_tempo_standard.txt"),
     "izzetmaestro":       ("apl.izzet_maestro_standard",      "IzzetMaestroAPL",      "decks/izzet_maestro_standard.txt"),
     "maestro":            ("apl.izzet_maestro_standard",      "IzzetMaestroAPL",      "decks/izzet_maestro_standard.txt"),
+    # ── PT SOS 2026 new archetypes (stub decks, GenericAPL) ─────────────
+    # Dimir Excruciator: 3.1% of PT field (Victor Santos Esquici list)
+    "dimirexcruciator":   ("apl.generic_apl",                 "GenericAPL",           "decks/dimir_excruciator_standard.txt"),
+    "excruciator":        ("apl.generic_apl",                 "GenericAPL",           "decks/dimir_excruciator_standard.txt"),
 }
 
 

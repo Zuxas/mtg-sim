@@ -1,34 +1,33 @@
-// Izzet Lessons — kobayui (placement 1, 2026-04-22)
-// Source: mtg_meta.db deck_id=121360 event='MTGO League' archetype='Izzet Lesson'
-4 Abandon Attachments
+// Izzet Lessons -- Rui Zhang (#1 seed, PT Secrets of Strixhaven 2026-05-01)
+// Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
+// PT WR: 49.44% overall; 75% vs Selesnya Landfall; 41.9% vs Mono-Green Landfall
 4 Accumulate Wisdom
-4 Boomerang Basics
+4 Artist's Talent
 4 Combustion Technique
 4 Firebending Lesson
 4 Gran-Gran
-2 Great Hall of the Biblioplex
-7 Island
-3 It'll Quench Ya!
-1 Multiversal Passage
-2 Ral, Crackling Wit
+4 Monument to Endurance
 4 Riverpyre Verge
-1 Roaring Furnace / Steaming Sauna
-1 Sanar, Unfinished Genius
 4 Spirebluff Canal
 4 Steam Vents
-2 Stock Up
-4 Stormchaser's Talent
-1 Traumatic Critique
+3 Consult the Star Charts
+2 Abandon Attachments
+2 Agna Qel'a
+2 Boomerang Basics
+2 Iroh's Demonstration
+2 It'll Quench Ya!
+2 Mountain
+2 Three Steps Ahead
+1 Spell Pierce
+6 Island
 
 Sideboard
-2 Annul
-2 Broadside Barrage
-1 Burst Lightning
-1 Disdainful Stroke
-1 Fire Magic
-1 Get Out
-1 Ghost Vacuum
-1 Negate
+3 Flashfreeze
+2 Negate
 2 Quantum Riddler
-2 Soul-Guide Lantern
-1 Wan Shi Tong, Librarian
+2 Ral, Crackling Wit
+1 Boomerang Basics
+1 Broadside Barrage
+1 Spell Pierce
+1 Spell Snare
+1 Stormchaser's Talent

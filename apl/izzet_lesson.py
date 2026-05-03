@@ -1,7 +1,8 @@
 """apl/izzet_lesson.py -- Izzet Lesson APL (Standard)
 
 Tempo/control shell with Saga 'Lesson' cards and cheap damage spells.
-Top Standard archetype at 23% meta share (Jan 2026).
+Updated to Zhang Rui's PT SOS #1-seed list (2026-05-01).
+49.44% overall PT WR; 75% vs Selesnya Landfall; loses to Mono-Green 41.9%.
 
 Play pattern (real Magic):
 
@@ -45,6 +46,12 @@ COMBUSTION   = "Combustion Technique"     # cheap damage/removal
 ABANDON      = "Abandon Attachments"      # artifact/enchantment hate
 BOOMERANG    = "Boomerang Basics"         # bounce
 
+# ── SOS additions (Zhang Rui PT list 2026-05-01) ────────────────────
+CONSULT      = "Consult the Star Charts"  # 2-cmc scry+draw
+THREE_STEPS  = "Three Steps Ahead"        # 3-cmc copy/counter
+AGNA         = "Agna Qel'a"               # 2-cmc value creature
+SPELL_PIERCE = "Spell Pierce"             # 1-cmc soft counter
+
 # ── Big spells (threats) ────────────────────────────────────────────
 IROH         = "Iroh's Demonstration"     # finisher
 QUENCH       = "It'll Quench Ya!"         # big spell
@@ -54,40 +61,46 @@ class IzzetLessonAPL(ControlAPL):
     name = "Izzet Lesson"
     max_turns = 14
 
-    # No hand attack in this archetype (blue-red doesn't run Thoughtseize)
+    # No hand attack in this archetype
     HAND_ATTACK = ()
 
-    # Reactive removal — hold mana open through main 1
+    # Burn doubles as removal AND face damage — don't hold it all game.
+    # In fair matchups these clear the path; in goldfish they go face.
+    # Listed cheapest first so mana reservation stays minimal.
     REMOVAL = (
-        COMBUSTION,       # {1}{R} damage
+        COMBUSTION,       # {1}{R} 2 damage — burns creatures or face
         ABANDON,          # {1}{R} artifact/ench hate
-        BOOMERANG,        # {1}{U} bounce
+        BOOMERANG,        # {1}{U} bounce tempo
     )
 
-    # No hardcoded counters in mainboard; sideboard-only (Annul / Negate)
-    COUNTERS = ()
+    # Three Steps Ahead acts as soft counter in match; model as counter
+    COUNTERS = (
+        THREE_STEPS,      # {1}{U}{U} copy/counter — held for opp threats
+        SPELL_PIERCE,     # {U} soft counter
+    )
 
     # No mainboard wipes
     WIPES = ()
 
-    # Threats — Sagas tick up for value while pressuring life total.
-    # Order cheapest first; ControlAPL casts biggest-castable per turn.
+    # Threats — Sagas/Classes tick up for value + pressure.
+    # Order cheapest first; biggest-castable chosen each turn.
     THREATS = (
         GRAN_GRAN,        # 1-drop creature
-        FIREBENDING,      # 2-cmc Saga
-        STORMCHASER,      # 2-cmc Class
-        ARTIST,           # 2-cmc Class
-        MONUMENT,         # 3-cmc engine
-        QUENCH,           # 4-cmc big spell
+        AGNA,             # 2-drop value creature
+        FIREBENDING,      # 2-cmc Saga, deals damage per chapter
+        ARTIST,           # 2-cmc Class, draw engine
+        MONUMENT,         # 3-cmc recur engine
+        QUENCH,           # 4-cmc finisher
         IROH,             # 5-cmc finisher
     )
 
-    # Card-advantage engines
+    # Card-advantage engines (cast freely — no mana reservation for these)
     VALUE_SPELLS = (
+        CONSULT,          # scry 2 + draw 1 — cast pre-combat for selection
         ACCUMULATE,       # draw 2
     )
 
-    # Izzet mulligans looser than esper — 2 colors, 20 mana sources
+    # Izzet mulligans looser — 2 colors, 20 mana sources, no 1-drops needed
     MULL_MIN_LANDS = 2
     MULL_MAX_LANDS = 5
 
@@ -118,6 +131,35 @@ class IzzetLessonAPL(ControlAPL):
             gs._log("  Gran-Gran static: noncreature spells cost {1} less "
                     "(3+ Lessons in GY)")
         super().main_phase(gs)
+
+    # ------------------------------------------------------------------
+    # Match-mode: fire burn aggressively when behind on the damage race
+    # ------------------------------------------------------------------
+
+    def main_phase2(self, gs):
+        """Post-combat: prioritize burn when opp has a threatening board.
+
+        In fair matchups this deck wins by racing — Firebending Lesson
+        chapters + burn to face. When we're losing the damage race
+        (opp has 3+ power on board), cast all available burn immediately
+        rather than holding for reactive mana.
+        """
+        opp = getattr(self, "_opp_gs", None)
+        opp_power = 0
+        if opp is not None:
+            from data.card import Tag
+            for c in opp.zones.battlefield:
+                if c.has(Tag.CREATURE):
+                    try:
+                        opp_power += int(c.power or 0)
+                    except (ValueError, TypeError):
+                        opp_power += 2
+        # If opp has 3+ power threatening us, burn aggressively (don't hold)
+        # This models casting Combustion Technique at opp's best creature
+        # to slow the clock, then going face with the rest.
+        if opp_power >= 3:
+            self._cast_in_priority(gs, self.REMOVAL)
+        super().main_phase2(gs)
 
     # ------------------------------------------------------------------
     # Archetype hooks — level up Classes when mana permits

@@ -1,0 +1,34 @@
+// Dimir Excruciator -- Victor Santos Esquici (PT SOS 2026-05-01)
+// Source: meta-analyzer DB (event_id 11881)
+// PT SOS field share: ~3.1% (15/481 players)
+4 Doomsday Excruciator
+4 Superior Spider-Man
+4 Deceit
+4 Requiting Hex
+4 Gloomlake Verge
+4 Watery Grave
+4 Restless Reef
+3 Bitter Triumph
+3 Duress
+3 Winternight Stories
+2 Cavern of Souls
+2 Day of Black Sun
+2 Emeritus of Ideation
+2 Stock Up
+2 Strategic Betrayal
+2 Undercity Sewers
+1 Deadly Cover-Up
+10 Swamp
+
+Sideboard
+3 Oildeep Gearhulk
+2 Flashfreeze
+2 Qarsi Revenant
+1 Day of Black Sun
+1 Deadly Cover-Up
+1 Decorum Dissertation
+1 Disdainful Stroke
+1 Duress
+1 Shoot the Sheriff
+1 Strategic Betrayal
+1 The End

@@ -28276,6 +28276,103 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 3 ─────────────────────────────────────────
+
+def _vizier_menagerie_etb(gs, card):
+    """Vizier of the Menagerie -- {3}{G} Creature.
+    'Look at top card any time. May cast creature spells from top of library.'
+    Model: persistent card advantage. ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Vizier of the Menagerie ETB: top-cast static (draw 1 proxy)")
+
+
+def _adaptive_automaton_etb(gs, card):
+    """Adaptive Automaton -- {3} Artifact Creature.
+    'Choose creature type. This is that type. Other creatures of that type +1/+1.'
+    Model: tribal lord. ETB proxy: +1 to all other creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Adaptive Automaton ETB: tribal +1/+1 to all other creatures")
+
+
+def _biogenic_upgrade_spell(gs, card):
+    """Biogenic Upgrade -- {4}{G}{G} Sorcery.
+    'Distribute 3 +1/+1 counters among 1-3 creatures, then double all their counters.'
+    Model: distribute 3 counters to best creature, double."""
+    from data.card import Tag as _Tag
+    friends = sorted([c for c in gs.zones.battlefield
+                      if not c.is_land() and c.has(_Tag.CREATURE)],
+                     key=lambda c: -c.effective_power())
+    for i, f in enumerate(friends[:3]):
+        f.counters = (f.counters or 0) + 1
+    # Double counters on all creatures with counters
+    for f in gs.zones.battlefield:
+        if not f.is_land() and f.has(_Tag.CREATURE) and (f.counters or 0) > 0:
+            f.counters = f.counters * 2
+    gs._log("  Biogenic Upgrade: +3 distributed + double all counters")
+
+
+def _savage_ventmaw_etb(gs, card):
+    """Savage Ventmaw -- {4}{R}{G} Creature 4/4 (Flying).
+    'Whenever attacks, add {R}{R}{R}{G}{G}{G} (don't lose at step end).'
+    Model: flying + big mana on attack. ETB proxy: +3 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Savage Ventmaw ETB: flying + +3 mana attack proxy")
+
+
+def _angel_finality_etb(gs, card):
+    """Angel of Finality -- {3}{W} Creature (Flying).
+    'When this creature enters, exile target player's graveyard.'
+    Model: GY hate ETB. Exile opp's GY in match mode."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        exiled = len(opp.zones.graveyard)
+        opp.zones.exile = getattr(opp.zones, "exile", []) + list(opp.zones.graveyard)
+        opp.zones.graveyard.clear()
+        gs._log(f"  Angel of Finality ETB: exile opp's {exiled} GY cards")
+
+
+def _nine_lives_etb(gs, card):
+    """Nine-Lives Familiar -- {1}{B}{B} Creature.
+    'Enters with 8 revival counters if cast. Dies, remove a counter, return.'
+    Model: pseudo-immortal creature -- proxy: 8 counters (very resilient)."""
+    card.counters = (card.counters or 0) + 8
+    gs._log("  Nine-Lives Familiar ETB: 8 revival counters (immortality proxy)")
+
+
+def _dictate_kruphix_etb(gs, card):
+    """Dictate of Kruphix -- {1}{U}{U} Enchantment (Flash).
+    'At the beginning of each player's draw step, that player draws an extra card.'
+    Model: both players draw 1 extra per turn. ETB proxy: draw 1 now."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Dictate of Kruphix ETB: both-player draw trigger (draw 1 proxy)")
+
+
+def _cultivators_caravan_etb(gs, card):
+    """Cultivator's Caravan -- {3} Artifact. {T}: Add one mana of any color. Crew 3.
+    Model: mana rock. ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Cultivator's Caravan ETB: +1 mana proxy ({T}: any color)")
+
+
+def _harmless_offering_spell(gs, card):
+    """Harmless Offering -- {2}{R} Sorcery.
+    'Target opponent gains control of target permanent you control.'
+    Model: donate a permanent to opp (tempo/combo piece). Proxy: donate land."""
+    lands = [c for c in gs.zones.battlefield if c.is_land()]
+    if lands:
+        donated = lands[0]  # donate worst land
+        gs.zones.battlefield.remove(donated)
+        opp = getattr(gs, "_match_opp", None)
+        if opp:
+            opp.zones.battlefield.append(donated)
+        gs._log(f"  Harmless Offering: donate {donated.name} to opp (combo proxy)")
+
+
 # ── Foundations (FDN) batch 2 ─────────────────────────────────────────
 
 def _affectionate_indrik_etb(gs, card):
@@ -28818,6 +28915,8 @@ _SPELL_HANDLERS.update({
     "Rise of the Dark Realms": _rise_dark_realms_spell,
     "Fix What's Broken":   _fix_whats_broken_spell,
     "Genesis Wave":        _genesis_wave_spell,
+    "Harmless Offering":   _harmless_offering_spell,
+    "Biogenic Upgrade":    _biogenic_upgrade_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -28851,6 +28950,14 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 3
+    "Vizier of the Menagerie":    _vizier_menagerie_etb,
+    "Adaptive Automaton":         _adaptive_automaton_etb,
+    "Savage Ventmaw":             _savage_ventmaw_etb,
+    "Angel of Finality":          _angel_finality_etb,
+    "Nine-Lives Familiar":        _nine_lives_etb,
+    "Dictate of Kruphix":         _dictate_kruphix_etb,
+    "Cultivator's Caravan":       _cultivators_caravan_etb,
     # FDN batch 2
     "Affectionate Indrik":        _affectionate_indrik_etb,
     "Spinner of Souls":           _spinner_of_souls_etb,

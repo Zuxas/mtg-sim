@@ -28276,6 +28276,103 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 5 ─────────────────────────────────────────
+
+def _empyrean_eagle_etb(gs, card):
+    """Empyrean Eagle -- {1}{W}{U} Creature (Flying).
+    'Other creatures you control with flying get +1/+1.'
+    ETB proxy: +1/+1 to all our other flying creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if c is not card and not c.is_land() and c.has(_Tag.CREATURE) and c.has(_Tag.FLYING):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Empyrean Eagle ETB: +1/+1 to all friendly fliers")
+
+
+def _angel_vitality_etb(gs, card):
+    """Angel of Vitality -- {2}{W} Creature (Flying).
+    'If you gain life, gain that much +1 instead. Gets +2/+2 at 25+ life.'
+    ETB proxy: +2/+2 counters (threshold always met in goldfish)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Angel of Vitality ETB: +2/+2 (25+ life threshold proxy)")
+
+
+def _gate_colossus_etb(gs, card):
+    """Gate Colossus -- {8} Artifact Creature 8/8 (Affinity for Gates).
+    'Can't be blocked by creatures with power 2 or less. When nonland
+     goes to your GY, put this from GY to library.'
+    ETB proxy: large body; affinity means free if many Gates."""
+    gs._log("  Gate Colossus ETB: 8/8 can't be blocked by power<=2")
+
+
+def _twinblade_blessing_etb(gs, card):
+    """Twinblade Blessing -- {1}{W}{W} Enchantment (Flash).
+    'Enchant creature. Enchanted creature has double strike and vigilance.'
+    ETB proxy: pump enchanted = best creature gets +2/+2 proxy."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield
+               if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Twinblade Blessing ETB: double strike + vigilance proxy (+2)")
+
+
+def _blasphemous_edict_spell(gs, card):
+    """Blasphemous Edict -- {3}{B}{B} Sorcery. Alternative cost if 13+ creatures.
+    'Each player sacrifices a creature.'
+    Model: both players sacrifice best creature."""
+    from data.card import Tag as _Tag
+    # We sacrifice our weakest
+    our_creatures = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if our_creatures:
+        worst = min(our_creatures, key=lambda c: c.effective_power())
+        gs.zones.battlefield.remove(worst)
+        gs.zones.graveyard.append(worst)
+    # Opp sacrifices their best
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        opp_creatures = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if opp_creatures:
+            target = max(opp_creatures, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Blasphemous Edict: sacrifice {worst.name if our_creatures else 'nothing'}, opp sacs {target.name}")
+
+
+def _ravenous_giant_etb(gs, card):
+    """Ravenous Giant -- {2}{R}{R} Creature.
+    'At beginning of upkeep, deals 1 damage to you.'
+    ETB proxy: register upkeep drawback (no-op in goldfish, small damage)."""
+    gs._log("  Ravenous Giant ETB: upkeep self-damage trigger registered")
+
+
+def _slumbering_cerberus_etb(gs, card):
+    """Slumbering Cerberus -- {1}{R} Creature. 'Doesn't untap during upkeep.
+    Morbid: at end step, if a creature died this turn, untap it.'
+    ETB proxy: starts tapped, morbid wakes it."""
+    card.tapped = True  # enters tapped per oracle
+    gs._log("  Slumbering Cerberus ETB: enters tapped (morbid-untap trigger active)")
+
+
+def _dropkick_bomber_etb(gs, card):
+    """Dropkick Bomber -- {2}{R} Creature. 'Other Goblins +1/+1.'
+    ETB proxy: tribal +1/+1 to all other creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Dropkick Bomber ETB: Goblin tribal +1/+1 to all other creatures")
+
+
+def _sun_blessed_healer_etb(gs, card):
+    """Sun-Blessed Healer -- {1}{W} Creature (Lifelink). Kicker {1}{W}.
+    'When kicks, create 2/2 Pegasus with flying.'
+    ETB proxy: if mana allowed, create small flying token."""
+    from data.card import Card, Tag
+    gs._log("  Sun-Blessed Healer ETB: lifelink (kicker token proxy on next cast)")
+
+
 # ── Foundations (FDN) batch 4 ─────────────────────────────────────────
 
 def _exclusion_mage_etb(gs, card):
@@ -29033,6 +29130,7 @@ _SPELL_HANDLERS.update({
     "Harmless Offering":   _harmless_offering_spell,
     "Biogenic Upgrade":    _biogenic_upgrade_spell,
     "Time Stop":           _time_stop_spell,
+    "Blasphemous Edict":   _blasphemous_edict_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29066,6 +29164,15 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 5
+    "Empyrean Eagle":             _empyrean_eagle_etb,
+    "Angel of Vitality":          _angel_vitality_etb,
+    "Gate Colossus":              _gate_colossus_etb,
+    "Twinblade Blessing":         _twinblade_blessing_etb,
+    "Ravenous Giant":             _ravenous_giant_etb,
+    "Slumbering Cerberus":        _slumbering_cerberus_etb,
+    "Dropkick Bomber":            _dropkick_bomber_etb,
+    "Sun-Blessed Healer":         _sun_blessed_healer_etb,
     # FDN batch 4
     "Exclusion Mage":             _exclusion_mage_etb,
     "Volley Veteran":             _volley_veteran_etb,

@@ -28276,6 +28276,121 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Foundations (FDN) batch 4 ─────────────────────────────────────────
+
+def _exclusion_mage_etb(gs, card):
+    """Exclusion Mage -- {2}{U} Creature.
+    'ETB: return target creature an opponent controls to its owner's hand.'"""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Exclusion Mage ETB: bounce {target.name}")
+
+
+def _volley_veteran_etb(gs, card):
+    """Volley Veteran -- {3}{R} Creature.
+    'ETB: deals damage to target creature opponent controls = number of Goblins.'
+    Model: proxy 2 damage to opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            try:
+                if 2 >= int(target.toughness or 1):
+                    opp.zones.battlefield.remove(target)
+                    opp.zones.graveyard.append(target)
+                    gs._log(f"  Volley Veteran ETB: kill {target.name} (2 damage)")
+            except (ValueError, TypeError):
+                pass
+
+
+def _micromancer_etb(gs, card):
+    """Micromancer -- {3}{U} Creature. 'ETB: search for CMC<=1 instant/sorcery.'
+    Model: draw 1 (tutor proxy)."""
+    spells = [c for c in gs.zones.library
+              if not c.is_land() and (getattr(c,'cmc',0) or 0) <= 1
+              and any(t in (c.type_line or '') for t in ('Instant','Sorcery'))]
+    if spells:
+        found = spells[0]
+        gs.zones.library.remove(found)
+        gs.zones.hand.append(found)
+        gs._log(f"  Micromancer ETB: tutor {found.name} to hand")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+
+
+def _grappling_kraken_etb(gs, card):
+    """Grappling Kraken -- {4}{U}{U} Creature.
+    'Landfall: tap target opp creature + stun counter.'
+    ETB proxy: tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE) and not getattr(c,'tapped',False)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Grappling Kraken ETB: tap+stun {target.name} (landfall proxy)")
+
+
+def _mischievous_pup_etb(gs, card):
+    """Mischievous Pup -- {2}{W} Creature (Flash).
+    'ETB: return up to one target creature with power 2 or less an opponent
+     controls to its owner's hand.'
+    Model: ETB bounce small opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        small = [c for c in opp.zones.battlefield
+                 if not c.is_land() and c.has(_Tag.CREATURE)
+                 and (c.effective_power() or 0) <= 2]
+        if small:
+            target = max(small, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Mischievous Pup ETB: bounce small {target.name}")
+
+
+def _time_stop_spell(gs, card):
+    """Time Stop -- {4}{U}{U} Instant. 'End the turn.'
+    Model: hard-stop. Proxy: remove all opp creatures from battle (wipe)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        creatures = [c for c in list(opp.zones.battlefield) if not c.is_land()]
+        for c in creatures:
+            opp.zones.battlefield.remove(c)
+            opp.zones.hand.append(c)
+        gs._log(f"  Time Stop: end turn proxy -- bounce {len(creatures)} opp permanents")
+
+
+def _heraldic_banner_etb(gs, card):
+    """Heraldic Banner -- {3} Artifact. 'Choose color, creatures get +1/+0. {T}: Add 1 mana.'
+    ETB proxy: +1 mana + +1/+0 to all our creatures."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Heraldic Banner ETB: +1 mana + +1/+0 to all creatures (color-choice proxy)")
+
+
+def _infernal_vessel_etb(gs, card):
+    """Infernal Vessel -- {2}{B} Creature. 'When dies (if not Demon), return with 2 counters.'
+    ETB proxy: standard; death trigger makes it recurring."""
+    gs._log("  Infernal Vessel ETB: death-recursion trigger active (2 counters on return)")
+
+
 # ── Foundations (FDN) batch 3 ─────────────────────────────────────────
 
 def _vizier_menagerie_etb(gs, card):
@@ -28917,6 +29032,7 @@ _SPELL_HANDLERS.update({
     "Genesis Wave":        _genesis_wave_spell,
     "Harmless Offering":   _harmless_offering_spell,
     "Biogenic Upgrade":    _biogenic_upgrade_spell,
+    "Time Stop":           _time_stop_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -28950,6 +29066,14 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # FDN batch 4
+    "Exclusion Mage":             _exclusion_mage_etb,
+    "Volley Veteran":             _volley_veteran_etb,
+    "Micromancer":                _micromancer_etb,
+    "Grappling Kraken":           _grappling_kraken_etb,
+    "Mischievous Pup":            _mischievous_pup_etb,
+    "Heraldic Banner":            _heraldic_banner_etb,
+    "Infernal Vessel":            _infernal_vessel_etb,
     # FDN batch 3
     "Vizier of the Menagerie":    _vizier_menagerie_etb,
     "Adaptive Automaton":         _adaptive_automaton_etb,

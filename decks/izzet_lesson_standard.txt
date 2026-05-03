@@ -1,6 +1,7 @@
 // Izzet Lessons -- Rui Zhang (#1 seed, PT Secrets of Strixhaven 2026-05-01)
 // Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
 // PT WR: 49.44% overall; 75% vs Selesnya Landfall; 41.9% vs Mono-Green Landfall
+// audit:stub -- 14 SB cards (DB data gap; PT DB record missing 1 SB slot)
 4 Accumulate Wisdom
 4 Artist's Talent
 4 Combustion Technique

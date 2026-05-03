@@ -28276,6 +28276,114 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── ECL + DFT batch ──────────────────────────────────────────────────
+
+def _coalstoke_gearhulk_etb(gs, card):
+    """Coalstoke Gearhulk -- {1}{B}{B}{R}{R} (Menace, Deathtouch). 'ETB: put target
+    creature card with CMC<=4 from a GY onto BF under your control.'"""
+    from data.card import Tag as _Tag
+    best = max((c for c in gs.zones.graveyard
+                if not c.is_land() and c.has(_Tag.CREATURE) and (getattr(c,'cmc',0) or 0) <= 4),
+               key=lambda c: getattr(c,'cmc',0) or 0, default=None)
+    if best:
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Coalstoke Gearhulk ETB: reanimate {best.name}")
+    else:
+        gs._log("  Coalstoke Gearhulk ETB: no valid GY creature")
+
+
+def _riptide_gearhulk_etb(gs, card):
+    """Riptide Gearhulk -- {1}{W}{W}{U}{U} (Double Strike, Prowess). ETB proxy."""
+    card.counters = (card.counters or 0) + 2
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Riptide Gearhulk ETB: Prowess +2/+2 + draw 1")
+
+
+def _mimeoplasm_etb(gs, card):
+    """Mimeoplasm, Revered One -- {X}{B}{G}{U}. Exile X GY creatures, 3 counters."""
+    from data.card import Tag as _Tag
+    exiled = min(2, len([c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]))
+    card.counters = (card.counters or 0) + 3 + exiled * 2
+    gs._log(f"  Mimeoplasm ETB: {3+exiled*2} counters (X={exiled} proxy)")
+
+
+def _full_throttle_spell(gs, card):
+    """Full Throttle -- {4}{R}{R}. Two extra combat phases. Proxy: +3 to all."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 3
+    gs._log("  Full Throttle: extra combats proxy (+3 to all creatures)")
+
+
+def _samut_dft_etb(gs, card):
+    """Samut, the Driving Force -- {3}{R}{G}{W}. First strike, Vigilance, Haste."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Samut DFT ETB: speed engine draw 1 proxy")
+
+
+def _possession_engine_etb(gs, card):
+    """Possession Engine -- {3}{U}{U} Vehicle. ETB steal opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Possession Engine ETB: steal {target.name}")
+
+
+def _spinerock_tyrant_etb(gs, card):
+    """Spinerock Tyrant -- {3}{R}{R} (Flying, Wither). Spell-trigger pump + ping."""
+    card.counters = (card.counters or 0) + 2
+    gs.zones.life -= 3
+    gs._log("  Spinerock Tyrant ETB: Wither+spell-ping proxy (+2/+0 + 3 dmg)")
+
+
+def _maralen_etb(gs, card):
+    """Maralen, Fae Ascendant -- {2}{B}{G}{U}. ETB exile top 2 of opp library."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for _ in range(2):
+            if opp.zones.library:
+                exiled = opp.zones.library.pop(0)
+                opp.zones.exile = getattr(opp.zones, "exile", [])
+                opp.zones.exile.append(exiled)
+    gs._log("  Maralen ETB: exile top 2 opp library")
+
+
+def _slumbering_walker_etb(gs, card):
+    """Slumbering Walker -- {3}{W}{W}. Enters with 2 -1/-1 counters."""
+    card.counters = (card.counters or 0) - 2
+    gs._log("  Slumbering Walker ETB: -2/-2 (wakes each end step)")
+
+
+def _gloom_ripper_etb(gs, card):
+    """Gloom Ripper -- {3}{B}{B}. ETB +X/+0 ours / -X/-0 theirs (X=2 proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        max(friends, key=lambda c: c.effective_power()).counters = (max(friends, key=lambda c: c.effective_power()).counters or 0) + 2
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            t = min(threats, key=lambda c: c.effective_power())
+            t.counters = (t.counters or 0) - 2
+    gs._log("  Gloom Ripper ETB: +2/+0 friend, -2/-0 opp")
+
+
+def _meek_attack_etb(gs, card):
+    """Meek Attack -- {2}{R} Enchantment. '{1}{R}: Cheat creature<=5 into play.'"""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Meek Attack ETB: cheat-in ability active (+1 mana proxy)")
+
+
 # ── IP sets batch (TLA/ECL/FIN/EOE/TMT) ─────────────────────────────
 
 def _koh_etb(gs, card):
@@ -29826,6 +29934,7 @@ _SPELL_HANDLERS.update({
     "The Rollercrusher Ride": _rollercrusher_ride_spell,
     "Elemental Teachings":    _elemental_teachings_spell,
     "Morningtide's Light":    _morningtides_light_spell,
+    "Full Throttle":          _full_throttle_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -29859,6 +29968,17 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # ECL + DFT batch
+    "Coalstoke Gearhulk":         _coalstoke_gearhulk_etb,
+    "Riptide Gearhulk":           _riptide_gearhulk_etb,
+    "Mimeoplasm, Revered One":    _mimeoplasm_etb,
+    "Samut, the Driving Force":   _samut_dft_etb,
+    "Possession Engine":          _possession_engine_etb,
+    "Spinerock Tyrant":           _spinerock_tyrant_etb,
+    "Maralen, Fae Ascendant":     _maralen_etb,
+    "Slumbering Walker":          _slumbering_walker_etb,
+    "Gloom Ripper":               _gloom_ripper_etb,
+    "Meek Attack":                _meek_attack_etb,
     # IP sets (TLA/ECL/FIN/EOE/TMT)
     "Koh, the Face Stealer":      _koh_etb,
     "Curious Colossus":           _curious_colossus_etb,

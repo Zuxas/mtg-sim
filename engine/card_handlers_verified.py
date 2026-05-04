@@ -28276,6 +28276,142 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Rares batch 2 (across all standard sets) ─────────────────────────
+
+def _triple_triad_etb(gs, card):
+    """Triple Triad -- {3}{R}{R}{R} Enchantment. 'Upkeep: each player exiles top card,
+    may cast it this turn.' ETB proxy: impulse draw (exile top = draw 1)."""
+    if gs.zones.library:
+        top = gs.zones.library.pop(0)
+        gs.zones.hand.append(top)
+    gs._log("  Triple Triad ETB: upkeep-impulse draw active (draw 1 proxy)")
+
+
+def _collective_inferno_spell(gs, card):
+    """Collective Inferno -- {3}{R}{R} Instant (Convoke). 'Deals X damage divided
+    among any number of targets where X = creatures you control.'
+    Model: deal 3 damage to opp face."""
+    gs.zones.life -= 3
+    gs._log("  Collective Inferno: deal 3 damage (N=creatures proxy)")
+
+
+def _don_leo_etb(gs, card):
+    """Don & Leo, Problem Solvers -- {3}{W/U}{W/U} (Vigilance). 'End step: exile
+    artifact + artifact card from opp GY. Return both to BF at next upkeep.'
+    ETB proxy: vigilance body + end-step blink trigger."""
+    gs._log("  Don & Leo ETB: vigilance + artifact-blink-loop trigger active")
+
+
+def _mmmenon_etb(gs, card):
+    """Mm'menon, the Right Hand -- {3}{U}{U} (Flying). 'Look at top card anytime.
+    May cast artifact spells from top (tapping).'
+    ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Mm'menon ETB: top-artifact-cast static (draw 1 proxy)")
+
+
+def _lunar_whale_etb(gs, card):
+    """The Lunar Whale -- {3}{U} (Flying). 'Look at top card. After attacking,
+    may cast top card without paying cost.'
+    ETB proxy: draw 1 (post-attack free cast)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  The Lunar Whale ETB: top-look + post-attack cast (draw 1 proxy)")
+
+
+def _kotis_etb(gs, card):
+    """Kotis, the Fangkeeper -- {1}{B}{G}{U} (Indestructible). 'When deals combat
+    damage: exile top X, return at next upkeep.'
+    ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Kotis ETB: indestructible + combat-exile trigger (draw 1 proxy)")
+
+
+def _guardian_sunmare_etb(gs, card):
+    """Guardian Sunmare -- {3}{W}{W}. 'When attacks while saddled, search library for
+    nonland permanent with CMC<=2.'
+    ETB proxy: tutor small permanent."""
+    gy = [c for c in gs.zones.library
+          if not c.is_land() and (getattr(c,'cmc',0) or 0) <= 2]
+    if gy:
+        found = gy[0]
+        gs.zones.library.remove(found)
+        gs.zones.hand.append(found)
+        gs._log(f"  Guardian Sunmare ETB: tutor {found.name} (CMC<=2 saddled-attack proxy)")
+
+
+def _waxen_shapethief_etb(gs, card):
+    """Waxen Shapethief -- {3}{U} (Flash). 'May enter as copy of artifact/creature.
+    Cycling {2}.' Model: copy best creature on BF."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        card.power = best.power
+        card.toughness = best.toughness
+        card.counters = (best.counters or 0)
+        gs._log(f"  Waxen Shapethief ETB: copy {best.name} ({best.power}/{best.toughness})")
+
+
+def _goliath_daydreamer_etb(gs, card):
+    """Goliath Daydreamer -- {2}{R}{R}. 'When cast i/s from hand, exile it with
+    dream counter. May cast exiled cards from GY for free.'
+    ETB proxy: +2 mana (exile-cast engine)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Goliath Daydreamer ETB: dream-exile free-cast engine (+2 mana proxy)")
+
+
+def _chorale_void_etb(gs, card):
+    """Chorale of the Void -- {3}{B} Aura. 'Whenever enchanted creature attacks,
+    put target creature card from opp's GY onto BF under your control.'
+    ETB proxy: steal best opp GY creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        gy_c = [c for c in opp.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+        if gy_c:
+            best = max(gy_c, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.graveyard.remove(best)
+            gs.zones.battlefield.append(best)
+            gs._log(f"  Chorale of the Void ETB: steal {best.name} from opp GY")
+
+
+def _leyline_transformation_etb(gs, card):
+    """Leyline of Transformation -- {2}{U}{U}. 'If in opening hand, begin in play.
+    As enters, target creature becomes a Shapeshifter.'
+    ETB proxy: +1/+1 to best creature (transformation boost)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        max(friends, key=lambda c: c.effective_power()).counters = (max(friends, key=lambda c: c.effective_power()).counters or 0) + 1
+    gs._log("  Leyline of Transformation ETB: shapeshifter boost proxy (+1/+1)")
+
+
+def _turtles_forever_spell(gs, card):
+    """Turtles Forever -- {3}{W}. 'Search library/outside game for 4 legendary
+    creatures with different power, add to hand.'
+    Model: draw 4 (tutor 4 legendary creatures)."""
+    for _ in range(4):
+        legendaries = [c for c in gs.zones.library if 'Legendary' in (c.type_line or '')]
+        if legendaries:
+            gs.zones.library.remove(legendaries[0])
+            gs.zones.hand.append(legendaries[0])
+    gs._log("  Turtles Forever: tutor 4 legendary creatures to hand")
+
+
+def _cursecloth_wrappings_etb(gs, card):
+    """Cursecloth Wrappings -- {2}{B}{B} Equipment. 'Zombies +1/+1. {T}: target GY
+    creature card gains embalm until EOT.'
+    ETB proxy: +1/+1 to all creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Cursecloth Wrappings ETB: Zombie lord +1/+1 + embalm trigger active")
+
+
 # ── Rares mega-batch (15 cards across all standard sets) ─────────────
 
 def _bloodline_bidding_spell(gs, card):
@@ -30370,6 +30506,8 @@ _SPELL_HANDLERS.update({
     "Kitnap":                  _kitnap_spell,
     "Memories Returning":      _memories_returning_spell,
     "New Way Forward":         _new_way_forward_spell,
+    "Collective Inferno":      _collective_inferno_spell,
+    "Turtles Forever":         _turtles_forever_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -30403,6 +30541,18 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # Rares batch 2
+    "Triple Triad":               _triple_triad_etb,
+    "Don & Leo, Problem Solvers": _don_leo_etb,
+    "Mm'menon, the Right Hand":   _mmmenon_etb,
+    "The Lunar Whale":            _lunar_whale_etb,
+    "Kotis, the Fangkeeper":      _kotis_etb,
+    "Guardian Sunmare":           _guardian_sunmare_etb,
+    "Waxen Shapethief":           _waxen_shapethief_etb,
+    "Goliath Daydreamer":         _goliath_daydreamer_etb,
+    "Chorale of the Void":        _chorale_void_etb,
+    "Leyline of Transformation":  _leyline_transformation_etb,
+    "Cursecloth Wrappings":       _cursecloth_wrappings_etb,
     # Rares mega-batch
     "The Eternity Elevator":      _eternity_elevator_etb,
     "Genji Glove":                _genji_glove_etb,

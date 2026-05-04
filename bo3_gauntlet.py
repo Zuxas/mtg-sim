@@ -75,9 +75,14 @@ def main():
 
     # Build opponent kill distributions
     opp_clocks = {}
+    _fmt = (args.format or "").lower().replace(" ", "")
     for arch in field:
         key = _infer_archetype_key(arch)
-        opp_clocks[arch] = ARCHETYPE_CLOCKS.get(key, ARCHETYPE_CLOCKS["unknown"])
+        # Try format-qualified key first (e.g. "izzetprowessstandard") so Standard
+        # and Modern clocks don't collide on shared archetype names.
+        fmt_key = key + _fmt if _fmt and _fmt != "legacy" else key
+        opp_clocks[arch] = ARCHETYPE_CLOCKS.get(fmt_key,
+                           ARCHETYPE_CLOCKS.get(key, ARCHETYPE_CLOCKS["unknown"]))
 
     # ── Load real matchup data ────────────────────────────────────────────
     real_matrix = {}

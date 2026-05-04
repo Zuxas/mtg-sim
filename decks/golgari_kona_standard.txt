@@ -1,0 +1,31 @@
+// Golgari Kona - paul gabat (PT SOS 2026)
+4 Overgrown Tomb
+4 Starting Town
+4 Wastewood Verge
+4 Requiting Hex
+4 Evendo, Waking Haven
+4 Susur Secundi, Void Altar
+4 Kona, Rescue Beastie
+4 Vaultborn Tyrant
+3 Bitter Triumph
+3 Deep-Cavern Bat
+3 Zuko's Conviction
+3 Dina's Guidance
+2 Forest
+2 Blooming Marsh
+2 Overlord of the Balemurk
+2 Archdruid's Charm
+2 Harvester of Misery
+2 Withering Curse
+1 Armaggon, Future Shark
+1 Ghalta, Stampede Tyrant
+1 Summon: Bahamut
+1 Valgavoth, Terror Eater
+
+Sideboard
+3 Keen-Eyed Curator
+3 Overlord of the Hauntwoods
+3 Torpor Orb
+3 Frenzied Baloth
+2 Duress
+1 Absolute Virtue

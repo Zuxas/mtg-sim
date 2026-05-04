@@ -55,29 +55,65 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
   6. Self-return replays don't consume extra land drops
 - Kill sources: ~90% combat, ~8% Analyst loop, ~2% Scapeshift OHKO
 
-### In progress
+### Standard match APLs — 38/38 decks covered (as of 2026-05-04)
 
-- Domain Zoo: P/T propagation bug (power/toughness not flowing through static abilities correctly)
-- Deep audit of the 9 basic match APLs (sb_plan_generic) — some are stubs from Gemma, need hand-tuning
+Two-player engine is fully wired. Both players call their APLs each turn.
+Base class: `apl/aware_match_apl.py` (`AwareMatchAPL`), inherits from `MatchAPL`.
+
+**AwareMatchAPL capabilities:**
+- `OPP_THREAT_MODEL` — per-archetype dict of `{removal, counters, pump, rep_mana}` counts
+- `declare_attackers()` — lethal check first, then trade-intelligence (CMC comparison, beatdown role), then counter-mana holdback
+- `declare_blockers()` — conservative (avoid trading up CMC unless necessary), lethal recognition
+- `reserve_mana(gs, opp)` hook — tells `tap_lands()` to leave N lands untapped for reactive mana; `_tap_for_response()` taps them in response windows
+- `pre_combat_instant(gs, opp)` — fires before attackers declared; kill ninjutsu enablers (Kaito), exile blink-bait
+- `post_attackers_instant(gs, opp, attackers)` — fires after attackers declared; kill high-value unblocked threats
+- `_lethal_this_turn(gs, opp, candidates)` — accounts for prowess pump, flying evasion, trample
+
+**Engine additions (2026-05-04):**
+- `_opp_key` wired at match start for OPP_THREAT_MODEL lookups
+- Card mutation fix: `copy.copy(c)` per game in `run_match()` — prevents stat bleed across games
+- Monument to Endurance drain tracked via `gs._monument_choices_this_turn`; game-over check fires after `tap_lands()`
+- Slickshot Show-Off Plot mechanic: exile to `__prowess_plotted__`, cast free next turn when opponent has 0 untapped lands
+- Pre-combat and post-attackers priority windows in the turn loop
+- Per-spell reactive windows: `_try_reactive_interaction` fires up to `spells_cast_this_turn` times
+
+**Named archetypes with dedicated MatchAPLs:**
+```
+izzetprowessstandard  selesnyalandfall     izzetlessonstandard  azoriusmomo
+azoriustempo          dimirexcruciator     izzetmaestro         selesnyaouroboroid
+izzetspellementals    jeskaicombostd       superiordoomsday     monogreenlandfall
+mardudiscard          rakdosdiscard        borosdiscard         sultaicontrol
+temurlutestandard     fourcolorcontrol     simicombiscience     bantombiscience
+temuromniscience      fourcoloroverlords   golgarikona          golgaricontrol
+dimirmidrangestd      fourcolorelemental   selesnyarhythm       bantrhythm
+bantairbending        borosdragons         azoriusblink
+```
+
+**Known model limitations:**
+- Hand-size advantage not modeled: Izzet Lessons draws 8+ cards by T5 via Monument+Gran-Gran+Artist's Talent, but the sim can't represent inevitable card-advantage wins. Sim shows ~75% SelLF WR vs Izzet Lessons; PT data shows ~75% IzzetLessons WR. Inverted until hand-tracking is added.
+- Mana model approximation: `reserve_mana()` holds N lands untapped but can't perfectly model "hold up UU for counterspell." Close enough for most archetypes.
+- Domain Zoo P/T propagation bug (pre-existing, not addressed).
 
 ### Experimental (auto-generated, mixed quality)
 
-- `apl/experimental/` contains 9 Gemma-generated match APLs for Standard archetypes. Not hand-tuned. WRs range 16–48%. See `apl/experimental/README.md` for disposition guidance. **Do not** recommend these as canonical.
+- `apl/experimental/` contains legacy Gemma-generated match APLs for Standard archetypes. Superseded by the 38 canonical match APLs above. **Do not** recommend these as canonical.
 
-## Coverage audit (2026-04-25)
+## Coverage audit (2026-05-04 — updated)
 
 Full L1 card-handler + APL/MatchAPL coverage map across all four formats.
-Source of truth for "what's a real backlog item" vs "false-positive gap."
 
-- **Top-line:** Modern is L1-complete (292/292 handlers). Pioneer is the
-  big L1 backlog (57 gaps). Standard 3 gaps, Legacy 3 gaps.
-- **APL coverage:** 33 of 65 deck files have no APL_REGISTRY entry (the
-  sim can't run them at all). 11 decks have APL but no MatchAPL (fall
-  back to GoldfishAdapter).
-- **Data-quality flags surfaced:** 8 deck files have non-standard
-  mainboard counts (54, 58, 59, 61, 62, 81) — likely typos or sideboard-
-  guide bundling. Triage before trusting any field-weighted gauntlet
-  result that includes these decks.
+- **Standard handlers: 4218/4218 (100%)** — all 17 sets clean as of 2026-05-03.
+- **Modern:** L1-complete (292/292 handlers).
+- **Pioneer:** Big L1 backlog (57 gaps). Legacy: 3 gaps.
+- **Standard APL coverage:** 38/38 Standard decks have both APL_REGISTRY and MATCH_APL_REGISTRY entries.
+- **Data-quality flags:** 8 deck files have non-standard mainboard counts (54, 58, 59, 61, 62, 81) — flagged with `audit:intentional` or `audit:custom_variant` markers.
+
+Artifacts:
+- `data/full_audit_2026-04-25.md` — combined report (all sections)
+- `data/<format>_l1_handler_audit_2026-04-25.csv` — per-format L1 detail
+- `data/apl_coverage_audit_2026-04-25.csv` — per-deck APL detail
+
+Re-run: `python scripts/full_audit.py [--formats modern,standard,...] [--date YYYY-MM-DD]`.
 
 Artifacts:
 - `data/full_audit_2026-04-25.md` — combined report (all sections)

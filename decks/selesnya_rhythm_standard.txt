@@ -1,0 +1,31 @@
+// Selesnya Rhythm - raul porojan (PT SOS 2026)
+8 Forest
+4 Llanowar Elves
+4 Badgermole Cub
+4 Ouroboroid
+4 Hushwood Verge
+4 Temple Garden
+4 Starting Town
+4 Gene Pollinator
+4 Spider Manifestation
+4 Nature's Rhythm
+4 Brightglass Gearhulk
+2 Abandoned Air Temple
+2 Seam Rip
+2 Meltstrider's Resolve
+1 Soul-Guide Lantern
+1 Plains
+1 Craterhoof Behemoth
+1 Nurturing Pixie
+1 Insidious Fungus
+1 Goldvein Hydra
+
+Sideboard
+4 Sage of the Skies
+3 Get Lost
+2 Surrak, Elusive Hunter
+2 Leatherhead, Swamp Stalker
+1 Seam Rip
+1 Meltstrider's Resolve
+1 Pyrrhic Strike
+1 Authority of the Consuls

@@ -1,0 +1,27 @@
+// Seed 7: Matthew Stefansson - Mono Green Landfall (PT SOS 2026)
+14 Forest
+4 Llanowar Elves
+4 Badgermole Cub
+4 Keen-Eyed Curator
+4 Fabled Passage
+4 Escape Tunnel
+4 Icetill Explorer
+4 Sazh's Chocobo
+4 Earthbender Ascension
+3 Ba Sing Se
+3 Mightform Harmonizer
+3 Meltstrider's Resolve
+3 Sapling Nursery
+1 Bushwhack
+1 Promising Vein
+
+Sideboard
+3 Mossborn Hydra
+2 Surrak, Elusive Hunter
+2 Origin of Metalbending
+2 Torpor Orb
+2 Pawpatch Formation
+1 Leatherhead, Swamp Stalker
+1 Meltstrider's Resolve
+1 Sapling Nursery
+1 Sandman, Shifting Scoundrel

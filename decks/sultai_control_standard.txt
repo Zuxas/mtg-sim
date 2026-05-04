@@ -1,0 +1,36 @@
+// Sultai Control - akira shibata (PT SOS 2026)
+4 Overgrown Tomb
+4 Starting Town
+4 Watery Grave
+4 Ancient Cornucopia
+4 Deceit
+4 Rakshasa's Bargain
+4 Emeritus of Ideation
+3 Wastewood Verge
+3 Superior Spider-Man
+3 Awaken the Honored Dead
+3 Withering Curse
+2 Underground Mortuary
+2 Gloomlake Verge
+2 Undercity Sewers
+2 Requiting Hex
+2 Shoot the Sheriff
+2 Witherbloom Charm
+2 Quandrix Charm
+1 Swamp
+1 Island
+1 Multiversal Passage
+1 Wistfulness
+1 Black Cat, Cunning Thief
+1 Dreamroot Cascade
+
+Sideboard
+2 Duress
+2 Pest Control
+2 Keen-Eyed Curator
+2 Cavern of Souls
+2 Negate
+2 Strategic Betrayal
+1 Bitter Triumph
+1 Disdainful Stroke
+1 Black Cat, Cunning Thief

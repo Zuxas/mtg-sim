@@ -1,0 +1,36 @@
+// Dimir Midrange - carlos martinez (PT SOS 2026)
+4 Multiversal Passage
+4 Kaito, Bane of Nightmares
+4 Watery Grave
+4 Gloomlake Verge
+4 Floodpits Drowner
+4 Dream Beavers
+4 Spyglass Siren
+3 Swamp
+3 Island
+3 Tishana's Tidebinder
+3 Enduring Curiosity
+3 Requiting Hex
+2 Bitter Triumph
+2 Starting Town
+2 Restless Reef
+2 Preacher of the Schism
+2 Deep-Cavern Bat
+2 Shoot the Sheriff
+2 Soulstone Sanctuary
+1 Spell Snare
+1 Wan Shi Tong, Librarian
+1 Phantom Interference
+
+Sideboard
+2 Duress
+2 Annul
+2 Disdainful Stroke
+2 Day of Black Sun
+1 Soul-Guide Lantern
+1 Spell Pierce
+1 Essence Scatter
+1 The Unagi of Kyoshi Island
+1 Requiting Hex
+1 Strategic Betrayal
+1 The Ooze

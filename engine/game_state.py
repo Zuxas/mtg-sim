@@ -856,11 +856,112 @@ class GameState:
     # -----------------------------------------------------------------------
 
     def tap_lands(self):
-        """Tap all untapped lands for mana. Skips already-tapped lands."""
-        for land in self.zones.lands_on_battlefield():
-            if not land.tapped:
+        """
+        Tap untapped lands for mana, then tap mana dorks.
+
+        Respects gs.mana_reserve: if > 0, leave that many lands physically
+        untapped so they're available for instant-speed plays during the
+        opponent's response windows (_tap_for_response picks them up then).
+
+        Priority for which lands stay untapped: tap single-color basics first
+        (they're cheapest), keep dual-colored lands untapped last (most flexible
+        for interaction mana). E.g. with reserve=1 and [Forest, Plains, Temple
+        Garden]: tap Forest, tap Plains, leave Temple Garden untapped.
+        """
+        from engine.keywords import KWTag
+        reserve = getattr(self, 'mana_reserve', 0)
+        untapped = [l for l in self.zones.lands_on_battlefield() if not l.tapped]
+
+        if reserve <= 0:
+            for land in untapped:
                 land.tapped = True
                 self.mana_pool.add_land(land.type_line, land.name)
+        else:
+            # Sort: basics (single-type) first, duals/flex last
+            def _tap_priority(land):
+                t = land.type_line.lower()
+                colors = sum(1 for w in ('plains','island','swamp','mountain','forest')
+                             if w in t)
+                return colors  # 1=basic (tap first), 2=dual (hold last)
+
+            ordered = sorted(untapped, key=_tap_priority)
+            n_tap = max(0, len(ordered) - reserve)
+            for land in ordered[:n_tap]:
+                land.tapped = True
+                self.mana_pool.add_land(land.type_line, land.name)
+            if len(ordered) > n_tap:
+                held = [l.name for l in ordered[n_tap:]]
+                self._log(f"  tap_lands: held {held} untapped (reserve={reserve})")
+
+        # Tap mana dorks — creatures that produce mana each turn
+        for card in self.zones.battlefield:
+            if card.is_land():
+                continue
+            if not card.has(Tag.CREATURE):
+                continue
+            if getattr(card, 'tapped', False):
+                continue
+            if getattr(card, 'summoning_sickness', False) and KWTag.HASTE not in card.tags:
+                continue
+            if KWTag.MANA_DORK not in card.tags:
+                continue
+            # Determine mana color from oracle text or type line
+            oracle = (getattr(card, 'oracle_text', '') or '').lower()
+            color = 'G'   # default: green (most dorks)
+            if 'add {w}' in oracle:  color = 'W'
+            elif 'add {u}' in oracle: color = 'U'
+            elif 'add {b}' in oracle: color = 'B'
+            elif 'add {r}' in oracle: color = 'R'
+            elif 'add {g}' in oracle: color = 'G'
+            elif 'add one mana' in oracle or 'add {c}' in oracle:
+                self.mana_pool.flex += 1
+                card.tapped = True
+                self._log(f"  {card.name}: tap for C mana")
+                continue
+            card.tapped = True
+            self.mana_pool.add(color, 1)
+            self._log(f"  {card.name}: tap for {{{color}}}")
+
+            # Gran-Gran trigger: "Whenever Gran-Gran becomes tapped, draw a card,
+            # then discard a card." This fires on ANY tap, including for mana.
+            if card.name == "Gran-Gran":
+                if self.zones.library:
+                    self.zones.hand.append(self.zones.library.pop(0))
+                if self.zones.hand:
+                    # Discard worst card (excess land or lowest-cmc spell)
+                    worst = min(self.zones.hand,
+                                key=lambda c: (1 if c.is_land() else 2,
+                                               -getattr(c, 'cmc', 0)))
+                    self.zones.hand.remove(worst)
+                    self.zones.graveyard.append(worst)
+                    self._log(f"  Gran-Gran tap trigger: draw 1, discard {worst.name}")
+                    # Monument to Endurance trigger: whenever you discard, choose one
+                    # that hasn't been chosen this turn:
+                    #   A) Draw a card   B) Create Treasure   C) Each opponent loses 3 life
+                    # Optimal sequence: drain first (life loss = primary win condition),
+                    # then draw (card advantage), then treasure (extra mana).
+                    monument_up = any(c.name == "Monument to Endurance"
+                                      for c in self.zones.battlefield)
+                    if monument_up:
+                        monument_choices = getattr(self, '_monument_choices_this_turn', set())
+                        if 'drain' not in monument_choices:
+                            # Drain 3 life from all opponents
+                            if hasattr(self, '_match_opp') and self._match_opp:
+                                self._match_opp.life -= 3
+                                self._log(f"  Monument to Endurance: opponent loses 3 life "
+                                          f"(now at {self._match_opp.life})")
+                            monument_choices.add('drain')
+                        elif 'draw' not in monument_choices:
+                            # Draw a card (card advantage)
+                            if self.zones.library:
+                                self.zones.hand.append(self.zones.library.pop(0))
+                                self._log("  Monument to Endurance: draw a card")
+                            monument_choices.add('draw')
+                        else:
+                            # Create a Treasure token
+                            self.mana_pool.flex += 1
+                            self._log("  Monument to Endurance: create Treasure")
+                        self._monument_choices_this_turn = monument_choices
 
     # -------------------------------------------------------------------
     # Land classification helpers (Phase 0B)

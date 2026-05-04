@@ -1,0 +1,35 @@
+// Azorius Blink - Standard (SOS 2026)
+// Representative build: Nurturing Pixie blink engine + Enduring Innocence draw payoff
+// PT SOS Day 1-2 field share: 2.5% (12/481 players)
+// Game plan: blink ETB creatures repeatedly for Enduring Innocence draws and Novice Inspector treasures
+// Main: 60 | Sideboard: 15
+
+4 Novice Inspector
+4 Nurturing Pixie
+4 Enduring Innocence
+4 Voice of Victory
+3 Starfield Shepherd
+2 Momo, Friendly Flier
+2 Haliya, Guided by Light
+4 Shardmage's Rescue
+3 Get Lost
+2 Seam Rip
+2 Cosmogrand Zenith
+1 Opt
+1 Flow State
+4 Hallowed Fountain
+4 Meticulous Archive
+4 Abandoned Air Temple
+2 Restless Anchorage
+2 Fountainport
+4 Plains
+4 Island
+
+// Sideboard
+3 Doorkeeper Thrull
+3 Sheltered by Ghosts
+2 Rest in Peace
+2 Authority of the Consuls
+2 Flashfreeze
+2 Soul-Guide Lantern
+1 Clarion Conqueror

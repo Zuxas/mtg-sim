@@ -34,18 +34,19 @@
     "Izzet Affinity": 46.6
   },
   "Izzet Lessons (standard)": {
+    "Sultai Reanimator": 46.0,
     "Jeskai Control": 57.0,
     "Azorius Omniscience": 61.4,
-    "Sultai Reanimator": 46.0,
-    "Azorius Momo": 2.9,
-    "Azorius Tempo": 11.3,
-    "Izzet Prowess": 8.2,
-    "Selesnya Landfall": 7.2,
-    "Izzet Maestro": 9.9,
-    "Mono Green Landfall": 15.1,
-    "Golgari Midrange": 28.9,
-    "Simic Ouroboroid": 12.5,
-    "Izzet Spellementals": 19.6
+    "Azorius Momo": 4.0,
+    "Azorius Tempo": 14.3,
+    "Izzet Prowess": 0.4,
+    "Selesnya Landfall": 0.8,
+    "Izzet Maestro": 1.0,
+    "Golgari Midrange": 7.6,
+    "Simic Ouroboroid": 0.1,
+    "Mono Green Landfall": 1.0,
+    "Izzet Spellementals": 1.1,
+    "Dimir Excruciator": 4.6
   },
   "Boros Energy (modern)": {
     "Amulet Titan": 54.0,
@@ -92,12 +93,13 @@
     "Jeskai Control": 60.0,
     "Azorius Omniscience": 61.4,
     "Sultai Reanimator": 52.0,
-    "Izzet Spellementals": 85.2,
-    "Izzet Prowess": 88.0,
-    "Golgari Midrange": 61.4,
-    "Azorius Tempo": 74.1,
-    "Azorius Momo": 63.2,
-    "Izzet Maestro": 50.6,
-    "Simic Ouroboroid": 60.9
+    "Izzet Prowess": 83.5,
+    "Izzet Spellementals": 76.5,
+    "Golgari Midrange": 60.7,
+    "Dimir Excruciator": 68.7,
+    "Azorius Momo": 59.9,
+    "Azorius Tempo": 69.9,
+    "Izzet Maestro": 52.3,
+    "Simic Ouroboroid": 47.1
   }
 }

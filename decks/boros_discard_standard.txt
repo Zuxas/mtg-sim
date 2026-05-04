@@ -1,0 +1,28 @@
+// Boros Discard - benji leaf (PT SOS 2026)
+6 Mountain
+4 Sacred Foundry
+4 Sunbillow Verge
+4 Fear of Missing Out
+4 Inspiring Vantage
+4 Hired Claw
+4 Bloodghast
+4 Marauding Mako
+4 Cool but Rude
+4 Hardened Academic
+3 Burst Lightning
+3 Inti, Seneschal of the Sun
+2 Starting Town
+2 Multiversal Passage
+2 Tersa Lightshatter
+2 Casey Jones, Vigilante
+2 Erode
+2 Practiced Offense
+
+Sideboard
+4 Magebane Lizard
+2 Scorching Shot
+2 Sheltered by Ghosts
+2 Ghost Vacuum
+2 Case of the Crimson Pulse
+2 Erode
+1 Sunspine Lynx

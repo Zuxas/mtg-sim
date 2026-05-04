@@ -1,0 +1,36 @@
+// Bant Omniscience - jodyk (PT SOS 2026)
+4 Multiversal Passage
+4 Formidable Speaker
+4 Omniscience
+4 Stock Up
+4 Marang River Regent
+4 Kona, Rescue Beastie
+4 Adagia, Windswept Bastion
+4 Uthros, Titanic Godcore
+4 Roiling Dragonstorm
+3 Cavern of Souls
+3 Erode
+2 Temple Garden
+2 Seam Rip
+2 Floodfarm Verge
+2 Voice of Victory
+2 Dreamroot Cascade
+2 Emeritus of Ideation
+1 Plains
+1 Island
+1 Breeding Pool
+1 Hallowed Fountain
+1 Consult the Star Charts
+1 Springleaf Drum
+
+Sideboard
+2 Spell Pierce
+2 Clarion Conqueror
+2 Rest in Peace
+2 Day of Judgment
+2 Voice of Victory
+1 Beza, the Bounding Spring
+1 Spider-Sense
+1 Seam Rip
+1 Kutzil's Flanker
+1 Overlord of the Mistmoors

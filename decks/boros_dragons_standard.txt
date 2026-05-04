@@ -1,0 +1,30 @@
+// Boros Dragons - wentong zhang (PT SOS 2026)
+4 Burst Lightning
+4 Clarion Conqueror
+4 Sacred Foundry
+4 Sunbillow Verge
+4 Voice of Victory
+4 Inspiring Vantage
+4 Momo, Friendly Flier
+4 Nova Hellkite
+4 Maelstrom of the Spirit Dragon
+4 Magmatic Hellkite
+4 Sarkhan, Dragon Ascendant
+3 Multiversal Passage
+3 Cavern of Souls
+2 Mountain
+2 Get Lost
+2 Dragonhawk, Fate's Tempest
+2 Twinmaw Stormbrood
+1 Spectacular Tactics
+1 Lorehold, the Historian
+
+Sideboard
+4 Rest in Peace
+3 Doorkeeper Thrull
+2 The Legend of Roku
+2 High Noon
+1 Pyroclasm
+1 Get Lost
+1 Slagstorm
+1 Spectacular Tactics

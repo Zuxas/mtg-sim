@@ -1,0 +1,32 @@
+// Mardu Discard - christopher kral (PT SOS 2026)
+4 Concealed Courtyard
+4 Iron-Shield Elf
+4 Starting Town
+4 Blood Crypt
+4 Sacred Foundry
+4 Bloodghast
+4 Marauding Mako
+4 Moonshadow
+4 Cool but Rude
+4 Hardened Academic
+4 Practiced Offense
+3 Burst Lightning
+3 Tersa Lightshatter
+2 Inspiring Vantage
+2 Erode
+1 Mountain
+1 Godless Shrine
+1 Multiversal Passage
+1 Cecil, Dark Knight
+1 Blazemire Verge
+1 Shardmage's Rescue
+
+Sideboard
+4 Leyline of the Void
+3 Voice of Victory
+2 Strategic Betrayal
+2 Case of the Crimson Pulse
+1 Seam Rip
+1 Inti, Seneschal of the Sun
+1 Shoot the Sheriff
+1 Erode

@@ -1,6 +1,26 @@
 # mtg-sim TODO
 
-## Active priorities (2026-04-26 morning, post-session)
+## Active priorities (2026-05-04, post-session)
+
+### COMPLETED this session (2026-05-04)
+- [x] Standard handler coverage: 4218/4218 (100%), all 17 sets
+- [x] Standard match APL coverage: 38/38 decks, all named archetypes
+- [x] `AwareMatchAPL` base class (`apl/aware_match_apl.py`) — lethal recognition, trade logic, counter-mana holdback, reserve_mana hook
+- [x] Two-player engine full wiring: pre-combat priority, post-attackers priority, per-spell reactive windows
+- [x] Card mutation fix: `copy.copy(c)` per game in `run_match()`
+- [x] `_opp_key` wiring for OPP_THREAT_MODEL lookups
+- [x] Monument to Endurance drain win condition modeled
+- [x] Slickshot Show-Off Plot mechanic (exile, cast when opponent tapped out)
+- [x] PT SOS Top 8 simulation (`sim_pt_sos_top8.py`, Bo5 bracket)
+- [x] PT SOS Swiss simulation (`sim_pt_sos_swiss.py`, 325 players, 10 rounds Standard)
+- [x] Bo3 gauntlet: Selesnya Landfall vs full field (200 matches each, sideboard-aware)
+
+### Known model gaps (P1 — not blocking RC prep)
+- Hand-size advantage not modeled: Izzet Lessons card draw via Monument+Gran-Gran+Artist's Talent inverts its true matchup vs SelLF (sim: 78.5% SelLF, reality: ~25%). Requires tracking hand size as a resource and modeled card-advantage win.
+- Mana model: `reserve_mana()` approximation can't perfectly represent "hold up UU for counterspell on any turn."
+- Domain Zoo P/T propagation bug (pre-existing).
+
+### P0 -- Match-runner combat gap, remaining phases
 
 ### P0 -- Match-runner combat gap, remaining phases
 Phase 1 SHIPPED at commit a31f360. Phases 2/3/4 fresh-session work,

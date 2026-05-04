@@ -162,6 +162,53 @@ APL_REGISTRY = {
     # Selesnya Ouroboroid: Matt Nass #2 seed PT SOS (Ouroboroid engine)
     "selesnyaouroboroid": ("apl.selesnya_ouroboroid_standard", "SelesnyaOuroboroidAPL", "decks/selesnya_ouroboroid_standard.txt"),
     "ouroboroid":         ("apl.selesnya_ouroboroid_standard", "SelesnyaOuroboroidAPL", "decks/selesnya_ouroboroid_standard.txt"),
+    # ── PT SOS 2026 named archetypes (each gets its own APL) ────────────
+    "temurlute":           ("apl.lute_control_standard",       "TemurLuteAPL",           "decks/temur_lute_standard.txt"),
+    "temurlutestd":        ("apl.lute_control_standard",       "TemurLuteAPL",           "decks/temur_lute_standard.txt"),
+    "fourcolorcontrol":    ("apl.lute_control_standard",       "FourColorControlAPL",    "decks/four_color_control_standard.txt"),
+    "borordragons":        ("apl.boros_dragons_standard",      "BorsDragonsAPL",         "decks/boros_dragons_standard.txt"),  # kept for compat
+    "borosdragons":        ("apl.boros_dragons_standard",      "BorsDragonsAPL",         "decks/boros_dragons_standard.txt"),
+    "golgarikona":         ("apl.golgari_kona_standard",       "GolgariKonaAPL",         "decks/golgari_kona_standard.txt"),
+    "golgaricontrol":      ("apl.golgari_control_standard",    "GolgariControlAPL",      "decks/golgari_control_standard.txt"),
+    "dimirmidrangestdstd": ("apl.dimir_midrange_std_standard", "DimirMidrangeStdAPL",    "decks/dimir_midrange_std_standard.txt"),
+    "dimirmidrangestd":    ("apl.dimir_midrange_std_standard", "DimirMidrangeStdAPL",    "decks/dimir_midrange_std_standard.txt"),
+    "simicomniscience":    ("apl.omniscience_standard",        "SimicOmniscienceAPL",    "decks/simic_omniscience_standard.txt"),
+    "bantomniscience":     ("apl.omniscience_standard",        "BantOmniscienceAPL",     "decks/bant_omniscience_standard.txt"),
+    "temuromniscience":    ("apl.omniscience_standard",        "TemurOmniscienceAPL",    "decks/temur_omniscience_standard.txt"),
+    "temuomniscience":     ("apl.omniscience_standard",        "TemurOmniscienceAPL",    "decks/temur_omniscience_standard.txt"),
+    "fourcolorelemental":  ("apl.four_color_elemental_standard","FourColorElementalAPL", "decks/four_color_elemental_standard.txt"),
+    "selesnyarhythm":      ("apl.selesnya_rhythm_standard",    "SelesnyaRhythmAPL",      "decks/selesnya_rhythm_standard.txt"),
+    "bantrhythm":          ("apl.bant_rhythm_standard",        "BantRhythmAPL",          "decks/bant_rhythm_standard.txt"),
+    "bantairbending":      ("apl.bant_airbending_standard",    "BantAirbendingAPL",      "decks/bant_airbending_standard.txt"),
+    # ── Discard-aggro archetypes (PT SOS 2026) ───────────────────────────
+    "mardudiscard":    ("apl.discard_aggro_standard", "MarduDiscardAPL",  "decks/mardu_discard_standard.txt"),
+    "rakdosdiscard":   ("apl.discard_aggro_standard", "RakdosDiscardAPL", "decks/rakdos_discard_standard.txt"),
+    "borosdiscard":    ("apl.discard_aggro_standard", "BorosDiscardAPL",  "decks/boros_discard_standard.txt"),
+    "sultaicontrol":   ("apl.sultai_control_standard","SultaiControlAPL", "decks/sultai_control_standard.txt"),
+    # Azorius Blink: 2.5% of PT SOS field (12/481 players)
+    "azoriusblink":       ("apl.azorius_blink_standard",       "AzoriusBlinkAPL",       "decks/azorius_blink_standard.txt"),
+    "blink":              ("apl.azorius_blink_standard",       "AzoriusBlinkAPL",       "decks/azorius_blink_standard.txt"),
+    # Izzet Prowess Standard goldfish APL (separate from Modern "izzetprowess")
+    "izzetprowessstandard": ("apl.izzet_prowess_standard",    "IzzetProwessAPL",        "decks/izzet_prowess_standard.txt"),
+    # ── Standard match APLs promoted from GoldfishAdapter (2026-05-04) ──────
+    "azoriusaggro":         ("apl.azorius_aggro_standard",       "AzoriusAggroAPL",                   "decks/azorius_aggro_standard.txt"),
+    "azoriustempo":         ("apl.azorius_tempo_standard",       "AzoriusTempoAPL",                   "decks/azorius_tempo_standard.txt"),
+    "dimirexcruciator":     ("apl.generic_apl",                  "GenericAPL",                        "decks/dimir_excruciator_standard.txt"),
+    "excruciator":          ("apl.generic_apl",                  "GenericAPL",                        "decks/dimir_excruciator_standard.txt"),
+    "fourcoveroverlords":   ("apl.auto_apls.four_color_overlords","FourColorOverlordsAPL",             "decks/four_color_overlords_standard.txt"),
+    "fourcoloroverlords":   ("apl.auto_apls.four_color_overlords","FourColorOverlordsAPL",             "decks/four_color_overlords_standard.txt"),
+    "izzetcontrol":         ("apl.izzet_control_standard",       "IzzetControlAPL",                   "decks/izzet_control_standard.txt"),
+    "izzetmaestro":         ("apl.izzet_maestro_standard",       "IzzetMaestroAPL",                   "decks/izzet_maestro_standard.txt"),
+    "maestro":              ("apl.izzet_maestro_standard",       "IzzetMaestroAPL",                   "decks/izzet_maestro_standard.txt"),
+    "monogreenaggro":       ("apl.mono_green_aggro_standard",    "MonoGreenAggroAPL",                 "decks/mono_green_aggro_standard.txt"),
+    "roamingelementals":    ("apl.roaming_elementals_standard",  "RoamingElementalsAPL",              "decks/roaming_elementals_standard.txt"),
+    "selesnyaouroboroid":   ("apl.selesnya_ouroboroid_standard", "SelesnyaOuroboroidAPL",             "decks/selesnya_ouroboroid_standard.txt"),
+    "ouroboroid":           ("apl.selesnya_ouroboroid_standard", "SelesnyaOuroboroidAPL",             "decks/selesnya_ouroboroid_standard.txt"),
+    "simicjackal":          ("apl.auto_apls.simic_jackal",       "SimicJackalAPL",                    "decks/simic_jackal_standard.txt"),
+    "simicrhythm":          ("apl.auto_apls.simic_rhythm",       "SimicRhythmAPL",                    "decks/simic_rhythm_standard.txt"),
+    "superiordoomsday":     ("apl.superior_doomsday_standard",   "SuperiorDoomsdayAPL",               "decks/superior_doomsday_standard.txt"),
+    "doomsday":             ("apl.superior_doomsday_standard",   "SuperiorDoomsdayAPL",               "decks/superior_doomsday_standard.txt"),
+    "simiccub":             ("apl.simic_cub_standard_match",     "SimicCubStandardMatchAPL",          "decks/simic_cub_standard.txt"),
 }
 
 
@@ -169,8 +216,9 @@ APL_REGISTRY = {
 # Maps deck keys to MatchAPL subclasses (opponent-aware, two-player games)
 MATCH_APL_REGISTRY = {
     "borosenergy":     ("apl.boros_energy_match",   "BorosEnergyMatchAPL"),
-    "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),
-    "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),
+    "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern
+    "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern alias
+    "izzetprowessstandard": ("apl.izzet_prowess_standard_match", "IzzetProwessStandardMatchAPL"),
     "domainzoo":       ("apl.domain_zoo_match",     "DomainZooMatchAPL"),
     "domain":          ("apl.domain_zoo_match",     "DomainZooMatchAPL"),
     "amulettitan":     ("apl.amulet_titan_match",   "AmuletTitanMatchAPL"),
@@ -239,6 +287,28 @@ MATCH_APL_REGISTRY = {
     "izzetspellementals":("apl.izzet_spellementals_standard_match","IzzetSpellementalsStandardMatchAPL"),
     "azoriusmomo":       ("apl.azorius_momo_standard_match",    "AzoriusMomoStandardMatchAPL"),
     "momo":              ("apl.azorius_momo_standard_match",    "AzoriusMomoStandardMatchAPL"),
+    # Azorius Blink (2026-05-04)
+    "azoriusblink":        ("apl.azorius_blink_standard_match",            "AzoriusBlinkStandardMatchAPL"),
+    "blink":               ("apl.azorius_blink_standard_match",            "AzoriusBlinkStandardMatchAPL"),
+    # ── Standard match APLs promoted from GoldfishAdapter (2026-05-04) ──────
+    "azoriusaggro":        ("apl.azorius_aggro_standard_match",            "AzoriusAggroStandardMatchAPL"),
+    "azoriustempo":        ("apl.azorius_tempo_standard_match",            "AzoriusTempoStandardMatchAPL"),
+    "dimirexcruciator":    ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
+    "excruciator":         ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
+    "fourcoloroverlords":  ("apl.experimental.four_color_overlords_standard_match", "FourColorOverlordsMatchAPL"),
+    "fourcoveroverlords":  ("apl.experimental.four_color_overlords_standard_match", "FourColorOverlordsMatchAPL"),
+    "izzetcontrol":        ("apl.izzet_control_standard_match",            "IzzetControlStandardMatchAPL"),
+    "izzetmaestro":        ("apl.izzet_maestro_standard_match",            "IzzetMaestroStandardMatchAPL"),
+    "maestro":             ("apl.izzet_maestro_standard_match",            "IzzetMaestroStandardMatchAPL"),
+    "monogreenaggro":      ("apl.mono_green_aggro_standard_match",         "MonoGreenAggroStandardMatchAPL"),
+    "roamingelementals":   ("apl.roaming_elementals_standard_match",       "RoamingElementalsStandardMatchAPL"),
+    "selesnyaouroboroid":  ("apl.selesnya_ouroboroid_standard_match",      "SelesnyaOuroboroidStandardMatchAPL"),
+    "ouroboroid":          ("apl.selesnya_ouroboroid_standard_match",      "SelesnyaOuroboroidStandardMatchAPL"),
+    "simicjackal":         ("apl.experimental.simic_jackal_standard_match","SimicJackalStandardMatchAPL"),
+    "simicrhythm":         ("apl.experimental.simic_rhythm_standard_match","SimicRhythmStandardMatchAPL"),
+    "superiordoomsday":    ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
+    "doomsday":            ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
+    "simiccub":            ("apl.simic_cub_standard_match",                "SimicCubStandardMatchAPL"),
 }
 
 

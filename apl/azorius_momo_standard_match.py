@@ -87,7 +87,7 @@ class AzoriusMomoStandardMatchAPL(MatchAPL):
                         gs._log(f"  Haliya ETB: gain 1 life (total {gs.life})")
                     # Cosmogrand Zenith: 2nd spell -> 2 Soldier tokens
                     elif name == ZENITH and spells_cast_this_main >= 2:
-                        from data.card import Card as _C
+                        from data.card import Card as _C  # noqa: F811
                         for _ in range(2):
                             tok = _C("Soldier Token", mana_cost=None, cmc=0,
                                      type_line="Token Creature -- Human Soldier")
@@ -97,6 +97,7 @@ class AzoriusMomoStandardMatchAPL(MatchAPL):
                         gs._log("  Cosmogrand Zenith: 2nd spell -> 2 Soldier tokens")
                     # Sage of the Skies: 2nd spell -> copy Sage
                     elif name == SAGE and spells_cast_this_main >= 2:
+                        from data.card import Card as _C
                         copy = _C("Sage of the Skies", mana_cost=c.mana_cost,
                                   cmc=getattr(c, 'cmc', 0), type_line=getattr(c, 'type_line', ''))
                         copy.power = getattr(c, 'power', '2')

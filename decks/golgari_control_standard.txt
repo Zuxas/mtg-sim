@@ -1,0 +1,35 @@
+// Golgari Control - aaronangeles (PT SOS 2026)
+4 Overgrown Tomb
+4 Starting Town
+4 Vibrance
+4 Wastewood Verge
+4 Deathcap Glade
+4 Deceit
+3 Cavern of Souls
+3 Ancient Cornucopia
+3 Requiting Hex
+3 Firdoch Core
+3 Unholy Annex // Ritual Chamber
+3 Professor Dellian Fel
+2 Swamp
+2 Bitter Triumph
+2 Wistfulness
+2 Shoot the Sheriff
+2 Emeritus of Abundance
+2 Withering Curse
+1 Forest
+1 Nowhere to Run
+1 Pit of Offerings
+1 Strategic Betrayal
+1 The Soul Stone
+1 Petrified Hamlet
+
+Sideboard
+4 Duress
+3 Torpor Orb
+3 Intimidation Tactics
+1 Soul-Guide Lantern
+1 Morlun, Devourer of Spiders
+1 Maelstrom Pulse
+1 Deadly Cover-Up
+1 Strategic Betrayal

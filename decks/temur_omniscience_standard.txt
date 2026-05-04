@@ -1,0 +1,39 @@
+// Temur Omniscience - aras ?eny?z (PT SOS 2026)
+4 Cavern of Souls
+4 Formidable Speaker
+4 Omniscience
+4 Ashling, Rekindled
+4 Kona, Rescue Beastie
+4 Uthros, Titanic Godcore
+4 Kavaron, Memorial World
+3 Breeding Pool
+3 Stock Up
+3 Winternight Stories
+3 Marang River Regent
+3 North Wind Avatar
+2 Spirebluff Canal
+2 Starting Town
+2 Multiversal Passage
+2 Stomping Ground
+2 Fire Magic
+1 Forest
+1 Riverpyre Verge
+1 Steam Vents
+1 Firebending Lesson
+1 Spider-Sense
+1 Spell Snare
+1 Bounce Off
+
+Sideboard
+2 Soul-Guide Lantern
+2 Abrade
+2 Spider-Sense
+1 Firebending Lesson
+1 Fire Magic
+1 Origin of Metalbending
+1 Voice of Victory
+1 Ill-Timed Explosion
+1 Marang River Regent
+1 Extinguisher Battleship
+1 Omni-Changeling
+1 Stormkeld Vanguard

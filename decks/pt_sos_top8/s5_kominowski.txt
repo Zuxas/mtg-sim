@@ -1,0 +1,33 @@
+// Seed 5: Maxx Kominowski - Izzet Spellementals (PT SOS 2026)
+5 Island
+4 Riverpyre Verge
+4 Spirebluff Canal
+4 Steam Vents
+4 Opt
+4 Sleight of Hand
+4 Sunderflock
+4 Eddymurk Crab
+4 Hearth Elemental
+4 Prismari Charm
+3 Burst Lightning
+3 Spell Snare
+3 Winternight Stories
+3 Flow State
+2 Multiversal Passage
+2 Impractical Joke
+1 Heroes' Hangout
+1 Spell Pierce
+1 Get Out
+
+Sideboard
+2 Ral, Crackling Wit
+2 Pit of Offerings
+2 Hydro-Man, Fluid Felon
+2 Hexing Squelcher
+1 Abrade
+1 Annul
+1 Ghost Vacuum
+1 Disdainful Stroke
+1 Get Out
+1 Broadside Barrage
+1 Skycrash

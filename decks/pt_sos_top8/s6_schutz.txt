@@ -1,0 +1,25 @@
+// Seed 6: Stefan Schutz - Mono Green Landfall (PT SOS 2026)
+13 Forest
+4 Llanowar Elves
+4 Badgermole Cub
+4 Fabled Passage
+4 Ba Sing Se
+4 Escape Tunnel
+4 Meltstrider's Resolve
+4 Icetill Explorer
+4 Sazh's Chocobo
+4 Esper Origins
+4 Earthbender Ascension
+3 Mightform Harmonizer
+2 Edge Rover
+1 Cavern of Souls
+1 Dragon Sniper
+
+Sideboard
+4 Mossborn Hydra
+3 Soul-Guide Lantern
+2 Pawpatch Formation
+2 Sapling Nursery
+2 Royal Treatment
+1 Cavern of Souls
+1 Mightform Harmonizer

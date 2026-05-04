@@ -1,131 +1,469 @@
 """
-apl/selesnya_landfall_standard_match.py — Selesnya Landfall (Standard, PT SOS 2026)
+apl/selesnya_landfall_standard_match.py -- Selesnya Landfall match APL (Standard / PT SOS 2026)
+
+Based on Christoffer Larsen / Nathan Steuer lists (Top 2, PT SOS 2026).
+PT WR: 63.81% overall. Beats Prowess 62.9%, Mono-Green 65.4%.
 
 Key engine:
-- Tifa Lockhart ({1}{G}): 2/2 trample, landfall doubles power until EoT
-- Sazh's Chocobo ({G}): 1/1, landfall puts +1/+1 counter
-- Mossborn Hydra ({2}{G}): trample, grows from counters
-- Earthbender Ascension ({2}{G}): ETB earthbend 2 + tutor basic land (free landfall trigger)
-- Llanowar Elves: T1 mana acceleration
-- Fabled Passage: fetchland for double landfall trigger
+  Badgermole Cub ({1}{G}): landfall +1/+1 counter — grows every turn, NEVER trade
+  Mightform Harmonizer ({2}{G}{G}): landfall doubles target creature's power until EoT
+  Erode ({W} instant): destroy any creature/PW, they get a basic land
+  Snakeskin Veil ({G} instant): +1/+1 counter + hexproof — counter their removal
+  Bushwhack ({G} sorcery, modal): "target creature +2/+2 + trample until EoT" in combat
+  Lumbering Worldwagon ({2}{G}): power = lands you control, fetches basics on ETB/attack
+  Surrak, Elusive Hunter ({2}{G}): uncounterable, trample, triggers on being targeted
+  Kutzil, Malamet Exemplar ({1}{G}{W}): opponents can't cast spells on your turn
+    → play Kutzil BEFORE Erode to lock out Snakeskin Veil responses
+
+Timing priorities:
+  1. Pre-combat: Erode their best blocker (or Kutzil if available → then Erode)
+  2. Attack with everyone EXCEPT Badgermole Cub into a profitable trade
+  3. Trigger Mightform Harmonizer: double the creature with most counters
+  4. Combat trick: Bushwhack (+2/+2 trample) to break a bad block
+  5. End step: nothing flash-worthy in main deck
+  6. Respond: Snakeskin Veil when they target our key creature
 """
-from data.card import Card, Tag
-from apl.match_apl import MatchAPL
+from data.card import Tag
+from apl.aware_match_apl import AwareMatchAPL, BLINK_BAIT
+from engine.game_state import GameState
 from engine.match_state import safe_power, safe_toughness
 
-TIFA       = "Tifa Lockhart"
-CHOCOBO    = "Sazh's Chocobo"
-HYDRA      = "Mossborn Hydra"
-ASCENSION  = "Earthbender Ascension"
-ELVES      = "Llanowar Elves"
-BADGERMOLE = "Badgermole Cub"
+BADGERMOLE   = "Badgermole Cub"
+HARMONIZER   = "Mightform Harmonizer"
+ELVES        = "Llanowar Elves"
+CHOCOBO      = "Sazh's Chocobo"
+ASCENSION    = "Earthbender Ascension"
+SURRAK       = "Surrak, Elusive Hunter"
+WORLDWAGON   = "Lumbering Worldwagon"
+ERODE        = "Erode"
+BUSHWHACK    = "Bushwhack"
+SNAKESKIN    = "Snakeskin Veil"
+KUTZIL       = "Kutzil, Malamet Exemplar"
+ESCAPE_TUNN  = "Escape Tunnel"
+BA_SING_SE   = "Ba Sing Se"
+FABLED_PASS  = "Fabled Passage"
+
+# Creatures we never want to trade (too much invested value)
+PROTECT_ALWAYS = {BADGERMOLE, HARMONIZER}
+
+# Fetch lands that trigger landfall when sacrificed — play these first
+FETCH_LANDS = {FABLED_PASS, ESCAPE_TUNN}
 
 
-class SelesnyaLandfallStandardMatchAPL(MatchAPL):
-    name = "Selesnya Landfall"
-    win_condition_damage = 20
-    max_turns = 10
+class SelesnyaLandfallStandardMatchAPL(AwareMatchAPL):
+    name        = "Selesnya Landfall"
+    ARCHETYPE   = "aggro"
+    COUNTER_COST  = 0         # no counters, tap out freely
+    COUNTER_CARDS = set()
+    FLASH_THREATS = set()     # no flash threats in main deck
+
+    # Erode is instant-speed removal — fired by _match_cast_removal and pre-combat
+    MATCH_REMOVAL = {
+        ERODE: ("W", None),   # destroys any creature or planeswalker
+    }
+    MATCH_WIPES        = set()
+    MATCH_EXILE        = set()          # Erode destroys, doesn't exile
+    MATCH_GRANTS_LAND  = {ERODE}       # Erode: opponent fetches a basic on resolution
+
+    # Protect these from being killed — use Snakeskin Veil or just hold them back
+    SB_PLANS = {
+        "aggro": (
+            ["3 Mossborn Hydra", "2 Snakeskin Veil"],
+            ["2 Lumbering Worldwagon", "2 Keen-Eyed Curator", "1 Icetill Explorer"],
+        ),
+        "control": (
+            ["3 Sheltered by Ghosts", "2 Snakeskin Veil", "1 Kutzil, Malamet Exemplar"],
+            ["2 Icetill Explorer", "1 Keen-Eyed Curator", "2 Earthbender Ascension", "1 Erode"],
+        ),
+        "combo": (
+            ["2 Snakeskin Veil", "2 Dyadrine, Synthesis Amalgam"],
+            ["2 Lumbering Worldwagon", "2 Icetill Explorer"],
+        ),
+        "tempo": (
+            ["2 Snakeskin Veil", "1 Kutzil, Malamet Exemplar", "3 Mossborn Hydra"],
+            ["2 Lumbering Worldwagon", "2 Icetill Explorer", "1 Keen-Eyed Curator", "1 Erode"],
+        ),
+        "ramp": (
+            ["3 Mossborn Hydra", "1 Restoration Magic"],
+            ["2 Lumbering Worldwagon", "2 Icetill Explorer"],
+        ),
+    }
+
+    # ------------------------------------------------------------------
+    # Mulligan / bottom
+    # ------------------------------------------------------------------
 
     def keep(self, hand, mulligans, on_play):
-        if len(hand) <= 4: return True
-        lands = sum(1 for c in hand if c.is_land())
-        threats = sum(1 for c in hand if c.name in (TIFA, CHOCOBO, HYDRA, ELVES))
-        if lands == 0: return False
-        if lands > 5: return False
-        if threats >= 1 and lands >= 2: return True
-        return mulligans >= 2
+        if len(hand) <= 4:
+            return True
+        lands   = sum(1 for c in hand if c.is_land())
+        threats = sum(1 for c in hand if c.name in {BADGERMOLE, CHOCOBO, ELVES})
+        if lands == 0 or lands > 5:
+            return False
+        return (threats >= 1 and lands >= 2) or mulligans >= 2
 
     def bottom(self, hand, n):
-        lands = sorted([c for c in hand if c.is_land()], key=lambda c: c.name)
+        lands  = sorted([c for c in hand if c.is_land()], key=lambda c: c.name)
         spells = sorted([c for c in hand if not c.is_land()],
                         key=lambda c: -getattr(c, 'cmc', 0))
         return (lands[4:] + spells)[:n]
 
-    def main_phase(self, gs): self.main_phase_match(gs, None)
+    # ------------------------------------------------------------------
+    # Land play — fetch lands first for double landfall
+    # ------------------------------------------------------------------
 
-    def main_phase_match(self, gs, opponent):
-        self._play_land_if_able(gs)
+    def reserve_mana(self, gs, opponent):
+        """Hold 1 land for Erode when we have it in hand."""
+        has_erode = any(c.name == ERODE for c in gs.zones.hand)
+        gs.mana_reserve = 1 if has_erode else 0
+
+    def _play_best_land(self, gs):
+        lands = [c for c in gs.zones.hand if c.is_land()]
+        if not lands or gs.land_played:
+            return
+        # Prefer fetch lands: they trigger landfall twice
+        # (once when they enter, once when the fetched basic enters)
+        fetches = [c for c in lands if c.name in FETCH_LANDS]
+        basics  = [c for c in lands if c.name not in FETCH_LANDS]
+        land = (fetches or basics)[0]
+        gs.play_land(land)
+        self._fire_landfall_triggers(gs)   # trigger 1: land enters
+
+        # Fabled Passage / Escape Tunnel — sac to fetch a basic (trigger 2)
+        if land.name in FETCH_LANDS and land in gs.zones.battlefield:
+            gs.zones.battlefield.remove(land)
+            gs.zones.graveyard.append(land)
+            # Find a basic to fetch
+            basics_in_lib = [c for c in gs.zones.library if c.is_land()
+                             and c.name not in FETCH_LANDS]
+            if basics_in_lib:
+                fetched = basics_in_lib[0]
+                gs.zones.library.remove(fetched)
+                gs.zones.battlefield.append(fetched)
+                fetched.tapped = True
+                fetched.turn_entered = gs.turn
+                self._fire_landfall_triggers(gs)   # trigger 2: basic enters
+                gs._log(f"  {land.name}: sac → fetch {fetched.name} (2nd landfall)")
+
+    def _fire_landfall_triggers(self, gs):
+        """Apply landfall ETB effects for Badgermole Cub and Harmonizer."""
+        for c in gs.zones.battlefield:
+            if c.name == BADGERMOLE:
+                try:
+                    p = int(c.power) + 1
+                    t = int(c.toughness) + 1
+                    c.power     = str(p)
+                    c.toughness = str(t)
+                except (ValueError, TypeError):
+                    pass
+            elif c.name == HARMONIZER:
+                # Doubles the creature with the most counters / highest power
+                creatures = [x for x in gs.zones.battlefield
+                             if x.has(Tag.CREATURE) and x is not c and not x.is_land()]
+                if creatures:
+                    target = max(creatures, key=lambda x: (
+                        getattr(x, 'counters', 0), safe_power(x)))
+                    try:
+                        target.power = str(int(target.power) * 2)
+                    except (ValueError, TypeError):
+                        pass
+
+    # ------------------------------------------------------------------
+    # Main phase
+    # ------------------------------------------------------------------
+
+    def main_phase_match(self, gs: GameState, opponent: GameState):
+        self._opp_gs = opponent
+        self._play_best_land(gs)
         gs.tap_lands()
 
-        # Deploy threats cheapest first — Chocobo/Elves T1, Tifa T2, Hydra/Ascension T3
+        # If Kutzil is in hand and we have enough mana, play it BEFORE Erode
+        # so opponent can't respond with Snakeskin Veil to our removal
+        for card in list(gs.zones.hand):
+            if card.name == KUTZIL:
+                if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    gs._log("  Kutzil: opponents locked out of spells this turn")
+                    break
+
+        # Erode their best threat pre-combat (fires standard removal logic)
+        self._match_cast_removal(gs, opponent)
+
+        # Deploy curve cheapest-first — prioritize Elves T1, Badgermole/Chocobo T2
         changed = True
-        attempts = 0
-        while changed and attempts < 10:
-            changed = False; attempts += 1
+        while changed:
+            changed = False
             castable = [c for c in gs.zones.hand
-                        if c.has(Tag.CREATURE) and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
+                        if c.has(Tag.CREATURE)
+                        and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
             if castable:
                 spell = min(castable, key=lambda c: getattr(c, 'cmc', 0))
                 if gs.cast_spell(spell):
-                    # Earthbender Ascension ETB: earthbend + tutor basic = extra land drop
                     if spell.name == ASCENSION:
-                        basics = [x for x in gs.zones.library if x.is_land()]
+                        # Earthbender Ascension ETB: tutor + play a basic = extra landfall
+                        basics = [x for x in gs.zones.library if x.is_land()
+                                  and x.name not in FETCH_LANDS]
                         if basics:
                             land = basics[0]
                             gs.zones.library.remove(land)
                             gs.zones.battlefield.append(land)
                             land.turn_entered = gs.turn
-                            self._trigger_landfall(gs)
-                            gs._log(f"  Earthbender Ascension: earthbend + tutor {land.name}")
+                            self._fire_landfall_triggers(gs)
                     changed = True
+
+        # Cast non-creature spells (Bushwhack in ramp mode to find land)
+        for card in list(gs.zones.hand):
+            if not card.is_land() and not card.has(Tag.CREATURE):
+                if card.name == BUSHWHACK:
+                    # Use ramp mode pre-combat (save +2/+2 for combat trick)
+                    # Only use land-fetch mode if we're land-light
+                    my_lands = sum(1 for c in gs.zones.battlefield if c.is_land())
+                    if my_lands <= 3:
+                        if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                            gs.cast_spell(card)
+                elif gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+
+        # Ba Sing Se earthbend: {2}{G}{T} (sorcery speed) exiles and returns
+        # 2 lands — each re-entry triggers landfall. Use AFTER threats are deployed
+        # so we have creatures to pump with Mightform Harmonizer.
+        harmonizer_up = any(c.name == HARMONIZER for c in gs.zones.battlefield
+                            if not c.is_land())
+        if harmonizer_up:
+            ba_sing = next((c for c in gs.zones.battlefield
+                            if c.name == BA_SING_SE
+                            and not getattr(c, 'tapped', False)), None)
+            if ba_sing and gs.mana_pool.total() >= 3:
+                # Pay {2}{G} for earthbend activation — deduct from pool
+                gs.mana_pool.pay("2G", 3)
+                ba_sing.tapped = True
+                earthbend_targets = [c for c in gs.zones.battlefield
+                                     if c.is_land() and c is not ba_sing][:2]
+                for land in earthbend_targets:
+                    # Exile and immediately return tapped — triggers landfall
+                    gs.zones.battlefield.remove(land)
+                    gs.zones.battlefield.append(land)
+                    land.tapped = True
+                    self._fire_landfall_triggers(gs)
+                    gs._log(f"  Ba Sing Se earthbend: {land.name} re-enters (landfall)")
+
+    def main_phase(self, gs):
+        self.main_phase_match(gs, None)
+
+    # ------------------------------------------------------------------
+    # Declare attackers — protect Badgermole Cub from bad trades
+    # ------------------------------------------------------------------
+
+    def declare_attackers(self, gs: GameState, opponent: GameState) -> list:
+        self._fire_landfall_triggers(gs)   # Mightform Harmonizer doubling on attack
+
+        eligible = [c for c in gs.zones.battlefield
+                    if not c.is_land()
+                    and c.has(Tag.CREATURE)
+                    and not getattr(c, 'summoning_sickness', False)
+                    and not getattr(c, 'tapped', False)]
+
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if not c.is_land()
+                         and c.has(Tag.CREATURE)
+                         and not getattr(c, 'tapped', False)]
+
+        # No blockers → attack with everything
+        if not opp_creatures:
+            return eligible
+
+        attackers = []
+        for atk in eligible:
+            atk_p = safe_power(atk)
+            atk_t = safe_toughness(atk)
+
+            # Find their best blocker for this attacker
+            best_blk = None
+            for blk in opp_creatures:
+                if best_blk is None or safe_power(blk) > safe_power(best_blk):
+                    best_blk = blk
+
+            if best_blk is None:
+                attackers.append(atk)
+                continue
+
+            blk_p = safe_power(best_blk)
+            blk_t = safe_toughness(best_blk)
+
+            if blk_p < atk_t:
+                # We survive the block → always attack
+                attackers.append(atk)
+            elif atk_p >= blk_t:
+                # Trade: both die
+                if atk.name in PROTECT_ALWAYS:
+                    # Never trade Badgermole Cub or Mightform Harmonizer —
+                    # their cumulative value (counters / doubling engine) is
+                    # worth more than removing one blocker
+                    pass
                 else:
-                    break
+                    # Trade is fine if their creature costs more
+                    if self._trade_value(atk, best_blk) >= 0:
+                        attackers.append(atk)
+            else:
+                # Dies alone — only push through if we're way behind
+                opp_dmg = self._opp_damage_dealt()
+                my_dmg  = getattr(gs, "damage_dealt", 0)
+                if opp_dmg > my_dmg + 8:
+                    attackers.append(atk)
 
-        # Cast enchantments/other spells
-        for c in list(gs.zones.hand):
-            if not c.is_land() and not c.has(Tag.CREATURE):
-                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
+        return attackers
 
-    def _trigger_landfall(self, gs):
-        """Apply landfall triggers when a land enters."""
-        for c in gs.zones.battlefield:
-            if c.name == TIFA:
-                # Tifa doubles power until EoT (simulate as +power each land)
+    # ------------------------------------------------------------------
+    # Combat trick: Bushwhack (+2/+2 + trample) to save an attacker
+    # or push lethal through
+    # ------------------------------------------------------------------
+
+    def combat_trick(self, gs: GameState, opponent: GameState,
+                     attackers: list, blocker_assignments: dict):
+        assign_map = {id(k): v for k, v in blocker_assignments.items()} \
+                     if blocker_assignments else {}
+
+        # --- Trick 1: Escape Tunnel sac → landfall → Mightform Harmonizer doubles ---
+        # Escape Tunnel: sac to fetch a basic (instant speed, no restriction).
+        # The fetched basic enters tapped, triggering landfall.
+        # If Mightform Harmonizer is in play, this doubles an attacker's power
+        # AFTER blockers are declared — opponent can't respond.
+        harmonizer = next((c for c in gs.zones.battlefield
+                           if c.name == HARMONIZER and not c.is_land()), None)
+        tunnel = next((c for c in gs.zones.battlefield
+                       if c.name == ESCAPE_TUNN), None)
+        if harmonizer and tunnel and attackers:
+            # Find the attacker with the most power (best doubling target)
+            target_atk = max(attackers, key=lambda c: safe_power(c))
+            # Sac Escape Tunnel → fetch basic → landfall
+            gs.zones.battlefield.remove(tunnel)
+            gs.zones.graveyard.append(tunnel)
+            basics = [c for c in gs.zones.library if c.is_land()]
+            if basics:
+                new_land = basics[0]
+                gs.zones.library.remove(new_land)
+                gs.zones.battlefield.append(new_land)
+                new_land.tapped     = True
+                new_land.turn_entered = gs.turn
+                # Landfall: Badgermole Cub gets counter + Harmonizer fires
+                self._fire_landfall_triggers(gs)
+                # Harmonizer's doubling targets the chosen attacker
                 try:
-                    c.power = str(int(c.power) * 2)
+                    target_atk.power = str(int(target_atk.power) * 2)
                 except (ValueError, TypeError):
                     pass
-            elif c.name == CHOCOBO:
-                # +1/+1 counter
-                try:
-                    c.power = str(int(c.power) + 1)
-                    c.toughness = str(int(c.toughness) + 1)
-                except (ValueError, TypeError):
-                    pass
+                gs._log(f"  Escape Tunnel -> landfall -> Harmonizer doubles "
+                        f"{target_atk.name} to {target_atk.power} power!")
+            return  # used our trick
 
-    def declare_attackers(self, gs, opponent):
-        # Trigger Tifa doubling on the land we played this turn
-        self._trigger_landfall(gs)
-        return [c for c in gs.zones.battlefield
-                if not c.is_land() and c.has(Tag.CREATURE)
-                and not getattr(c, 'summoning_sickness', False)
-                and not getattr(c, 'tapped', False)]
+        # --- Trick 2: Bushwhack +2/+2 trample to save a dying attacker ---
+        for atk in attackers:
+            blks = assign_map.get(id(atk), [])
+            if not blks:
+                continue
+            total_blk_p = sum(safe_power(b) for b in blks)
+            atk_t       = safe_toughness(atk)
 
-    def declare_blockers(self, gs, opp, attackers):
-        assignments = {}
-        if not attackers: return assignments
-        blockers = [c for c in gs.zones.battlefield
-                    if c.has(Tag.CREATURE) and not c.is_land()
-                    and not getattr(c, 'tapped', False)
-                    and safe_toughness(c) >= 3]
-        if blockers:
-            biggest = max(attackers, key=lambda c: safe_power(c))
-            if safe_power(biggest) >= 3:
-                assignments[id(biggest)] = [blockers[0]]
-        return assignments
+            if total_blk_p >= atk_t:
+                for card in list(gs.zones.hand):
+                    if card.name == BUSHWHACK:
+                        if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                            gs.mana_pool.pay(card.mana_cost, card.cmc)
+                            gs.zones.hand.remove(card)
+                            gs.zones.graveyard.append(card)
+                            try:
+                                atk.power     = str(int(atk.power) + 2)
+                                atk.toughness = str(int(atk.toughness) + 2)
+                            except (ValueError, TypeError):
+                                pass
+                            gs._log(f"  Bushwhack: +2/+2 trample on {atk.name}")
+                            return
 
-    def respond_to_spell(self, gs, opponent, spell): return None
-    def end_step_actions(self, gs, opponent): pass
+        # --- Trick 3: Snakeskin Veil as pump to save a dying attacker ---
+        for atk in attackers:
+            blks = assign_map.get(id(atk), [])
+            if not blks:
+                continue
+            total_blk_p = sum(safe_power(b) for b in blks)
+            atk_t       = safe_toughness(atk)
+            if total_blk_p >= atk_t and atk.name in PROTECT_ALWAYS:
+                veil = next((c for c in gs.zones.hand if c.name == SNAKESKIN), None)
+                if veil and gs.mana_pool.can_cast(veil.mana_cost, veil.cmc):
+                    gs.mana_pool.pay(veil.mana_cost, veil.cmc)
+                    gs.zones.hand.remove(veil)
+                    gs.zones.graveyard.append(veil)
+                    try:
+                        atk.power     = str(int(atk.power) + 1)
+                        atk.toughness = str(int(atk.toughness) + 1)
+                    except (ValueError, TypeError):
+                        pass
+                    gs._log(f"  Snakeskin Veil: +1/+1 hexproof on {atk.name}")
+                    return
 
-    def _play_land_if_able(self, gs):
-        lands = [c for c in gs.zones.hand if c.is_land()]
-        if not lands or gs.land_played: return
-        def score(c):
-            n = (c.name or '').lower()
-            if 'passage' in n or 'tunnel' in n: return 0
-            if 'forest' in n or 'plains' in n: return 1
-            return 3
-        land = min(lands, key=score)
-        gs.play_land(land)
-        self._trigger_landfall(gs)
+    # ------------------------------------------------------------------
+    # Respond to removal with Snakeskin Veil on our key creature
+    # ------------------------------------------------------------------
+
+    def respond_to_spell(self, gs: GameState, opponent: GameState, spell):
+        """
+        When opponent casts removal, protect our most valuable creature
+        with Snakeskin Veil (+1/+1 + hexproof).
+        'Most valuable' = Badgermole Cub (most counters) or Harmonizer.
+        """
+        from engine.stack import classify_card, InteractionType
+        if spell:
+            itype = classify_card(spell)
+            if itype not in (InteractionType.REMOVAL, InteractionType.BURN):
+                return None  # not targeting our creatures
+
+        # Find Snakeskin Veil in hand
+        veil = next((c for c in gs.zones.hand if c.name == SNAKESKIN), None)
+        if veil and gs.mana_pool.can_cast(veil.mana_cost, veil.cmc):
+            # Find our most valuable target (Badgermole Cub first)
+            my_creatures = [c for c in gs.zones.battlefield
+                            if c.has(Tag.CREATURE) and not c.is_land()]
+            if not my_creatures:
+                return None
+            # Priority: protect Badgermole Cub, then Harmonizer, then biggest
+            for name in (BADGERMOLE, HARMONIZER):
+                if any(c.name == name for c in my_creatures):
+                    return veil
+            # Fallback: protect our biggest creature
+            return veil
+
+        return None
+
+    # ------------------------------------------------------------------
+    # Pre-combat priority: Erode their best blocker before combat
+    # (inherited from AwareMatchAPL via _kill_with_removal)
+    # ------------------------------------------------------------------
+
+    def pre_combat_instant(self, gs: GameState, opponent: GameState):
+        """Erode their largest creature before it can block."""
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
+        if not opp_creatures:
+            return
+
+        # Kill their biggest blocker to clear the path
+        target = max(opp_creatures, key=lambda c: safe_power(c))
+        if safe_power(target) >= 2:
+            if self._kill_with_removal(gs, opponent, target, prefer_exile=False):
+                gs._log(f"  [pre-combat] Erode kills {target.name}")
+
+    # ------------------------------------------------------------------
+    # Trigger ordering: Mightform Harmonizer doubles most-countered creature
+    # ------------------------------------------------------------------
+
+    def order_triggers(self, gs: GameState, triggers: list) -> list:
+        """
+        When Mightform Harmonizer and Badgermole Cub both trigger on land drop,
+        resolve Badgermole Cub's counter first (so Harmonizer doubles the
+        already-incremented power).
+        """
+        def trigger_priority(t):
+            name = getattr(t, 'source_name', '') or ''
+            if BADGERMOLE in name:    return 0   # counter first
+            if HARMONIZER in name:    return 1   # doubling second
+            return 2
+        return sorted(triggers, key=trigger_priority)

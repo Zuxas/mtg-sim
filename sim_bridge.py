@@ -100,6 +100,36 @@ ARCHETYPE_CLOCKS = {
     "eldrazi ramp":       {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0},   # Tron variant T5-6
     "eldraziramp":        {3: 5.0, 4: 20.0, 5: 35.0, 6: 25.0, 7: 10.0, 8: 5.0},
     "unknown":            {4: 5.0, 5: 20.0, 6: 35.0, 7: 25.0, 8: 10.0, 9: 5.0},
+    # ── Standard field clocks (PT SOS 2026 — measured 2026-05-04, 500 games on play) ─
+    # These override the Modern/generic entries above for Standard gauntlet accuracy.
+    "izzetprowess":        {4: 0.2, 5: 12.6, 6: 29.6, 7: 20.0, 8: 16.4, 9: 9.8, 10: 6.4},   # avg T7.00
+    "izzetprowessstandard":{4: 0.2, 5: 12.6, 6: 29.6, 7: 20.0, 8: 16.4, 9: 9.8, 10: 6.4},   # alias
+    "monogreenlandfall":   {4: 4.2, 5: 42.2, 6: 32.8, 7: 16.6, 8: 2.6,  9: 1.2, 10: 0.4},   # avg T5.76
+    "izzetspellementals":  {4: 0.2, 5: 3.2,  6: 9.8,  7: 18.0, 8: 16.8, 9: 20.0, 10: 14.2}, # avg T8.00
+    "golgarimidrange":     {5: 15.2, 6: 35.2, 7: 24.4, 8: 11.2, 9: 7.8, 10: 3.0, 11: 1.8},  # avg T6.83
+    "golgari":             {5: 15.2, 6: 35.2, 7: 24.4, 8: 11.2, 9: 7.8, 10: 3.0, 11: 1.8},  # alias
+    "izzetlessons":        {5: 0.2, 6: 1.8, 7: 5.6, 8: 13.0, 9: 17.0, 10: 16.0, 11: 12.6},  # avg T9.92
+    "izzetlesson":         {5: 0.2, 6: 1.8, 7: 5.6, 8: 13.0, 9: 17.0, 10: 16.0, 11: 12.6},  # alias
+    "azoriusmomo":         {3: 0.2, 4: 8.0, 5: 26.6, 6: 31.4, 7: 22.0, 8: 6.8, 9: 2.4},     # avg T6.11
+    "momo":                {3: 0.2, 4: 8.0, 5: 26.6, 6: 31.4, 7: 22.0, 8: 6.8, 9: 2.4},     # alias
+    "azoriusblink":        {4: 0.6, 5: 15.2, 6: 50.6, 7: 23.6, 8: 8.0, 9: 1.4, 10: 0.4},    # avg T6.30
+    "azoriustempo":        {4: 3.8, 5: 25.8, 6: 43.8, 7: 16.4, 8: 6.6, 9: 3.0, 10: 0.6},    # avg T6.08
+    "izzetmaestro":        {4: 9.6, 5: 48.2, 6: 21.8, 7: 9.2,  8: 3.6, 9: 3.8, 10: 1.0},    # avg T5.80
+    "selesnyalandfall":    {4: 1.8, 5: 32.2, 6: 34.0, 7: 20.2, 8: 6.6, 9: 3.0, 10: 1.4},    # avg T6.16
+    "selesnyaouroboroid":  {4: 3.0, 5: 47.0, 6: 37.0, 7: 8.2,  8: 3.2, 9: 1.0, 10: 0.4},    # avg T5.66
+    "azoriusomniscience":  {4: 1.2, 5: 22.2, 6: 42.4, 7: 19.6, 8: 8.6, 9: 3.8, 10: 0.8},   # avg T6.34
+    "dimirexcruciator":    {7: 7.6, 8: 28.4, 9: 25.4, 10: 14.2, 11: 8.6, 12: 6.6, 13: 3.4}, # avg T9.45
+    # Sultai Reanimator: goldfish APL can't model the reanimate-Atraxa combo;
+    # hand-tune to reanimator profile (T2-4 kills when the combo assembles).
+    "sultaireanimator":    {2: 8.0, 3: 30.0, 4: 35.0, 5: 18.0, 6: 7.0, 7: 2.0},             # hand-tuned
+    # Jeskai Control: ManaPool.available error skips sim; use slow control proxy.
+    "jeskaicontrol":       {5: 8.0, 6: 18.0, 7: 28.0, 8: 25.0, 9: 14.0, 10: 7.0},           # hand-tuned
+    "mardudiscard":        {5: 15.0, 6: 44.0, 7: 22.7, 8: 11.3, 9: 3.7, 10: 1.7},            # measured T6.49
+    "rakdosdiscard":       {5: 6.0, 6: 28.3, 7: 36.3, 8: 12.7, 9: 8.3, 10: 4.3},             # measured T7.02
+    "borosdiscard":        {5: 8.7, 6: 36.7, 7: 35.3, 8: 10.7, 9: 6.0, 10: 1.0},             # measured T6.71
+    "sultaicontrol":       {7: 2.7, 8: 17.3, 9: 17.3, 10: 18.0, 11: 16.7, 12: 9.3},          # measured T10.19
+    # Dimir Excruciator: slow midrange/control (GenericAPL stub)
+    "dimirmidrangestd":    {7: 7.6, 8: 28.4, 9: 25.4, 10: 14.2, 11: 8.6, 12: 6.6, 13: 3.4}, # alias
 }
 
 APL_REGISTRY = {}

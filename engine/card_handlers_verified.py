@@ -32090,6 +32090,308 @@ def _specimen_freighter_etb(gs, card):
         gs._log(f"  Specimen Freighter ETB: bounce {len(threats[:2])} opp creatures")
 
 
+# ── TMT batch (Teenage Mutant Ninja Turtles) ──────────────────────────
+
+def _don_raph_etb(gs, card):
+    """Don & Raph, Hard Science -- Menace. 'When attacks, next noncreature spell has affinity.'
+    ETB proxy: menace + +1 mana (affinity cost savings)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Don & Raph ETB: menace + affinity-spell attack trigger (+1 mana proxy)")
+
+def _turncoat_kunoichi_etb(gs, card):
+    """Turncoat Kunoichi -- Sneak {2}{W}{B}: return unblocked attacker. Standard body.
+    ETB proxy: sneak-enter creature body."""
+    gs._log("  Turncoat Kunoichi ETB: sneak body registered")
+
+def _zoo_escapees_etb(gs, card):
+    """Zoo Escapees -- 'When leaves battlefield, create Mutagen token.'
+    ETB proxy: create Mutagen (+1 mana on entry)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Zoo Escapees ETB: leave-BF Mutagen trigger (+1 mana proxy)")
+
+def _april_etb(gs, card):
+    """April, Reporter of the Weird -- 'When deals combat damage, draw N then discard 1.'
+    ETB proxy: draw 1 (combat-damage loot)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  April ETB: combat-damage draw N discard 1 (draw 1 proxy)")
+
+def _genghis_frog_etb(gs, card):
+    """Genghis Frog -- Trample. 'When Mutant enters, create Mutagen token.'
+    ETB proxy: trample + create Mutagen (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Genghis Frog ETB: trample + Mutant-enter Mutagen trigger (+1 mana proxy)")
+
+def _henchbots_etb(gs, card):
+    """Henchbots -- 'ETB: exile target tapped opp creature until this leaves.'
+    ETB proxy: exile opp's biggest tapped creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE) and getattr(c,'tapped',False)]
+        if not threats:  # if none tapped, take biggest
+            threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Henchbots ETB: exile {target.name} until this leaves")
+
+def _foot_mystic_etb(gs, card):
+    """Foot Mystic -- Lifelink. Disappear: if perm left BF this turn, special effect.
+    ETB proxy: lifelink + Disappear trigger registered."""
+    gs._log("  Foot Mystic ETB: lifelink + Disappear trigger active")
+
+def _lita_etb(gs, card):
+    """Lita, Little Orphan Amphibian -- Alliance: when another creature enters, choose effect.
+    ETB proxy: draw 1 (Alliance trigger on ETB)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Lita ETB: Alliance trigger (draw 1 proxy)")
+
+def _ninja_teen_etb(gs, card):
+    """Ninja Teen -- Level-up creature. 'When creature leaves, effect.'
+    ETB proxy: level 1 body registered."""
+    gs._log("  Ninja Teen ETB: level-up body registered")
+
+def _lord_dregg_etb(gs, card):
+    """Lord Dregg, Insect Invader -- Flying. Disappear: end step if perm left: opp sacrifices perm.
+    ETB proxy: flying + Disappear trigger active."""
+    gs._log("  Lord Dregg ETB: flying + Disappear-sac trigger active")
+
+def _wingnut_etb(gs, card):
+    """Wingnut, Bat on the Belfry -- Alliance: when another creature enters, gains flying/death touch.
+    ETB proxy: Alliance trigger +1/+1 proxy."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Wingnut ETB: Alliance flying/deathtouch grant (+1 proxy)")
+
+def _insectoid_exterminator_etb(gs, card):
+    """Insectoid Exterminator -- Flying. Disappear: end step effect.
+    ETB proxy: flying + Disappear trigger active."""
+    gs._log("  Insectoid Exterminator ETB: flying + Disappear trigger active")
+
+def _chrome_dome_etb(gs, card):
+    """Chrome Dome -- 'Other artifact creatures +1/+0. {5}: create copy token.'
+    ETB proxy: +1 to all our creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Chrome Dome ETB: artifact-tribal +1/+0 to all creatures")
+
+def _weather_maker_etb(gs, card):
+    """Weather Maker -- 'Landfall: put charge counter. {T}: act on counters.'
+    ETB proxy: +1 mana (landfall mana engine)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Weather Maker ETB: Landfall charge-counter engine (+1 mana proxy)")
+
+def _raph_leo_etb(gs, card):
+    """Raph & Leo, Sibling Rivals -- 'When attacks (first combat), untap 1-2 tapped things.'
+    ETB proxy: untap 2 lands (mana ramp)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Raph & Leo ETB: attack untap 1-2 tapped (+2 mana proxy)")
+
+def _michelangelo_game_master_etb(gs, card):
+    """Michelangelo, Game Master -- Disappear: end step if perm left, draw 1.
+    ETB proxy: draw 1 (Disappear trigger proxy)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Michelangelo Game Master ETB: Disappear draw 1 proxy")
+
+def _shredder_unrelenting_etb(gs, card):
+    """Shredder, Unrelenting -- Sneak {3}{B}: return unblocked attacker. Large body.
+    ETB proxy: sneak large body."""
+    gs._log("  Shredder ETB: sneak body registered")
+
+def _ray_fillet_etb(gs, card):
+    """Ray Fillet, Man Ray -- Flying. 'ETB: create Mutagen token.'
+    ETB proxy: flying + Mutagen (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Ray Fillet ETB: flying + create Mutagen (+1 mana proxy)")
+
+def _novel_nunchaku_etb(gs, card):
+    """Novel Nunchaku -- Equipment. 'ETB: attach to target. Equipped gets +1/+1.'
+    ETB proxy: +1 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Novel Nunchaku ETB: equip +1/+1 proxy to best creature")
+
+def _ragamuffin_raptor_etb(gs, card):
+    """Ragamuffin Raptor -- 'ETB: return target creature or Food from GY to hand.'
+    ETB proxy: return best GY creature to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Ragamuffin Raptor ETB: return {best.name} from GY")
+
+def _karai_etb(gs, card):
+    """Karai, Future of the Foot -- Sneak {2}{W}{B}: return unblocked attacker.
+    ETB proxy: sneak body."""
+    gs._log("  Karai ETB: sneak body registered")
+
+def _madame_null_etb(gs, card):
+    """Madame Null, Power Broker -- Deathtouch. 'When another enters, may pay life = its power: draw.'
+    ETB proxy: deathtouch + pay-life-draw trigger registered."""
+    gs._log("  Madame Null ETB: deathtouch + enter-life-draw trigger active")
+
+def _venus_etb(gs, card):
+    """Venus, Torn Between Worlds -- 'When dealt damage, put that many +1/+1 counters on her.'
+    ETB proxy: +2 counters (combat damage proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Venus ETB: damage-pump trigger (+2 proxy)")
+
+def _bebop_rocksteady_etb(gs, card):
+    """Bebop & Rocksteady -- 'When attacks/blocks, sac permanent unless discard card.'
+    ETB proxy: aggressive body (discard to keep permanents)."""
+    gs._log("  Bebop & Rocksteady ETB: sac-or-discard attack/block trigger active")
+
+def _return_sewers_spell(gs, card):
+    """Return to the Sewers -- {3}{U} Instant. 'Target creature's owner puts it top or bottom.'
+    Model: opp puts their best creature on bottom of library."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.library.append(target)
+            gs._log(f"  Return to the Sewers: {target.name} to bottom of library")
+
+def _rat_king_etb(gs, card):
+    """Rat King, Verminister -- Disappear: end step if perm left, draw 1.
+    ETB proxy: draw 1 (Disappear draw trigger)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Rat King ETB: Disappear draw 1 proxy")
+
+def _crustacean_commando_etb(gs, card):
+    """Crustacean Commando -- 'ETB: create Mutagen token.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Crustacean Commando ETB: create Mutagen (+1 mana proxy)")
+
+def _donatello_gadget_master_etb(gs, card):
+    """Donatello, Gadget Master -- Sneak {1}{U}: return unblocked attacker.
+    ETB proxy: sneak body + draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Donatello Gadget Master ETB: sneak + on-enter draw 1")
+
+def _shredders_armor_etb(gs, card):
+    """Shredder's Armor -- Equipment. 'ETB: attach to target. Equipped +2/+1.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Shredder's Armor ETB: equip +2/+1 to best creature")
+
+def _oroku_saki_etb(gs, card):
+    """Oroku Saki, Shredder Rising -- Sneak {1}{B}: return unblocked attacker.
+    ETB proxy: sneak body."""
+    gs._log("  Oroku Saki ETB: sneak body registered")
+
+def _zog_etb(gs, card):
+    """Zog, Triceraton Castaway -- Reach, trample. 'ETB: target creature can't block this turn.'
+    ETB proxy: reach trample + prevent blocking opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True  # can't block proxy (tapped = won't block)
+            gs._log(f"  Zog ETB: reach trample + {target.name} can't block this turn")
+
+def _punk_frogs_etb(gs, card):
+    """Punk Frogs -- Ward {3}. No immediate ETB effect."""
+    gs._log("  Punk Frogs ETB: ward 3 body")
+
+def _last_ronin_etb(gs, card):
+    """The Last Ronin -- Saga (III). Various effects per chapter.
+    ETB proxy: draw 2 (saga value engine)."""
+    for _ in range(2):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  The Last Ronin ETB: Saga draw 2 proxy")
+
+def _koya_etb(gs, card):
+    """Koya, Death from Above -- Flying. 'ETB: exile target creature; returns next upkeep.'
+    ETB proxy: exile opp's best creature until next upkeep."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Koya ETB: flying + exile {target.name} (returns next upkeep)")
+
+def _quintessential_katana_etb(gs, card):
+    """Quintessential Katana -- Equipment. 'Equipped +1/+1. On combat damage: untap equipped.'
+    ETB proxy: +1 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Quintessential Katana ETB: +1/+1 equip + combat untap trigger")
+
+def _pain_101_spell(gs, card):
+    """Pain 101 -- {2}{B}{G} Instant. 'Target creature gets deathtouch + dies: return to hand.'
+    Model: give our best creature deathtouch + death recursion."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.tags.add(Tag.DEATHTOUCH)
+        gs._log(f"  Pain 101: {best.name} gets deathtouch + death-recursion until EOT")
+
+def _raphael_attitude_etb(gs, card):
+    """Raphael, Most Attitude -- Menace. Alliance: when another creature enters, +1/+1 on Raphael.
+    ETB proxy: +2 (Alliance triggered 2x proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Raphael Most Attitude ETB: menace + Alliance +2 pump proxy")
+
+def _slithering_cryptid_etb(gs, card):
+    """Slithering Cryptid -- 'ETB: create Mutagen token.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Slithering Cryptid ETB: create Mutagen (+1 mana proxy)")
+
+def _donatello_mechanic_etb(gs, card):
+    """Donatello, Mutant Mechanic -- '{T}: Put 3 +1/+1 on target artifact. If not creature, becomes 1/1.'
+    ETB proxy: +3 to our best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Donatello Mutant Mechanic ETB: {T} artifact-pump (+3 to best proxy)")
+
+def _mondo_gecko_etb(gs, card):
+    """Mondo Gecko -- '{1}, Discard: becomes color and gains keyword until EOT.'
+    ETB proxy: loot trigger (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Mondo Gecko ETB: discard-color-keyword (loot draw 1 proxy)")
+
+def _michelangelo_mutant_bff_etb(gs, card):
+    """Michelangelo, Mutant BFF -- 'Counter-creatures can't be blocked by more than 1 creature.'
+    ETB proxy: evasion static active."""
+    gs._log("  Michelangelo Mutant BFF ETB: counter-creature evasion static active")
+
+
 def _graduation_day_etb(gs, card):
     """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
     targets a creature, +1/+1 to each creature you control.'
@@ -32311,6 +32613,9 @@ _SPELL_HANDLERS.update({
     "Cathartic Parting":       _cathartic_parting_spell,
     "Trial of Agony":          _trial_of_agony_spell,
     "Horrid Vigor":            _horrid_vigor_spell,
+    # TMT spells
+    "Return to the Sewers":    _return_sewers_spell,
+    "Pain 101":                _pain_101_spell,
     # EOE spells
     "Close Encounter":         _close_encounter_spell,
     "Pull Through the Weft":   _pull_through_weft_spell,
@@ -32504,6 +32809,46 @@ _ETB_HANDLERS.update({
     "Gratuitous Violence":        _gratuitous_violence_etb,
     "Quilled Greatwurm":          _quilled_greatwurm_etb,
     # SOS batch 4 ETB
+    # TMT ETB
+    "Don & Raph, Hard Science":    _don_raph_etb,
+    "Turncoat Kunoichi":           _turncoat_kunoichi_etb,
+    "Zoo Escapees":                _zoo_escapees_etb,
+    "April, Reporter of the Weird": _april_etb,
+    "Genghis Frog":                _genghis_frog_etb,
+    "Henchbots":                   _henchbots_etb,
+    "Foot Mystic":                 _foot_mystic_etb,
+    "Lita, Little Orphan Amphibian": _lita_etb,
+    "Ninja Teen":                  _ninja_teen_etb,
+    "Lord Dregg, Insect Invader":  _lord_dregg_etb,
+    "Wingnut, Bat on the Belfry":  _wingnut_etb,
+    "Insectoid Exterminator":      _insectoid_exterminator_etb,
+    "Chrome Dome":                 _chrome_dome_etb,
+    "Weather Maker":               _weather_maker_etb,
+    "Raph & Leo, Sibling Rivals":  _raph_leo_etb,
+    "Michelangelo, Game Master":   _michelangelo_game_master_etb,
+    "Shredder, Unrelenting":       _shredder_unrelenting_etb,
+    "Ray Fillet, Man Ray":         _ray_fillet_etb,
+    "Novel Nunchaku":              _novel_nunchaku_etb,
+    "Ragamuffin Raptor":           _ragamuffin_raptor_etb,
+    "Karai, Future of the Foot":   _karai_etb,
+    "Madame Null, Power Broker":   _madame_null_etb,
+    "Venus, Torn Between Worlds":  _venus_etb,
+    "Bebop & Rocksteady":          _bebop_rocksteady_etb,
+    "Rat King, Verminister":       _rat_king_etb,
+    "Crustacean Commando":         _crustacean_commando_etb,
+    "Donatello, Gadget Master":    _donatello_gadget_master_etb,
+    "Shredder's Armor":            _shredders_armor_etb,
+    "Oroku Saki, Shredder Rising": _oroku_saki_etb,
+    "Zog, Triceraton Castaway":    _zog_etb,
+    "Punk Frogs":                  _punk_frogs_etb,
+    "The Last Ronin":              _last_ronin_etb,
+    "Koya, Death from Above":      _koya_etb,
+    "Quintessential Katana":       _quintessential_katana_etb,
+    "Raphael, Most Attitude":      _raphael_attitude_etb,
+    "Slithering Cryptid":          _slithering_cryptid_etb,
+    "Donatello, Mutant Mechanic":  _donatello_mechanic_etb,
+    "Mondo Gecko":                 _mondo_gecko_etb,
+    "Michelangelo, Mutant BFF":    _michelangelo_mutant_bff_etb,
     # SPM ETB
     "Vulture, Scheming Scavenger": _vulture_scheming_etb,
     "Costume Closet":              _costume_closet_etb,

@@ -28,6 +28,7 @@ STRATEGIC_BETRAY = "Strategic Betrayal"
 QUANTUM_RIDDLER  = "Quantum Riddler"
 DEEP_CAVERN_BAT  = "Deep-Cavern Bat"
 KAITO            = "Kaito, Bane of Nightmares"
+ANNUL            = "Annul"
 
 # Creature lands that must be killed aggressively
 CREATURE_LANDS = {"Restless Reef", "Restless Anchorage", "Faerie Mastermind"}
@@ -54,31 +55,47 @@ class DimirExcruciatorStandardMatchAPL(AwareMatchAPL, GenericAPL):
     }
     MATCH_EXILE = set()   # no exile removal in main package
 
+    # Sideboard plans from RIW Hobbies Dimir Midrange guide (Aug-Sep 2025)
+    # Key: Floodpits Drowner is weak (Fire Magic kills it); cut it first vs red
+    # Tishana's Tidebinder shuts ETB/activated abilities -- key SB piece vs ETB-heavy decks
+    # The End = exile removal with cost reduction; primary answer to Nova Hellkite
     SB_PLANS = {
         "aggro": (
-            # vs Red/Aggro: full playset Requiting Hex + lifegain
-            [REQUITING_HEX, REQUITING_HEX, "Soul-Guide Lantern", "Soul-Guide Lantern"],
-            ["Flashfreeze", QUANTUM_RIDDLER, "counterspells", "slow threats"],
-        ),
-        "control": (
-            # vs Control: Quantum Riddler scales; remove slower interaction
-            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, QUANTUM_RIDDLER],
-            ["Requiting Hex", "Requiting Hex", "removal"],
-        ),
-        "combo": (
-            # vs Graveyard/Combo: Soul-Guide Lantern + Strategic Betrayal
-            ["Soul-Guide Lantern", "Soul-Guide Lantern", STRATEGIC_BETRAY],
-            [QUANTUM_RIDDLER, "slow threats", "removal"],
-        ),
-        "ramp": (
-            # vs Landfall: kill dorks with Requiting Hex; Flashfreeze for payoffs
-            [REQUITING_HEX, REQUITING_HEX, FLASHFREEZE, FLASHFREEZE],
-            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, "slow threats", "removal"],
+            # vs Mono Red: cut Floodpits Drowner (Fire Magic), trim Kaito; +removal and lifegain
+            ["Tishana's Tidebinder", "Tishana's Tidebinder", "The End", "The End",
+             STRATEGIC_BETRAY, STRATEGIC_BETRAY, "Stab"],
+            [DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, DEEP_CAVERN_BAT,
+             KAITO, KAITO, "Floodpits Drowner"],
         ),
         "tempo": (
-            # vs tempo decks: Spell Snare stays; add Requiting Hex
-            [REQUITING_HEX, REQUITING_HEX, "Soul-Guide Lantern"],
-            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, "slow threats"],
+            # vs Izzet Prowess/tempo: Tidebinder shuts ETBs; trim Drowner; add interaction
+            ["Tishana's Tidebinder", "Tishana's Tidebinder", "The End", "The End",
+             STRATEGIC_BETRAY, STRATEGIC_BETRAY],
+            [DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, DEEP_CAVERN_BAT,
+             KAITO, "Floodpits Drowner"],
+        ),
+        "control": (
+            # vs Azorius Control: counters + Tidebinder; remove slow main-deck pieces
+            [FLASHFREEZE, FLASHFREEZE, "Spell Pierce", "Spell Pierce",
+             "Disdainful Stroke", "Disdainful Stroke",
+             "Tishana's Tidebinder", "Tishana's Tidebinder", ANNUL],
+            ["Floodpits Drowner", "Floodpits Drowner", "Floodpits Drowner",
+             "Tragic Trajectory", "Tragic Trajectory",
+             "Shoot the Sheriff", STRATEGIC_BETRAY],
+        ),
+        "combo": (
+            # vs Izzet Cauldron/combo: GY hate; Annul for enchantments
+            ["Ghost Vacuum", "Ghost Vacuum",
+             "Tishana's Tidebinder", "Tishana's Tidebinder",
+             "The End", "The End", STRATEGIC_BETRAY, STRATEGIC_BETRAY, ANNUL],
+            ["Floodpits Drowner", "Floodpits Drowner", "Floodpits Drowner",
+             "Tragic Trajectory", "Tragic Trajectory",
+             "Sunset Saboteur", "Enduring Curiosity", KAITO, "Floodpits Drowner"],
+        ),
+        "midrange": (
+            # vs Dimir Mirror: Tidebinder + The End; cut Deep-Cavern Bat (weak in mirror)
+            ["Tishana's Tidebinder", "Tishana's Tidebinder", "The End", "Stab"],
+            [DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, DEEP_CAVERN_BAT, KAITO],
         ),
     }
 

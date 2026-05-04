@@ -37,45 +37,49 @@ LANDFALL_CREATURES = {BADGERMOLE_CUB, ICETILL_EXPLORER, SAZHS_CHOCOBO,
 
 class MonoGreenLandfallStandardMatchAPL(MatchAPL):
     ARCHETYPE = "ramp"
-    # Sideboard plans from mtg.cardsrealm guide (Mar 2026)
-    # Leatherhead + Harmonizer = hexproof + trample + doubled power (instant lethal combo)
-    # Protect: Badgermole Cub, Icetill Explorer, Leatherhead, Harmonizer
-    # Trade: Llanowar Elves, Sazh's Chocobo
+    # Sideboard plans from Decktionary in-depth guide (Mar 2026) -- Mono Green specific
+    # Icetill Explorer = "essential card in the deck" -- never cut
+    # Sapling Nursery = critical vs board-focused matchups; cut vs spell-heavy decks
+    # Harmonizer standalone = "not particularly impactful"; only good in combination with Icetill+fetches
+    # Key combo: Icetill + fetches + Harmonizer = up to 32 damage; trigger order: Chocobo/Ascension counters FIRST
     SB_PLANS = {
-        "ramp": (
-            # vs Mirror: Mossborn Hydra + Surrak (resilient threats); cut Harmonizer (slow vs combo)
-            ["Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra",
-             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
-            ["Mightform Harmonizer", "Mightform Harmonizer",
-             "Sapling Nursery", "Sapling Nursery", "Meltstrider's Resolve", "Meltstrider's Resolve"],
-        ),
         "combo": (
-            # vs Izzet Lessons: Soul-Guide Lantern + Surrak; cut Harmonizer (they counter it)
-            ["Soul-Guide Lantern", "Soul-Guide Lantern",
-             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
-            ["Mightform Harmonizer", "Mightform Harmonizer",
-             "Meltstrider's Resolve", "Meltstrider's Resolve"],
-        ),
-        "midrange": (
-            # vs Dimir Midrange: Surrak (hexproof beats Requiting Hex) + Pawpatch Formation
-            ["Surrak, Elusive Hunter", "Surrak, Elusive Hunter",
-             "Pawpatch Formation", "Pawpatch Formation"],
-            ["Sapling Nursery", "Sapling Nursery",
-             "Meltstrider's Resolve", "Meltstrider's Resolve"],
-        ),
-        "aggro": (
-            # vs Mono Red: Meltstrider's Resolve (lifegain pump) + Pawpatch Formation
-            ["Meltstrider's Resolve", "Meltstrider's Resolve",
-             "Pawpatch Formation", "Pawpatch Formation", "Pawpatch Formation"],
-            ["Sapling Nursery", "Sapling Nursery", "Sapling Nursery",
-             "Archdruid's Charm", "Archdruid's Charm"],
+            # vs Izzet Lessons: Torpor Orb shuts ETBs (Gran-Gran, Monument); cut Badgermole Cub
+            ["Torpor Orb", "Torpor Orb", "Torpor Orb",
+             "Mossborn Hydra", "Mossborn Hydra",
+             "Sandman, Shifting Scoundrel"],
+            ["Badgermole Cub", "Badgermole Cub", "Badgermole Cub", "Badgermole Cub",
+             "Archdruid's Charm", "Mightform Harmonizer"],
         ),
         "tempo": (
-            # vs Azorius Tempo: Scrapshooter (removes enchantments) + Pawpatch
-            ["Scrapshooter", "Scrapshooter",
-             "Pawpatch Formation", "Pawpatch Formation"],
-            ["Mightform Harmonizer", "Mightform Harmonizer",
-             "Meltstrider's Resolve", "Meltstrider's Resolve"],
+            # vs Spellementals: Meltstrider's Resolve counters removal; Origin of Metalbending
+            ["Meltstrider's Resolve", "Meltstrider's Resolve", "Meltstrider's Resolve",
+             "Mossborn Hydra", "Mossborn Hydra",
+             "Origin of Metalbending", "Origin of Metalbending"],
+            ["Sapling Nursery", "Sapling Nursery", "Sapling Nursery", "Sapling Nursery",
+             "Fecund Greenshell", "Esper Origins", "Esper Origins"],
+        ),
+        "midrange": (
+            # vs Dimir Midrange: Torpor Orb + Meltstrider + Mossborn; cut slow engines
+            ["Torpor Orb", "Torpor Orb", "Torpor Orb",
+             "Meltstrider's Resolve", "Meltstrider's Resolve", "Meltstrider's Resolve",
+             "Mossborn Hydra", "Mossborn Hydra", "Pawpatch Formation"],
+            ["Fecund Greenshell",
+             "Sapling Nursery", "Sapling Nursery", "Sapling Nursery", "Sapling Nursery",
+             "Archdruid's Charm", "Archdruid's Charm",
+             "Esper Origins", "Esper Origins"],
+        ),
+        "control": (
+            # vs Control variants: Surrak (uncounterable) + Sandman; cut Mossborn (bad vs sweepers)
+            ["Surrak, Elusive Hunter", "Sandman, Shifting Scoundrel", "Pawpatch Formation"],
+            ["Mossborn Hydra", "Mossborn Hydra", "Mightform Harmonizer"],
+        ),
+        "ramp": (
+            # vs Mirror / Mono Green: Mossborn Hydra closes fast; cut slow engines
+            ["Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra",
+             "Surrak, Elusive Hunter"],
+            ["Sapling Nursery", "Sapling Nursery",
+             "Mightform Harmonizer", "Mightform Harmonizer", "Archdruid's Charm"],
         ),
     }
     name = "Mono Green Landfall (Standard)"

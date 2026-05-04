@@ -28,20 +28,27 @@ from apl.match_apl import MatchAPL
 # ---------------------------------------------------------------------------
 OPP_THREAT_MODEL: dict[str, dict] = {
     # Instant removal density, counter density, pump density, min mana to represent
+    # Sources: guide database reads 2026-05-04 (RIW Hobbies, Decktionary, TCGPlayer, metafy.gg)
     "izzetprowessstandard": {"removal": 4, "counters": 4, "pump": 2, "rep_mana": 1},
-    "monogreenlandfall":    {"removal": 0, "counters": 0, "pump": 4, "rep_mana": 1},
-    "selesnyalandfall":     {"removal": 2, "counters": 0, "pump": 2, "rep_mana": 1},  # Erode = {W} = 1 mana
+    # MonoGreen: Snakeskin Veil {G} is the main pump/protection
+    "monogreenlandfall":    {"removal": 0, "counters": 0, "pump": 2, "rep_mana": 1},
+    "selesnyalandfall":     {"removal": 2, "counters": 0, "pump": 2, "rep_mana": 1},  # Erode={W}, Snakeskin Veil={G}
     "selesnyaouroboroid":   {"removal": 1, "counters": 0, "pump": 2, "rep_mana": 1},
     "golgarimidrange":      {"removal": 6, "counters": 0, "pump": 0, "rep_mana": 2},
     "golgaricontrol":       {"removal": 6, "counters": 0, "pump": 0, "rep_mana": 2},
     "golgarikona":          {"removal": 4, "counters": 0, "pump": 0, "rep_mana": 2},
-    "izzetspellementals":   {"removal": 2, "counters": 3, "pump": 4, "rep_mana": 1},
-    "izzetlessons":         {"removal": 2, "counters": 4, "pump": 0, "rep_mana": 2},
+    # Spellementals: control/tempo. No pump. Heavy counters: Annul, Spell Pierce, Spell Snare, Disdainful Stroke, Bounce Off.
+    # Holds 2 mana for instant-speed counters/sweepers. Sunderflock = big board reset.
+    "izzetspellementals":   {"removal": 3, "counters": 6, "pump": 0, "rep_mana": 2},
+    # Izzet Lessons: 3 removal (Combustion Technique, Firebending Lesson, Iroh's Demo),
+    # 6 counters (Three Steps Ahead, It'll Quench Ya, Spell Pierce, Negate, Flashfreeze, Spell Snare)
+    "izzetlessons":         {"removal": 3, "counters": 6, "pump": 0, "rep_mana": 2},
     "azoriusmomo":          {"removal": 4, "counters": 2, "pump": 0, "rep_mana": 2},
     "azoriustempo":         {"removal": 2, "counters": 4, "pump": 0, "rep_mana": 1},
     "azoriusblink":         {"removal": 2, "counters": 0, "pump": 0, "rep_mana": 2},
     "jeskaicontrol":        {"removal": 4, "counters": 4, "pump": 0, "rep_mana": 2},
-    "dimirmidrangestd":     {"removal": 4, "counters": 3, "pump": 0, "rep_mana": 2},
+    # Dimir Midrange: Requiting Hex {1B} instant removal + Spell Snare {U} counter
+    "dimirmidrangestd":     {"removal": 6, "counters": 2, "pump": 0, "rep_mana": 2},
     "dimirexcruciator":     {"removal": 4, "counters": 2, "pump": 0, "rep_mana": 2},
     "izzetmaestro":         {"removal": 3, "counters": 3, "pump": 2, "rep_mana": 1},
     "sultaicontrol":        {"removal": 6, "counters": 2, "pump": 0, "rep_mana": 2},
@@ -65,6 +72,8 @@ DANGEROUS_ATTACKERS = {
     "Floodpits Drowner",           # ninjutsu enabler
     "Dream Beavers",               # ninjutsu enabler
     "Kaito Shizuki",               # ninjutsu enabler
+    "Gran-Gran",                   # loot on attack/unblocked = Monument to Endurance trigger; primary kill target vs Izzet Lessons
+    "Icetill Explorer",            # chains fetch land landfall triggers (4 per turn); remove before engine fires
 }
 
 # Permanents with valuable ETBs that should be killed NOW (not after they bounce/blink).
@@ -76,6 +85,8 @@ BLINK_BAIT = {
     "Gene Pollinator",        # ETB: draw
     "Quantum Riddler",        # ETB: scry+draw
     "Kona, Rescue Beastie",   # ETB: recur a creature
+    "Mightform Harmonizer",   # ETB/tap: combo kill piece (Harmonizer + Leatherhead = instant lethal)
+    "Earthbender Ascension",  # continuous trample enabler; remove before landfall chains grow
 }
 
 

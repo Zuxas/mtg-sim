@@ -1,36 +1,125 @@
-"""apl/dimir_excruciator_standard_match.py -- Dimir Excruciator match APL (Standard)
-
-Victor Santos Esquici 3.1% PT SOS field. Control shell using Excruciator of Sins
-as a recursive threat. Proxy GolgariMidrangeStandardMatchAPL game plan (midrange/control).
 """
-from apl.match_apl import MatchAPL
+apl/dimir_excruciator_standard_match.py -- Dimir Midrange/Excruciator match APL (Standard)
+
+Victor Santos Esquici 3.1% PT SOS field. Dimir midrange control shell.
+Key cards (from RIW Hobbies guide Feb 2026):
+  Requiting Hex {1B}: instant removal, better than Stab/Tragic Trajectory; kills creature lands
+  Deep-Cavern Bat {1B}: early tempo and hand disruption
+  Spell Snare {U}: answers Get Lost, protects Kaito, stops Badgermole Cub
+  Excruciator of Sins: recursive threat (self-recurs from graveyard)
+
+Matchup roles:
+  vs Aggro:    removal-heavy tempo; run full 4x Requiting Hex
+  vs Midrange: interactive midrange; kill creature lands (Restless Reef) aggressively
+  vs Control:  tempo threat density; Quantum Riddler scales in long game
+  vs Combo:    disruption-first; hand disruption + counter suite
+"""
+from __future__ import annotations
+from data.card import Tag
+from engine.game_state import GameState
+from engine.match_state import safe_toughness
+from apl.aware_match_apl import AwareMatchAPL
 from apl.generic_apl import GenericAPL
 
+REQUITING_HEX    = "Requiting Hex"
+SPELL_SNARE      = "Spell Snare"
+FLASHFREEZE      = "Flashfreeze"
+STRATEGIC_BETRAY = "Strategic Betrayal"
+QUANTUM_RIDDLER  = "Quantum Riddler"
+DEEP_CAVERN_BAT  = "Deep-Cavern Bat"
+KAITO            = "Kaito, Bane of Nightmares"
 
-class DimirExcruciatorStandardMatchAPL(MatchAPL, GenericAPL):
-    ARCHETYPE = "control"
+# Creature lands that must be killed aggressively
+CREATURE_LANDS = {"Restless Reef", "Restless Anchorage", "Faerie Mastermind"}
+
+# Removal targets in kill-priority order
+KILL_PRIORITY = {
+    "Badgermole Cub",       # ramp must die T1-T2
+    "Gran-Gran",            # Monument engine enabler
+    "Icetill Explorer",     # landfall chain engine
+    "Mightform Harmonizer", # combo kill piece
+    "Earthbender Ascension",# trample enabler
+}
+
+
+class DimirExcruciatorStandardMatchAPL(AwareMatchAPL, GenericAPL):
+    ARCHETYPE = "midrange"
+
+    # Spell Snare = {U}; hold 2 mana for Requiting Hex responses
+    COUNTER_COST  = 2
+    COUNTER_CARDS = {SPELL_SNARE, FLASHFREEZE}
+
+    MATCH_REMOVAL = {
+        REQUITING_HEX: ("1B", None),   # no toughness cap — kills anything at instant speed
+    }
+    MATCH_EXILE = set()   # no exile removal in main package
+
     SB_PLANS = {
         "aggro": (
-            ["3 Oildeep Gearhulk", "2 Qarsi Revenant"],
-            ["2 Flashfreeze", "3 counterspells"],
+            # vs Red/Aggro: full playset Requiting Hex + lifegain
+            [REQUITING_HEX, REQUITING_HEX, "Soul-Guide Lantern", "Soul-Guide Lantern"],
+            ["Flashfreeze", QUANTUM_RIDDLER, "counterspells", "slow threats"],
         ),
         "control": (
-            ["2 Flashfreeze", "3 Oildeep Gearhulk"],
-            ["3 Qarsi Revenant", "2 removal"],
+            # vs Control: Quantum Riddler scales; remove slower interaction
+            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, QUANTUM_RIDDLER],
+            ["Requiting Hex", "Requiting Hex", "removal"],
         ),
         "combo": (
-            ["2 Flashfreeze", "3 Oildeep Gearhulk", "2 Qarsi Revenant"],
-            ["3 slow threats", "4 creatures"],
+            # vs Graveyard/Combo: Soul-Guide Lantern + Strategic Betrayal
+            ["Soul-Guide Lantern", "Soul-Guide Lantern", STRATEGIC_BETRAY],
+            [QUANTUM_RIDDLER, "slow threats", "removal"],
         ),
         "ramp": (
-            ["2 Flashfreeze", "3 Oildeep Gearhulk"],
-            ["2 Qarsi Revenant", "3 creatures"],
+            # vs Landfall: kill dorks with Requiting Hex; Flashfreeze for payoffs
+            [REQUITING_HEX, REQUITING_HEX, FLASHFREEZE, FLASHFREEZE],
+            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, "slow threats", "removal"],
         ),
         "tempo": (
-            ["3 Oildeep Gearhulk", "2 Qarsi Revenant"],
-            ["2 Flashfreeze", "3 slow spells"],
+            # vs tempo decks: Spell Snare stays; add Requiting Hex
+            [REQUITING_HEX, REQUITING_HEX, "Soul-Guide Lantern"],
+            [QUANTUM_RIDDLER, QUANTUM_RIDDLER, "slow threats"],
         ),
     }
 
     def __init__(self):
-        GenericAPL.__init__(self, deck_name="Dimir Excruciator", role="control")
+        GenericAPL.__init__(self, deck_name="Dimir Excruciator", role="midrange")
+
+    # ---------------------------------------------------------------------------
+    # Reserve mana: hold 2 for Requiting Hex (instant speed) + Spell Snare
+    # ---------------------------------------------------------------------------
+
+    def reserve_mana(self, gs: GameState, opponent: GameState):
+        has_hex    = any(c.name == REQUITING_HEX for c in gs.zones.hand)
+        has_snare  = any(c.name == SPELL_SNARE   for c in gs.zones.hand)
+        if has_hex:
+            gs.mana_reserve = 2   # {1}{B} = 2 mana
+        elif has_snare:
+            gs.mana_reserve = 1   # {U} = 1 mana
+        else:
+            gs.mana_reserve = 0
+
+    # ---------------------------------------------------------------------------
+    # Pre-combat: Requiting Hex priority targets
+    # ---------------------------------------------------------------------------
+
+    def pre_combat_instant(self, gs: GameState, opponent: GameState):
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if c.has(Tag.CREATURE) and not c.is_land()]
+
+        # Kill creature lands aggressively (Restless Reef can't be bounced)
+        for c in opponent.zones.battlefield:
+            if c.name in CREATURE_LANDS and c.has(Tag.CREATURE):
+                if self._kill_with_removal(gs, opponent, c):
+                    gs._log(f"  [pre-combat] killed creature land {c.name}")
+                    return
+
+        # Kill priority creatures in order
+        for name in KILL_PRIORITY:
+            for c in opp_creatures:
+                if c.name == name:
+                    if self._kill_with_removal(gs, opponent, c):
+                        gs._log(f"  [pre-combat] Requiting Hex killed {c.name}")
+                        return
+
+        super().pre_combat_instant(gs, opponent)

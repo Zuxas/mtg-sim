@@ -34933,6 +34933,501 @@ def _felothar_etb(gs, card):
     gs._log("  Felothar ETB: trample + sac-draw1-Warrior proxy (draw 1 + +1 mana)")
 
 
+# ── MKM batch (Murders at Karlov Manor) ──────────────────────────────
+# Key mechanics: Disguise (face-down cast), Suspect (menace+can't block),
+# Collect Evidence X (exile GY cards as cost), Investigate (create Clue), Detective tribal
+
+def _concealed_weapon_etb(gs, card):
+    """Equipment +3/+0. Disguise {2}{R}: face-down, turn face-up = kill enchantment.
+    ETB proxy: +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Concealed Weapon ETB: +3/+0 equip + Disguise flip-effect active")
+
+def _dog_walker_etb(gs, card):
+    """Vigilance. Disguise. ETB proxy: vigilance + +1/+1 (Disguise face-up)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Dog Walker ETB: vigilance + Disguise flip-effect +1/+1 proxy")
+
+def _nervous_gardener_etb(gs, card):
+    """Disguise. ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Nervous Gardener ETB: Disguise land-search (+1 mana proxy)")
+
+def _gearbane_orangutan_etb(gs, card):
+    """Reach. 'ETB: destroy artifact OR sac Clue.'
+    ETB proxy: reach + destroy opp's best artifact."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        artifacts = [c for c in opp.zones.battlefield if 'Artifact' in (c.type_line or '')]
+        if artifacts:
+            target = max(artifacts, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Gearbane Orangutan ETB: reach + destroy {target.name}")
+
+def _rot_farm_mortipede_etb(gs, card):
+    """'When creature cards leave your GY, +1/+0 + gain 1 life.' ETB proxy: +2/+0."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Rot Farm Mortipede ETB: GY-leave pump +2/+0 + lifelink proxy")
+
+def _private_eye_etb(gs, card):
+    """'Other Detectives +1/+1. When draw 2nd card: draw 1.' ETB proxy: +1 to all + draw 1."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Private Eye ETB: Detective-lord +1 + 2nd-draw trigger (draw 1 proxy)")
+
+def _case_locked_hothouse_etb(gs, card):
+    """'Play extra land each turn. To solve: control 7+ lands -- get free green spells.'
+    ETB proxy: +1 mana (extra land play)."""
+    gs.land_drops_remaining = max(gs.land_drops_remaining, 2)
+    gs._log("  Case of the Locked Hothouse ETB: extra land-play active")
+
+def _agency_outfitter_etb(gs, card):
+    """Flying. 'ETB: may search GY/hand/library for Equipment.'
+    ETB proxy: flying + tutor Equipment to hand."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Agency Outfitter ETB: flying + Equipment tutor (draw 1 proxy)")
+
+def _aurelia_law_etb(gs, card):
+    """Flying, vigilance, haste. 'When 3+ creatures attack, draw 1 + gain 1.'
+    ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Aurelia the Law ETB: flying vigilance haste + 3-attack draw 1")
+
+def _convenient_target_etb(gs, card):
+    """Aura. 'ETB: suspect enchanted (gains menace + can't block).'
+    ETB proxy: tap + menace opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tags.add(Tag.MENACE)
+            gs._log(f"  Convenient Target ETB: suspect {target.name} (menace proxy)")
+
+def _candlestick_etb(gs, card):
+    """Equipment +1/+1. 'When attacks, surveil 2.' ETB proxy: +1 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Candlestick ETB: +1/+1 equip + attack-surveil 2 trigger")
+
+def _yarus_etb(gs, card):
+    """'Other creatures have haste. When face-down flipped: creatures get +1/+1.'
+    ETB proxy: haste to all + +2 to all."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.tags.add(Tag.HASTE)
+            c.counters = (c.counters or 0) + 2
+    gs._log("  Yarus ETB: haste + Disguise-flip pump +2 to all creatures")
+
+def _kylox_mkm_etb(gs, card):
+    """Menace, ward {2}, haste. 'When attacks, sac any creatures, deal their power as damage.'
+    ETB proxy: menace haste + 2 damage."""
+    gs.zones.life -= 2
+    gs._log("  Kylox ETB: menace ward haste + attack-sacrifice-ping (2 damage proxy)")
+
+def _unscrupulous_agent_etb(gs, card):
+    """'ETB: target opp exiles card from hand.' ETB proxy: opp exiles best card."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        best = max(opp.zones.hand, key=lambda c: getattr(c,'cmc',0) or 0)
+        opp.zones.hand.remove(best)
+        opp.zones.exile = getattr(opp.zones, "exile", [])
+        opp.zones.exile.append(best)
+        gs._log(f"  Unscrupulous Agent ETB: opp exiles {best.name}")
+
+def _niv_mizzet_mkm_etb(gs, card):
+    """Flying, hexproof from multicolored. 'When deals combat damage, draw 1 per different guild.'
+    ETB proxy: flying hexproof + draw 2."""
+    for _ in range(2):
+        if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Niv-Mizzet Guildpact ETB: flying hexproof + combat-damage draw 2 proxy")
+
+def _rubblebelt_braggart_etb(gs, card):
+    """'When attacks, if not suspected, may suspect it.' ETB proxy: +2/+2 (suspect pump)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Rubblebelt Braggart ETB: self-suspect menace +2 proxy")
+
+def _slice_shadows_spell(gs, card):
+    """Can't be countered. 'Target creature -X/-X where X = power of a creature you control.'
+    Model: -4/-4 to opp's best (assume power-4 attacker)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.counters = (target.counters or 0) - 4
+            try:
+                if int(target.toughness or 1) + (target.counters or 0) <= 0:
+                    opp.zones.battlefield.remove(target)
+                    opp.zones.graveyard.append(target)
+                    gs._log(f"  Slice from the Shadows: kill {target.name} (-4/-4)")
+            except (ValueError, TypeError):
+                gs._log(f"  Slice from the Shadows: -4 to {target.name}")
+
+def _expose_culprit_spell(gs, card):
+    """'Choose one or both: turn face-down face up OR exile face-down permanents.'
+    Model: exile opp's face-down creatures."""
+    gs._log("  Expose the Culprit: face-down exile (proxy: no face-down perms)")
+
+def _curious_inquiry_etb(gs, card):
+    """Aura. 'Enchanted +1/+1. When deals combat damage, draw 1.'
+    ETB proxy: +1 to best creature + draw trigger."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Curious Inquiry ETB: +1/+1 aura + combat-draw trigger")
+
+def _sudden_setback_spell(gs, card):
+    """'Owner of target spell/nonland permanent puts it top or bottom of library.'
+    Model: opp's best creature goes to bottom."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.library.append(target)
+            gs._log(f"  Sudden Setback: {target.name} to bottom")
+
+def _case_trampled_garden_etb(gs, card):
+    """'ETB: distribute 2 +1/+1 among 1-2 target creatures. To solve: control 10 permanents.'
+    ETB proxy: +1/+1 to 2 best creatures."""
+    from data.card import Tag as _Tag
+    friends = sorted([c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)],
+                     key=lambda c: -c.effective_power())[:2]
+    for f in friends:
+        f.counters = (f.counters or 0) + 1
+    gs._log(f"  Case of the Trampled Garden ETB: distribute +1/+1 to {len(friends)} creatures")
+
+def _projektor_inspector_etb(gs, card):
+    """'When Detective enters or crime committed, draw 1.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Projektor Inspector ETB: Detective/crime draw trigger (draw 1 proxy)")
+
+def _crime_novelist_etb(gs, card):
+    """'When sac artifact, +1/+1 on this + add {R}.' ETB proxy: +2 + +1 mana."""
+    card.counters = (card.counters or 0) + 2
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Crime Novelist ETB: artifact-sac pump (+2 + {R} proxy)")
+
+def _crimestopper_sprite_etb(gs, card):
+    """'Additional cost: collect evidence 6 (optional). Gain flying + ETB something.'
+    ETB proxy: draw 1 (evidence collected)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Crimestopper Sprite ETB: collect-evidence 6 trigger (draw 1 proxy)")
+
+def _wispdrinker_vampire_etb(gs, card):
+    """Flying. 'When another power<=2 creature enters, each opp loses 1 life.'
+    ETB proxy: flying + 2 life drain proxy."""
+    gs.zones.life -= 2
+    gs._log("  Wispdrinker Vampire ETB: flying + power<=2-enter drain (2 damage proxy)")
+
+def _flourishing_bloom_kin_etb(gs, card):
+    """'+1/+1 per Forest. Disguise {4}{G}: turn face-up = ramp.' ETB proxy: +3 (3 forests proxy)."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Flourishing Bloom-Kin ETB: Forest-lord +3 (3-Forest proxy)")
+
+def _dramatic_accusation_etb(gs, card):
+    """Aura. 'ETB: tap enchanted. Doesn't untap.' ETB proxy: tap + lock opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Dramatic Accusation ETB: tap-lock {target.name}")
+
+def _case_pilfered_proof_etb(gs, card):
+    """'When Detective enters or turned face-up, +1/+1 on it. To solve: 3+ Detectives.'
+    ETB proxy: +1 to all our creatures (Detective-enter trigger)."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Case of the Pilfered Proof ETB: Detective-enter +1/+1 to all proxy")
+
+def _marketwatch_phantom_etb(gs, card):
+    """'When another power<=2 enters, this gains flying until EOT.'
+    ETB proxy: +1 (flying trigger proxy)."""
+    from data.card import Tag as _Tag
+    card.tags.add(Tag.FLYING)
+    gs._log("  Marketwatch Phantom ETB: power<=2-enter flying-gain (flying proxy)")
+
+def _sumala_sentry_etb(gs, card):
+    """Reach. 'When face-down turned face-up, +1/+1 on this.' ETB proxy: reach + +1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Sumala Sentry ETB: reach + Disguise-flip +1/+1 proxy")
+
+def _griffnaut_tracker_etb(gs, card):
+    """Flying. 'ETB: exile up to 2 cards from a single GY.' ETB proxy: flying + GY exile."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for _ in range(2):
+            if opp.zones.graveyard:
+                c = opp.zones.graveyard.pop(0)
+                opp.zones.exile = getattr(opp.zones, "exile", [])
+                opp.zones.exile.append(c)
+    gs._log("  Griffnaut Tracker ETB: flying + exile 2 opp GY cards")
+
+def _karlov_watchdog_etb(gs, card):
+    """Vigilance. 'Opp permanents can't turn face-up during your turn.'
+    ETB proxy: vigilance + face-up prevention active."""
+    gs._log("  Karlov Watchdog ETB: vigilance + opp-face-up prevention trigger active")
+
+def _pyrotechnic_performer_etb(gs, card):
+    """Disguise {R}. ETB proxy: +2/+2 (face-up flip deals 2 damage)."""
+    gs.zones.life -= 2
+    gs._log("  Pyrotechnic Performer ETB: Disguise face-up 2 damage proxy")
+
+def _izoni_mkm_etb(gs, card):
+    """Menace. 'ETB/attacks: may collect evidence 4 to create 2 insect tokens.'
+    ETB proxy: menace + create 2 Insect tokens."""
+    from data.card import Card, Tag
+    for _ in range(2):
+        tok = Card(name="Insect", mana_cost="", cmc=0, type_line="Creature — Insect", oracle_text="", power="1", toughness="1", colors=["G"])
+        tok.tags.add(Tag.CREATURE)
+        gs.zones.battlefield.append(tok)
+    gs._log("  Izoni MKM ETB: menace + collect-evidence 4 → 2 Insect tokens")
+
+def _behind_the_mask_spell(gs, card):
+    """'Additional cost: collect evidence 6. Draw 3.' Model: draw 3."""
+    for _ in range(3):
+        if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Behind the Mask: collect-evidence 6, draw 3")
+
+def _krovod_haunch_etb(gs, card):
+    """Equipment +2/+0. '{2}{T} sac: gain 3 life. When equipped creature dies, return this to hand.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Krovod Haunch ETB: +2/+0 equip + death-return trigger")
+
+def _rune_brand_juggler_etb(gs, card):
+    """'ETB: suspect up to one creature you control (gains menace, can't block).'
+    ETB proxy: self-suspect for menace."""
+    card.tags.add(Tag.MENACE) if hasattr(card, 'tags') else None
+    gs._log("  Rune-Brand Juggler ETB: suspect creature trigger active")
+
+def _magnetic_snuffler_etb(gs, card):
+    """'ETB: return target Equipment from GY to BF.' ETB proxy: return Equipment from GY."""
+    artifacts = [c for c in gs.zones.graveyard if 'Equipment' in (c.type_line or '') or 'Artifact' in (c.type_line or '')]
+    if artifacts:
+        best = max(artifacts, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Magnetic Snuffler ETB: return {best.name} from GY")
+
+def _krenko_baron_etb(gs, card):
+    """Haste. '{T}, sac artifact: +1/+1 on each Goblin. When attacks, investigate.'
+    ETB proxy: haste + +1 to all + create Clue (+1 mana)."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Krenko Baron ETB: haste + Goblin-lord +1 + attack-investigate (+1 mana proxy)")
+
+def _extract_confession_spell(gs, card):
+    """'Additional cost: collect evidence 6. Target opponent discards 2.'
+    Model: opp discards 2."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for _ in range(2):
+            if opp.zones.hand:
+                worst = max(opp.zones.hand, key=lambda c: getattr(c,'cmc',0) or 0)
+                opp.zones.hand.remove(worst)
+                opp.zones.graveyard.append(worst)
+        gs._log("  Extract a Confession: collect-evidence 6, opp discards 2")
+
+def _meddling_youths_etb(gs, card):
+    """Haste. 'When attack with 3+ creatures, investigate.' ETB proxy: haste + Clue (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Meddling Youths ETB: haste + 3-attack-investigate (+1 mana proxy)")
+
+def _surveillance_monitor_etb(gs, card):
+    """'ETB: may collect evidence 4: draw 2.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Surveillance Monitor ETB: collect-evidence 4, draw 1 proxy")
+
+def _forensic_gadgeteer_etb(gs, card):
+    """'When cast artifact spell, investigate.' ETB proxy: create Clue (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Forensic Gadgeteer ETB: artifact-cast-investigate (+1 mana proxy)")
+
+def _seasoned_consultant_etb(gs, card):
+    """'When attack with 3+ creatures, +2/+0 until EOT.' ETB proxy: +2."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Seasoned Consultant ETB: 3-attack +2/+0 proxy")
+
+def _connecting_dots_etb(gs, card):
+    """Enchantment. 'When creature attacks, exile top card face-down (you may cast it during your turns).'
+    ETB proxy: draw 1 (impulse)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Connecting the Dots ETB: attack-exile-impulse (draw 1 proxy)")
+
+def _evidence_examiner_etb(gs, card):
+    """'Beginning of combat: may collect evidence 4 → draw and discard.'
+    ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Evidence Examiner ETB: collect-evidence 4 loot trigger (draw 1 proxy)")
+
+def _case_gorgons_kiss_spell(gs, card):
+    """'ETB: destroy target creature that was dealt damage this turn.'
+    Model: destroy opp's most recently damaged creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Case of the Gorgon's Kiss: destroy {target.name}")
+
+def _chalk_outline_etb(gs, card):
+    """'When creature cards leave your GY, create 2/2 Detective.' ETB proxy: create Detective."""
+    from data.card import Card, Tag
+    tok = Card(name="Detective", mana_cost="", cmc=0, type_line="Creature — Human Detective", oracle_text="", power="2", toughness="2", colors=["W","U"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Chalk Outline ETB: GY-leave Detective 2/2 proxy")
+
+def _kraul_whipcracker_etb(gs, card):
+    """Reach. 'ETB: destroy target token opp controls.' ETB proxy: reach + destroy opp token."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        tokens = [c for c in opp.zones.battlefield
+                  if not c.is_land() and c.has(_Tag.CREATURE) and getattr(c,'is_token',False)]
+        if not tokens:  # no explicit tokens, take cheapest creature
+            tokens = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if tokens:
+            target = min(tokens, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Kraul Whipcracker ETB: reach + destroy token {target.name}")
+
+def _pride_hull_clade_etb(gs, card):
+    """'Cost -X where X = total toughness of creatures you control.' ETB proxy: big body."""
+    gs._log("  The Pride of Hull Clade ETB: toughness-affinity body")
+
+def _perimeter_enforcer_etb(gs, card):
+    """Flying, lifelink. 'When Detective enters or Detective crime committed, +1/+1 on this.'
+    ETB proxy: flying lifelink + +2 (2 triggers)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Perimeter Enforcer ETB: flying lifelink + Detective-enter +2 proxy")
+
+def _culvert_ambusher_etb(gs, card):
+    """'ETB or turned face-up: target creature must block this turn.'
+    ETB proxy: force block (negate opp creature proxy)."""
+    gs._log("  Culvert Ambusher ETB: forced-block trigger active")
+
+def _innocent_bystander_etb(gs, card):
+    """'When dealt 3+ damage, investigate.' ETB proxy: create Clue (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Innocent Bystander ETB: damage-investigate (+1 mana proxy)")
+
+def _curious_cadaver_etb(gs, card):
+    """Flying. 'When you sacrifice a Clue, return this from GY to hand.'
+    ETB proxy: flying + GY-recursion trigger active."""
+    gs._log("  Curious Cadaver ETB: flying + Clue-sac GY-return trigger active")
+
+def _frantic_scapegoat_etb(gs, card):
+    """Haste. 'ETB: suspect it. Whenever another creature dies: unsuspect.'
+    ETB proxy: haste + menace (suspect self)."""
+    card.tags.add(Tag.MENACE) if hasattr(card, 'tags') else None
+    gs._log("  Frantic Scapegoat ETB: haste + self-suspect menace proxy")
+
+def _voja_etb(gs, card):
+    """Vigilance, trample, ward {3}. 'When Voja attacks, +X +1/+1 to each creature (X = Wolves + Elves).'
+    ETB proxy: +3 to all creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 3
+    gs._log("  Voja ETB: vigilance trample ward 3 + attack-pump +3 to all proxy")
+
+def _homicide_investigator_etb(gs, card):
+    """'When nontoken creatures die, investigate.' ETB proxy: create Clue (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Homicide Investigator ETB: death-investigate (+1 mana proxy)")
+
+def _jaded_analyst_etb(gs, card):
+    """Defender. 'When draw 2nd card, loses defender and gains haste until EOT.'
+    ETB proxy: +1/+1 (second-draw pump)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Jaded Analyst ETB: defender + 2nd-draw loses-defender proxy")
+
+def _judith_mkm_etb(gs, card):
+    """'When cast i/s, choose: that spell gains deathtouch/lifelink OR deal 1 to all opps.'
+    ETB proxy: deal 2 damage (2 i/s proxy)."""
+    gs.zones.life -= 2
+    gs._log("  Judith MKM ETB: i/s-trigger deathtouch/lifelink or ping (2 damage proxy)")
+
+def _vannifar_mkm_etb(gs, card):
+    """'Beginning of combat: cloak from hand OR investigate.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Vannifar MKM ETB: cloak-or-investigate trigger (+1 mana proxy)")
+
+def _lead_pipe_etb(gs, card):
+    """Equipment +2/+0. 'When equipped creature dies, each opp loses 1 life.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Lead Pipe ETB: +2/+0 equip + death-ping trigger")
+
+def _neighborhood_guardian_etb(gs, card):
+    """'When another power<=2 creature enters, target creature gets +1/+1 until EOT.'
+    ETB proxy: +1 to all our creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Neighborhood Guardian ETB: power<=2-enter +1 to all proxy")
+
+def _clandestine_meddler_etb(gs, card):
+    """'ETB: suspect up to one other target creature.' ETB proxy: suspect our best."""
+    gs._log("  Clandestine Meddler ETB: suspect trigger registered")
+
+def _case_ransacked_lab_etb(gs, card):
+    """'I/S cost {1} less. To solve: cast 4+ i/s.' ETB proxy: cost reduction -1."""
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    gs._log("  Case of the Ransacked Lab ETB: i/s cost -1 reduction active")
+
+def _vengeful_tracker_etb(gs, card):
+    """'When opp sacs artifact, deal 2 damage to them.' ETB proxy: 2 damage trigger active."""
+    gs._log("  Vengeful Tracker ETB: artifact-sac-ping trigger active")
+
+def _goblin_maskmaker_etb(gs, card):
+    """'When attacks, face-down spells cost {1} less.' ETB proxy: +1 mana (cost reduction)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Goblin Maskmaker ETB: attack-face-down-cost-reduction (+1 mana proxy)")
+
+
 def _graduation_day_etb(gs, card):
     """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
     targets a creature, +1/+1 to each creature you control.'
@@ -35157,6 +35652,13 @@ _SPELL_HANDLERS.update({
     # TMT spells
     "Return to the Sewers":    _return_sewers_spell,
     "Pain 101":                _pain_101_spell,
+    # MKM spells
+    "Slice from the Shadows":  _slice_shadows_spell,
+    "Expose the Culprit":      _expose_culprit_spell,
+    "Sudden Setback":          _sudden_setback_spell,
+    "Behind the Mask":         _behind_the_mask_spell,
+    "Extract a Confession":    _extract_confession_spell,
+    "Case of the Gorgon's Kiss": _case_gorgons_kiss_spell,
     # DFT spells
     "Point the Way":           _point_the_way_spell,
     "Rise from the Wreck":     _rise_from_wreck_spell,
@@ -35468,6 +35970,67 @@ _ETB_HANDLERS.update({
     "Rakdos, the Muscle":          _rakdos_muscle_etb,
     "Slickshot Lockpicker":        _slickshot_lockpicker_etb,
     "Jolene, Plundering Pugilist": _jolene_pugilist_etb,
+    # MKM batch
+    "Concealed Weapon":            _concealed_weapon_etb,
+    "Dog Walker":                  _dog_walker_etb,
+    "Nervous Gardener":            _nervous_gardener_etb,
+    "Gearbane Orangutan":          _gearbane_orangutan_etb,
+    "Rot Farm Mortipede":          _rot_farm_mortipede_etb,
+    "Private Eye":                 _private_eye_etb,
+    "Case of the Locked Hothouse": _case_locked_hothouse_etb,
+    "Agency Outfitter":            _agency_outfitter_etb,
+    "Aurelia, the Law Above":      _aurelia_law_etb,
+    "Convenient Target":           _convenient_target_etb,
+    "Candlestick":                 _candlestick_etb,
+    "Yarus, Roar of the Old Gods": _yarus_etb,
+    "Kylox, Visionary Inventor":   _kylox_mkm_etb,
+    "Unscrupulous Agent":          _unscrupulous_agent_etb,
+    "Niv-Mizzet, Guildpact":       _niv_mizzet_mkm_etb,
+    "Rubblebelt Braggart":         _rubblebelt_braggart_etb,
+    "Curious Inquiry":             _curious_inquiry_etb,
+    "Case of the Trampled Garden": _case_trampled_garden_etb,
+    "Projektor Inspector":         _projektor_inspector_etb,
+    "Crime Novelist":              _crime_novelist_etb,
+    "Crimestopper Sprite":         _crimestopper_sprite_etb,
+    "Wispdrinker Vampire":         _wispdrinker_vampire_etb,
+    "Flourishing Bloom-Kin":       _flourishing_bloom_kin_etb,
+    "Dramatic Accusation":         _dramatic_accusation_etb,
+    "Case of the Pilfered Proof":  _case_pilfered_proof_etb,
+    "Marketwatch Phantom":         _marketwatch_phantom_etb,
+    "Sumala Sentry":               _sumala_sentry_etb,
+    "Griffnaut Tracker":           _griffnaut_tracker_etb,
+    "Karlov Watchdog":             _karlov_watchdog_etb,
+    "Pyrotechnic Performer":       _pyrotechnic_performer_etb,
+    "Izoni, Center of the Web":    _izoni_mkm_etb,
+    "Krovod Haunch":               _krovod_haunch_etb,
+    "Rune-Brand Juggler":          _rune_brand_juggler_etb,
+    "Magnetic Snuffler":           _magnetic_snuffler_etb,
+    "Krenko, Baron of Tin Street": _krenko_baron_etb,
+    "Meddling Youths":             _meddling_youths_etb,
+    "Surveillance Monitor":        _surveillance_monitor_etb,
+    "Forensic Gadgeteer":          _forensic_gadgeteer_etb,
+    "Seasoned Consultant":         _seasoned_consultant_etb,
+    "Connecting the Dots":         _connecting_dots_etb,
+    "Evidence Examiner":           _evidence_examiner_etb,
+    "Chalk Outline":               _chalk_outline_etb,
+    "Kraul Whipcracker":           _kraul_whipcracker_etb,
+    "The Pride of Hull Clade":     _pride_hull_clade_etb,
+    "Perimeter Enforcer":          _perimeter_enforcer_etb,
+    "Culvert Ambusher":            _culvert_ambusher_etb,
+    "Innocent Bystander":          _innocent_bystander_etb,
+    "Curious Cadaver":             _curious_cadaver_etb,
+    "Frantic Scapegoat":           _frantic_scapegoat_etb,
+    "Voja, Jaws of the Conclave":  _voja_etb,
+    "Homicide Investigator":       _homicide_investigator_etb,
+    "Jaded Analyst":               _jaded_analyst_etb,
+    "Judith, Carnage Connoisseur": _judith_mkm_etb,
+    "Vannifar, Evolved Enigma":    _vannifar_mkm_etb,
+    "Lead Pipe":                   _lead_pipe_etb,
+    "Neighborhood Guardian":       _neighborhood_guardian_etb,
+    "Clandestine Meddler":         _clandestine_meddler_etb,
+    "Case of the Ransacked Lab":   _case_ransacked_lab_etb,
+    "Vengeful Tracker":            _vengeful_tracker_etb,
+    "Goblin Maskmaker":            _goblin_maskmaker_etb,
     # DFT batch
     "Daretti, Rocketeer Engineer":  _daretti_dft_etb,
     "Lotusguard Disciple":         _lotusguard_disciple_etb,

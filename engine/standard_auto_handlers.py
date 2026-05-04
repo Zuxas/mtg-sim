@@ -2835,8 +2835,6 @@ _h_duel_tactics = _spell([["damage_creature", {"n": 1, "target": "opp_biggest"}]
 _h_wild_hypothesis = _spell([["create_token", {"count": 1, "power": "0", "toughness": "0", "keywords": []}], ["scry", {"n": 2}]])
 # [sos] Heated Argument deals 6 damage to target creature. You may exile a card from you
 _h_heated_argument = _spell([["damage_creature", {"n": 6, "target": "opp_biggest"}]])
-# [sos] Counter target spell. If you control a Wizard, add an amount of {C} equal to the
-_h_mana_sculpt = _spell([["scry", {"n": 0}]])
 # [sos] Converge ? Create two 0/0 green and blue Fractal creature tokens. Put X +1/+1 co
 _h_snarl_song = _spell([["gain_life", {"n": 1}], ["create_token", {"count": 2, "power": "0", "toughness": "0", "keywords": []}], ["add_counters", {"n": 1, "target": "all_friendly"}]])
 # [sos] This spell costs {2} less to cast if one or more cards left your graveyard this 
@@ -4365,7 +4363,6 @@ for _n,_f in {
     "Duel Tactics": _h_duel_tactics,
     "Wild Hypothesis": _h_wild_hypothesis,
     "Heated Argument": _h_heated_argument,
-    "Mana Sculpt": _h_mana_sculpt,
     "Snarl Song": _h_snarl_song,
     "Wilt in the Heat": _h_wilt_in_the_heat,
     "Pursue the Past": _h_pursue_the_past,

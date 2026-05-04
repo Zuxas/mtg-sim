@@ -30607,6 +30607,395 @@ def _arcane_omens_spell(gs, card):
         gs._log("  Arcane Omens: opp discards 2 (Converge=2 proxy)")
 
 
+# ── SOS batch 4 (Repartee + GY-leave + misc) ─────────────────────────
+
+# Repartee cycle: trigger when you cast i/s targeting a creature
+# In goldfish, we don't target our own creatures, so these are no-ops in goldfish;
+# in match mode they fire when we target opp creatures with removal.
+
+def _lecturing_scornmage_etb(gs, card):
+    """Lecturing Scornmage -- {2}{U} Creature. Repartee: put +1/+1 on this."""
+    gs._log("  Lecturing Scornmage ETB: Repartee +1/+1 trigger active")
+
+def _inkling_mascot_etb(gs, card):
+    """Inkling Mascot -- {1}{W}{B} Creature. Repartee: gains flying until EOT."""
+    gs._log("  Inkling Mascot ETB: Repartee flying-grant trigger active")
+
+def _rehearsed_debater_etb(gs, card):
+    """Rehearsed Debater -- {2}{W} Creature (Vigilance). Repartee: +1/+1 until EOT."""
+    gs._log("  Rehearsed Debater ETB: vigilance + Repartee pump trigger active")
+
+def _stirring_hopesinger_etb(gs, card):
+    """Stirring Hopesinger -- {3}{W} Creature (Flying, Lifelink). Repartee: +1/+1 counter."""
+    gs._log("  Stirring Hopesinger ETB: flying lifelink + Repartee +1/+1 trigger active")
+
+def _melancholic_poet_etb(gs, card):
+    """Melancholic Poet -- {2}{B} Creature. Repartee: each opp -1 life, you +1 life."""
+    gs._log("  Melancholic Poet ETB: Repartee life-drain trigger active")
+
+def _scolding_administrator_etb(gs, card):
+    """Scolding Administrator -- {2}{B} Creature (Menace). Repartee: counter activated ability."""
+    gs._log("  Scolding Administrator ETB: Menace + Repartee ability-counter trigger active")
+
+def _informed_inkwright_etb(gs, card):
+    """Informed Inkwright -- {2}{W} Creature (Vigilance). Repartee: create 1/1 Inkling with flying."""
+    gs._log("  Informed Inkwright ETB: vigilance + Repartee Inkling-create trigger active")
+
+def _forum_necroscribe_etb(gs, card):
+    """Forum Necroscribe -- {3}{B} Creature. Ward-Discard. Repartee: bounce GY creature to hand."""
+    gs._log("  Forum Necroscribe ETB: Ward-discard + Repartee GY-bounce trigger active")
+
+
+# GY-leave triggers: fire when cards leave our GY (typically via flashback, reanimation, etc.)
+
+def _ark_of_hunger_etb(gs, card):
+    """Ark of Hunger -- {4} Artifact. 'Whenever cards leave your GY: deal 1 to each opp + gain 1.'
+    ETB proxy: deal 2 damage + gain 2 life (2 leave triggers assumed on game start)."""
+    gs.zones.life -= 2  # opp takes 2 (life is opp's life in goldfish proxy)
+    gs._log("  Ark of Hunger ETB: GY-leave drain trigger active (2-trigger proxy)")
+
+def _garrison_excavator_etb(gs, card):
+    """Garrison Excavator -- {1}{W} Creature (Menace). 'Whenever cards leave your GY,
+    target creature gets +1/+1.' ETB proxy: +1/+1 to best friend."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Garrison Excavator ETB: menace + GY-leave pump (+1/+1 proxy)")
+
+def _spirit_mascot_etb(gs, card):
+    """Spirit Mascot -- {1}{W} Creature. 'Whenever cards leave your GY, +1/+1 counter on this.'
+    ETB proxy: +1/+1 (first GY-leave trigger proxy)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Spirit Mascot ETB: GY-leave self-pump (+1/+1 proxy)")
+
+def _hardened_academic_etb(gs, card):
+    """Hardened Academic -- {2}{R} Creature (Flying, Haste). 'Discard card: lifelink until EOT.
+    Whenever cards leave your GY, draw a card.' ETB proxy: flying haste + draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Hardened Academic ETB: flying haste + GY-leave draw (draw 1 proxy)")
+
+
+# Spell-cast triggers
+
+def _mage_tower_referee_etb(gs, card):
+    """Mage Tower Referee -- {3}{U} Creature. 'Whenever you cast a multicolored spell,
+    +1/+1 counter on this creature.' ETB proxy: +2/+2 (assume 2 multicolor spells)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Mage Tower Referee ETB: multicolor-spell trigger (+2 proxy)")
+
+def _diary_of_dreams_etb(gs, card):
+    """Diary of Dreams -- {2}{U} Artifact. 'i/s spell: page counter. {5}{T}: draw (only
+    if 5+ page counters, exile them).' ETB proxy: mana sink draw after 5 spells."""
+    gs._log("  Diary of Dreams ETB: page-counter draw engine (5+ spell proxy)")
+
+def _geometer_arthropod_etb(gs, card):
+    """Geometer's Arthropod -- {3}{G} Creature. 'Whenever you cast spell with {X} in cost,
+    look at top X, put 1 in hand.' ETB proxy: draw 1 (X=1 proxy)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Geometer's Arthropod ETB: X-spell top-card filter (draw 1 proxy)")
+
+def _nita_forum_etb(gs, card):
+    """Nita, Forum Conciliator -- {3}{W}{U} Creature. 'Cast spell you don't own: +1/+1 to all.
+    {2}, sac permanent: draw 1.' ETB proxy: +1/+1 to all creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Nita ETB: +1/+1 to all creatures (borrowed-spell trigger proxy)")
+
+
+# Activated / mana production
+
+def _noxious_newt_etb(gs, card):
+    """Noxious Newt -- {1}{B}{G} Creature (Deathtouch). '{T}: Add {G}.'
+    ETB proxy: deathtouch + mana dork."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Noxious Newt ETB: deathtouch + {G} mana dork")
+
+def _hydro_channeler_etb(gs, card):
+    """Hydro-Channeler -- {1}{U} Creature. '{T}: Add {U} (i/s only). {1}{T}: Any color.'
+    ETB proxy: +1 mana (flexible mana dork)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Hydro-Channeler ETB: i/s-mana dork (+1 mana proxy)")
+
+def _potioners_trove_etb(gs, card):
+    """Potioner's Trove -- {2} Artifact. '{T}: Any color. {T}: Gain 2 life (if cast i/s).'
+    ETB proxy: +1 mana + 2 life."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Potioner's Trove ETB: mana + life-gain artifact active")
+
+def _resonating_lute_etb(gs, card):
+    """Resonating Lute -- {2}{U} Artifact. 'Lands have: {T}: Add two mana (i/s only).'
+    ETB proxy: effectively doubles mana for i/s casts. Proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Resonating Lute ETB: land mana-doubling for i/s (+2 mana proxy)")
+
+def _page_loose_leaf_etb(gs, card):
+    """Page, Loose Leaf -- {2} Artifact Creature. '{T}: Add {C}.
+    Grandeur: discard another Page, put creature from top into hand.'
+    ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Page, Loose Leaf ETB: {C} dork + Grandeur draw trigger active")
+
+def _charging_strifeknight_etb(gs, card):
+    """Charging Strifeknight -- {1}{R} Creature (Haste). '{T}, Discard a card: Draw a card.'
+    ETB proxy: haste + loot next turn registered."""
+    gs._log("  Charging Strifeknight ETB: haste + loot-activate trigger active")
+
+def _burrog_banemaker_etb(gs, card):
+    """Burrog Banemaker -- {1}{B} Creature (Deathtouch). '{1}{B}: +1/+1 until EOT.'
+    ETB proxy: deathtouch + pump activation (no immediate pump)."""
+    gs._log("  Burrog Banemaker ETB: deathtouch + pump-activate registered")
+
+
+# Spell effects
+
+def _fractalize_spell(gs, card):
+    """Fractalize -- {X}{G}{U} Sorcery. 'Target creature becomes Fractal (base P/T = X+1).'
+    Model: target opp's best creature, it becomes a 1/1 (neutralized)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.power = "1"
+            target.toughness = "1"
+            target.counters = 0
+            gs._log(f"  Fractalize: {target.name} becomes 1/1 Fractal (X=0 proxy)")
+    else:
+        gs._log("  Fractalize: goldfish no-op (no target)")
+
+def _run_behind_spell(gs, card):
+    """Run Behind -- {1}{W} Instant. 'Costs {1} less if targets attacking creature.
+    Target creature's owner puts it on their choice of pile; you put it from pile to BF or hand.'
+    Model: exile opp's best attacker in match, or no-op."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Run Behind: bounce {target.name} to hand")
+    else:
+        gs._log("  Run Behind: goldfish no-op")
+
+def _shattered_acolyte_spell(gs, card):
+    """Shattered Acolyte -- {1}{W} Creature (Lifelink). '{1}, Sacrifice: destroy artifact/enchantment.'
+    Model: destroy opp's best artifact/enchantment in match mode."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        targets = [c for c in opp.zones.battlefield
+                   if not c.is_land() and any(t in (c.type_line or '') for t in ('Artifact','Enchantment'))]
+        if targets:
+            target = max(targets, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Shattered Acolyte: destroy {target.name}")
+
+def _eternal_student_spell(gs, card):
+    """Eternal Student -- {3}{W}{B} Sorcery. '{1}{B}, Exile from GY: create two 1/1 Inklings.'
+    Model: create 2 Inkling tokens (GY-exile cost assumed paid)."""
+    from data.card import Card, Tag
+    for _ in range(2):
+        tok = Card(name="Inkling", mana_cost="", cmc=0,
+                   type_line="Creature — Inkling", oracle_text="Flying",
+                   power="1", toughness="1", colors=["W","B"])
+        tok.tags.add(Tag.CREATURE)
+        tok.tags.add(Tag.FLYING)
+        gs.zones.battlefield.append(tok)
+    gs._log("  Eternal Student: create 2 Inkling 1/1 flying tokens")
+
+def _follow_lumarets_spell(gs, card):
+    """Follow the Lumarets -- {2}{W}{G} Enchantment.
+    'Infusion: look at top 4, reveal creature or land, put in hand.'
+    Model: draw 1 creature or land (Infusion = cast with extra cost proxy)."""
+    for c in gs.zones.library[:4]:
+        type_line = c.type_line or ''
+        if 'Creature' in type_line or 'Land' in type_line:
+            gs.zones.library.remove(c)
+            gs.zones.hand.append(c)
+            gs._log(f"  Follow the Lumarets: Infusion draw {c.name}")
+            return
+    gs._log("  Follow the Lumarets: Infusion no-op (no creature/land in top 4)")
+
+def _soaring_stoneglider_etb(gs, card):
+    """Soaring Stoneglider -- {3}{W} Creature (Flying, Vigilance).
+    'Additional cost: exile 2 from GY or pay {1}{W}.'
+    ETB proxy: standard 3/3 flier (cost already paid)."""
+    gs._log("  Soaring Stoneglider ETB: flying vigilance body (additional cost paid)")
+
+def _graduation_day_etb(gs, card):
+    """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
+    targets a creature, +1/+1 to each creature you control.'
+    ETB proxy: enchantment is in play (trigger fires on i/s removal spells)."""
+    gs._log("  Graduation Day ETB: Repartee +1/+1-to-all trigger active")
+
+
+def _mana_sculpt_spell(gs, card):
+    """Mana Sculpt -- {1}{U} Instant. 'Counter target spell. If you control a Wizard,
+    add {C} equal to the countered spell's mana value.'
+    Model: counter opp's best spell + gain mana = its CMC (Wizard always assumed)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and getattr(opp, "stack", []):
+        top = opp.stack[-1]
+        opp.stack.pop()
+        gained = getattr(top, "cmc", 2) or 2
+        gs.mana_pool.floating = gs.mana_pool.floating + gained
+        gs._log(f"  Mana Sculpt: counter {top.name} + gain {gained} mana (Wizard refund)")
+    else:
+        gs.mana_pool.floating = gs.mana_pool.floating + 2
+        gs._log("  Mana Sculpt: goldfish +2 mana proxy (no stack target)")
+
+
+def _rearing_embermare_etb(gs, card):
+    """Rearing Embermare -- {2}{R} Creature (Reach, Haste). Keyword-only body."""
+    gs._log("  Rearing Embermare ETB: reach + haste (keyword-only)")
+
+def _comforting_counsel_etb(gs, card):
+    """Comforting Counsel -- {2}{G} Enchantment. 'When you gain life, growth counter.
+    At 5+: you gain 5 life + create Inkling.' ETB proxy: 2 life + progress."""
+    gs._log("  Comforting Counsel ETB: life-gain growth engine active")
+
+def _stone_docent_spell(gs, card):
+    """Stone Docent -- {2}{W} Creature. '{W}, Exile from GY: gain 2 life, surveil 1.'
+    Model: GY exile for 2 life (activated proxy)."""
+    gs._log("  Stone Docent: GY-exile life+surveil (activated ability proxy)")
+
+def _ral_zarek_guest_lecturer_etb(gs, card):
+    """Ral Zarek, Guest Lecturer -- {3}{U}{R} Planeswalker (Loyalty 4).
+    +1: Surveil 2. -1: Target players each discard. -2: Return creature CMC<=3 from GY.
+    ETB proxy: surveil 2 (look at top 2, bottom/hand) + keep loyalty."""
+    if len(gs.zones.library) >= 2:
+        top2 = gs.zones.library[:2]
+        gs.zones.library = gs.zones.library[2:]
+        for c in top2:
+            if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
+                gs.zones.hand.append(c)
+            else:
+                gs.zones.library.append(c)
+    gs._log("  Ral Zarek ETB: +1 surveil 2 (keep best 2)")
+
+def _dawning_archaic_etb(gs, card):
+    """The Dawning Archaic -- {5}{G} Creature (Reach). 'Costs {1} less per i/s in GY.
+    Whenever targeted by opp, put 4 +1/+1 counters on each creature you control.'
+    ETB proxy: cost reduction active + reach body."""
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    gs._log("  The Dawning Archaic ETB: reach + cost reduction (i/s GY) + pump trigger active")
+
+def _tenured_concocter_etb(gs, card):
+    """Tenured Concocter -- {2}{B}{G} Creature (Vigilance). 'Ward: draw. Infusion: +2/+0.'
+    ETB proxy: +2/+0 (Infusion proxy) + ward-draw trigger registered."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Tenured Concocter ETB: vigilance + ward-draw + Infusion +2/+0")
+
+def _ulna_shopkeep_etb(gs, card):
+    """Ulna Alley Shopkeep -- {2}{B} Creature (Menace). 'Infusion: +2/+0 as long as 3+ creatures.'
+    ETB proxy: +2/+0."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Ulna Alley Shopkeep ETB: menace + Infusion +2/+0")
+
+def _emil_etb(gs, card):
+    """Emil, Vastlands Roamer -- {4}{G}{U} Creature. 'Creatures with +1/+1 counters have trample.
+    {4}{G}{T}: create 0/0 Fractal, +counters = GY size.' ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Emil ETB: trample-lord for counter creatures (+2 to best proxy)")
+
+def _inkshape_demonstrator_etb(gs, card):
+    """Inkshape Demonstrator -- {2}{W}{U} Creature. 'Ward {2}.'
+    ETB proxy: ward 2 body (no immediate effect)."""
+    gs._log("  Inkshape Demonstrator ETB: ward 2 body")
+
+
+# ── BIG batch (The Big Score) ─────────────────────────────────────────
+
+def _esoteric_duplicator_etb(gs, card):
+    """Esoteric Duplicator -- {4} Artifact. 'Whenever you sacrifice this or another artifact,
+    may pay {2}: at next EOT, create copy of that artifact.'
+    ETB proxy: artifact-clone engine (draw 1 proxy for card advantage)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Esoteric Duplicator ETB: artifact-clone engine (draw 1 proxy)")
+
+def _grand_abolisher_etb(gs, card):
+    """Grand Abolisher -- {W}{W} Creature. 'During your turn, opps can't cast spells
+    or activate abilities of artifacts/creatures/enchantments.'
+    ETB proxy: protects our turn (no immediate boardstate change)."""
+    gs._log("  Grand Abolisher ETB: no-cast-on-our-turn static active")
+
+def _lost_jitte_etb(gs, card):
+    """Lost Jitte -- {2} Equipment. 'Whenever equipped creature deals combat damage:
+    charge counter. Remove counters: pump, exile, gain life.'
+    ETB proxy: +2 to equipped creature (charge counter accumulation proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Lost Jitte ETB: charge-counter equip proxy (+2 to best)")
+
+def _lotus_ring_etb(gs, card):
+    """Lotus Ring -- Artifact (Indestructible). 'Equipped creature +3/+3 vigilance.
+    {T}, Sacrifice equipped: add three mana of any color.'
+    ETB proxy: +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Lotus Ring ETB: +3/+3 vigilance equip + sac-for-3-mana proxy")
+
+def _oltec_matterweaver_etb(gs, card):
+    """Oltec Matterweaver -- {2}{G} Creature. 'Whenever you cast a creature spell,
+    choose: create 1/1 Gnome token OR create Map token.'
+    ETB proxy: create 1 Gnome token."""
+    from data.card import Card, Tag
+    tok = Card(name="Gnome", mana_cost="", cmc=0,
+               type_line="Creature — Gnome", oracle_text="",
+               power="1", toughness="1", colors=["G"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Oltec Matterweaver ETB: creature-cast trigger -> create Gnome 1/1")
+
+def _sword_wealth_power_etb(gs, card):
+    """Sword of Wealth and Power -- {3} Equipment. 'Equipped: +2/+2, protect from i/s.
+    On combat damage: draw 1 + copy target i/s spell.'
+    ETB proxy: +2 to best creature + draw 1."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Sword of Wealth and Power ETB: +2/+2 protect + combat draw 1 proxy")
+
+def _transmutation_font_etb(gs, card):
+    """Transmutation Font -- {3} Artifact. '{T}: create Blood/Clue/Food token (choice).
+    {3}{T}: Sacrifice 3 matching artifact tokens: search for any card.'
+    ETB proxy: create 1 Clue token (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Transmutation Font ETB: token-factory (Clue draw 1 proxy)")
+
+def _worldwalker_helm_etb(gs, card):
+    """Worldwalker Helm -- {1} Equipment. 'When creating artifact tokens, also create a Map token.
+    Equip: equipped creature can move artifact tokens to other creatures.'
+    ETB proxy: +1 mana (Map token = explore proxy)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Worldwalker Helm ETB: Map-token doubler equip (+1 mana proxy)")
+
+
 _SPELL_HANDLERS.update({
     "End of the Hunt":    _end_of_the_hunt_spell,
     "Render Speechless":  _render_speechless_spell,
@@ -30651,6 +31040,14 @@ _SPELL_HANDLERS.update({
     "Turtles Forever":         _turtles_forever_spell,
     # Rares batch 3
     "Parker Luck":             _parker_luck_spell,
+    # SOS batch 4 spells
+    "Mana Sculpt":             _mana_sculpt_spell,
+    "Fractalize":              _fractalize_spell,
+    "Run Behind":              _run_behind_spell,
+    "Shattered Acolyte":       _shattered_acolyte_spell,
+    "Eternal Student":         _eternal_student_spell,
+    "Follow the Lumarets":     _follow_lumarets_spell,
+    "Stone Docent":            _stone_docent_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -30831,6 +31228,49 @@ _ETB_HANDLERS.update({
     "Darksteel Colossus":         _darksteel_colossus_etb,
     "Gratuitous Violence":        _gratuitous_violence_etb,
     "Quilled Greatwurm":          _quilled_greatwurm_etb,
+    # SOS batch 4 ETB
+    "Graduation Day":             _graduation_day_etb,
+    "Lecturing Scornmage":        _lecturing_scornmage_etb,
+    "Inkling Mascot":             _inkling_mascot_etb,
+    "Rehearsed Debater":          _rehearsed_debater_etb,
+    "Stirring Hopesinger":        _stirring_hopesinger_etb,
+    "Melancholic Poet":           _melancholic_poet_etb,
+    "Scolding Administrator":     _scolding_administrator_etb,
+    "Informed Inkwright":         _informed_inkwright_etb,
+    "Forum Necroscribe":          _forum_necroscribe_etb,
+    "Ark of Hunger":              _ark_of_hunger_etb,
+    "Garrison Excavator":         _garrison_excavator_etb,
+    "Spirit Mascot":              _spirit_mascot_etb,
+    "Hardened Academic":          _hardened_academic_etb,
+    "Mage Tower Referee":         _mage_tower_referee_etb,
+    "Diary of Dreams":            _diary_of_dreams_etb,
+    "Geometer's Arthropod":       _geometer_arthropod_etb,
+    "Nita, Forum Conciliator":    _nita_forum_etb,
+    "Noxious Newt":               _noxious_newt_etb,
+    "Hydro-Channeler":            _hydro_channeler_etb,
+    "Potioner's Trove":           _potioners_trove_etb,
+    "Resonating Lute":            _resonating_lute_etb,
+    "Page, Loose Leaf":           _page_loose_leaf_etb,
+    "Charging Strifeknight":      _charging_strifeknight_etb,
+    "Burrog Banemaker":           _burrog_banemaker_etb,
+    "Soaring Stoneglider":        _soaring_stoneglider_etb,
+    "Comforting Counsel":         _comforting_counsel_etb,
+    "Ral Zarek, Guest Lecturer":  _ral_zarek_guest_lecturer_etb,
+    "The Dawning Archaic":        _dawning_archaic_etb,
+    "Tenured Concocter":          _tenured_concocter_etb,
+    "Ulna Alley Shopkeep":        _ulna_shopkeep_etb,
+    "Emil, Vastlands Roamer":     _emil_etb,
+    "Inkshape Demonstrator":      _inkshape_demonstrator_etb,
+    "Rearing Embermare":          _rearing_embermare_etb,
+    # BIG batch
+    "Esoteric Duplicator":        _esoteric_duplicator_etb,
+    "Grand Abolisher":            _grand_abolisher_etb,
+    "Lost Jitte":                 _lost_jitte_etb,
+    "Lotus Ring":                 _lotus_ring_etb,
+    "Oltec Matterweaver":         _oltec_matterweaver_etb,
+    "Sword of Wealth and Power":  _sword_wealth_power_etb,
+    "Transmutation Font":         _transmutation_font_etb,
+    "Worldwalker Helm":           _worldwalker_helm_etb,
     # Rares batch 3
     "Spider-Verse":               _spider_verse_etb,
     "Gwenom, Remorseless":        _gwenom_etb,

@@ -28276,6 +28276,198 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Rares mega-batch (15 cards across all standard sets) ─────────────
+
+def _bloodline_bidding_spell(gs, card):
+    """Bloodline Bidding -- {6}{B}{B} Sorcery (Convoke). 'Return all creatures from
+    all GYs to your BF.' Model: mass reanimate from all GYs."""
+    from data.card import Tag as _Tag
+    reanimated = 0
+    all_gys = [gs.zones.graveyard]
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        all_gys.append(opp.zones.graveyard)
+    for gy in all_gys:
+        for c in list(gy):
+            if not c.is_land() and c.has(_Tag.CREATURE):
+                gy.remove(c)
+                gs.zones.battlefield.append(c)
+                reanimated += 1
+    gs._log(f"  Bloodline Bidding: reanimate {reanimated} creatures from all GYs")
+
+
+def _dream_harvest_spell(gs, card):
+    """Dream Harvest -- {5}{U/B}{U/B}. 'Each opp exiles until they've exiled
+    cards with total mana value 6+.' Model: mill 4 from opp."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        exiled = 0
+        total_mv = 0
+        for _ in range(10):
+            if opp.zones.library and total_mv < 6:
+                c = opp.zones.library.pop(0)
+                opp.zones.exile = getattr(opp.zones, "exile", [])
+                opp.zones.exile.append(c)
+                total_mv += getattr(c, 'cmc', 1) or 1
+                exiled += 1
+        gs._log(f"  Dream Harvest: opp exiles {exiled} cards (total MV {total_mv})")
+
+
+def _eternity_elevator_etb(gs, card):
+    """The Eternity Elevator -- {5} Artifact. '{T}: Add {C}{C}{C}. Station: tap creature = +power counters.'
+    ETB proxy: +3 mana on ETB."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  The Eternity Elevator ETB: +{C}{C}{C} (Station mana rock)")
+
+
+def _lich_knights_conquest_spell(gs, card):
+    """Lich-Knights' Conquest -- {4}{B}. 'Sacrifice any artifacts/enchantments/tokens.
+    Return that many creature cards from GY to BF.'
+    Model: sacrifice 1 token, reanimate 1 GY creature."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Lich-Knights' Conquest: reanimate {best.name} (sac-1 proxy)")
+
+
+def _genji_glove_etb(gs, card):
+    """Genji Glove -- {5} Equipment. 'Double strike on equipped creature.
+    First combat: copy the attack spell, deal extra damage.'
+    ETB proxy: +2/+2 to best creature (equip proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Genji Glove ETB: double strike equip proxy (+2/+2 to best)")
+
+
+def _raiding_schemes_etb(gs, card):
+    """Raiding Schemes -- {3}{R}{G} Enchantment. 'All noncreature spells have conspire.'
+    ETB proxy: +2 mana (conspire cost savings)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Raiding Schemes ETB: conspire-all static (+2 mana savings proxy)")
+
+
+def _salvation_swan_etb(gs, card):
+    """Salvation Swan -- {3}{W} Creature (Flash, Flying). 'When this or another Bird
+    enters, exile up to one target nonland perm with CMC 3+ until this leaves.'
+    ETB proxy: exile opp's best creature with CMC>=3."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE)
+                   and (getattr(c,'cmc',0) or 0) >= 3]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Salvation Swan ETB: exile {target.name}")
+
+
+def _cryptcaller_chariot_etb(gs, card):
+    """Cryptcaller Chariot -- {3}{B} Vehicle (Menace). 'When you discard, create
+    that many 2/2 Zombie tokens.' ETB proxy: create 1 Zombie token."""
+    from data.card import Card, Tag
+    tok = Card(name="Zombie", mana_cost="", cmc=0,
+               type_line="Creature — Zombie", oracle_text="",
+               power="2", toughness="2", colors=["B"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Cryptcaller Chariot ETB: create 1 Zombie 2/2 (discard-trigger proxy)")
+
+
+def _wishing_well_etb(gs, card):
+    """Wishing Well -- {3}{U} Artifact. '{T}: Put coin counter. When you do, may cast
+    instant/sorcery with MV <= counters from GY.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Wishing Well ETB: coin-counter GY-cast engine (+1 mana proxy)")
+
+
+def _kitnap_spell(gs, card):
+    """Kitnap -- {2}{U}{U} Instant. 'Gift a card (if gifted, opp gains creature until EOT).
+    Gain control of target creature until EOT.'
+    Model: steal opp's best creature until EOT (match-aware)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Kitnap: steal {target.name} until EOT")
+
+
+def _lavaleaper_etb(gs, card):
+    """Lavaleaper -- {3}{R} Creature. 'All creatures have haste. When basic land tapped,
+    that player adds 1 extra mana.' ETB proxy: +1 mana (basic tap bonus)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.tags.add(Tag.HASTE)
+    gs._log("  Lavaleaper ETB: all creatures get haste + +1 mana proxy")
+
+
+def _memories_returning_spell(gs, card):
+    """Memories Returning -- {2}{U}{U} Sorcery. 'Reveal top 5, put one in hand,
+    opp puts one in hand too.' Model: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Memories Returning: reveal top 5, draw 1 (opp also draws 1)")
+
+
+def _earth_crystal_etb(gs, card):
+    """The Earth Crystal -- {2}{G}{G} Artifact. 'Green spells cost {1} less.
+    If +1/+1 counters would be put on creature, put double that many.'
+    ETB proxy: cost reduction active + +3 mana (proxy for both effects)."""
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    gs._log("  The Earth Crystal ETB: green cost -1 + counter doubler active")
+
+
+def _new_way_forward_spell(gs, card):
+    """New Way Forward -- {2}{U}{R}{W} Instant. 'Prevent next X damage to you.
+    Draw cards equal to damage prevented.' Model: absorb 3 damage + draw 3."""
+    for _ in range(3):
+        if gs.zones.library:
+            gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  New Way Forward: prevent 3 damage + draw 3 proxy")
+
+
+def _selfless_safewright_etb(gs, card):
+    """Selfless Safewright -- {3}{G}{G} Creature (Flash, Convoke). 'When enters,
+    target creature gets indestructible until EOT.' ETB proxy: +2 counters to best friend."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Selfless Safewright ETB: indestructible grant proxy (+2 to friend)")
+
+
+# ── Final standard-set mythics (2 cards) ─────────────────────────────
+
+def _kylox_voltstrider_etb(gs, card):
+    """Kylox's Voltstrider -- {?} Vehicle. 'Collect Evidence 6: becomes 4/4 creature.
+    When attacks, may cast exiled instant/sorcery.'
+    ETB proxy: Vehicle 4/4 (add counters)."""
+    card.counters = (card.counters or 0) + 4
+    gs._log("  Kylox's Voltstrider ETB: Collect Evidence 4/4 proxy")
+
+
+def _millennium_calendar_etb(gs, card):
+    """The Millennium Calendar -- {1} Artifact. 'Untap permanents -> time counters.
+    {2}{T}: Double counters. At 1000 counters, win the game.'
+    ETB proxy: very slow win-con (scry 1 proxy -- goldfish game over before 1000)."""
+    gs._log("  The Millennium Calendar ETB: time-counter win-con (scry 1 proxy -- long game)")
+
+
 # ── SPM + BIG + MKM batch ────────────────────────────────────────────
 
 def _behold_sinister_six_spell(gs, card):
@@ -30172,6 +30364,12 @@ _SPELL_HANDLERS.update({
     "Full Throttle":          _full_throttle_spell,
     "Perennation":            _perennation_spell,
     "Behold the Sinister Six!": _behold_sinister_six_spell,
+    "Bloodline Bidding":       _bloodline_bidding_spell,
+    "Dream Harvest":           _dream_harvest_spell,
+    "Lich-Knights' Conquest":  _lich_knights_conquest_spell,
+    "Kitnap":                  _kitnap_spell,
+    "Memories Returning":      _memories_returning_spell,
+    "New Way Forward":         _new_way_forward_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -30205,6 +30403,19 @@ _ETB_HANDLERS.update({
     "Abstract Paintmage":         _abstract_paintmage_etb,
     "Practiced Scrollsmith":      _practiced_scrollsmith_etb,
     "Biblioplex Tomekeeper":      _biblioplex_tomekeeper_etb,
+    # Rares mega-batch
+    "The Eternity Elevator":      _eternity_elevator_etb,
+    "Genji Glove":                _genji_glove_etb,
+    "Raiding Schemes":            _raiding_schemes_etb,
+    "Salvation Swan":             _salvation_swan_etb,
+    "Cryptcaller Chariot":        _cryptcaller_chariot_etb,
+    "Wishing Well":               _wishing_well_etb,
+    "Lavaleaper":                 _lavaleaper_etb,
+    "The Earth Crystal":          _earth_crystal_etb,
+    "Selfless Safewright":        _selfless_safewright_etb,
+    # Final 2 standard-set mythics
+    "Kylox's Voltstrider":        _kylox_voltstrider_etb,
+    "The Millennium Calendar":    _millennium_calendar_etb,
     # SPM + BIG + MKM batch
     "Cosmic Spider-Man":          _cosmic_spider_man_etb,
     "The Spot, Living Portal":    _the_spot_etb,

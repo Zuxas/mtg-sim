@@ -28276,6 +28276,147 @@ def _emeritus_woe_etb(gs, card):
 
 # ── Foundations (FDN) reprints -- competitive handlers ────────────────
 
+# ── Rares batch 3 ─────────────────────────────────────────────────────
+
+def _spider_verse_etb(gs, card):
+    """Spider-Verse -- {3}{R}{R} Enchantment. 'Legend rule doesn't apply to Spiders.
+    Whenever you cast spell from anywhere other than hand, create Spider copy token.'
+    ETB proxy: create 1 Spider 2/2."""
+    from data.card import Card, Tag
+    tok = Card(name="Spider", mana_cost="", cmc=0,
+               type_line="Creature — Spider", oracle_text="Reach",
+               power="2", toughness="2", colors=["R"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Spider-Verse ETB: legend-rule off + Spider token 2/2")
+
+
+def _gwenom_etb(gs, card):
+    """Gwenom, Remorseless -- {3}{B}{B} (Deathtouch, Lifelink). 'When attacks,
+    look at top card, may cast it paying life instead of mana.'
+    ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Gwenom ETB: deathtouch lifelink + attack-cast trigger (draw 1)")
+
+
+def _teval_etb(gs, card):
+    """Teval, Arbiter of Virtue -- {2}{B}{G}{U} (Flying, Lifelink). 'All spells have delve.'
+    ETB proxy: +2 mana (delve cost savings proxy)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Teval ETB: all-spells delve static (+2 mana proxy)")
+
+
+def _mirrormind_crown_etb(gs, card):
+    """Mirrormind Crown -- {4} Equipment. 'First time you create tokens, also create
+    a token that's a copy of each creature you control.'
+    ETB proxy: double tokens proxy (+2/+2 to best)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Mirrormind Crown ETB: token-doubling equipment proxy (+2/+2)")
+
+
+def _mikey_don_etb(gs, card):
+    """Mikey & Don, Party Planners -- {2}{G/U}{G/U}. 'Ward 2. Look at top card.
+    Play lands + cast Mutants from top.'
+    ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Mikey & Don ETB: top-cast static (draw 1 proxy)")
+
+
+def _raphael_nightwatcher_etb(gs, card):
+    """Raphael, the Nightwatcher -- {2}{R}{R}. Sneak {1}{R}{R}.
+    'When attacks, opponent reveals top card and discards it if not land.'
+    ETB proxy: discard opp's top card."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.library:
+        top = opp.zones.library.pop(0)
+        if not top.is_land():
+            opp.zones.graveyard.append(top)
+            gs._log(f"  Raphael Nightwatcher ETB: opp discards {top.name}")
+        else:
+            opp.zones.library.insert(0, top)  # keep land
+            gs._log("  Raphael Nightwatcher ETB: top was land, kept")
+
+
+def _rip_spawn_hunter_etb(gs, card):
+    """Rip, Spawn Hunter -- {2}{G}{W}. Survival: at beginning of second main phase,
+    if tapped: reveal top X, put creature with X power into hand.'
+    ETB proxy: draw 1 creature."""
+    creatures = [c for c in gs.zones.library if not c.is_land() and 'Creature' in (c.type_line or '')]
+    if creatures:
+        found = creatures[0]
+        gs.zones.library.remove(found)
+        gs.zones.hand.append(found)
+        gs._log(f"  Rip ETB: Survival tutor creature {found.name}")
+
+
+def _shark_shredder_etb(gs, card):
+    """Shark Shredder, Killer Clone -- {2}{B}{B}. Sneak {3}{B}{B}. First strike.
+    'When deals combat damage: put target creature from opp GY into play under your control.'
+    ETB proxy: steal opp GY creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        gy = [c for c in opp.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+        if gy:
+            best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.graveyard.remove(best)
+            gs.zones.battlefield.append(best)
+            gs._log(f"  Shark Shredder ETB: steal {best.name} from opp GY")
+
+
+def _doran_besieged_etb(gs, card):
+    """Doran, Besieged by Time -- {1}{W}{B}{G}. 'Toughness > power spells cost {1} less.
+    Whenever another creature enters, it fights target opp creature.'
+    ETB proxy: cost reduction + fight trigger."""
+    from data.card import Tag as _Tag
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = min(threats, key=lambda c: c.effective_power())
+            opp_power = target.effective_power()
+            our_power = max(1, int(card.power or 1))
+            if our_power >= int(target.toughness or 1):
+                opp.zones.battlefield.remove(target)
+                opp.zones.graveyard.append(target)
+    gs._log("  Doran ETB: cost -1 + fight trigger active")
+
+
+def _taster_of_wares_etb(gs, card):
+    """Taster of Wares -- {2}{B}. 'ETB: opp reveals X cards (X = number of basic lands
+    you control). You choose one for them to discard.'
+    Model: opp discards 1."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        worst = max(opp.zones.hand, key=lambda c: getattr(c,'cmc',0) or 0)
+        opp.zones.hand.remove(worst)
+        opp.zones.graveyard.append(worst)
+        gs._log(f"  Taster of Wares ETB: opp discards {worst.name}")
+
+
+def _parker_luck_spell(gs, card):
+    """Parker Luck -- {2}{B} Sorcery. 'End step: 2 players reveal top card.
+    Controller of higher MV card loses 3 life or discards 2.'
+    Model: opp loses 3 life."""
+    gs.zones.life -= 3
+    gs._log("  Parker Luck: opp loses 3 life (top-card MV gamble proxy)")
+
+
+def _lilah_etb(gs, card):
+    """Lilah, Undefeated Slickshot -- {1}{U}{R} (Prowess). 'Whenever you cast
+    noncreature spell: put it on top instead of GY, copy it with storm.'
+    ETB proxy: Prowess +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Lilah ETB: Prowess + storm-rebound trigger (+1/+1 proxy)")
+
+
 # ── Rares batch 2 (across all standard sets) ─────────────────────────
 
 def _triple_triad_etb(gs, card):
@@ -30508,6 +30649,8 @@ _SPELL_HANDLERS.update({
     "New Way Forward":         _new_way_forward_spell,
     "Collective Inferno":      _collective_inferno_spell,
     "Turtles Forever":         _turtles_forever_spell,
+    # Rares batch 3
+    "Parker Luck":             _parker_luck_spell,
 })
 
 _ETB_HANDLERS.update({
@@ -30688,6 +30831,18 @@ _ETB_HANDLERS.update({
     "Darksteel Colossus":         _darksteel_colossus_etb,
     "Gratuitous Violence":        _gratuitous_violence_etb,
     "Quilled Greatwurm":          _quilled_greatwurm_etb,
+    # Rares batch 3
+    "Spider-Verse":               _spider_verse_etb,
+    "Gwenom, Remorseless":        _gwenom_etb,
+    "Teval, Arbiter of Virtue":   _teval_etb,
+    "Mirrormind Crown":           _mirrormind_crown_etb,
+    "Mikey & Don, Party Planners": _mikey_don_etb,
+    "Raphael, the Nightwatcher":  _raphael_nightwatcher_etb,
+    "Rip, Spawn Hunter":          _rip_spawn_hunter_etb,
+    "Shark Shredder, Killer Clone": _shark_shredder_etb,
+    "Doran, Besieged by Time":    _doran_besieged_etb,
+    "Taster of Wares":            _taster_of_wares_etb,
+    "Lilah, Undefeated Slickshot": _lilah_etb,
 })
 
 

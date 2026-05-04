@@ -310,6 +310,26 @@ MATCH_APL_REGISTRY = {
     "superiordoomsday":    ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
     "doomsday":            ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
     "simiccub":            ("apl.simic_cub_standard_match",                "SimicCubStandardMatchAPL"),
+    # ── New match APLs from guide-informed pass (2026-05-04) ─────────────────
+    "bantairbending":      ("apl.bant_airbending_standard_match",          "BantAirbendingStandardMatchAPL"),
+    "temurlute":           ("apl.temur_lute_standard_match",               "TemurLuteStandardMatchAPL"),
+    "temurlutestd":        ("apl.temur_lute_standard_match",               "TemurLuteStandardMatchAPL"),
+    "mardudiscard":        ("apl.discard_aggro_standard_match",            "MarduDiscardStandardMatchAPL"),
+    "rakdosdiscard":       ("apl.discard_aggro_standard_match",            "RakdosDiscardStandardMatchAPL"),
+    "borosdiscard":        ("apl.discard_aggro_standard_match",            "BorosDiscardStandardMatchAPL"),
+    "sultaicontrol":       ("apl.sultai_control_standard_match",           "SultaiControlStandardMatchAPL"),
+    # Proxy mappings: route to nearest strategic equivalent
+    "dimirmidrangestd":    ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
+    "dimirmidrangestdstd": ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
+    "fourcolorcontrol":    ("apl.jeskai_control_standard_match",           "JeskaiControlStandardMatchAPL"),
+    "fourcolorelemental":  ("apl.izzet_spellementals_standard_match",      "IzzetSpellementalsStandardMatchAPL"),
+    "golgaricontrol":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
+    "golgarikona":         ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
+    "selesnyarhythm":      ("apl.selesnya_landfall_standard_match",        "SelesnyaLandfallStandardMatchAPL"),
+    "bantrhythm":          ("apl.bant_airbending_standard_match",          "BantAirbendingStandardMatchAPL"),
+    "simicomniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
+    "bantomniscience":     ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
+    "temuromniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
 }
 
 

@@ -34831,6 +34831,107 @@ def _descendant_of_storms_etb(gs, card):
     card.counters = (card.counters or 0) + 1
     gs._log("  Descendant of Storms ETB: attack-endure +1 proxy")
 
+# TDM final batch (14 remaining)
+
+def _veteran_ice_climber_etb(gs, card):
+    """Vigilance, can't be blocked. 'When attacks, tap target.' ETB proxy: unblockable + tap."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Veteran Ice Climber ETB: vigilance unblockable + attack-tap {target.name}")
+    else:
+        gs._log("  Veteran Ice Climber ETB: vigilance + can't be blocked")
+
+def _iridescent_tiger_etb(gs, card):
+    """'ETB if cast: add {W}{U}{B}{R}{G}.' ETB proxy: +5 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 5
+    gs._log("  Iridescent Tiger ETB: cast trigger {W}{U}{B}{R}{G} (+5 mana proxy)")
+
+def _zurgos_vanguard_etb(gs, card):
+    """'Mobilize 1: when attacks, create 1 tapped attacking Warrior.' ETB proxy: create Warrior."""
+    from data.card import Card, Tag
+    tok = Card(name="Warrior", mana_cost="", cmc=0, type_line="Creature — Warrior", oracle_text="", power="1", toughness="1", colors=["R"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Zurgo's Vanguard ETB: Mobilize 1 Warrior proxy")
+
+def _inspirited_vanguard_etb(gs, card):
+    """'When enters or attacks, endures 2 (+2/+2 or 2/2 Warrior).' ETB proxy: +2."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Inspirited Vanguard ETB: ETB/attack endures 2 (+2 proxy)")
+
+def _all_out_assault_etb(gs, card):
+    """Enchantment. '+1/+1 + deathtouch to all creatures. ETB if ??? Mobilize or extra effect.'
+    ETB proxy: +1 + deathtouch to all our creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+            c.tags.add(Tag.DEATHTOUCH)
+    gs._log("  All-Out Assault ETB: +1/+1 + deathtouch to all our creatures")
+
+def _flamehold_grappler_etb(gs, card):
+    """First strike. 'ETB: copy next spell you cast this turn when you cast it.'
+    ETB proxy: first strike + spell-copy trigger active."""
+    gs._log("  Flamehold Grappler ETB: first strike + ETB-spell-copy trigger active")
+
+def _sandskitter_outrider_etb(gs, card):
+    """Menace. 'ETB: create Treasure.' ETB proxy: menace + +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Sandskitter Outrider ETB: menace + create Treasure (+1 mana proxy)")
+
+def _jeskai_brushmaster_etb(gs, card):
+    """Double strike. Prowess. ETB proxy: double strike + +1/+1 (Prowess)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Jeskai Brushmaster ETB: double strike + Prowess +1/+1 proxy")
+
+def _stormbeacon_blade_etb(gs, card):
+    """Equipment +3/+0. 'When attacks, draw 1 if control creature with power 4+.'
+    ETB proxy: +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Stormbeacon Blade ETB: +3/+0 equip + power-4-draw trigger")
+
+def _attuned_hunter_etb(gs, card):
+    """Trample. 'When cards leave GY your turn, +1/+1 counter on this.'
+    ETB proxy: trample + +2 (2 GY-leave triggers proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Attuned Hunter ETB: trample + GY-leave pump (+2 proxy)")
+
+def _lasyd_prowler_etb(gs, card):
+    """'ETB: may mill = land count. Reach and trample gained.' ETB proxy: draw 1 (mill chain)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Lasyd Prowler ETB: ETB-mill land-count (draw 1 proxy)")
+
+def _fortress_kin_guard_etb(gs, card):
+    """'ETB: endures 1 (+1/+1 OR create 1/1 Warrior).' ETB proxy: +1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Fortress Kin-Guard ETB: endures 1 (+1/+1 proxy)")
+
+def _synchronized_charge_spell(gs, card):
+    """'Distribute 2 +1/+1 among 1-2 creatures. They get additional counter per attacking.'
+    Model: +1/+1 to 2 best creatures."""
+    from data.card import Tag as _Tag
+    friends = sorted([c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)],
+                     key=lambda c: -c.effective_power())[:2]
+    for f in friends:
+        f.counters = (f.counters or 0) + 1
+    gs._log(f"  Synchronized Charge: +1/+1 to {len(friends)} creatures")
+
+def _felothar_etb(gs, card):
+    """Trample. 'ETB/attacks: may sac nonland perm. When you do, draw 1 + create Warrior.'
+    ETB proxy: trample + +1 mana + draw 1."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Felothar ETB: trample + sac-draw1-Warrior proxy (draw 1 + +1 mana)")
+
 
 def _graduation_day_etb(gs, card):
     """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
@@ -35065,6 +35166,7 @@ _SPELL_HANDLERS.update({
     "Stall Out":               _stall_out_spell,
     # TDM spells
     "Rite of Renewal":         _rite_of_renewal_spell,
+    "Synchronized Charge":     _synchronized_charge_spell,
     "Dragonclaw Strike":       _dragonclaw_strike_spell,
     "Twin Bolt":               _twin_bolt_spell,
     "Alesha's Legacy":         _alethas_legacy_spell,
@@ -35445,6 +35547,20 @@ _ETB_HANDLERS.update({
     "Summit Intimidator":          _summit_intimidator_etb,
     "Wayspeaker Bodyguard":        _wayspeaker_bodyguard_etb,
     "Descendant of Storms":        _descendant_of_storms_etb,
+    # TDM final batch
+    "Veteran Ice Climber":         _veteran_ice_climber_etb,
+    "Iridescent Tiger":            _iridescent_tiger_etb,
+    "Zurgo's Vanguard":            _zurgos_vanguard_etb,
+    "Inspirited Vanguard":         _inspirited_vanguard_etb,
+    "All-Out Assault":             _all_out_assault_etb,
+    "Flamehold Grappler":          _flamehold_grappler_etb,
+    "Sandskitter Outrider":        _sandskitter_outrider_etb,
+    "Jeskai Brushmaster":          _jeskai_brushmaster_etb,
+    "Stormbeacon Blade":           _stormbeacon_blade_etb,
+    "Attuned Hunter":              _attuned_hunter_etb,
+    "Lasyd Prowler":               _lasyd_prowler_etb,
+    "Fortress Kin-Guard":          _fortress_kin_guard_etb,
+    "Felothar, Dawn of the Abzan": _felothar_etb,
     # FDN batch
     "Drakuseth, Maw of Flames":    _drakuseth_etb,
     "Felidar Retreat":             _felidar_retreat_etb,

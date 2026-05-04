@@ -31478,6 +31478,618 @@ def _waterwind_scout_etb(gs, card):
     gs._log("  Waterwind Scout ETB: flying + create Map token (+1 mana proxy)")
 
 
+# ── SPM batch (Marvel's Spider-Man) ──────────────────────────────────
+
+def _vulture_scheming_etb(gs, card):
+    """Vulture, Scheming Scavenger -- Flying. 'When attacks, other Villains gain flying.'
+    ETB proxy: +1 to all creatures (tribal pump)."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Vulture ETB: flying + Villain-flying grant (+1 to all proxy)")
+
+def _costume_closet_etb(gs, card):
+    """Costume Closet -- 'Enters with 2 +1/+1 counters. {T}: Move counter to creature.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Costume Closet ETB: 2 counters -> move to best creature (+2 proxy)")
+
+def _clone_saga_etb(gs, card):
+    """The Clone Saga -- Saga. I: Surveil 2. II: ???. III: ???
+    ETB proxy: surveil 2 (look at top 2, keep best)."""
+    if len(gs.zones.library) >= 2:
+        top2 = gs.zones.library[:2]
+        gs.zones.library = gs.zones.library[2:]
+        for c in top2:
+            if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
+                gs.zones.hand.append(c)
+            else:
+                gs.zones.library.append(c)
+    gs._log("  The Clone Saga ETB: Saga I surveil 2")
+
+def _spider_gwen_etb(gs, card):
+    """Spider-Gwen, Free Spirit -- Reach. 'Whenever tapped, may discard: draw.'
+    ETB proxy: reach body + loot trigger (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Spider-Gwen ETB: reach + loot-on-tap (draw 1 proxy)")
+
+def _wild_pack_squad_etb(gs, card):
+    """Wild Pack Squad -- 'At beginning of combat, target creature gets first strike + vigilance.'
+    ETB proxy: +1/+1 to best creature (combat trigger proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Wild Pack Squad ETB: combat first-strike+vigilance grant (+1 proxy)")
+
+def _daily_bugle_reporters_etb(gs, card):
+    """Daily Bugle Reporters -- 'ETB: +1/+1 on up to 2 creatures OR 2 damage to opp.'
+    ETB proxy: +1/+1 to 2 creatures."""
+    from data.card import Tag as _Tag
+    friends = sorted([c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)],
+                     key=lambda c: -c.effective_power())[:2]
+    for f in friends:
+        f.counters = (f.counters or 0) + 1
+    gs._log(f"  Daily Bugle Reporters ETB: +1/+1 to {len(friends)} creatures")
+
+def _spider_mobile_etb(gs, card):
+    """Spider-Mobile -- Vehicle. 'When attacks/blocks: +1/+1 per Spider you control.'
+    ETB proxy: +2/+2 (assume 2 Spiders)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Spider-Mobile ETB: attack/block Spider pump (+2 proxy)")
+
+def _mob_lookout_etb(gs, card):
+    """Mob Lookout -- 'ETB: target creature connives.' ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Mob Lookout ETB: connive trigger (draw 1 proxy)")
+
+def _shocker_etb(gs, card):
+    """Shocker, Unshakable -- First strike (your turn). 'ETB: 2 damage to each opponent.'
+    ETB proxy: deal 2 damage to opp."""
+    gs.zones.life -= 2
+    gs._log("  Shocker ETB: 2 damage to each opp")
+
+def _shriek_treblemaker_etb(gs, card):
+    """Shriek, Treblemaker -- 'At start of first main: discard, then creature can't block.'
+    ETB proxy: loot trigger (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Shriek ETB: discard-draw trigger (loot proxy)")
+
+def _spider_rex_etb(gs, card):
+    """Spider-Rex, Daring Dino -- Reach, trample, ward {2}. No ETB trigger.
+    ETB proxy: reach trample ward 2 body."""
+    gs._log("  Spider-Rex ETB: reach trample ward 2 body")
+
+def _green_goblin_revenant_etb(gs, card):
+    """Green Goblin, Revenant -- Flying, deathtouch. 'Attack: discard then draw per card.'
+    ETB proxy: flying deathtouch + draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Green Goblin ETB: flying deathtouch + attack-loot (draw 1 proxy)")
+
+def _spdr_etb(gs, card):
+    """SP//dr -- Vigilance. 'ETB: +1/+1 on target creature. Modified creature trigger: draw.'
+    ETB proxy: +1 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  SP//dr ETB: vigilance + +1/+1 to best + modified-draw trigger")
+
+def _prowler_thief_etb(gs, card):
+    """Prowler, Clawed Thief -- Menace. 'When other Villain enters, +1/+1 to this.'
+    ETB proxy: +2 (2 Villain-enter triggers)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Prowler ETB: menace + Villain-enter pump (+2 proxy)")
+
+def _biorganic_carapace_etb(gs, card):
+    """Biorganic Carapace -- Equipment. 'ETB: attach to target. Equipped: +2/+2 + indestructible.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Biorganic Carapace ETB: +2/+2 indestructible equip proxy")
+
+def _spider_man_india_etb(gs, card):
+    """Spider-Man India -- Web-slinging alternative cast. No ETB trigger.
+    ETB proxy: reach + web-slinging registered."""
+    gs._log("  Spider-Man India ETB: reach + web-slinging cast trigger active")
+
+def _rhino_brute_etb(gs, card):
+    """Rhino, Barreling Brute -- Vigilance, trample, haste. 'Attack with CMC4+: +4/+0 until EOT.'
+    ETB proxy: +4/+0 (attack pump assumed)."""
+    card.counters = (card.counters or 0) + 4
+    gs._log("  Rhino ETB: vigilance trample haste + CMC4-attack pump (+4 proxy)")
+
+def _superior_foes_etb(gs, card):
+    """Superior Foes of Spider-Man -- Trample. 'Cast CMC4+: exile top, may cast.'
+    ETB proxy: draw 1 (top-exile impulse)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Superior Foes ETB: trample + CMC4-exile-cast (draw 1 proxy)")
+
+def _doc_ock_henchmen_etb(gs, card):
+    """Doc Ock's Henchmen -- Flash. 'When attacks, connives.'
+    ETB proxy: loot on attack (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Doc Ock's Henchmen ETB: flash + attack-connive (draw 1 proxy)")
+
+def _mechanical_mobster_etb(gs, card):
+    """Mechanical Mobster -- 'ETB: exile card from GY. Target creature gets +1/+1 until EOT.'
+    ETB proxy: exile opp GY card + +1 to best."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.graveyard:
+        exiled = opp.zones.graveyard.pop(0)
+        opp.zones.exile = getattr(opp.zones, "exile", [])
+        opp.zones.exile.append(exiled)
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Mechanical Mobster ETB: GY-exile + +1/+1 to best creature")
+
+def _living_brain_etb(gs, card):
+    """Living Brain, Mechanical Marvel -- 'At combat start: artifact becomes creature.'
+    ETB proxy: +1 mana (artifact-animation engine)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Living Brain ETB: artifact-animation combat trigger (+1 mana proxy)")
+
+def _symbiote_spider_man_etb(gs, card):
+    """Symbiote Spider-Man -- 'When deals combat damage: look at top N, draw/play one.'
+    ETB proxy: draw 1."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Symbiote Spider-Man ETB: combat-damage top-N look (draw 1 proxy)")
+
+def _scorpion_striker_etb(gs, card):
+    """Scorpion, Seething Striker -- Deathtouch. 'End step if creature died: +1 to target.'
+    ETB proxy: deathtouch + death trigger registered."""
+    gs._log("  Scorpion ETB: deathtouch + end-step death-pump trigger active")
+
+def _spider_slayer_etb(gs, card):
+    """Spider-Slayer -- 'When hits Spider: destroy it. {6}, Exile: pay life to search.'
+    ETB proxy: destroy opp's best creature (Spider proxy)."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Spider-Slayer ETB: destroy {target.name} (Spider-hit proxy)")
+
+def _spider_girl_etb(gs, card):
+    """Spider-Girl, Legacy Hero -- Flying (your turn). 'When leaves: create Dino token.'
+    ETB proxy: flying body + death token trigger registered."""
+    gs._log("  Spider-Girl ETB: flying (your turn) + on-leave Dino-token trigger active")
+
+def _skyward_spider_etb(gs, card):
+    """Skyward Spider -- Ward {2}. No immediate ETB effect."""
+    gs._log("  Skyward Spider ETB: ward 2 body")
+
+def _spinneret_spiderling_etb(gs, card):
+    """Spinneret and Spiderling -- 'Attack with 2+ Spiders: +1/+1 on this. Combat damage: +1/+1.'
+    ETB proxy: +2 (2 triggers proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Spinneret and Spiderling ETB: Spider-attack + combat-damage pump (+2 proxy)")
+
+def _cheering_crowd_etb(gs, card):
+    """Cheering Crowd -- 'Beginning of each player's first main, may put +1/+1 on this.'
+    ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Cheering Crowd ETB: upkeep self-pump (+1 proxy)")
+
+def _kravens_last_hunt_etb(gs, card):
+    """Kraven's Last Hunt -- Saga. I: Mill 5. II: Put creature from GY. III: Fight.
+    ETB proxy: mill 5 opp + reanimate best GY creature."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for _ in range(5):
+            if opp.zones.library:
+                c = opp.zones.library.pop(0)
+                opp.zones.graveyard.append(c)
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Kraven's Last Hunt ETB: mill 5 opp + reanimate {best.name}")
+    else:
+        gs._log("  Kraven's Last Hunt ETB: mill 5 opp (no GY creature)")
+
+def _passenger_ferry_etb(gs, card):
+    """Passenger Ferry -- Vehicle. 'When attacks, may pay {U}: another attacker can't be blocked.'
+    ETB proxy: evasion-grant trigger registered."""
+    gs._log("  Passenger Ferry ETB: attack-evasion trigger active")
+
+def _web_shooters_etb(gs, card):
+    """Web-Shooters -- Equipment. 'Equipped +1/+1 reach. Attack: tap target creature.'
+    ETB proxy: +1 to best creature + tap opp on attack."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log("  Web-Shooters ETB: +1/+1 reach equip + attack-tap trigger active")
+
+def _shadow_goblin_etb(gs, card):
+    """Shadow of the Goblin -- Enchantment. 'Unreliable Visions: beginning first main: discard then draw.'
+    ETB proxy: loot trigger (draw 1)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Shadow of the Goblin ETB: Unreliable Visions loot trigger (draw 1 proxy)")
+
+
+# ── EOE batch (Edge of Eternities) ────────────────────────────────────
+
+def _close_encounter_spell(gs, card):
+    """Close Encounter -- Instant. Additional cost: choose creature/warped. Effect: varies.
+    Model: exile opp's best creature until EOT proxy."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Close Encounter: exile {target.name} until EOT")
+
+def _nanoform_sentinel_etb(gs, card):
+    """Nanoform Sentinel -- 'Whenever tapped, untap another target permanent.'
+    ETB proxy: +1 mana (tap/untap engine)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Nanoform Sentinel ETB: tap-untap engine (+1 mana proxy)")
+
+def _harmonious_grovestrider_etb(gs, card):
+    """Harmonious Grovestrider -- Ward {2}. No immediate ETB effect."""
+    gs._log("  Harmonious Grovestrider ETB: ward 2 body")
+
+def _requiem_monolith_etb(gs, card):
+    """Requiem Monolith -- '{T}: Target creature gets when-dealt-damage-draw trigger.'
+    ETB proxy: draw 1 (trigger-giving engine)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Requiem Monolith ETB: damage-draw-grant {T} (draw 1 proxy)")
+
+def _mechanozoa_etb(gs, card):
+    """Mechanozoa -- 'ETB: tap + stun opp creature.'
+    ETB proxy: tap + stun opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            target.stun_counters = getattr(target, 'stun_counters', 0) + 1
+            gs._log(f"  Mechanozoa ETB: tap+stun {target.name}")
+
+def _bygone_colossus_etb(gs, card):
+    """Bygone Colossus -- Warp {3}: exile until next upkeep. Large body.
+    ETB proxy: big body (warp already resolved, it's on BF)."""
+    gs._log("  Bygone Colossus ETB: warp body (exile-until-upkeep resolved)")
+
+def _meltstrider_gear_etb(gs, card):
+    """Meltstrider's Gear -- Equipment. 'ETB: attach to target. Equipped: +2/+1.'
+    ETB proxy: +2 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Meltstrider's Gear ETB: attach +2/+1 to best creature")
+
+def _syr_vondam_etb(gs, card):
+    """Syr Vondam, the Lucent -- Deathtouch, lifelink. 'ETB/attacks: other creatures +1/+0 + deathtouch.'
+    ETB proxy: +1 to all other creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Syr Vondam ETB: deathtouch lifelink + ETB +1/+0 deathtouch to all others")
+
+def _blade_of_swarm_etb(gs, card):
+    """Blade of the Swarm -- 'ETB: put 2 +1/+1 on this OR return target exiled creature.'
+    ETB proxy: +2 to self."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Blade of the Swarm ETB: +2/+2 on self (choice A)")
+
+def _pull_through_weft_spell(gs, card):
+    """Pull Through the Weft -- {4}{B} Sorcery. 'Return up to 2 nonland perms from GY to hand,
+    then return up to 1 to BF.' Model: reanimate best GY perm + return 1 to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land()]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Pull Through the Weft: reanimate {best.name}")
+    if len(gy) > 1:
+        gy2 = [c for c in gs.zones.graveyard if not c.is_land()]
+        if gy2:
+            second = max(gy2, key=lambda c: getattr(c,'cmc',0) or 0)
+            gs.zones.graveyard.remove(second)
+            gs.zones.hand.append(second)
+
+def _sami_engineer_etb(gs, card):
+    """Sami, Ship's Engineer -- 'End step if 2+ tapped creatures: create tapped 2/2 Robot.'
+    ETB proxy: create 1 Robot token."""
+    from data.card import Card, Tag
+    tok = Card(name="Robot", mana_cost="", cmc=0,
+               type_line="Artifact Creature — Robot", oracle_text="",
+               power="2", toughness="2", colors=[])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Sami ETB: end-step Robot creation (2/2 token proxy)")
+
+def _kav_landseeker_etb(gs, card):
+    """Kav Landseeker -- Menace. 'ETB: create Lander token.'
+    ETB proxy: menace + Lander (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Kav Landseeker ETB: menace + Lander token (+1 mana proxy)")
+
+def _hylderblade_etb(gs, card):
+    """Hylderblade -- Equipment +3/+1. Void: end step if nonland perm left: pump equipped.
+    ETB proxy: +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Hylderblade ETB: +3/+1 equip + Void pump trigger active")
+
+def _haliya_cadet_etb(gs, card):
+    """Haliya, Ascendant Cadet -- 'ETB/attacks: +1/+1 to target. When counter put on our creature: draw.'
+    ETB proxy: +1 to best creature + draw 1."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Haliya ETB: +1/+1 to best + counter-draw trigger (draw 1 proxy)")
+
+def _insatiable_skittermaw_etb(gs, card):
+    """Insatiable Skittermaw -- Menace. Void: end step if nonland perm left: +3/+3.
+    ETB proxy: +3 (Void trigger assumed active)."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Insatiable Skittermaw ETB: menace + Void +3/+3 proxy")
+
+def _skystinger_etb(gs, card):
+    """Skystinger -- Reach. 'When blocks flying: +5/+0 until EOT.' ETB proxy: reach body."""
+    gs._log("  Skystinger ETB: reach + flying-block pump trigger active")
+
+def _bioengineered_future_etb(gs, card):
+    """Bioengineered Future -- Enchantment. 'ETB: create Lander token.'
+    ETB proxy: Lander (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Bioengineered Future ETB: Lander token (+1 mana proxy)")
+
+def _scrounge_eternity_spell(gs, card):
+    """Scrounge for Eternity -- {5}{B}{B} Sorcery. 'Additional cost: sac artifact/creature.
+    Return target creature from any GY to BF.' Model: reanimate best GY creature."""
+    from data.card import Tag as _Tag
+    all_gy = list(gs.zones.graveyard)
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        all_gy += list(opp.zones.graveyard)
+    targets = [c for c in all_gy if not c.is_land() and c.has(_Tag.CREATURE)]
+    if targets:
+        best = max(targets, key=lambda c: getattr(c,'cmc',0) or 0)
+        try:
+            gs.zones.graveyard.remove(best)
+        except ValueError:
+            if opp:
+                opp.zones.graveyard.remove(best)
+        gs.zones.battlefield.append(best)
+        gs._log(f"  Scrounge for Eternity: reanimate {best.name}")
+
+def _ragost_etb(gs, card):
+    """Ragost, Deft Gastronaut -- 'Artifacts are Foods. {2}{T} Sac: gain 2 life.'
+    ETB proxy: +1 mana (food-artifact engine)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Ragost ETB: artifact-as-Food engine (+1 mana proxy)")
+
+def _roving_actuator_etb(gs, card):
+    """Roving Actuator -- Void: ETB if nonland perm left or spell warped this turn, draw 1.
+    ETB proxy: draw 1 (Void trigger fires on ETB)."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Roving Actuator ETB: Void trigger draw 1")
+
+def _virulent_silencer_etb(gs, card):
+    """Virulent Silencer -- 'When nontoken artifact creature deals combat damage, opp gets poison.'
+    ETB proxy: poison trigger registered."""
+    gs._log("  Virulent Silencer ETB: artifact-combat-damage poison trigger active")
+
+def _galactic_wayfarer_etb(gs, card):
+    """Galactic Wayfarer -- 'ETB: create Lander token.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Galactic Wayfarer ETB: create Lander (+1 mana proxy)")
+
+def _exosuit_savior_etb(gs, card):
+    """Exosuit Savior -- Flying. 'ETB: return up to one other perm to owner's hand.'
+    ETB proxy: bounce opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+            gs._log(f"  Exosuit Savior ETB: flying + bounce {target.name}")
+
+def _weftstalker_ardent_etb(gs, card):
+    """Weftstalker Ardent -- 'When another creature/artifact enters, deal 1 to each opp.'
+    ETB proxy: deal 2 damage to opp (2 enter triggers this turn)."""
+    gs.zones.life -= 2
+    gs._log("  Weftstalker Ardent ETB: enter-ping trigger (2 damage proxy)")
+
+def _red_tiger_mechan_etb(gs, card):
+    """Red Tiger Mechan -- Haste. Warp {1}{R}: exile until next upkeep.
+    ETB proxy: haste body."""
+    gs._log("  Red Tiger Mechan ETB: haste warp body")
+
+def _gravpack_monoist_etb(gs, card):
+    """Gravpack Monoist -- Flying. 'When dies: create tapped 2/2 Robot token.'
+    ETB proxy: flying + death token trigger registered."""
+    gs._log("  Gravpack Monoist ETB: flying + death-Robot-token trigger active")
+
+def _pinnacle_kill_ship_etb(gs, card):
+    """Pinnacle Kill-Ship -- Spacecraft. 'ETB: deal 10 damage to target creature.'
+    ETB proxy: destroy opp's biggest creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Pinnacle Kill-Ship ETB: 10 damage kills {target.name}")
+
+def _lightless_evangel_etb(gs, card):
+    """Lightless Evangel -- 'When sac another creature/artifact: +1/+1.'
+    ETB proxy: +1/+1 (first sac trigger proxy)."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Lightless Evangel ETB: sac-pump +1/+1 proxy")
+
+def _biomechan_engineer_etb(gs, card):
+    """Biomechan Engineer -- 'ETB: create Lander token.' ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Biomechan Engineer ETB: create Lander (+1 mana proxy)")
+
+def _beamsaw_prospector_etb(gs, card):
+    """Beamsaw Prospector -- 'When dies: create Lander token.'
+    ETB proxy: death trigger registered."""
+    gs._log("  Beamsaw Prospector ETB: death-Lander trigger active")
+
+
+# ── EOE final batch (10 remaining) ───────────────────────────────────
+
+def _kavaron_skywarden_etb(gs, card):
+    """Kavaron Skywarden -- Reach. Void: end step if nonland perm left, draw 1.
+    ETB proxy: reach + Void draw 1 proxy."""
+    if gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Kavaron Skywarden ETB: reach + Void draw 1 proxy")
+
+def _memorial_team_leader_etb(gs, card):
+    """Memorial Team Leader -- 'During your turn, other creatures +1/+0.' Warp {1}{R}.
+    ETB proxy: +1/+0 to all other creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Memorial Team Leader ETB: +1/+0 to all other creatures (your-turn static)")
+
+def _broodguard_elite_etb(gs, card):
+    """Broodguard Elite -- 'Enters with X +1/+1 counters. When leaves: put X counters on creatures.'
+    ETB proxy: +3 on self (X=3 proxy)."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Broodguard Elite ETB: +3 counters on enter (X=3 proxy)")
+
+def _monoist_circuit_feeder_etb(gs, card):
+    """Monoist Circuit-Feeder -- Flying. 'ETB: target creature +X/+0, target creature -X/-0 (X=CMC).'
+    ETB proxy: +3/+0 to best creature (X=3 proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Monoist Circuit-Feeder ETB: flying + +X/+0 to best creature (+3 proxy)")
+
+def _interceptor_mechan_etb(gs, card):
+    """Interceptor Mechan -- Flying. 'ETB: return target artifact/creature from GY to hand.'
+    ETB proxy: flying + return best GY creature to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Interceptor Mechan ETB: flying + return {best.name} from GY")
+
+def _cosmogrand_zenith_etb(gs, card):
+    """Cosmogrand Zenith -- 'When second spell cast each turn: create 2 Soldier tokens OR +3/+3 to target.'
+    ETB proxy: create 2 Soldier tokens."""
+    from data.card import Card, Tag
+    for _ in range(2):
+        tok = Card(name="Soldier", mana_cost="", cmc=0,
+                   type_line="Creature — Human Soldier", oracle_text="",
+                   power="1", toughness="1", colors=["W"])
+        tok.tags.add(Tag.CREATURE)
+        gs.zones.battlefield.append(tok)
+    gs._log("  Cosmogrand Zenith ETB: second-spell trigger proxy (2 Soldier tokens)")
+
+def _tractor_beam_etb(gs, card):
+    """Tractor Beam -- Aura. 'ETB: tap enchanted. You control enchanted permanently.'
+    ETB proxy: tap + steal opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            target.tapped = True
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Tractor Beam ETB: tap + steal {target.name}")
+
+def _susurian_dirgecraft_etb(gs, card):
+    """Susurian Dirgecraft -- Spacecraft. 'ETB: each opp sacrifices a nontoken creature.'
+    ETB proxy: opp sacrifices best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield
+                   if not c.is_land() and c.has(_Tag.CREATURE) and not getattr(c,'is_token',False)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Susurian Dirgecraft ETB: opp sacrifices {target.name}")
+
+def _voidforged_titan_etb(gs, card):
+    """Voidforged Titan -- Void: end step if nonland perm left, gets +3/+3 and trample.
+    ETB proxy: +3 (Void trigger active proxy)."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Voidforged Titan ETB: Void +3/+3 trample trigger active (+3 proxy)")
+
+def _specimen_freighter_etb(gs, card):
+    """Specimen Freighter -- Spacecraft. 'ETB: bounce up to 2 non-Spacecraft creatures to hands.'
+    ETB proxy: bounce opp's 2 best creatures."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = sorted([c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)],
+                         key=lambda c: -c.effective_power())
+        for target in threats[:2]:
+            opp.zones.battlefield.remove(target)
+            opp.zones.hand.append(target)
+        gs._log(f"  Specimen Freighter ETB: bounce {len(threats[:2])} opp creatures")
+
+
 def _graduation_day_etb(gs, card):
     """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
     targets a creature, +1/+1 to each creature you control.'
@@ -31699,6 +32311,10 @@ _SPELL_HANDLERS.update({
     "Cathartic Parting":       _cathartic_parting_spell,
     "Trial of Agony":          _trial_of_agony_spell,
     "Horrid Vigor":            _horrid_vigor_spell,
+    # EOE spells
+    "Close Encounter":         _close_encounter_spell,
+    "Pull Through the Weft":   _pull_through_weft_spell,
+    "Scrounge for Eternity":   _scrounge_eternity_spell,
     # LCI spells
     "Rumbling Rockslide":      _rumbling_rockslide_spell,
     "In the Presence of Ages": _in_presence_ages_spell,
@@ -31888,6 +32504,78 @@ _ETB_HANDLERS.update({
     "Gratuitous Violence":        _gratuitous_violence_etb,
     "Quilled Greatwurm":          _quilled_greatwurm_etb,
     # SOS batch 4 ETB
+    # SPM ETB
+    "Vulture, Scheming Scavenger": _vulture_scheming_etb,
+    "Costume Closet":              _costume_closet_etb,
+    "The Clone Saga":              _clone_saga_etb,
+    "Spider-Gwen, Free Spirit":    _spider_gwen_etb,
+    "Wild Pack Squad":             _wild_pack_squad_etb,
+    "Daily Bugle Reporters":       _daily_bugle_reporters_etb,
+    "Spider-Mobile":               _spider_mobile_etb,
+    "Mob Lookout":                 _mob_lookout_etb,
+    "Shocker, Unshakable":         _shocker_etb,
+    "Shriek, Treblemaker":         _shriek_treblemaker_etb,
+    "Spider-Rex, Daring Dino":     _spider_rex_etb,
+    "Green Goblin, Revenant":      _green_goblin_revenant_etb,
+    "SP//dr, Piloted by Peni":     _spdr_etb,
+    "Prowler, Clawed Thief":       _prowler_thief_etb,
+    "Biorganic Carapace":          _biorganic_carapace_etb,
+    "Spider-Man India":            _spider_man_india_etb,
+    "Rhino, Barreling Brute":      _rhino_brute_etb,
+    "Superior Foes of Spider-Man": _superior_foes_etb,
+    "Doc Ock's Henchmen":          _doc_ock_henchmen_etb,
+    "Mechanical Mobster":          _mechanical_mobster_etb,
+    "Living Brain, Mechanical Marvel": _living_brain_etb,
+    "Symbiote Spider-Man":         _symbiote_spider_man_etb,
+    "Scorpion, Seething Striker":  _scorpion_striker_etb,
+    "Spider-Slayer, Hatred Honed": _spider_slayer_etb,
+    "Spider-Girl, Legacy Hero":    _spider_girl_etb,
+    "Skyward Spider":              _skyward_spider_etb,
+    "Spinneret and Spiderling":    _spinneret_spiderling_etb,
+    "Cheering Crowd":              _cheering_crowd_etb,
+    "Kraven's Last Hunt":          _kravens_last_hunt_etb,
+    "Passenger Ferry":             _passenger_ferry_etb,
+    "Web-Shooters":                _web_shooters_etb,
+    "Shadow of the Goblin":        _shadow_goblin_etb,
+    # EOE ETB
+    "Nanoform Sentinel":           _nanoform_sentinel_etb,
+    "Harmonious Grovestrider":     _harmonious_grovestrider_etb,
+    "Requiem Monolith":            _requiem_monolith_etb,
+    "Mechanozoa":                  _mechanozoa_etb,
+    "Bygone Colossus":             _bygone_colossus_etb,
+    "Meltstrider's Gear":          _meltstrider_gear_etb,
+    "Syr Vondam, the Lucent":      _syr_vondam_etb,
+    "Blade of the Swarm":          _blade_of_swarm_etb,
+    "Sami, Ship's Engineer":       _sami_engineer_etb,
+    "Kav Landseeker":              _kav_landseeker_etb,
+    "Hylderblade":                 _hylderblade_etb,
+    "Haliya, Ascendant Cadet":     _haliya_cadet_etb,
+    "Insatiable Skittermaw":       _insatiable_skittermaw_etb,
+    "Skystinger":                  _skystinger_etb,
+    "Bioengineered Future":        _bioengineered_future_etb,
+    "Ragost, Deft Gastronaut":     _ragost_etb,
+    "Roving Actuator":             _roving_actuator_etb,
+    "Virulent Silencer":           _virulent_silencer_etb,
+    "Galactic Wayfarer":           _galactic_wayfarer_etb,
+    "Exosuit Savior":              _exosuit_savior_etb,
+    "Weftstalker Ardent":          _weftstalker_ardent_etb,
+    "Red Tiger Mechan":            _red_tiger_mechan_etb,
+    "Gravpack Monoist":            _gravpack_monoist_etb,
+    "Pinnacle Kill-Ship":          _pinnacle_kill_ship_etb,
+    "Lightless Evangel":           _lightless_evangel_etb,
+    "Biomechan Engineer":          _biomechan_engineer_etb,
+    "Beamsaw Prospector":          _beamsaw_prospector_etb,
+    # EOE final batch
+    "Kavaron Skywarden":           _kavaron_skywarden_etb,
+    "Memorial Team Leader":        _memorial_team_leader_etb,
+    "Broodguard Elite":            _broodguard_elite_etb,
+    "Monoist Circuit-Feeder":      _monoist_circuit_feeder_etb,
+    "Interceptor Mechan":          _interceptor_mechan_etb,
+    "Cosmogrand Zenith":           _cosmogrand_zenith_etb,
+    "Tractor Beam":                _tractor_beam_etb,
+    "Susurian Dirgecraft":         _susurian_dirgecraft_etb,
+    "Voidforged Titan":            _voidforged_titan_etb,
+    "Specimen Freighter":          _specimen_freighter_etb,
     # DSK ETB
     "Fear of Infinity":           _fear_of_infinity_etb,
     "A-Leyline of Resonance":     _leyline_of_resonance_etb,

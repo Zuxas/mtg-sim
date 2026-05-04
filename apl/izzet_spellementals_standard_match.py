@@ -93,31 +93,34 @@ class IzzetSpellementalsStandardMatchAPL(AwareMatchAPL, IzzetProwessAPL):
     MULL_MIN_LANDS  = 2
     MULL_MAX_LANDS  = 4
 
+    # Exact sideboard plans from RIW Hobbies RCQ winner guide (March 2026)
     SB_PLANS = {
         "aggro": (
-            # vs Izzet Prowess: Pyroclasm + Annul for enchantments
-            [PYROCLASM, PYROCLASM, ANNUL, ANNUL, "Sear"],
-            [SPELL_PIERCE, SPELL_PIERCE, WINTERNIGHT, WINTERNIGHT, BOUNCE_OFF],
+            # vs Izzet Prowess: Abrade + Broadside + Pyroclasm; trim slow/bad matchup pieces
+            ["Abrade", BROADSIDE, PYROCLASM],
+            ["Three Steps Ahead", SPELL_PIERCE, "Stock Up"],
         ),
         "control": (
-            # vs Control: Disdainful Stroke + Negate; land one threat and protect
-            [DISDAINFUL, DISDAINFUL, "Negate", SOUL_GUIDE],
-            [PYROCLASM, BOUNCE_OFF, WINTERNIGHT, WINTERNIGHT],
+            # vs Control/Dimir Midrange: Hydro-Man Fluid Felon for card advantage; Broadside
+            ["Hydro-Man Fluid Felon", "Hydro-Man Fluid Felon", BROADSIDE],
+            ["Spider Sense", BOUNCE_OFF, SPELL_PIERCE],
         ),
         "combo": (
-            # vs Izzet Lessons: Annul Monument/Artist's Talent; Soul-Guide Lantern for GY
-            [ANNUL, ANNUL, SOUL_GUIDE, SOUL_GUIDE, DISDAINFUL, "Negate"],
-            [SUNDERFLOCK, SUNDERFLOCK, BOUNCE_OFF, BURST, BURST, TRAUMATIC],
+            # vs Izzet Lessons (50/50): Annul Monument/Artist's; Soul Guide Lantern GY hate
+            # Sunderflock is too slow here -- bring in counters instead
+            [SOUL_GUIDE, SOUL_GUIDE, ANNUL, ANNUL, "Abrade", "Negate", "Stock Up"],
+            [SUNDERFLOCK, SUNDERFLOCK, "Spider Sense", BOUNCE_OFF, "Into the Flood Maw",
+             "Sear", BURST],
         ),
         "ramp": (
-            # vs Landfall (MonoGreen/Selesnya): Pyroclasm dorks, Disdainful/Flashfreeze payoffs
-            [PYROCLASM, PYROCLASM, FLASHFREEZE, FLASHFREEZE, DISDAINFUL, BROADSIDE],
-            [SPELL_SNARE, SPELL_SNARE, WINTERNIGHT, WINTERNIGHT, BOUNCE_OFF, BURST],
+            # vs Mono Green (45/55 underdog): Flashfreeze payoffs, Abrade/Broadside dorks
+            [FLASHFREEZE, "Abrade", "Into the Flood Maw", DISDAINFUL, BROADSIDE],
+            ["Three Steps Ahead", "Spider Sense", SPELL_SNARE, "Stock Up", WINTERNIGHT],
         ),
-        "midrange": (
-            # vs Dimir Midrange: Hydro-Man for value; Broadside interaction
-            ["Hydro-Man Fluid Felon", "Hydro-Man Fluid Felon", BROADSIDE],
-            [BOUNCE_OFF, BURST, SPELL_PIERCE],
+        "tempo": (
+            # vs UG Badgermole Cub (80/20): bolt ramp, Pyroclasm, Flashfreeze Rhythm
+            [BROADSIDE, PYROCLASM, FLASHFREEZE, "Into the Flood Maw"],
+            ["Stock Up", SPELL_PIERCE, "Spider Sense", "Three Steps Ahead"],
         ),
     }
 

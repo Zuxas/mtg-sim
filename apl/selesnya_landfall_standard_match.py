@@ -65,27 +65,46 @@ class SelesnyaLandfallStandardMatchAPL(AwareMatchAPL):
     MATCH_EXILE        = set()          # Erode destroys, doesn't exile
     MATCH_GRANTS_LAND  = {ERODE}       # Erode: opponent fetches a basic on resolution
 
-    # Protect these from being killed — use Snakeskin Veil or just hold them back
+    # Sideboard plans from mtg.cardsrealm guide + PT SOS data
     SB_PLANS = {
         "aggro": (
-            ["3 Mossborn Hydra", "2 Snakeskin Veil"],
-            ["2 Lumbering Worldwagon", "2 Keen-Eyed Curator", "1 Icetill Explorer"],
+            # vs Gruul Aggro / Mirror: Sheltered by Ghosts + Seam Rip + Surrak
+            # Dyadrine too slow vs racing decks; Felidar Retreat cut (SB pivot)
+            ["Sheltered by Ghosts", "Sheltered by Ghosts", "Seam Rip",
+             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
+            ["Dyadrine, Synthesis Amalgam", "Dyadrine, Synthesis Amalgam",
+             "Felidar Retreat", "Lumbering Worldwagon", "Icetill Explorer"],
         ),
         "control": (
-            ["3 Sheltered by Ghosts", "2 Snakeskin Veil", "1 Kutzil, Malamet Exemplar"],
-            ["2 Icetill Explorer", "1 Keen-Eyed Curator", "2 Earthbender Ascension", "1 Erode"],
+            # vs Azorius Control / Jeskai: Frenzied Baloth (hexproof) + Surrak + Requisition Raid
+            # Cut Snakeskin Veil (their removal is exile-based) and Titanic Growth
+            ["Frenzied Baloth", "Frenzied Baloth", "Surrak, Elusive Hunter",
+             "Surrak, Elusive Hunter", "Requisition Raid"],
+            ["Snakeskin Veil", "Snakeskin Veil", "Titanic Growth",
+             "Titanic Growth", "Dyadrine, Synthesis Amalgam"],
         ),
         "combo": (
-            ["2 Snakeskin Veil", "2 Dyadrine, Synthesis Amalgam"],
-            ["2 Lumbering Worldwagon", "2 Icetill Explorer"],
+            # vs Izzet Lessons / Graveyard: Rest in Peace + Requisition Raid + Surrak
+            ["Rest in Peace", "Rest in Peace", "Requisition Raid",
+             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
+            ["Sazh's Chocobo", "Tifa Lockhart",
+             "Dyadrine, Synthesis Amalgam", "Lumbering Worldwagon", "Icetill Explorer"],
         ),
         "tempo": (
-            ["2 Snakeskin Veil", "1 Kutzil, Malamet Exemplar", "3 Mossborn Hydra"],
-            ["2 Lumbering Worldwagon", "2 Icetill Explorer", "1 Keen-Eyed Curator", "1 Erode"],
+            # vs Izzet Prowess / tempo: Sheltered + Surrak; cut slow engine pieces
+            ["Sheltered by Ghosts", "Sheltered by Ghosts", "Seam Rip",
+             "Surrak, Elusive Hunter", "Mossborn Hydra", "Mossborn Hydra"],
+            ["Dyadrine, Synthesis Amalgam", "Dyadrine, Synthesis Amalgam",
+             "Lumbering Worldwagon", "Icetill Explorer",
+             "Keen-Eyed Curator", "Erode"],
         ),
         "ramp": (
-            ["3 Mossborn Hydra", "1 Restoration Magic"],
-            ["2 Lumbering Worldwagon", "2 Icetill Explorer"],
+            # vs Mono Green Landfall / mirror: Sheltered + Seam Rip to disrupt their engine
+            ["Sheltered by Ghosts", "Sheltered by Ghosts", "Seam Rip",
+             "Surrak, Elusive Hunter", "Mossborn Hydra", "Mossborn Hydra"],
+            ["Dyadrine, Synthesis Amalgam", "Dyadrine, Synthesis Amalgam",
+             "Felidar Retreat", "Lumbering Worldwagon",
+             "Icetill Explorer", "Keen-Eyed Curator"],
         ),
     }
 

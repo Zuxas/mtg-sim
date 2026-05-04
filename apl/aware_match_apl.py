@@ -94,6 +94,7 @@ DANGEROUS_ATTACKERS = {
     "Kaito Shizuki",               # ninjutsu enabler
     "Gran-Gran",                   # loot on attack/unblocked = Monument to Endurance trigger; primary kill target vs Izzet Lessons
     "Icetill Explorer",            # chains fetch land landfall triggers (4 per turn); remove before engine fires
+    "Traveling Chocobo",           # landfall doubler; attack trigger gives +1/+1 to all creatures per land
 }
 
 # Permanents with valuable ETBs that should be killed NOW (not after they bounce/blink).
@@ -110,6 +111,9 @@ BLINK_BAIT = {
     "Proft's Eidetic Memory", # Jeskai Oculus draw engine: whenever creature with counter attacks = draw
     "Brightglass Gearhulk",   # {3UU} Dimir mirror-breaker; ETB searches for removal; must exile
     "Doc Aurlock, Grizzled Genius", # Bant Airbending: reduces Avatar costs; remove before Appa/Aang land
+    "Bristly Bill, Spine Sower",    # Selesnya engine "glue"; removes it and their counter synergy stalls
+    "Felidar Retreat",              # Selesnya/Bant post-board token engine; generates tokens on each land
+    "Traveling Chocobo",            # Selesnya landfall doubler alongside Icetill; exile before engine fires
 }
 
 

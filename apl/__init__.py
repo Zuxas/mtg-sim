@@ -259,8 +259,9 @@ MATCH_APL_REGISTRY = {
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
-    "jeskaicontrol":   ("apl.jeskai_control_match",  "JeskaiControlMatchAPL"),
-    "jeskaienergycontrol": ("apl.jeskai_control_match", "JeskaiControlMatchAPL"),
+    "jeskaicontrol":   ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
+    "jeskaienergycontrol": ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
+    "jeskaimodern":    ("apl.jeskai_control_match",  "JeskaiControlMatchAPL"),  # Modern variant (Teferi/Narset)
     # Standard APLs (2026-04-29)
     "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL"),
     "gruulaggro":      ("apl.gruul_aggro_standard_match",    "GruulAggroStandardMatchAPL"),

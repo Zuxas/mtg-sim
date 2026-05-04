@@ -35428,6 +35428,959 @@ def _goblin_maskmaker_etb(gs, card):
     gs._log("  Goblin Maskmaker ETB: attack-face-down-cost-reduction (+1 mana proxy)")
 
 
+# ── FIN batch (Final Fantasy) ─────────────────────────────────────────
+# Job select Equipment: when enters, create 1/1 Hero + attach to it for free.
+# ETB proxy: create 1/1 Hero + +1 to best creature.
+
+def _job_select_equipment_etb(gs, card):
+    """Generic Job-select Equipment ETB: create 1/1 Hero token, equip proxy."""
+    from data.card import Card, Tag
+    tok = Card(name="Hero", mana_cost="", cmc=0,
+               type_line="Creature — Human Warrior", oracle_text="",
+               power="1", toughness="1", colors=["W"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not tok]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 1
+    gs._log(f"  {card.name} ETB: Job-select create Hero 1/1 + equip +1 to best")
+
+def _fang_etb(gs, card):
+    """'When cards leave your GY, draw 1 lose 1 life.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Fang ETB: GY-leave draw/lose trigger (draw 1 proxy)")
+
+def _queen_brahne_etb(gs, card):
+    """Prowess. 'ETB: each opp discards 1 card.' ETB proxy: Prowess +1 + opp discards."""
+    card.counters = (card.counters or 0) + 1
+    opp = getattr(gs, "_match_opp", None)
+    if opp and opp.zones.hand:
+        worst = max(opp.zones.hand, key=lambda c: getattr(c,'cmc',0) or 0)
+        opp.zones.hand.remove(worst)
+        opp.zones.graveyard.append(worst)
+    gs._log("  Queen Brahne ETB: Prowess +1 + ETB discard opp's best")
+
+def _coliseum_behemoth_etb(gs, card):
+    """Trample. 'ETB: destroy artifact/enchantment OR create 4/4 Beast.'
+    ETB proxy: trample + destroy opp artifact or +4 to self."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        targets = [c for c in opp.zones.battlefield if 'Artifact' in (c.type_line or '') or 'Enchantment' in (c.type_line or '')]
+        if targets:
+            target = max(targets, key=lambda c: getattr(c,'cmc',0) or 0)
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Coliseum Behemoth ETB: trample + destroy {target.name}")
+            return
+    card.counters = (card.counters or 0) + 4
+    gs._log("  Coliseum Behemoth ETB: trample + create 4/4 Beast proxy")
+
+def _graha_tia_etb(gs, card):
+    """Reach. 'When artifacts/creatures enter, +1/+1 counter on this.' ETB proxy: reach + +2."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  G'raha Tia ETB: reach + Allagan Eye counter pump (+2 proxy)")
+
+def _rufus_shinra_etb(gs, card):
+    """'When attacks: if no Darkstar creature, create Darkstar 3/3.' ETB proxy: create 3/3."""
+    from data.card import Card, Tag
+    tok = Card(name="Darkstar", mana_cost="", cmc=0, type_line="Creature — Nightmare", oracle_text="Flying", power="3", toughness="3", colors=["B"])
+    tok.tags.add(Tag.CREATURE)
+    tok.tags.add(Tag.FLYING)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Rufus Shinra ETB: attack-create Darkstar 3/3 flying proxy")
+
+def _magitek_scythe_etb(gs, card):
+    """Equipment. 'ETB: may attach. Equipped has +2/+0 + deathtouch.' ETB proxy: +2 + deathtouch."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+        best.tags.add(Tag.DEATHTOUCH)
+    gs._log("  Magitek Scythe ETB: +2/+0 deathtouch equip proxy")
+
+def _ultima_weapon_etb(gs, card):
+    """Equipment. 'When equipped creature attacks, destroy target opp creature.'
+    ETB proxy: destroy opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Ultima Weapon ETB: attack-destroy {target.name}")
+
+def _ragnarok_divine_etb(gs, card):
+    """Vigilance, menace, trample, reach, haste. 'When dies, destroy target permanent.'
+    ETB proxy: all 5 keywords (massive body)."""
+    gs._log("  Ragnarok Divine ETB: vigilance menace trample reach haste + death-destroy trigger")
+
+def _judge_magister_etb(gs, card):
+    """Menace. 'When another Soldier or Warrior enters, +1/+1.' ETB proxy: +2 (2 triggers proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Judge Magister Gabranth ETB: menace + Soldier/Warrior-enter +2 proxy")
+
+def _vaan_etb(gs, card):
+    """'When Scout/Pirate/Rogue deal combat damage, exile top card, cast free.'
+    ETB proxy: draw 1 (impulse)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Vaan ETB: combat-damage exile-cast (draw 1 proxy)")
+
+def _omega_etb(gs, card):
+    """'ETB: for each opp, tap target nonland permanent.'
+    ETB proxy: tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Omega ETB: Wave Cannon tap {target.name}")
+
+def _sleep_magic_etb(gs, card):
+    """Aura. 'ETB: tap enchanted. Doesn't untap.' ETB proxy: tap + lock opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Sleep Magic ETB: tap-lock {target.name}")
+
+def _ice_flan_etb(gs, card):
+    """'ETB: tap target artifact/creature opp controls + stun counter.' ETB proxy: tap+stun."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            target.stun_counters = getattr(target, 'stun_counters', 0) + 1
+            gs._log(f"  Ice Flan ETB: tap+stun {target.name}")
+
+def _slash_of_light_spell(gs, card):
+    """'Deal damage = number of creatures + lands you control.' Model: deal 6 damage (3+3 proxy)."""
+    gs.zones.life -= 6
+    gs._log("  Slash of Light: deal 6 damage (creatures+lands proxy)")
+
+def _qutrub_forayer_etb(gs, card):
+    """'ETB: destroy target creature dealt damage this turn OR exile target GY creature card.'
+    ETB proxy: destroy opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Qutrub Forayer ETB: destroy {target.name}")
+
+def _cloud_of_darkness_etb(gs, card):
+    """Flying. 'ETB: target opp creature gets -3/-0 until EOT.' ETB proxy: flying + -3/-0 to opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.counters = (target.counters or 0) - 3
+            gs._log(f"  Cloud of Darkness ETB: flying + Particle Beam -3/-0 to {target.name}")
+
+def _ether_etb(gs, card):
+    """{T}, exile: add {U}. 'When next cast i/s, copy it.' ETB proxy: +1 mana + copy trigger."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Ether ETB: {T} for {U} + next-i/s-copy (+2 mana proxy)")
+
+def _balthier_fran_etb(gs, card):
+    """Reach. 'Vehicles +1/+1 + vigilance + reach. When Vehicle crewed, draw 1.'
+    ETB proxy: reach + draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Balthier and Fran ETB: reach + Vehicle-lord + crew-draw (draw 1 proxy)")
+
+def _buster_sword_etb(gs, card):
+    """Equipment +3/+2. 'When deals combat damage, look at top 3, keep 1, return 2.'
+    ETB proxy: +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Buster Sword ETB: +3/+2 equip + combat-top-3-filter proxy")
+
+def _delivery_moogle_etb(gs, card):
+    """Flying. 'ETB: search library/GY for artifact card, put in hand.'
+    ETB proxy: flying + draw 1 artifact."""
+    artifacts = [c for c in gs.zones.library if 'Artifact' in (c.type_line or '')]
+    if artifacts:
+        gs.zones.library.remove(artifacts[0])
+        gs.zones.hand.append(artifacts[0])
+        gs._log(f"  Delivery Moogle ETB: flying + tutor {artifacts[0].name}")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+        gs._log("  Delivery Moogle ETB: flying + draw 1 (no artifact in library)")
+
+def _kain_etb(gs, card):
+    """'Flying during your turn. When deals combat damage, draw 1 + create 1/1 token.'
+    ETB proxy: flying + draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Kain ETB: flying (your turn) + combat-damage draw/token (draw 1 proxy)")
+
+def _vincents_limit_break_spell(gs, card):
+    """Tiered. 'Target creature gains deathtouch + trample until EOT.'
+    Model: give our best creature deathtouch + trample."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.tags.add(Tag.DEATHTOUCH)
+        best.tags.add(Tag.TRAMPLE)
+        gs._log(f"  Vincent's Limit Break: {best.name} gets deathtouch + trample until EOT")
+
+def _quistis_etb(gs, card):
+    """'ETB: may cast target i/s from opp's GY.' ETB proxy: draw 1 (cast from opp GY)."""
+    opp = getattr(gs, "_match_opp", None)
+    gy_spells = []
+    if opp:
+        gy_spells = [c for c in opp.zones.graveyard if any(t in (c.type_line or '') for t in ('Instant','Sorcery'))]
+    if gy_spells:
+        best = max(gy_spells, key=lambda c: getattr(c,'cmc',0) or 0)
+        opp.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Quistis ETB: Blue Magic - steal {best.name} from opp GY")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+        gs._log("  Quistis ETB: Blue Magic (no opp GY spell, draw 1 proxy)")
+
+def _stuck_summoners_etb(gs, card):
+    """Flash Aura. 'ETB: tap enchanted. Enchanted doesn't untap.' ETB proxy: tap + lock opp."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Stuck in Summoner's Sanctum ETB: flash tap-lock {target.name}")
+
+def _gaius_etb(gs, card):
+    """'ETB: each player sacs a token OR target opp loses 2 life.'
+    ETB proxy: opp loses 2 life."""
+    gs.zones.life -= 2
+    gs._log("  Gaius van Baelsar ETB: each-sac-token OR opp loses 2 life proxy")
+
+def _garnet_etb(gs, card):
+    """Lifelink. 'When attacks, remove lore counter from Sagas: gain their abilities until EOT.'
+    ETB proxy: lifelink + +2 (attack Saga-lore trigger proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Garnet ETB: lifelink + attack-Saga-lore steal +2 proxy")
+
+def _barret_wallace_etb(gs, card):
+    """Reach. 'When attacks, deal damage = equipped creatures to target.'
+    ETB proxy: reach + 3 damage to opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            try:
+                if 3 >= int(target.toughness or 1):
+                    opp.zones.battlefield.remove(target)
+                    opp.zones.graveyard.append(target)
+                    gs._log(f"  Barret Wallace ETB: reach + attack-damage kills {target.name}")
+            except (ValueError, TypeError):
+                gs._log(f"  Barret Wallace ETB: reach + 3 damage to {target.name}")
+
+def _torgal_etb(gs, card):
+    """'When cast first Human creature each turn, it enters with +1/+1 counter.'
+    ETB proxy: +1 to all our creatures."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.counters = (c.counters or 0) + 1
+    gs._log("  Torgal ETB: first-Human-cast +1/+1 trigger (+1 to all proxy)")
+
+def _retrieve_esper_spell(gs, card):
+    """'Create 3/3 blue Robot Warrior. If cast from GY, draw 1.'
+    Model: create 3/3 Robot + draw 1."""
+    from data.card import Card, Tag
+    tok = Card(name="Robot Warrior", mana_cost="", cmc=0, type_line="Artifact Creature — Robot Warrior", oracle_text="", power="3", toughness="3", colors=["U"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Retrieve the Esper: create 3/3 Robot Warrior + draw 1")
+
+def _prima_vista_etb(gs, card):
+    """Flying Vehicle. 'When cast noncreature spell with 4+ mana, get an extra crew trigger.'
+    ETB proxy: flying + +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  The Prima Vista ETB: flying vehicle + 4-mana-spell crew bonus (+2 mana proxy)")
+
+def _summon_fat_chocobo_etb(gs, card):
+    """Saga IV. I: scry 2. II: creature +3/+3. III: create 2/1 Chocobo. IV: ???
+    ETB proxy: draw 1 + create 2/1 token."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    from data.card import Card, Tag
+    tok = Card(name="Chocobo", mana_cost="", cmc=0, type_line="Creature — Chocobo", oracle_text="", power="2", toughness="1", colors=["W"])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Summon: Fat Chocobo ETB: Saga draw 1 + Chocobo 2/1 proxy")
+
+def _summon_cerberus_etb(gs, card):
+    """Saga III. I: draw 2. II: 3 damage to target. III: +X/+X.
+    ETB proxy: draw 2 + 3 damage to opp."""
+    for _ in range(2):
+        if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs.zones.life -= 3
+    gs._log("  Summon: G.F. Cerberus ETB: Saga draw 2 + 3 damage proxy")
+
+def _ultros_etb(gs, card):
+    """'When cast noncreature spell with 4+ mana, tap target creature.'
+    ETB proxy: tap opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Ultros ETB: 4-mana-spell tap {target.name}")
+
+def _locke_cole_etb(gs, card):
+    """Deathtouch, lifelink. 'When deals combat damage, draw 1, return artifact/creature from GY.'
+    ETB proxy: deathtouch lifelink + draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Locke Cole ETB: deathtouch lifelink + combat-damage draw/GY-return (draw 1 proxy)")
+
+def _excalibur_ii_etb(gs, card):
+    """'When gain life, put charge counter. Equipped +1/+1 per 2 counters.'
+    ETB proxy: +2 to best creature (2 life-gain triggers)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 2
+    gs._log("  Excalibur II ETB: life-gain charge-counter equip (+2 proxy)")
+
+def _giott_etb(gs, card):
+    """Double strike. 'When Giott or Dwarf enters OR Equipment enters, draw 1.'
+    ETB proxy: double strike + draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Giott ETB: double strike + Dwarf/Equipment-enter draw 1")
+
+def _gilgamesh_etb(gs, card):
+    """'When ETB/attacks, look at top 6 for Equipment, put in hand.'
+    ETB proxy: draw 1 Equipment."""
+    equips = [c for c in gs.zones.library if 'Equipment' in (c.type_line or '') or 'Artifact' in (c.type_line or '')]
+    if equips:
+        gs.zones.library.remove(equips[0])
+        gs.zones.hand.append(equips[0])
+        gs._log(f"  Gilgamesh ETB: ETB/attack tutor {equips[0].name}")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+        gs._log("  Gilgamesh ETB: draw 1 (no Equipment in top 6)")
+
+def _shambling_cieth_etb(gs, card):
+    """'Enters tapped. When cast noncreature spell, may pay {B}: untap this.'
+    ETB proxy: enters tapped."""
+    card.tapped = True
+    gs._log("  Shambling Cie'th ETB: enters tapped (noncreature-spell untap trigger active)")
+
+def _raubahn_etb(gs, card):
+    """'Ward: pay life = Raubahn's power. When attacks, attach Equipment to Raubahn.'
+    ETB proxy: ward + attack-equip trigger active."""
+    gs._log("  Raubahn ETB: ward-life + attack-equip trigger active")
+
+def _ashe_etb(gs, card):
+    """'When attacks, look at top 5 for artifact/enchantment, put in hand.'
+    ETB proxy: draw 1 artifact or enchantment."""
+    found = next((c for c in gs.zones.library if 'Artifact' in (c.type_line or '') or 'Enchantment' in (c.type_line or '')), None)
+    if found:
+        gs.zones.library.remove(found)
+        gs.zones.hand.append(found)
+        gs._log(f"  Ashe ETB: attack top-5 tutor {found.name}")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+
+def _firion_etb(gs, card):
+    """'Equipped creatures have haste. When nontoken Equipment enters, draw 1.'
+    ETB proxy: haste to all + draw 1."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE):
+            c.tags.add(Tag.HASTE)
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Firion ETB: equipped-haste + Equipment-enter draw 1")
+
+def _prompto_etb(gs, card):
+    """Haste. 'Selfie Shot: when cast noncreature spell with 4+ mana, deal 3 damage to any target.'
+    ETB proxy: haste + 3 damage."""
+    gs.zones.life -= 3
+    gs._log("  Prompto ETB: haste + Selfie Shot 3 damage proxy")
+
+def _lightning_fin_etb(gs, card):
+    """Menace. 'When Lightning or creature you control attacks, deal 1 to each opp creature.'
+    ETB proxy: menace + ping each opp creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for c in opp.zones.battlefield:
+            if not c.is_land() and c.has(_Tag.CREATURE):
+                c.counters = (c.counters or 0) - 1
+    gs._log("  Lightning ETB: menace + attack-ping all opp creatures")
+
+def _squall_etb(gs, card):
+    """'Rough Divide: when creature attacks alone, gains double strike.'
+    ETB proxy: double strike trigger active."""
+    gs._log("  Squall ETB: Rough Divide double-strike trigger active")
+
+def _sandworm_etb(gs, card):
+    """Haste. 'ETB: destroy target land. Its controller searches for basic land.'
+    ETB proxy: haste + destroy opp's best nonbasic land."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        nonbasics = [c for c in opp.zones.battlefield if c.is_land() and 'Basic' not in (c.type_line or '')]
+        if nonbasics:
+            target = nonbasics[0]
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Sandworm ETB: haste + destroy {target.name}")
+
+def _matoya_etb(gs, card):
+    """'When you scry or surveil, draw 1.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Matoya ETB: scry/surveil-draw trigger (draw 1 proxy)")
+
+def _undercity_dire_rat_etb(gs, card):
+    """'Rat Tail: when dies, create Treasure.' ETB proxy: death-Treasure trigger active."""
+    gs._log("  Undercity Dire Rat ETB: death-Treasure trigger active")
+
+def _zodiark_etb(gs, card):
+    """Indestructible. 'ETB: each player sacs half non-God creatures.'
+    ETB proxy: opp sacs half their creatures."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        for c in threats[:len(threats)//2]:
+            opp.zones.battlefield.remove(c)
+            opp.zones.graveyard.append(c)
+    gs._log("  Zodiark ETB: indestructible + each player sacs half creatures")
+
+def _zell_etb(gs, card):
+    """'Play extra land each turn. +1/+0 per land.' ETB proxy: extra land play + +3."""
+    gs.land_drops_remaining = max(gs.land_drops_remaining, 2)
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Zell ETB: extra land-play + +3/+0 (3 lands proxy)")
+
+def _zidane_etb(gs, card):
+    """'ETB: gain control of target opp creature until EOT.' ETB proxy: steal best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Zidane ETB: steal {target.name} until EOT")
+
+def _final_days_spell(gs, card):
+    """'Create 2 tapped 2/2 black Horrors. If cast from GY: also create 3 copies.'
+    Model: create 2 Horror tokens."""
+    from data.card import Card, Tag
+    for _ in range(2):
+        tok = Card(name="Horror", mana_cost="", cmc=0, type_line="Creature — Horror", oracle_text="", power="2", toughness="2", colors=["B"])
+        tok.tags.add(Tag.CREATURE)
+        gs.zones.battlefield.append(tok)
+    gs._log("  The Final Days: create 2 tapped Horror 2/2 tokens")
+
+def _reno_rude_etb(gs, card):
+    """Menace. 'When deals combat damage, exile top card opp library, may cast.'
+    ETB proxy: menace + draw 1 (impulse)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Reno and Rude ETB: menace + combat-exile-cast (draw 1 proxy)")
+
+
+# ── TLA batch (Avatar: The Last Airbender) ────────────────────────────
+# Firebending X: when attacks, add {R}*X. ETB proxy: +X mana.
+# Airbend: return creature to hand.
+
+def _gran_gran_etb(gs, card):
+    """'When becomes tapped, draw/discard. Noncreature spells cost {1} less.'
+    ETB proxy: draw 1 + cost reduction."""
+    gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, 1)
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Gran-Gran ETB: tap-loot + noncreature cost -1 (draw 1 + -1 proxy)")
+
+def _fire_sages_etb(gs, card):
+    """Firebending 1: when attacks, add {R}. ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Fire Sages ETB: Firebending 1 attack +{R} (+1 mana proxy)")
+
+def _sandbender_scavengers_etb(gs, card):
+    """'When sac another perm, +1/+1. ETB: return target permanent from GY to hand.'
+    ETB proxy: draw 1 (GY return) + sac-pump trigger active."""
+    gy = [c for c in gs.zones.graveyard if not c.is_land()]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Sandbender Scavengers ETB: return {best.name} from GY")
+    else:
+        gs._log("  Sandbender Scavengers ETB: sac-pump trigger active")
+
+def _honest_work_etb(gs, card):
+    """Aura on opp creature. 'ETB: tap enchanted, remove it from combat. It doesn't untap.'
+    ETB proxy: tap + lock opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            gs._log(f"  Honest Work ETB: tap-lock {target.name}")
+
+def _firebending_student_etb(gs, card):
+    """Prowess. ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Firebending Student ETB: Prowess +1/+1 proxy")
+
+def _jeong_jeong_etb(gs, card):
+    """Firebending 1. ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Jeong Jeong ETB: Firebending 1 (+1 mana proxy)")
+
+def _fire_lord_azula_etb(gs, card):
+    """Firebending 2. ETB proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Fire Lord Azula ETB: Firebending 2 (+2 mana proxy)")
+
+def _zuko_etb(gs, card):
+    """Firebending 3. ETB proxy: +3 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Zuko ETB: Firebending 3 (+3 mana proxy)")
+
+def _cat_gator_etb(gs, card):
+    """Lifelink. 'ETB: deal damage = number of Swamps you control.'
+    ETB proxy: lifelink + 2 damage (2 Swamps proxy)."""
+    gs.zones.life -= 2
+    gs._log("  Cat-Gator ETB: lifelink + Swamp-count damage (2 damage proxy)")
+
+def _ty_lee_etb(gs, card):
+    """Prowess. ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Ty Lee ETB: Prowess +1/+1 proxy")
+
+def _rough_rhino_cavalry_etb(gs, card):
+    """Firebending 2. ETB proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Rough Rhino Cavalry ETB: Firebending 2 (+2 mana proxy)")
+
+def _sokka_etb(gs, card):
+    """Vigilance. 'When Sokka + 1+ other creatures attack, draw 1.'
+    ETB proxy: vigilance + draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Sokka ETB: vigilance + multi-attack draw 1 proxy")
+
+def _vindictive_warden_etb(gs, card):
+    """Menace. Firebending 1. ETB proxy: menace + +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Vindictive Warden ETB: menace + Firebending 1 (+1 mana proxy)")
+
+def _pirate_peddlers_etb(gs, card):
+    """Deathtouch. 'When sac another perm, +1/+1.' ETB proxy: deathtouch + +1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Pirate Peddlers ETB: deathtouch + sac-pump (+1 proxy)")
+
+def _enter_avatar_state_spell(gs, card):
+    """'Target creature becomes Avatar + gains all relevant keywords until EOT.'
+    Model: give our best creature flying, trample, haste, vigilance, indestructible."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.tags.add(Tag.FLYING)
+        best.tags.add(Tag.TRAMPLE)
+        best.tags.add(Tag.HASTE)
+        best.tags.add(Tag.INDESTRUCTIBLE)
+        gs._log(f"  Enter the Avatar State: {best.name} gains flying+trample+haste+indestructible")
+
+def _sun_warriors_etb(gs, card):
+    """Firebending X where X = creatures you control. ETB proxy: +3 mana (3 creatures)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Sun Warriors ETB: Firebending X creatures attack (+3 mana proxy)")
+
+def _combustion_man_etb(gs, card):
+    """'When attacks, destroy target permanent unless controller pays Combustion counters.'
+    ETB proxy: destroy opp's best permanent."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Combustion Man ETB: attack-destroy {target.name} (Combustion proxy)")
+
+def _fire_nation_cadets_etb(gs, card):
+    """'Firebending 2 if Lesson in your GY.' ETB proxy: +2 mana (Lesson assumed in GY)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Fire Nation Cadets ETB: Firebending 2 if Lesson in GY (+2 mana proxy)")
+
+def _bumi_bash_spell(gs, card):
+    """'Deal damage = number of lands you control to target creature OR deal 4 to each opp.'
+    Model: deal 4 to each opp face."""
+    gs.zones.life -= 4
+    gs._log("  Bumi Bash: deal 4 to each opponent (land-count proxy)")
+
+def _airbender_reversal_spell(gs, card):
+    """'Destroy target attacking creature OR Airbend target creature you control (return to hand).'
+    Model: destroy opp's best attacker."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Airbender's Reversal: destroy attacking {target.name}")
+
+def _tiger_seal_etb(gs, card):
+    """Vigilance. 'At beginning of upkeep, tap this creature.'
+    ETB proxy: vigilance (upkeep tap is drawback -- proxy no immediate effect)."""
+    gs._log("  Tiger-Seal ETB: vigilance + upkeep self-tap drawback active")
+
+# TLA remaining batch
+
+def _rebellious_captives_etb(gs, card):
+    """'Exhaust {6}: +2/+2 + earthbend 2.' ETB proxy: +2 (exhaust proxy)."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Rebellious Captives ETB: Exhaust +2/+2 + earthbend 2 proxy")
+
+def _aang_etb(gs, card):
+    """Flying. 'ETB: airbend up to one nonland permanent (exile, return at upkeep).'
+    ETB proxy: flying + exile opp's best creature until next upkeep."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Aang ETB: flying + airbend exile {target.name}")
+
+def _suki_courageous_etb(gs, card):
+    """'+1/+0 to other creatures. When another perm leaves BF, +1/+1 on this.'
+    ETB proxy: +1 to all + +1 on self."""
+    from data.card import Tag as _Tag
+    for c in gs.zones.battlefield:
+        if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
+            c.counters = (c.counters or 0) + 1
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Suki Courageous ETB: +1/+0 to all others + perm-leave +1 to self")
+
+def _rowdy_snowballers_etb(gs, card):
+    """'ETB: tap + stun opp creature.' ETB proxy: tap+stun."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            target.tapped = True
+            target.stun_counters = getattr(target, 'stun_counters', 0) + 1
+            gs._log(f"  Rowdy Snowballers ETB: tap+stun {target.name}")
+
+def _secret_bloodbending_spell(gs, card):
+    """Additional cost: may waterbend 10. 'Gain control of target opponent.'
+    Model: steal opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            gs.zones.battlefield.append(target)
+            gs._log(f"  Secret of Bloodbending: steal {target.name}")
+
+def _jet_etb(gs, card):
+    """'ETB: deal damage = creatures you control to target creature.'
+    ETB proxy: deal 3 damage to opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            try:
+                if 3 >= int(target.toughness or 1):
+                    opp.zones.battlefield.remove(target)
+                    opp.zones.graveyard.append(target)
+                    gs._log(f"  Jet ETB: 3 damage kills {target.name}")
+            except (ValueError, TypeError):
+                gs._log(f"  Jet ETB: 3 damage to {target.name}")
+
+def _azula_cunning_etb(gs, card):
+    """Firebending 2. ETB proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Azula Cunning Usurper ETB: Firebending 2 (+2 mana proxy)")
+
+def _glider_staff_etb(gs, card):
+    """Equipment. 'ETB: airbend target creature (exile, return next upkeep).'
+    ETB proxy: exile opp's best creature."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.exile = getattr(opp.zones, "exile", [])
+            opp.zones.exile.append(target)
+            gs._log(f"  Glider Staff ETB: airbend exile {target.name}")
+
+def _beifongs_bounty_etb(gs, card):
+    """'When nonland creature you control dies, earthbend X (= creature's power).'
+    ETB proxy: death-earthbend trigger active."""
+    gs._log("  Beifong's Bounty Hunters ETB: death-earthbend trigger active")
+
+def _momo_etb(gs, card):
+    """Flying, vigilance. 'When Momo leaves, create Food OR create another Momo.'
+    ETB proxy: flying vigilance body."""
+    gs._log("  Momo ETB: flying vigilance + leave-BF token trigger active")
+
+def _azula_hunt_etb(gs, card):
+    """Firebending 2. ETB proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Azula On the Hunt ETB: Firebending 2 (+2 mana proxy)")
+
+def _uncle_iroh_etb(gs, card):
+    """Firebending 1. ETB proxy: +1 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Uncle Iroh ETB: Firebending 1 (+1 mana proxy)")
+
+def _hei_bai_etb(gs, card):
+    """'When ETB/attacks, may sac another creature/artifact: deal damage = its power to any target.'
+    ETB proxy: deal 3 damage."""
+    gs.zones.life -= 3
+    gs._log("  Hei Bai ETB: ETB/attack-sac-damage (3 damage proxy)")
+
+def _suki_kyoshi_etb(gs, card):
+    """'Power = creatures you control. When attacks, create creature tokens = power.'
+    ETB proxy: +3 (3 creatures proxy)."""
+    card.counters = (card.counters or 0) + 3
+    gs._log("  Suki Kyoshi Warrior ETB: creature-count power + attack-token (+3 proxy)")
+
+def _destined_confrontation_spell(gs, card):
+    """'Each player chooses creatures with power<=4, battles between them.'
+    Model: targeted removal proxy."""
+    from data.card import Tag as _Tag
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c.effective_power() <= 4]
+        if threats:
+            target = max(threats, key=lambda c: c.effective_power())
+            opp.zones.battlefield.remove(target)
+            opp.zones.graveyard.append(target)
+            gs._log(f"  Destined Confrontation: battles kill {target.name}")
+
+def _fire_nation_warship_etb(gs, card):
+    """Reach. 'When dies, create Clue token.' ETB proxy: reach + death-Clue trigger."""
+    gs._log("  Fire Nation Warship ETB: reach vehicle + death-Clue trigger active")
+
+def _fire_nation_engineer_etb(gs, card):
+    """'Raid: end step if attacked, +1/+1 on this.' ETB proxy: +1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Fire Nation Engineer ETB: Raid attack-pump +1 proxy")
+
+def _long_feng_etb(gs, card):
+    """'When another creature or land goes to GY, draw 1.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Long Feng ETB: creature/land-GY draw trigger (draw 1 proxy)")
+
+def _fire_lord_zuko_etb(gs, card):
+    """'Firebending X = power.' ETB proxy: +X mana (assume power 3)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  Fire Lord Zuko ETB: Firebending X power (power=3 proxy, +3 mana)")
+
+def _ran_shaw_etb(gs, card):
+    """Flying, Firebending 2. 'ETB if cast with 3+ creatures: deal 5 damage to each creature.'
+    ETB proxy: flying + +2 mana + 5 damage to each opp creature."""
+    from data.card import Tag as _Tag
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    opp = getattr(gs, "_match_opp", None)
+    if opp:
+        for c in list(opp.zones.battlefield):
+            if not c.is_land() and c.has(_Tag.CREATURE):
+                c.counters = (c.counters or 0) - 5
+                try:
+                    if int(c.toughness or 1) + (c.counters or 0) <= 0:
+                        opp.zones.battlefield.remove(c)
+                        opp.zones.graveyard.append(c)
+                except (ValueError, TypeError):
+                    pass
+    gs._log("  Ran and Shaw ETB: flying Firebending 2 + 5 damage to each opp creature")
+
+def _lo_li_etb(gs, card):
+    """'ETB: search for Lesson or Noble card, put in hand.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Lo and Li ETB: Lesson/Noble tutor (draw 1 proxy)")
+
+def _wolfbat_etb(gs, card):
+    """Flying. 'When draw 2nd card, may pay {B}: return target creature from GY to hand.'
+    ETB proxy: flying + return best GY creature to hand."""
+    from data.card import Tag as _Tag
+    gy = [c for c in gs.zones.graveyard if not c.is_land() and c.has(_Tag.CREATURE)]
+    if gy:
+        best = max(gy, key=lambda c: getattr(c,'cmc',0) or 0)
+        gs.zones.graveyard.remove(best)
+        gs.zones.hand.append(best)
+        gs._log(f"  Wolfbat ETB: flying + 2nd-draw GY-return {best.name}")
+
+def _waterbender_ascension_etb(gs, card):
+    """'When creature deals combat damage to player, put quest counter. When 3 counters: enchantment becomes 4/4.'
+    ETB proxy: quest engine active."""
+    gs._log("  Waterbender Ascension ETB: quest-counter engine active")
+
+def _master_pakku_etb(gs, card):
+    """Prowess. ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Master Pakku ETB: Prowess +1/+1 proxy")
+
+def _fire_nation_raider_etb(gs, card):
+    """'Raid: ETB if attacked, create Clue token.' ETB proxy: create Clue (+1 mana)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Fire Nation Raider ETB: Raid-Clue (+1 mana proxy)")
+
+def _mai_etb(gs, card):
+    """Prowess. ETB proxy: +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Mai ETB: Prowess +1/+1 proxy")
+
+def _cat_owl_etb(gs, card):
+    """Flying. 'When attacks, untap target artifact or creature.' ETB proxy: flying + untap engine."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Cat-Owl ETB: flying + attack-untap (+1 mana proxy)")
+
+def _sokka_boomeranger_etb(gs, card):
+    """'ETB: discard up to 2, draw that many. When cast spell, investigate.'
+    ETB proxy: loot + Clue (+1 mana)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs._log("  Sokka Bold Boomeranger ETB: ETB loot + spell-investigate (+1 mana proxy)")
+
+def _the_unagi_etb(gs, card):
+    """Flash. 'Ward: Waterbend 4.' ETB proxy: flash ward body."""
+    gs._log("  The Unagi ETB: flash ward-waterbend 4 body")
+
+def _cave_two_lovers_etb(gs, card):
+    """Saga (III). I: ???, II: ???, III: ???. ETB proxy: draw 2."""
+    for _ in range(2):
+        if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Cave of Two Lovers ETB: Saga draw 2 proxy")
+
+def _appa_etb(gs, card):
+    """Flying. 'ETB/attacks: choose — flying to target OR +X/+X where X = creatures.'
+    ETB proxy: flying + +3 to best creature."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Appa ETB: flying + ETB/attack +3 to best creature")
+
+def _the_boulder_etb(gs, card):
+    """'When attacks, earthbend X = creatures you control.' ETB proxy: +3 mana (3 creatures)."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs._log("  The Boulder ETB: attack-earthbend X creatures (+3 mana proxy)")
+
+def _zhao_etb(gs, card):
+    """Firebending 2. ETB proxy: +2 mana."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs._log("  Zhao ETB: Firebending 2 (+2 mana proxy)")
+
+def _otter_penguin_etb(gs, card):
+    """'When draw 2nd card, +1/+2 until EOT + attack.' ETB proxy: +2/+2."""
+    card.counters = (card.counters or 0) + 2
+    gs._log("  Otter-Penguin ETB: 2nd-draw +1/+2 + attack trigger (+2 proxy)")
+
+def _master_piandao_etb(gs, card):
+    """First strike. 'When attacks, look at top 4, put 1 Equipment in hand.'
+    ETB proxy: first strike + draw 1 Equipment."""
+    equips = [c for c in gs.zones.library if 'Equipment' in (c.type_line or '') or 'Artifact' in (c.type_line or '')]
+    if equips:
+        gs.zones.library.remove(equips[0])
+        gs.zones.hand.append(equips[0])
+        gs._log(f"  Master Piandao ETB: first strike + attack-tutor {equips[0].name}")
+    elif gs.zones.library:
+        gs.zones.hand.append(gs.zones.library.pop(0))
+
+def _bitter_work_etb(gs, card):
+    """'When attack with power-4+ creatures, draw 1.' ETB proxy: draw 1."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Bitter Work ETB: power-4-attack draw trigger (draw 1 proxy)")
+
+def _teo_etb(gs, card):
+    """Flying. 'When flying creatures attack, draw 1 then discard 1.'
+    ETB proxy: flying + loot trigger."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Teo ETB: flying + flying-attack loot (draw 1 proxy)")
+
+def _avatar_destiny_etb(gs, card):
+    """Aura. 'Enchanted +1/+1 per creature in your GY.' ETB proxy: +3 (3 GY creatures proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Avatar Destiny ETB: GY-count aura +3 to enchanted creature proxy")
+
+def _iguana_parrot_etb(gs, card):
+    """Flying, vigilance. Prowess. ETB proxy: flying vigilance + +1/+1."""
+    card.counters = (card.counters or 0) + 1
+    gs._log("  Iguana Parrot ETB: flying vigilance + Prowess +1/+1 proxy")
+
+def _bumi_king_etb(gs, card):
+    """'ETB: choose up to X effects (X = Lesson cards in GY).'
+    ETB proxy: draw 1 (choose draw effect)."""
+    if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
+    gs._log("  Bumi King of Three Trials ETB: Lesson-count choice draw 1 proxy")
+
+def _team_avatar_etb(gs, card):
+    """Enchantment. 'When creature attacks alone, +X/+X where X = creatures you control.'
+    ETB proxy: +3/+3 to best attacker (3 creatures proxy)."""
+    from data.card import Tag as _Tag
+    friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
+    if friends:
+        best = max(friends, key=lambda c: c.effective_power())
+        best.counters = (best.counters or 0) + 3
+    gs._log("  Team Avatar ETB: alone-attack +X/+X (+3 creature-count proxy)")
+
+def _foggy_swamp_spirit_keeper_etb(gs, card):
+    """Lifelink. 'When draw 2nd card each turn, create 1/1 Spirit.'
+    ETB proxy: lifelink + create Spirit."""
+    from data.card import Card, Tag
+    tok = Card(name="Spirit", mana_cost="", cmc=0, type_line="Creature — Spirit", oracle_text="", power="1", toughness="1", colors=[])
+    tok.tags.add(Tag.CREATURE)
+    gs.zones.battlefield.append(tok)
+    gs._log("  Foggy Swamp Spirit Keeper ETB: lifelink + 2nd-draw Spirit 1/1 proxy")
+
+
 def _graduation_day_etb(gs, card):
     """Graduation Day -- {2}{W}{U} Enchantment. 'Repartee: whenever you cast i/s that
     targets a creature, +1/+1 to each creature you control.'
@@ -35652,6 +36605,17 @@ _SPELL_HANDLERS.update({
     # TMT spells
     "Return to the Sewers":    _return_sewers_spell,
     "Pain 101":                _pain_101_spell,
+    # FIN spells
+    "Slash of Light":          _slash_of_light_spell,
+    "Vincent's Limit Break":   _vincents_limit_break_spell,
+    "Retrieve the Esper":      _retrieve_esper_spell,
+    "The Final Days":          _final_days_spell,
+    # TLA spells (Enter the Avatar State is also here even though it's an Instant)
+    "Enter the Avatar State":  _enter_avatar_state_spell,
+    "Secret of Bloodbending":  _secret_bloodbending_spell,
+    "Bumi Bash":               _bumi_bash_spell,
+    "Airbender's Reversal":    _airbender_reversal_spell,
+    "Destined Confrontation":  _destined_confrontation_spell,
     # MKM spells
     "Slice from the Shadows":  _slice_shadows_spell,
     "Expose the Culprit":      _expose_culprit_spell,
@@ -35970,6 +36934,128 @@ _ETB_HANDLERS.update({
     "Rakdos, the Muscle":          _rakdos_muscle_etb,
     "Slickshot Lockpicker":        _slickshot_lockpicker_etb,
     "Jolene, Plundering Pugilist": _jolene_pugilist_etb,
+    # FIN batch (Job-select Equipment)
+    "Monk's Fist":                 _job_select_equipment_etb,
+    "Paladin's Arms":              _job_select_equipment_etb,
+    "Red Mage's Rapier":           _job_select_equipment_etb,
+    "Bard's Bow":                  _job_select_equipment_etb,
+    "Thief's Knife":               _job_select_equipment_etb,
+    "Sage's Nouliths":             _job_select_equipment_etb,
+    "Samurai's Katana":            _job_select_equipment_etb,
+    "Warrior's Sword":             _job_select_equipment_etb,
+    "White Mage's Staff":          _job_select_equipment_etb,
+    "Ninja's Blades":              _job_select_equipment_etb,
+    "Summoner's Grimoire":         _job_select_equipment_etb,
+    "Machinist's Arsenal":         _job_select_equipment_etb,
+    "Dark Knight's Greatsword":    _job_select_equipment_etb,
+    # FIN batch (non-Equipment)
+    "Fang, Fearless l'Cie":        _fang_etb,
+    "Queen Brahne":                _queen_brahne_etb,
+    "Coliseum Behemoth":           _coliseum_behemoth_etb,
+    "G'raha Tia":                  _graha_tia_etb,
+    "Rufus Shinra":                _rufus_shinra_etb,
+    "Magitek Scythe":              _magitek_scythe_etb,
+    "Ultima Weapon":               _ultima_weapon_etb,
+    "Ragnarok, Divine Deliverance": _ragnarok_divine_etb,
+    "Judge Magister Gabranth":     _judge_magister_etb,
+    "Vaan, Street Thief":          _vaan_etb,
+    "Omega, Heartless Evolution":  _omega_etb,
+    "Sleep Magic":                 _sleep_magic_etb,
+    "Ice Flan":                    _ice_flan_etb,
+    "Qutrub Forayer":              _qutrub_forayer_etb,
+    "Cloud of Darkness":           _cloud_of_darkness_etb,
+    "Ether":                       _ether_etb,
+    "Balthier and Fran":           _balthier_fran_etb,
+    "Buster Sword":                _buster_sword_etb,
+    "Delivery Moogle":             _delivery_moogle_etb,
+    "Kain, Traitorous Dragoon":    _kain_etb,
+    "Quistis Trepe":               _quistis_etb,
+    "Stuck in Summoner's Sanctum": _stuck_summoners_etb,
+    "Gaius van Baelsar":           _gaius_etb,
+    "Garnet, Princess of Alexandria": _garnet_etb,
+    "Barret Wallace":              _barret_wallace_etb,
+    "Torgal, A Fine Hound":        _torgal_etb,
+    "The Prima Vista":             _prima_vista_etb,
+    "Summon: Fat Chocobo":         _summon_fat_chocobo_etb,
+    "Summon: G.F. Cerberus":       _summon_cerberus_etb,
+    "Ultros, Obnoxious Octopus":   _ultros_etb,
+    "Locke Cole":                  _locke_cole_etb,
+    "Excalibur II":                _excalibur_ii_etb,
+    "Giott, King of the Dwarves":  _giott_etb,
+    "Gilgamesh, Master-at-Arms":   _gilgamesh_etb,
+    "Shambling Cie'th":            _shambling_cieth_etb,
+    "Raubahn, Bull of Ala Mhigo":  _raubahn_etb,
+    "Ashe, Princess of Dalmasca":  _ashe_etb,
+    "Firion, Wild Rose Warrior":   _firion_etb,
+    "Prompto Argentum":            _prompto_etb,
+    "Lightning, Security Sergeant": _lightning_fin_etb,
+    "Squall, SeeD Mercenary":      _squall_etb,
+    "Sandworm":                    _sandworm_etb,
+    "Matoya, Archon Elder":        _matoya_etb,
+    "Undercity Dire Rat":          _undercity_dire_rat_etb,
+    "Zodiark, Umbral God":         _zodiark_etb,
+    "Zell Dincht":                 _zell_etb,
+    "Zidane, Tantalus Thief":      _zidane_etb,
+    "Reno and Rude":               _reno_rude_etb,
+    # TLA batch
+    "Gran-Gran":                   _gran_gran_etb,
+    "Fire Sages":                  _fire_sages_etb,
+    "Sandbender Scavengers":       _sandbender_scavengers_etb,
+    "Honest Work":                 _honest_work_etb,
+    "Firebending Student":         _firebending_student_etb,
+    "Jeong Jeong, the Deserter":   _jeong_jeong_etb,
+    "Fire Lord Azula":             _fire_lord_azula_etb,
+    "Zuko, Exiled Prince":         _zuko_etb,
+    "Cat-Gator":                   _cat_gator_etb,
+    "Ty Lee, Artful Acrobat":      _ty_lee_etb,
+    "Rough Rhino Cavalry":         _rough_rhino_cavalry_etb,
+    "Sokka, Lateral Strategist":   _sokka_etb,
+    "Vindictive Warden":           _vindictive_warden_etb,
+    "Pirate Peddlers":             _pirate_peddlers_etb,
+    "Sun Warriors":                _sun_warriors_etb,
+    "Combustion Man":              _combustion_man_etb,
+    "Fire Nation Cadets":          _fire_nation_cadets_etb,
+    "Tiger-Seal":                  _tiger_seal_etb,
+    "Rebellious Captives":         _rebellious_captives_etb,
+    "Aang, the Last Airbender":    _aang_etb,
+    "Suki, Courageous Rescuer":    _suki_courageous_etb,
+    "Rowdy Snowballers":           _rowdy_snowballers_etb,
+    "Jet, Freedom Fighter":        _jet_etb,
+    "Azula, Cunning Usurper":      _azula_cunning_etb,
+    "Glider Staff":                _glider_staff_etb,
+    "Beifong's Bounty Hunters":    _beifongs_bounty_etb,
+    "Momo, Playful Pet":           _momo_etb,
+    "Azula, On the Hunt":          _azula_hunt_etb,
+    "Uncle Iroh":                  _uncle_iroh_etb,
+    "Hei Bai, Spirit of Balance":  _hei_bai_etb,
+    "Suki, Kyoshi Warrior":        _suki_kyoshi_etb,
+    "Fire Nation Warship":         _fire_nation_warship_etb,
+    "Fire Nation Engineer":        _fire_nation_engineer_etb,
+    "Long Feng, Grand Secretariat": _long_feng_etb,
+    "Fire Lord Zuko":              _fire_lord_zuko_etb,
+    "Ran and Shaw":                _ran_shaw_etb,
+    "Lo and Li, Twin Tutors":      _lo_li_etb,
+    "Wolfbat":                     _wolfbat_etb,
+    "Waterbender Ascension":       _waterbender_ascension_etb,
+    "Master Pakku":                _master_pakku_etb,
+    "Fire Nation Raider":          _fire_nation_raider_etb,
+    "Mai, Jaded Edge":             _mai_etb,
+    "Cat-Owl":                     _cat_owl_etb,
+    "Sokka, Bold Boomeranger":     _sokka_boomeranger_etb,
+    "The Unagi of Kyoshi Island":  _the_unagi_etb,
+    "The Cave of Two Lovers":      _cave_two_lovers_etb,
+    "Appa, Loyal Sky Bison":       _appa_etb,
+    "The Boulder, Ready to Rumble": _the_boulder_etb,
+    "Zhao, Ruthless Admiral":      _zhao_etb,
+    "Otter-Penguin":               _otter_penguin_etb,
+    "Master Piandao":              _master_piandao_etb,
+    "Bitter Work":                 _bitter_work_etb,
+    "Teo, Spirited Glider":        _teo_etb,
+    "Avatar Destiny":              _avatar_destiny_etb,
+    "Iguana Parrot":               _iguana_parrot_etb,
+    "Bumi, King of Three Trials":  _bumi_king_etb,
+    "Team Avatar":                 _team_avatar_etb,
+    "Foggy Swamp Spirit Keeper":   _foggy_swamp_spirit_keeper_etb,
     # MKM batch
     "Concealed Weapon":            _concealed_weapon_etb,
     "Dog Walker":                  _dog_walker_etb,

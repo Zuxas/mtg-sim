@@ -1,153 +1,185 @@
 """
-apl/jeskai_oculus_standard_match.py — Jeskai Oculus (Standard)
+apl/jeskai_oculus_standard_match.py -- Jeskai Oculus (Standard 2026)
 
-Storm combo using Prismari (storm on all spells) + Rootha (combat token)
-+ Veyran (doubles all triggers) + Zaffai (free spell per turn).
+From UltimateGuard guide (Apr 2025). Proactive creature-based midrange with
+dual win conditions.
 
-Win condition: assemble Prismari + Veyran, then chain spells for storm
-copies. Magma Opus with storm = 4 damage × N copies. Mathemagics = draw
-2^X × N copies. Rootha combat = massive flying token.
+Key cards:
+  Proft's Eidetic Memory: enchantment; whenever creature with a counter attacks = draw
+  Abhorrent Oculus:       Dimir reanimation target (Plan B)
+  Marauding Mako {2B}:    sacrifice outlet; triggers on discard
+  Fear of Missing Out:    sorcery; until EOT, whenever you attack, untap all creatures
+  Steamcore Scholar:      secondary threat/draw
+  Tersa Lightshatter:     secondary threat
+  Torch the Tower {R}:    1-mana removal (Bargain = sacrifice artifact for 3 damage)
+  Spell Pierce {U}:       counter vs non-creature spells
+
+Favorable vs: Izzet Prowess (54% WR per guide), Mono Red, Esper Pixie, Azorius Omniscience
+Weak vs: Domain Ramp, Dimir Midrange
+
+Sideboard from guide:
+  vs Izzet Prowess: +2 High Noon, +2 Sheltered by Ghosts, +1 Loran
+                    -2 Spyglass Siren, -1 Winternight Stories, -1 Oculus, -1 Helping Hand
+  vs Control:       +Disdainful Stroke, No More Lies, Negate, 2x Chandra, 2x Destroy Evil,
+                    Exorcise, Loran | -Torch the Tower (4x), Sheltered, Glacial Dragonhunt (2x)
+  vs Omniscience:   +2 Ghost Vacuum, No More Lies, Disdainful, Negate, 2x Destroy Evil,
+                    Exorcise, High Noon | -Sheltered, Torch (4x), Glacial (2x), Winternight, Proft
 """
-from typing import Optional
-from data.card import Card, Tag
+from __future__ import annotations
+from data.card import Tag
 from engine.game_state import GameState
-from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
-from apl.card_specs import (prismari, rootha, veyran, zaffai,
-                              deekah, lorehold, magma_opus, mathemagics)
+from apl.aware_match_apl import AwareMatchAPL
 
-PRISMARI  = prismari.NAME
-ROOTHA    = rootha.NAME
-VEYRAN    = veyran.NAME
-ZAFFAI    = zaffai.NAME
-DEEKAH    = deekah.NAME
-LOREHOLD  = lorehold.NAME
-MAGMA_OPS = magma_opus.NAME
-MATHEMAGIC= mathemagics.NAME
-OPT       = "Opt"
-WINTERNIGHT = "Winternight Stories"
-INTO_FLOOD  = "Into the Flood Maw"
+PROFT         = "Proft's Eidetic Memory"
+OCULUS        = "Abhorrent Oculus"
+MAKO          = "Marauding Mako"
+FEAR_MISSING  = "Fear of Missing Out"
+STEAMCORE     = "Steamcore Scholar"
+TERSA         = "Tersa Lightshatter"
+TORCH         = "Torch the Tower"
+SPYGLASS      = "Spyglass Siren"
+SPELL_PIERCE  = "Spell Pierce"
+GLACIAL       = "Glacial Dragonhunt"
+WINTERNIGHT   = "Winternight Stories"
 
-ENGINE_PIECES = {PRISMARI, ROOTHA, VEYRAN, DEEKAH, ZAFFAI, LOREHOLD}
+HIGH_NOON     = "High Noon"
+SHELTERED     = "Sheltered by Ghosts"
+LORAN         = "Loran of the Third Path"
+GHOST_VAC     = "Ghost Vacuum"
+DESTROY_EVIL  = "Destroy Evil"
+EXORCISE      = "Exorcise"
+NO_MORE_LIES  = "No More Lies"
+DISDAINFUL    = "Disdainful Stroke"
+NEGATE        = "Negate"
+CHANDRA       = "Chandra"
+
+# Kill priority: answer before they draw engine fires
+KILL_PRIORITY = (
+    PROFT,               # draw engine; exile if possible
+    "Gran-Gran",         # Monument enabler
+    "Mightform Harmonizer", # Landfall combo
+    "Icetill Explorer",  # Landfall chain
+    "Badgermole Cub",    # ramp
+)
+
+ENGINE_PIECES = {PROFT, OCULUS, MAKO, FEAR_MISSING, STEAMCORE, TERSA}
 
 
-class JeskaiOculusMatchAPL(MatchAPL):
+class JeskaiOculusMatchAPL(AwareMatchAPL):
     name = "Jeskai Oculus"
-    win_condition_damage = 20
-    max_turns = 12
+    ARCHETYPE = "combo"
 
     def keep(self, hand, mulligans, on_play):
-        if len(hand) <= 4: return True
+        if len(hand) <= 4:
+            return True
         lands = sum(1 for c in hand if c.is_land())
+        if lands == 0 or lands > 5:
+            return False
         has_engine = any(c.name in ENGINE_PIECES for c in hand)
-        has_spells = sum(1 for c in hand
-                        if not c.is_land() and not c.has(Tag.CREATURE)) >= 2
-        if lands == 0: return False
-        if has_engine and lands >= 2: return True
-        if has_spells and lands >= 2: return True
-        return mulligans >= 2
+        return has_engine or mulligans >= 2
 
     def bottom(self, hand, n):
         excess = sorted([c for c in hand if c.is_land()], key=lambda c: c.name)
         to_bottom = excess[3:]
-        filler = [c for c in hand if not c.is_land() and c not in to_bottom
-                  and c.name not in ENGINE_PIECES]
+        filler = sorted([c for c in hand if not c.is_land() and c not in to_bottom
+                         and c.name not in ENGINE_PIECES],
+                        key=lambda c: -getattr(c, 'cmc', 0))
         return (to_bottom + filler)[:n]
 
-    def main_phase(self, gs):
-        self.main_phase_match(gs, None)
+    # Spell Pierce {U}: hold 1 mana when in hand
+    COUNTER_COST  = 1
+    COUNTER_CARDS = {SPELL_PIERCE, NO_MORE_LIES, NEGATE, DISDAINFUL}
 
-    def main_phase_match(self, gs, opponent):
+    MATCH_REMOVAL = {
+        TORCH: ("R", 3),  # 3 damage (Bargain mode = sacrifice artifact for extra damage)
+    }
+    MATCH_EXILE = {GLACIAL}  # Glacial Dragonhunt exiles
+
+    SB_PLANS = {
+        "tempo": (
+            # vs Izzet Prowess: High Noon + Sheltered; trim clunky threats
+            [HIGH_NOON, HIGH_NOON, SHELTERED, SHELTERED, LORAN],
+            [SPYGLASS, SPYGLASS, WINTERNIGHT, OCULUS, "Helping Hand"],
+        ),
+        "aggro": (
+            # vs Red Aggro: more removal + creatures; trim card engines
+            [SHELTERED, SHELTERED, DESTROY_EVIL, DESTROY_EVIL, EXORCISE],
+            [WINTERNIGHT, WINTERNIGHT, GLACIAL, GLACIAL, OCULUS],
+        ),
+        "control": (
+            # vs Control/Jeskai: counters + Chandra threats
+            [DISDAINFUL, NO_MORE_LIES, NEGATE, CHANDRA, CHANDRA,
+             DESTROY_EVIL, DESTROY_EVIL, EXORCISE, LORAN],
+            [TORCH, TORCH, TORCH, TORCH, SHELTERED,
+             GLACIAL, GLACIAL, MAKO, OCULUS],
+        ),
+        "combo": (
+            # vs Omniscience: GY hate + counters
+            [GHOST_VAC, GHOST_VAC, NO_MORE_LIES, DISDAINFUL, NEGATE,
+             DESTROY_EVIL, DESTROY_EVIL, EXORCISE, HIGH_NOON],
+            [SHELTERED, TORCH, TORCH, TORCH, TORCH,
+             GLACIAL, GLACIAL, WINTERNIGHT, PROFT],
+        ),
+        "midrange": (
+            # vs Dimir Midrange: Destroy Evil for recursive threats; trim tempo pieces
+            [DESTROY_EVIL, DESTROY_EVIL, EXORCISE, NEGATE, GHOST_VAC],
+            [GLACIAL, GLACIAL, MAKO, SPYGLASS, OCULUS],
+        ),
+    }
+
+    def reserve_mana(self, gs: GameState, opponent: GameState):
+        has_pierce = any(c.name in self.COUNTER_CARDS for c in gs.zones.hand)
+        gs.mana_reserve = self.COUNTER_COST if has_pierce else 0
+
+    def main_phase_match(self, gs: GameState, opponent: GameState):
         self._play_land_if_able(gs)
+        if hasattr(self, 'reserve_mana'):
+            self.reserve_mana(gs, opponent)
         gs.tap_lands()
+        self._opp_gs = opponent
 
-        # Priority: Veyran T3 first (doubles everything that follows)
-        veyran.cast(gs, opponent)
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if not c.is_land() and c.has(Tag.CREATURE)]
 
-        # T4: Lorehold (miracle on all drawn spells = free high-CMC spells)
-        lorehold.cast(gs, opponent)
+        # Kill priority targets with Torch
+        for name in KILL_PRIORITY:
+            target = next((c for c in opp_creatures if c.name == name), None)
+            if target and safe_toughness(target) <= 3:
+                if self._kill_with_removal(gs, opponent, target, prefer_exile=True):
+                    break
 
-        # T4: Rootha (combat token based on spell MV)
-        rootha.cast(gs, opponent)
-
-        # T5: Deekah (Fractal tokens on each spell)
-        deekah.cast(gs, opponent)
-
-        # T6: Prismari (storm on all spells — the combo enabler)
-        if prismari.cast(gs, opponent):
-            spells = prismari.storm_copies(gs)
-            gs._log(f"  Prismari online: next spell storm-copies {spells}× "
-                    f"(Veyran doubles: {'yes' if veyran.is_active(gs) else 'no'})")
-
-        # T7: Zaffai (free spell per turn)
-        zaffai.cast(gs, opponent)
-
-        # Once Prismari is active, chain spells for storm
-        if prismari.is_active(gs):
-            # Opt / Winternight for storm fodder
-            for c in list(gs.zones.hand):
-                if c.name in (OPT, WINTERNIGHT) and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
-                    if c.name == WINTERNIGHT:
-                        gs.zones.draw(3)
-                        # Discard 2
-                        for _ in range(2):
-                            if gs.zones.hand:
-                                worst = min(gs.zones.hand, key=lambda x: getattr(x,'cmc',0))
-                                gs.zones.hand.remove(worst)
-                                gs.zones.graveyard.append(worst)
-                    else:
-                        gs.zones.draw(1)
-                    # Trigger Veyran magecraft
-                    if veyran.is_active(gs):
-                        veyran.apply_magecraft(gs)
-                    # Trigger Deekah fractal
-                    if deekah.is_active(gs):
-                        deekah.create_fractal_token(gs)
-                    # Prismari storm: apply damage
-                    copies = prismari.storm_copies(gs)
-                    if veyran.doubles_triggers(gs):
-                        copies *= 2
-
-            # Magma Opus with storm = devastating
-            if magma_opus.cast_free(gs, opponent) or magma_opus.cast(gs, opponent):
-                copies = prismari.storm_copies(gs)
-                gs.damage_dealt += magma_opus.DAMAGE * copies
-                gs._log(f"  Magma Opus storm: {magma_opus.DAMAGE}×{copies} = "
-                        f"{magma_opus.DAMAGE * copies} total")
-
-        # Rootha combat trigger: create X/X flier
-        rootha.fire_combat_trigger(gs, opponent)
+        # Engine deployment priority: Proft first (enables card advantage), then threats
+        for name in (PROFT, MAKO, STEAMCORE, TERSA, FEAR_MISSING, OCULUS):
+            for card in list(gs.zones.hand):
+                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    break
 
         self._cast_all_castable(gs)
 
-    def declare_attackers(self, gs, opponent):
-        return [c for c in gs.zones.battlefield
-                if c.has(Tag.CREATURE) and not c.is_land()
-                and not getattr(c, 'summoning_sickness', False)
-                and not getattr(c, 'tapped', False)]
+    def pre_combat_instant(self, gs: GameState, opponent: GameState):
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if c.has(Tag.CREATURE) and not c.is_land()]
+        for name in KILL_PRIORITY:
+            for c in opp_creatures:
+                if c.name == name and safe_toughness(c) <= 3:
+                    if self._kill_with_removal(gs, opponent, c, prefer_exile=True):
+                        gs._log(f"  [pre-combat] Torch killed {c.name}")
+                        return
+        super().pre_combat_instant(gs, opponent)
 
-    def declare_blockers(self, gs, opp, attackers):
+    def declare_blockers(self, gs: GameState, opponent: GameState, attackers: list):
+        if not attackers:
+            return {}
+        my_creatures = [c for c in gs.zones.battlefield
+                        if c.has(Tag.CREATURE) and not c.is_land()
+                        and not getattr(c, 'summoning_sickness', False)
+                        and not getattr(c, 'tapped', False)]
         assignments = {}
-        if not attackers: return assignments
-        blockers = [c for c in gs.zones.battlefield
-                    if c.has(Tag.CREATURE) and not c.is_land()
-                    and not getattr(c, 'tapped', False)
-                    and not getattr(c, 'summoning_sickness', False)]
-        if blockers:
-            biggest = max(attackers, key=lambda c: safe_power(c))
-            assignments[id(biggest)] = [max(blockers, key=lambda c: safe_toughness(c))]
+        for atk, blk in zip(
+            sorted(attackers, key=lambda c: -safe_power(c)),
+            sorted(my_creatures, key=lambda c: -safe_toughness(c))
+        ):
+            assignments[id(atk)] = [blk]
         return assignments
-
-    def respond_to_spell(self, gs, opponent, spell): return None
-    def end_step_actions(self, gs, opponent):
-        zaffai.reset_turn_flag(gs)
-
-    def _play_land_if_able(self, gs):
-        lands = [c for c in gs.zones.hand if c.is_land()]
-        if not lands or gs.land_played: return
-        def score(c):
-            n = (c.name or '').lower()
-            if 'canal' in n or 'vents' in n or 'fountain' in n: return 0
-            return 3
-        gs.play_land(min(lands, key=score))

@@ -57,10 +57,30 @@ OPP_THREAT_MODEL: dict[str, dict] = {
     "monogreenaggro":       {"removal": 0, "counters": 0, "pump": 3, "rep_mana": 1},
     "borosaggrostandard":   {"removal": 4, "counters": 0, "pump": 0, "rep_mana": 1},
     "borosdragons":         {"removal": 2, "counters": 2, "pump": 0, "rep_mana": 2},
-    "mardudiscard":         {"removal": 2, "counters": 0, "pump": 0, "rep_mana": 1},
-    "rakdosdiscard":        {"removal": 2, "counters": 0, "pump": 0, "rep_mana": 1},
+    # Discard aggro: taps out every turn; Bloodghast/Flamewake recurr; no instant interaction
+    "mardudiscard":         {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    "rakdosdiscard":        {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    "borosdiscard":         {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
     "simiccub":             {"removal": 0, "counters": 2, "pump": 3, "rep_mana": 1},
     "selesnyarhythm":       {"removal": 1, "counters": 0, "pump": 2, "rep_mana": 1},
+    # New archetypes added 2026-05-04
+    # Temur Lute: Three Steps Ahead + Negate + Annul + Flashfreeze + Spell Pierce; holds 2 mana
+    "temurlute":            {"removal": 2, "counters": 5, "pump": 0, "rep_mana": 2},
+    "temurlutestd":         {"removal": 2, "counters": 5, "pump": 0, "rep_mana": 2},
+    # Bant Airbending: taps out; no main-deck removal; Disdainful Stroke only in SB
+    "bantairbending":       {"removal": 0, "counters": 1, "pump": 0, "rep_mana": 0},
+    "bantrhythm":           {"removal": 0, "counters": 1, "pump": 1, "rep_mana": 0},
+    # Sultai Control: Deceit as primary interaction ({2UB}); holds 4 mana when Deceit in hand
+    "sultaicontrol":        {"removal": 1, "counters": 0, "pump": 0, "rep_mana": 4},
+    # Jeskai Oculus (current Standard): Torch the Tower {R} + Spell Pierce {U}; holds 1 mana
+    "jeskaioculus":         {"removal": 4, "counters": 2, "pump": 0, "rep_mana": 1},
+    # Temur Omniscience / Bant Omniscience / Simic Omni: all combo, hold counters
+    "temuromniscience":     {"removal": 0, "counters": 4, "pump": 0, "rep_mana": 2},
+    "bantomniscience":      {"removal": 0, "counters": 4, "pump": 0, "rep_mana": 2},
+    "simicomniscience":     {"removal": 0, "counters": 4, "pump": 0, "rep_mana": 2},
+    # Four Color variants
+    "fourcolorcontrol":     {"removal": 4, "counters": 4, "pump": 0, "rep_mana": 2},
+    "fourcolorelemental":   {"removal": 2, "counters": 4, "pump": 0, "rep_mana": 2},
 }
 
 # Creatures whose combat damage or attack trigger enables a powerful follow-up.
@@ -87,6 +107,9 @@ BLINK_BAIT = {
     "Kona, Rescue Beastie",   # ETB: recur a creature
     "Mightform Harmonizer",   # ETB/tap: combo kill piece (Harmonizer + Leatherhead = instant lethal)
     "Earthbender Ascension",  # continuous trample enabler; remove before landfall chains grow
+    "Proft's Eidetic Memory", # Jeskai Oculus draw engine: whenever creature with counter attacks = draw
+    "Brightglass Gearhulk",   # {3UU} Dimir mirror-breaker; ETB searches for removal; must exile
+    "Doc Aurlock, Grizzled Genius", # Bant Airbending: reduces Avatar costs; remove before Appa/Aang land
 }
 
 

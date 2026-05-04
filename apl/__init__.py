@@ -330,6 +330,20 @@ MATCH_APL_REGISTRY = {
     "simicomniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
     "bantomniscience":     ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
     "temuromniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
+    # ── Typo aliases + remaining proxy mappings ───────────────────────────────
+    "borordragons":        ("apl.azorius_momo_standard_match",             "AzoriusMomoStandardMatchAPL"),   # typo; Boros Dragons ~ Azorius Momo (flying aggro)
+    "borosdragons":        ("apl.azorius_momo_standard_match",             "AzoriusMomoStandardMatchAPL"),   # proxy; dragon tribal flying aggro
+    "borosenergyvariantjermey": ("apl.boros_energy_match",                 "BorosEnergyMatchAPL"),           # custom variant
+    "dimiragggrostandard": ("apl.esper_raffine_standard_match",            "EsperRaffineMatchAPL"),           # typo of dimiraggro
+    "dimiroculus":         ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"), # Dimir Oculus ~ Dimir Midrange
+    "espermidrange":       ("apl.esper_raffine_standard_match",            "EsperRaffineMatchAPL"),           # Esper midrange
+    "espervengance":       ("apl.goryos_match",                            "GoryosMatchAPL"),                 # typo of Esper Goryo's
+    "goryovengeance":      ("apl.goryos_match",                            "GoryosMatchAPL"),                 # Goryo's Vengeance
+    "orzhovblink":         ("apl.uw_blink_match",                          "UWBlinkMatchAPL"),                # Orzhov Blink ~ UW Blink
+    "rakdos":              ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"), # generic Rakdos -> midrange proxy
+    "rakdosmidrange":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"), # Rakdos Midrange
+    "standardaggro":       ("apl.mono_red_match",                          "MonoRedMatchAPL"),                 # generic aggro -> MonoRed proxy
+    "temuomniscience":     ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),     # typo of temuromniscience
 }
 
 

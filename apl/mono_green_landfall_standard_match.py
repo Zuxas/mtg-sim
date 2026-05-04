@@ -37,26 +37,45 @@ LANDFALL_CREATURES = {BADGERMOLE_CUB, ICETILL_EXPLORER, SAZHS_CHOCOBO,
 
 class MonoGreenLandfallStandardMatchAPL(MatchAPL):
     ARCHETYPE = "ramp"
+    # Sideboard plans from mtg.cardsrealm guide (Mar 2026)
+    # Leatherhead + Harmonizer = hexproof + trample + doubled power (instant lethal combo)
+    # Protect: Badgermole Cub, Icetill Explorer, Leatherhead, Harmonizer
+    # Trade: Llanowar Elves, Sazh's Chocobo
     SB_PLANS = {
-        "control": (
-            ["4 Mossborn Hydra", "2 Pawpatch Formation", "1 Archdruid's Charm"],
-            ["3 Esper Origins", "3 Sapling Nursery", "1 Meltstrider's Resolve"],
-        ),
-        "aggro": (
-            ["2 Eumidian Terrabotanist", "4 Mossborn Hydra", "1 Scrapshooter"],
-            ["3 Esper Origins", "3 Sapling Nursery", "1 Meltstrider's Resolve"],
+        "ramp": (
+            # vs Mirror: Mossborn Hydra + Surrak (resilient threats); cut Harmonizer (slow vs combo)
+            ["Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra", "Mossborn Hydra",
+             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
+            ["Mightform Harmonizer", "Mightform Harmonizer",
+             "Sapling Nursery", "Sapling Nursery", "Meltstrider's Resolve", "Meltstrider's Resolve"],
         ),
         "combo": (
-            ["2 Soul-Guide Lantern", "2 Torpor Orb", "1 Archdruid's Charm"],
-            ["3 Esper Origins", "2 Sapling Nursery"],
+            # vs Izzet Lessons: Soul-Guide Lantern + Surrak; cut Harmonizer (they counter it)
+            ["Soul-Guide Lantern", "Soul-Guide Lantern",
+             "Surrak, Elusive Hunter", "Surrak, Elusive Hunter"],
+            ["Mightform Harmonizer", "Mightform Harmonizer",
+             "Meltstrider's Resolve", "Meltstrider's Resolve"],
         ),
-        "ramp": (
-            ["4 Mossborn Hydra", "2 Torpor Orb", "2 Pawpatch Formation"],
-            ["3 Esper Origins", "3 Sapling Nursery", "2 Meltstrider's Resolve"],
+        "midrange": (
+            # vs Dimir Midrange: Surrak (hexproof beats Requiting Hex) + Pawpatch Formation
+            ["Surrak, Elusive Hunter", "Surrak, Elusive Hunter",
+             "Pawpatch Formation", "Pawpatch Formation"],
+            ["Sapling Nursery", "Sapling Nursery",
+             "Meltstrider's Resolve", "Meltstrider's Resolve"],
+        ),
+        "aggro": (
+            # vs Mono Red: Meltstrider's Resolve (lifegain pump) + Pawpatch Formation
+            ["Meltstrider's Resolve", "Meltstrider's Resolve",
+             "Pawpatch Formation", "Pawpatch Formation", "Pawpatch Formation"],
+            ["Sapling Nursery", "Sapling Nursery", "Sapling Nursery",
+             "Archdruid's Charm", "Archdruid's Charm"],
         ),
         "tempo": (
-            ["4 Mossborn Hydra", "2 Pawpatch Formation", "1 Scrapshooter"],
-            ["3 Esper Origins", "2 Sapling Nursery", "2 Meltstrider's Resolve"],
+            # vs Azorius Tempo: Scrapshooter (removes enchantments) + Pawpatch
+            ["Scrapshooter", "Scrapshooter",
+             "Pawpatch Formation", "Pawpatch Formation"],
+            ["Mightform Harmonizer", "Mightform Harmonizer",
+             "Meltstrider's Resolve", "Meltstrider's Resolve"],
         ),
     }
     name = "Mono Green Landfall (Standard)"

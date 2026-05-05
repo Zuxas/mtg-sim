@@ -317,6 +317,9 @@ MATCH_APL_REGISTRY = {
     "fivecolorrhythm":     ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),   # proxy
     # Sultai Reanimator: 10.1% of field; Bringer + Superior Spider-Man combo
     "sultaireanimator":    ("apl.sultai_reanimator_standard_match",        "SultaiReanimatorStandardMatchAPL"),
+    "grixiselementals":    ("apl.grixis_elementals_standard_match",        "GrixisElementalsStandardMatchAPL"),
+    "grixiselements":      ("apl.grixis_elementals_standard_match",        "GrixisElementalsStandardMatchAPL"),
+    "izzetelementsstandard": ("apl.izzet_spellementals_standard_match",    "IzzetSpellementalsStandardMatchAPL"),  # Izzet Elementals proxy
     # ── New match APLs from guide-informed pass (2026-05-04) ─────────────────
     "bantairbending":      ("apl.bant_airbending_standard_match",          "BantAirbendingStandardMatchAPL"),
     "temurlute":           ("apl.temur_lute_standard_match",               "TemurLuteStandardMatchAPL"),

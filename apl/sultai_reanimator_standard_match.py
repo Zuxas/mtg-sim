@@ -132,22 +132,37 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
         if opponent:
             self._use_removal(gs, opponent)
 
-        # 2. T2 loot — Deceit / Dredger's Insight fill GY. Goldfish
-        # approximation: treat as "draw 2, discard 1 biggest spell"
-        # so big creatures land in graveyard for reanimation.
+        # 2. GY fill: Oblivious Bookworm draws then discards at end step (approximated here)
+        # Oracle: "At beginning of your end step, you may draw a card. If you do, discard a card
+        # unless a face-down permanent entered this turn." Since we don't model end steps fully,
+        # approximate: when Bookworm is on battlefield, discard worst creature to GY each turn.
+        for c in gs.zones.battlefield:
+            if c.name == BOOKWORM and not c.is_land():
+                # End-step draw: draw 1
+                if gs.zones.library:
+                    gs.zones.draw(1)
+                # Discard worst non-Bringer creature to fill GY
+                discard_targets = [x for x in gs.zones.hand
+                                   if x.name not in {BRINGER, SPIDERMAN, AWAKEN_DEAD}
+                                   and x.has(Tag.CREATURE)]
+                if discard_targets:
+                    worst = min(discard_targets, key=lambda x: getattr(x, 'cmc', 0))
+                    gs.zones.hand.remove(worst)
+                    gs.zones.graveyard.append(worst)
+                    gs._log(f"  Oblivious Bookworm: draw 1, discard {worst.name} to GY")
+                break
+
+        # Deceit / Dredger's Insight as additional GY fill
         for name in (DECEIT, DREDGERS_INSIGHT):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
-                    # Mill: discard biggest-cmc creature from hand to GY
-                    creatures_in_hand = [x for x in gs.zones.hand
-                                          if x.has(Tag.CREATURE)]
+                    creatures_in_hand = [x for x in gs.zones.hand if x.has(Tag.CREATURE)]
                     if creatures_in_hand:
-                        victim = max(creatures_in_hand,
-                                       key=lambda x: getattr(x, 'cmc', 0))
+                        victim = max(creatures_in_hand, key=lambda x: getattr(x, 'cmc', 0))
                         gs.zones.hand.remove(victim)
                         gs.zones.graveyard.append(victim)
-                        gs._log(f"  {name}: mill {victim.name} to GY")
+                        gs._log(f"  {name}: discard {victim.name} to GY")
                     break
 
         # 3a. Superior Spider-Man — enters as copy of Bringer in GY

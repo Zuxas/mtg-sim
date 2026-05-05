@@ -35,7 +35,7 @@ BRIGHTGLASS    = "Brightglass Gearhulk"
 ARCHDRUID      = "Archdruid's Charm"
 FIGURE_FABLE   = "Figure of Fable"
 CRATERHOOF     = "Craterhoof Behemoth"
-SEAM_RIP       = "Seam Rip"
+SEAM_RIP       = "Seam Rip"       # {W} Enchantment: ETB exiles opponent's nonland MV<=2 permanent
 
 SAGE_SKIES     = "Sage of the Skies"
 GET_LOST       = "Get Lost"
@@ -75,8 +75,10 @@ class BantRhythmStandardMatchAPL(AwareMatchAPL):
 
     COUNTER_COST  = 0
     COUNTER_CARDS = set()
-    MATCH_REMOVAL = {}          # Seam Rip is sorcery-speed (main deck), not instant
-    MATCH_EXILE   = {GET_LOST}  # Get Lost in SB
+    # Seam Rip {W}: enchantment that exiles target nonland permanent with MV<=2
+    # Banishing Light variant: cast main phase, ETB effect fires immediately
+    MATCH_REMOVAL = {SEAM_RIP: ("W", 2)}   # {W} cost, max toughness proxy = MV 2
+    MATCH_EXILE   = {GET_LOST, SEAM_RIP}   # both are exile effects
 
     SB_PLANS = {
         "combo": (

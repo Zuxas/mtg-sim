@@ -64,11 +64,12 @@ OPP_THREAT_MODEL: dict[str, dict] = {
     "simiccub":             {"removal": 0, "counters": 2, "pump": 3, "rep_mana": 1},
     "selesnyarhythm":       {"removal": 1, "counters": 0, "pump": 2, "rep_mana": 1},
     # PT Lorwyn Eclipsed dominant archetypes (2026-05-04) -- from actual decklists
-    # Simic/Bant Rhythm: pure tap-out ramp; Seam Rip is sorcery-speed only
-    # 1 Bounce Off in Simic SB -- negligible instant interaction
+    # Simic Rhythm: no main-deck removal (Seam Rip in SB only); 1 Bounce Off SB
     "simicrhythm":          {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
-    "bantrhythm":           {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
-    "fivecolorrhythm":      {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    # Bant Rhythm: 3x Seam Rip {W} MAIN DECK -- enchantment that exiles MV<=2 permanents
+    # rep_mana=1: needs {W} to activate Seam Rip (and Abandoned Air Temple pump {3W})
+    "bantrhythm":           {"removal": 3, "counters": 0, "pump": 0, "rep_mana": 1},
+    "fivecolorrhythm":      {"removal": 1, "counters": 0, "pump": 0, "rep_mana": 1},
     # Sultai Reanimator: Disdainful Stroke SB, Deceit main (bounce); holds no mana (taps out to combo)
     "sultaireanimator":     {"removal": 1, "counters": 1, "pump": 0, "rep_mana": 0},
     # New archetypes added 2026-05-04
@@ -77,7 +78,7 @@ OPP_THREAT_MODEL: dict[str, dict] = {
     "temurlutestd":         {"removal": 2, "counters": 5, "pump": 0, "rep_mana": 2},
     # Bant Airbending: taps out; no main-deck removal; Disdainful Stroke only in SB
     "bantairbending":       {"removal": 0, "counters": 1, "pump": 0, "rep_mana": 0},
-    "bantrhythm":           {"removal": 0, "counters": 1, "pump": 1, "rep_mana": 0},
+    # bantrhythm: see PT Lorwyn Eclipsed section above (3x Seam Rip main deck)
     # Sultai Control: Deceit as primary interaction ({2UB}); holds 4 mana when Deceit in hand
     "sultaicontrol":        {"removal": 1, "counters": 0, "pump": 0, "rep_mana": 4},
     # Jeskai Oculus (current Standard): Torch the Tower {R} + Spell Pierce {U}; holds 1 mana

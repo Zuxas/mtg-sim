@@ -37,72 +37,1570 @@
     "Other": 18
   },
   "player_archetypes": {
-    "Portolan, Toni": "Izzet Maestro",
-    "Young, Michael NK": "Izzet Maestro",
-    "White, Tom": "Izzet Maestro",
-    "Seley, Sophi": "Izzet Maestro",
-    "Qiu, Jason": "Izzet Maestro",
-    "Nguyen, Truong Hai": "Izzet Maestro",
-    "Jade, Valerie": "Izzet Maestro",
-    "Dubreuil, Eleanor": "Izzet Maestro",
-    "Doherty, Shawn": "Izzet Maestro",
-    "Yukuhiro, Ken": "Sultai Control",
-    "Shibata, Akira": "Sultai Control",
-    "Ozawa, Takeshi": "Sultai Control",
-    "nakamura, shuhei": "Sultai Control",
-    "Kihara, Atsuki": "Sultai Control",
-    "Reid, Jason": "Golgari Midrange",
-    "Xu, Matt": "Golgari Midrange",
-    "Oswald, Kenny": "Golgari Midrange",
-    "Nelson, Kye": "Golgari Midrange",
-    "Hsu, Brendan": "Golgari Midrange",
-    "Lam, Curtis": "Golgari Midrange",
-    "Stettner, Elad": "Golgari Midrange",
-    "Leaf, Benji": "Boros Discard",
-    "Gabat, Paul": "Golgari Kona",
-    "Cosgrove, Nicolas": "Temur Lute",
-    "Bostic, Gabriel": "Four-Color Control",
-    "Buonadonna, Mason": "Bant Rhythm",
-    "Steuer, Nathan": "Selesnya Landfall",
-    "Larsen, Christoffer": "Selesnya Landfall",
-    "Adachi, Junichi": "Izzet Spellementals",
-    "Adams, January": "Izzet Spellementals",
-    "Bai, Huaxing": "Izzet Prowess",
-    "Baker, Christian": "Jeskai Control",
-    "Berrett, George": "Jeskai Control",
-    "Branis, Antonin": "Selesnya Landfall",
-    "Brace, Adam": "Mono-Green Landfall",
-    "Byrd, Mike": "Selesnya Landfall",
-    "Sigrist, Mike": "Mono-Green Landfall",
-    "Stark, Ben": "Selesnya Landfall",
-    "Stefansson, Matthew": "Mono-Green Landfall",
-    "Magalhaes, Edgar": "Selesnya Landfall",
-    "Manfield, Seth": "Selesnya Landfall",
-    "masukado, kenta": "Izzet Spellementals",
-    "Mazur, Spencer": "Izzet Prowess",
-    "Mishina, Ryouta": "Izzet Lessons",
-    "Morikis, Vasilios": "Izzet Spellementals",
-    "MORIYAMA, MASAHIDE": "Izzet Prowess",
-    "Mullens, Ryan": "Izzet Prowess",
-    "Nass, Matt": "Selesnya Ouroboroid",
-    "Nielsen, Simon": "Dimir Midrange",
-    "Oomkes, Matthew": "Izzet Prowess",
-    "Pardee, Samuel": "Rakdos Midrange",
-    "Plummer, Michael": "Izzet Spellementals",
-    "Potter, Jack": "Izzet Lessons",
-    "Ramos, Javier": "Mono-Green Landfall",
-    "Robb, Ian": "Boros Aggro",
-    "Rockenbach, Bryan": "Rakdos Midrange",
-    "Saenz, Ivan": "Selesnya Landfall",
-    "Sajgalik, Eduardo": "Mono-Green Landfall",
-    "Schnake, Abe": "Izzet Prowess",
-    "Wright, Matthew": "Izzet Prowess",
-    "Wylde-LaRue, Tristan": "Izzet Prowess",
-    "ZHANG, NEILSON": "Mono-Red Aggro",
-    "Kominowski, Maxx": "Izzet Spellementals",
-    "Schutz, Stefan": "Mono-Green Landfall",
-    "Faust, Zevin": "Azorius Tempo",
-    "Zhang, Rui": "Izzet Lessons"
+    "cftsoc": {
+      "archetype": "Izzet Lessons",
+      "placement": 1
+    },
+    "matt nass": {
+      "archetype": "Selesnya Ouroboroid",
+      "placement": 2
+    },
+    "christoffer larsen": {
+      "archetype": "Selesnya Landfall",
+      "placement": 4
+    },
+    "stefan sch\u00fctz": {
+      "archetype": "Mono Green Landfall",
+      "placement": 4
+    },
+    "nathan steuer": {
+      "archetype": "Selesnya Landfall",
+      "placement": 8
+    },
+    "matthew stefans": {
+      "archetype": "Mono Green Landfall",
+      "placement": 8
+    },
+    "maxx kominowski": {
+      "archetype": "Izzet Spellementals",
+      "placement": 8
+    },
+    "zevin faust": {
+      "archetype": "Azorius Control",
+      "placement": 8
+    },
+    "thierry ramboa": {
+      "archetype": "Izzet Prowess",
+      "placement": 16
+    },
+    "nam dang": {
+      "archetype": "Izzet Prowess",
+      "placement": 16
+    },
+    "charis kikidis": {
+      "archetype": "Mono Green Landfall",
+      "placement": 16
+    },
+    "andy garcia-romo": {
+      "archetype": "Mono Green Landfall",
+      "placement": 16
+    },
+    "mateo ferreira": {
+      "archetype": "Selesnya Landfall",
+      "placement": 16
+    },
+    "liam kane": {
+      "archetype": "Izzet Prowess",
+      "placement": 16
+    },
+    "javier dominguez": {
+      "archetype": "Selesnya Landfall",
+      "placement": 16
+    },
+    "alex rohan": {
+      "archetype": "Jeskai Control",
+      "placement": 16
+    },
+    "anthony lee": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "dcwasabi": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "bryan rockenbach": {
+      "archetype": "Mono Green Landfall",
+      "placement": 32
+    },
+    "shota yasooka": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "robin courtiat": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "wentong zhang": {
+      "archetype": "Boros Dragons",
+      "placement": 32
+    },
+    "arne huschenbeth": {
+      "archetype": "Mono Green Landfall",
+      "placement": 32
+    },
+    "bernardo torres": {
+      "archetype": "Izzet Spellementals",
+      "placement": 32
+    },
+    "alexander von stange": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "benjamin stark": {
+      "archetype": "Mono Green Landfall",
+      "placement": 32
+    },
+    "edgar magalhaes": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "mattia rizzi": {
+      "archetype": "Izzet Prowess",
+      "placement": 32
+    },
+    "christopher kral": {
+      "archetype": "Mardu Discard",
+      "placement": 32
+    },
+    "josep sanfeliu": {
+      "archetype": "Selesnya Landfall",
+      "placement": 32
+    },
+    "rick hup beng lee": {
+      "archetype": "Dimir Excruciator",
+      "placement": 32
+    },
+    "nicholas talbot": {
+      "archetype": "Mono Green Landfall",
+      "placement": 32
+    },
+    "jack potter": {
+      "archetype": "Mono Green Landfall",
+      "placement": 64
+    },
+    "noe offman": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "will krueger": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "leeshitian": {
+      "archetype": "Simic Omniscience",
+      "placement": 64
+    },
+    "yuchen liu": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "toru inoue": {
+      "archetype": "Izzet Spellementals",
+      "placement": 64
+    },
+    "daniel goetschel": {
+      "archetype": "Izzet Lessons",
+      "placement": 64
+    },
+    "kazutaka oya": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "jean-emmanuel depraz": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "ian robb": {
+      "archetype": "Izzet Lessons",
+      "placement": 64
+    },
+    "abe schnake": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "patricio roman": {
+      "archetype": "Mardu Discard",
+      "placement": 64
+    },
+    "martos": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "john wager": {
+      "archetype": "Azorius Control",
+      "placement": 64
+    },
+    "michael debenedetto-plummer": {
+      "archetype": "Izzet Spellementals",
+      "placement": 64
+    },
+    "richard nealston": {
+      "archetype": "Mono Green Landfall",
+      "placement": 64
+    },
+    "jacob mitchell-rabaey": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "zixia314": {
+      "archetype": "Jeskai Control",
+      "placement": 64
+    },
+    "tyson roylance": {
+      "archetype": "Dimir Excruciator",
+      "placement": 64
+    },
+    "ga\u00e9tan verdierre": {
+      "archetype": "Mono Green Landfall",
+      "placement": 64
+    },
+    "nicholas odenheimer": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "carlo de gaetano": {
+      "archetype": "Izzet Lessons",
+      "placement": 64
+    },
+    "ryan mullens": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "jack young": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "etai kurtzman": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "paul green": {
+      "archetype": "Mono Green Landfall",
+      "placement": 64
+    },
+    "steve gan": {
+      "archetype": "Izzet Spellementals",
+      "placement": 64
+    },
+    "yi yang": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "devon straub": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "david \u00c5strand": {
+      "archetype": "Mono Green Landfall",
+      "placement": 64
+    },
+    "pierre smith": {
+      "archetype": "Izzet Prowess",
+      "placement": 64
+    },
+    "akira shibata": {
+      "archetype": "Sultai Control",
+      "placement": 64
+    },
+    "tristan wylde-larue": {
+      "archetype": "Mono Green Landfall",
+      "placement": 65
+    },
+    "lukas schwendinger": {
+      "archetype": "Mono Red Aggro",
+      "placement": 66
+    },
+    "mikey bishara": {
+      "archetype": "Izzet Prowess",
+      "placement": 67
+    },
+    "koki hara": {
+      "archetype": "Bant Rhythm",
+      "placement": 68
+    },
+    "raul porojan": {
+      "archetype": "Selesnya Rhythm",
+      "placement": 69
+    },
+    "marcus wosner": {
+      "archetype": "Mono Green Landfall",
+      "placement": 70
+    },
+    "chenxinrong": {
+      "archetype": "Izzet Prowess",
+      "placement": 71
+    },
+    "jon beitler": {
+      "archetype": "Mono Green Landfall",
+      "placement": 72
+    },
+    "collins mullen": {
+      "archetype": "Mono Green Landfall",
+      "placement": 73
+    },
+    "yuuki ichikawa": {
+      "archetype": "Izzet Spellementals",
+      "placement": 74
+    },
+    "nicolas morales macaya": {
+      "archetype": "Mono Green Landfall",
+      "placement": 75
+    },
+    "moomkes": {
+      "archetype": "Four-Color Elemental...",
+      "placement": 76
+    },
+    "albert queralt garriga": {
+      "archetype": "Izzet Prowess",
+      "placement": 77
+    },
+    "joshua willis": {
+      "archetype": "Izzet Prowess",
+      "placement": 78
+    },
+    "andrew kidston": {
+      "archetype": "Selesnya Rhythm",
+      "placement": 79
+    },
+    "gavin perry": {
+      "archetype": "Azorius Momo",
+      "placement": 80
+    },
+    "yang chen": {
+      "archetype": "Izzet Prowess",
+      "placement": 81
+    },
+    "mike sigrist": {
+      "archetype": "Izzet Prowess",
+      "placement": 82
+    },
+    "luis salvatto": {
+      "archetype": "Selesnya Landfall",
+      "placement": 83
+    },
+    "huaxing bai": {
+      "archetype": "Mono Green Landfall",
+      "placement": 84
+    },
+    "mae french": {
+      "archetype": "Izzet Lessons",
+      "placement": 85
+    },
+    "rastaf": {
+      "archetype": "Mono Green Landfall",
+      "placement": 86
+    },
+    "michael byrd": {
+      "archetype": "Izzet Prowess",
+      "placement": 87
+    },
+    "ale_mtg": {
+      "archetype": "Selesnya Landfall",
+      "placement": 88
+    },
+    "matthew wright": {
+      "archetype": "Azorius Momo",
+      "placement": 89
+    },
+    "timoth\u00e9e blondiaux": {
+      "archetype": "Mono Green Landfall",
+      "placement": 90
+    },
+    "samuel pardee": {
+      "archetype": "Izzet Prowess",
+      "placement": 91
+    },
+    "alexey paulot": {
+      "archetype": "Jeskai Control",
+      "placement": 92
+    },
+    "eli kassis": {
+      "archetype": "Izzet Spellementals",
+      "placement": 93
+    },
+    "mj_23": {
+      "archetype": "Mono Green Landfall",
+      "placement": 94
+    },
+    "nick deriu": {
+      "archetype": "Four-Color Control",
+      "placement": 95
+    },
+    "evan vetter": {
+      "archetype": "Azorius Momo",
+      "placement": 96
+    },
+    "ryan brozovich": {
+      "archetype": "Mono Green Landfall",
+      "placement": 97
+    },
+    "oliver tomajko": {
+      "archetype": "Selesnya Landfall",
+      "placement": 98
+    },
+    "anthony cuello": {
+      "archetype": "Izzet Prowess",
+      "placement": 99
+    },
+    "atsuya okuno": {
+      "archetype": "Mono Green Landfall",
+      "placement": 100
+    },
+    "kenta masukado": {
+      "archetype": "Izzet Spellementals",
+      "placement": 101
+    },
+    "kellen pastore": {
+      "archetype": "Mono Green Landfall",
+      "placement": 102
+    },
+    "quinn tonole": {
+      "archetype": "Mono Red Aggro",
+      "placement": 103
+    },
+    "adam edelson": {
+      "archetype": "Izzet Prowess",
+      "placement": 104
+    },
+    "lorenzo terlizzi": {
+      "archetype": "Simic Omniscience",
+      "placement": 105
+    },
+    "yuya hosokawa": {
+      "archetype": "Izzet Lessons",
+      "placement": 106
+    },
+    "masashiro kuroda": {
+      "archetype": "Izzet Spellementals",
+      "placement": 107
+    },
+    "ryan condon": {
+      "archetype": "Izzet Spellementals",
+      "placement": 108
+    },
+    "mason buonadonna": {
+      "archetype": "Bant Rhythm",
+      "placement": 109
+    },
+    "zoza": {
+      "archetype": "Mono Green Landfall",
+      "placement": 110
+    },
+    "allen wu": {
+      "archetype": "Izzet Prowess",
+      "placement": 111
+    },
+    "brennan roy": {
+      "archetype": "Izzet Prowess",
+      "placement": 112
+    },
+    "nathan kirner": {
+      "archetype": "Mono Green Landfall",
+      "placement": 113
+    },
+    "insidegames": {
+      "archetype": "Mono Green Landfall",
+      "placement": 114
+    },
+    "shuhei nakamura": {
+      "archetype": "Sultai Control",
+      "placement": 115
+    },
+    "evan higgins": {
+      "archetype": "Izzet Spellementals",
+      "placement": 116
+    },
+    "kenith dsouza": {
+      "archetype": "Mono Green Landfall",
+      "placement": 117
+    },
+    "masakuni hamaguchi": {
+      "archetype": "Mono Green Landfall",
+      "placement": 118
+    },
+    "victor santos esquici": {
+      "archetype": "Dimir Excruciator",
+      "placement": 119
+    },
+    "george berrett": {
+      "archetype": "Azorius Momo",
+      "placement": 120
+    },
+    "austin walker": {
+      "archetype": "Azorius Control",
+      "placement": 121
+    },
+    "david inglis": {
+      "archetype": "Mono Green Landfall",
+      "placement": 122
+    },
+    "vasilios morikis": {
+      "archetype": "Izzet Prowess",
+      "placement": 123
+    },
+    "guglielmo lupi": {
+      "archetype": "Mono Green Landfall",
+      "placement": 124
+    },
+    "beenew": {
+      "archetype": "Izzet Prowess",
+      "placement": 125
+    },
+    "nihaodylan": {
+      "archetype": "Izzet Spellementals",
+      "placement": 126
+    },
+    "neilsonzhang": {
+      "archetype": "Izzet Prowess",
+      "placement": 127
+    },
+    "kenneth oswald": {
+      "archetype": "Golgari Midrange",
+      "placement": 128
+    },
+    "elliot fortier": {
+      "archetype": "Izzet Prowess",
+      "placement": 129
+    },
+    "jason reid": {
+      "archetype": "Golgari Midrange",
+      "placement": 130
+    },
+    "ben jones": {
+      "archetype": "Jeskai Control",
+      "placement": 131
+    },
+    "maty\u00e1\u0161 kalu\u017en\u00fd": {
+      "archetype": "Izzet Spellementals",
+      "placement": 132
+    },
+    "lalauwba": {
+      "archetype": "Izzet Prowess",
+      "placement": 133
+    },
+    "christian baker": {
+      "archetype": "Izzet Prowess",
+      "placement": 134
+    },
+    "aidan mirabelli": {
+      "archetype": "Izzet Prowess",
+      "placement": 135
+    },
+    "thirawat chaovarindr": {
+      "archetype": "Izzet Prowess",
+      "placement": 136
+    },
+    "francisco sanchez": {
+      "archetype": "Izzet Prowess",
+      "placement": 137
+    },
+    "maxime rayvich": {
+      "archetype": "Mono Green Landfall",
+      "placement": 138
+    },
+    "kye nelson": {
+      "archetype": "Golgari Midrange",
+      "placement": 139
+    },
+    "masahide moriyama": {
+      "archetype": "Izzet Spellementals",
+      "placement": 140
+    },
+    "derrick davis": {
+      "archetype": "Jeskai Control",
+      "placement": 141
+    },
+    "adria martin": {
+      "archetype": "Rakdos Discard",
+      "placement": 142
+    },
+    "max rappaport": {
+      "archetype": "Izzet Prowess",
+      "placement": 143
+    },
+    "charles wong": {
+      "archetype": "Mono Green Landfall",
+      "placement": 144
+    },
+    "andrew elenbogen": {
+      "archetype": "Azorius Momo",
+      "placement": 145
+    },
+    "elliethepurple": {
+      "archetype": "Izzet Maestro",
+      "placement": 146
+    },
+    "charles eliatamby": {
+      "archetype": "Mono Green Landfall",
+      "placement": 147
+    },
+    "andrew cuneo": {
+      "archetype": "Mono Green Landfall",
+      "placement": 148
+    },
+    "matt xu": {
+      "archetype": "Golgari Midrange",
+      "placement": 149
+    },
+    "edus": {
+      "archetype": "Simic Omniscience",
+      "placement": 150
+    },
+    "anton\u00edn brani\u0161": {
+      "archetype": "Izzet Lessons",
+      "placement": 151
+    },
+    "aelalea37": {
+      "archetype": "Mono Green Landfall",
+      "placement": 152
+    },
+    "evariel": {
+      "archetype": "Izzet Maestro",
+      "placement": 153
+    },
+    "ryan normandin": {
+      "archetype": "Mono Green Landfall",
+      "placement": 154
+    },
+    "yimin zhi": {
+      "archetype": "Izzet Prowess",
+      "placement": 155
+    },
+    "no\u00e9 fauquenoi": {
+      "archetype": "Mono Green Landfall",
+      "placement": 156
+    },
+    "victor hawkins": {
+      "archetype": "Selesnya Landfall",
+      "placement": 157
+    },
+    "ma noah": {
+      "archetype": "Selesnya Ouroboroid",
+      "placement": 158
+    },
+    "eli swafford": {
+      "archetype": "Mono Green Landfall",
+      "placement": 159
+    },
+    "preventrat": {
+      "archetype": "Izzet Prowess",
+      "placement": 160
+    },
+    "jack yudt": {
+      "archetype": "Izzet Lessons",
+      "placement": 161
+    },
+    "valentin orru": {
+      "archetype": "Izzet Prowess",
+      "placement": 162
+    },
+    "gavin meagher": {
+      "archetype": "Mardu Discard",
+      "placement": 163
+    },
+    "aras \u015eeny\u00fcz": {
+      "archetype": "Temur Omniscience",
+      "placement": 164
+    },
+    "gregorio galeotti": {
+      "archetype": "Izzet Spellementals",
+      "placement": 165
+    },
+    "corey burkhart": {
+      "archetype": "Azorius Momo",
+      "placement": 166
+    },
+    "reid duke": {
+      "archetype": "Izzet Prowess",
+      "placement": 167
+    },
+    "chang zheng": {
+      "archetype": "Izzet Prowess",
+      "placement": 168
+    },
+    "mike boulinguiez": {
+      "archetype": "Izzet Spellementals",
+      "placement": 169
+    },
+    "sergio garcia": {
+      "archetype": "Selesnya Landfall",
+      "placement": 170
+    },
+    "dylan pratt": {
+      "archetype": "Izzet Lessons",
+      "placement": 171
+    },
+    "luis gobern": {
+      "archetype": "Dimir Excruciator",
+      "placement": 172
+    },
+    "marco cammilluzzi": {
+      "archetype": "Four-Color Elemental...",
+      "placement": 173
+    },
+    "suorsa miitri": {
+      "archetype": "Izzet Lessons",
+      "placement": 174
+    },
+    "rafael marin": {
+      "archetype": "Izzet Lessons",
+      "placement": 175
+    },
+    "haven gilbert-avila": {
+      "archetype": "Izzet Spellementals",
+      "placement": 176
+    },
+    "julius fan": {
+      "archetype": "Izzet Spellementals",
+      "placement": 177
+    },
+    "zach flynn": {
+      "archetype": "Izzet Prowess",
+      "placement": 178
+    },
+    "brendan hsu": {
+      "archetype": "Golgari Midrange",
+      "placement": 179
+    },
+    "hiroki kageyama": {
+      "archetype": "Izzet Prowess",
+      "placement": 180
+    },
+    "borreguinhas": {
+      "archetype": "Mono Green Landfall",
+      "placement": 181
+    },
+    "marco del pivo": {
+      "archetype": "Mono Green Landfall",
+      "placement": 182
+    },
+    "ryan gassaway": {
+      "archetype": "Izzet Prowess",
+      "placement": 183
+    },
+    "marc peral": {
+      "archetype": "Mono Green Landfall",
+      "placement": 184
+    },
+    "timo bertram": {
+      "archetype": "Izzet Spellementals",
+      "placement": 185
+    },
+    "arch dota": {
+      "archetype": "Azorius Control",
+      "placement": 186
+    },
+    "davor detecnik": {
+      "archetype": "Izzet Prowess",
+      "placement": 187
+    },
+    "takeshi ozawa": {
+      "archetype": "Sultai Control",
+      "placement": 188
+    },
+    "pedro henrique flores": {
+      "archetype": "Jeskai Control",
+      "placement": 189
+    },
+    "alvaro fernandez torres": {
+      "archetype": "Izzet Prowess",
+      "placement": 190
+    },
+    "yamasaki yoshitaka": {
+      "archetype": "Izzet Prowess",
+      "placement": 191
+    },
+    "julien henry": {
+      "archetype": "Izzet Prowess",
+      "placement": 192
+    },
+    "cyprien tron": {
+      "archetype": "Bant Airbending",
+      "placement": 193
+    },
+    "vincent choy": {
+      "archetype": "Azorius Control",
+      "placement": 194
+    },
+    "frozen_mind": {
+      "archetype": "Jeskai Control",
+      "placement": 195
+    },
+    "edgar baumler": {
+      "archetype": "Izzet Prowess",
+      "placement": 196
+    },
+    "mitchell tamblyn": {
+      "archetype": "Golgari Midrange",
+      "placement": 197
+    },
+    "adam brace": {
+      "archetype": "Izzet Lessons",
+      "placement": 198
+    },
+    "christian calcano": {
+      "archetype": "Jeskai Control",
+      "placement": 199
+    },
+    "atsushi nakashima": {
+      "archetype": "Izzet Prowess",
+      "placement": 200
+    },
+    "glassysky": {
+      "archetype": "Izzet Prowess",
+      "placement": 201
+    },
+    "junichi adachi": {
+      "archetype": "Izzet Spellementals",
+      "placement": 202
+    },
+    "prez kuhnke": {
+      "archetype": "Izzet Lessons",
+      "placement": 203
+    },
+    "jeff jao": {
+      "archetype": "Simic Omniscience",
+      "placement": 204
+    },
+    "pietro maria oltolina": {
+      "archetype": "Izzet Prowess",
+      "placement": 205
+    },
+    "albert cordob\u00e9s": {
+      "archetype": "Jeskai Control",
+      "placement": 206
+    },
+    "jodyk": {
+      "archetype": "Bant Omniscience",
+      "placement": 207
+    },
+    "mark lawrence tubola": {
+      "archetype": "Mono Green Landfall",
+      "placement": 208
+    },
+    "snakeazkusa": {
+      "archetype": "Mono Green Landfall",
+      "placement": 209
+    },
+    "kazuya takuwa": {
+      "archetype": "Simic Omniscience",
+      "placement": 210
+    },
+    "jonny guttman": {
+      "archetype": "Mono Green Landfall",
+      "placement": 211
+    },
+    "william au": {
+      "archetype": "Jeskai Control",
+      "placement": 212
+    },
+    "jude hopkins": {
+      "archetype": "Izzet Lessons",
+      "placement": 213
+    },
+    "asha mills emmett": {
+      "archetype": "Izzet Prowess",
+      "placement": 214
+    },
+    "atsuki kihara": {
+      "archetype": "Sultai Control",
+      "placement": 215
+    },
+    "james dimitrov": {
+      "archetype": "Izzet Prowess",
+      "placement": 216
+    },
+    "tase yuya": {
+      "archetype": "Azorius Momo",
+      "placement": 217
+    },
+    "shawn doherty": {
+      "archetype": "Izzet Maestro",
+      "placement": 218
+    },
+    "mtgholic": {
+      "archetype": "Izzet Prowess",
+      "placement": 219
+    },
+    "carlos torrico": {
+      "archetype": "Izzet Spellementals",
+      "placement": 220
+    },
+    "brandon kohrs": {
+      "archetype": "Four-Color Control",
+      "placement": 221
+    },
+    "gabriel joglar": {
+      "archetype": "Mono Green Landfall",
+      "placement": 222
+    },
+    "ethan hollen": {
+      "archetype": "Izzet Prowess",
+      "placement": 223
+    },
+    "orangeaed": {
+      "archetype": "Jeskai Control",
+      "placement": 224
+    },
+    "wappa hamada": {
+      "archetype": "Mono Green Landfall",
+      "placement": 225
+    },
+    "sebastian thaler": {
+      "archetype": "Izzet Prowess",
+      "placement": 226
+    },
+    "avi lessure": {
+      "archetype": "Azorius Momo",
+      "placement": 227
+    },
+    "amy james": {
+      "archetype": "Izzet Lessons",
+      "placement": 228
+    },
+    "masataka hori": {
+      "archetype": "Izzet Prowess",
+      "placement": 229
+    },
+    "evan sonnenberg-rhim": {
+      "archetype": "Mono Green Landfall",
+      "placement": 230
+    },
+    "januaryadams": {
+      "archetype": "Izzet Spellementals",
+      "placement": 231
+    },
+    "yiren jiang": {
+      "archetype": "Izzet Spellementals",
+      "placement": 232
+    },
+    "lucas duchow": {
+      "archetype": "Izzet Prowess",
+      "placement": 233
+    },
+    "bassel nasri": {
+      "archetype": "Izzet Spellementals",
+      "placement": 234
+    },
+    "yuxuan zhang": {
+      "archetype": "Izzet Prowess",
+      "placement": 235
+    },
+    "simon nielsen": {
+      "archetype": "Mono Green Landfall",
+      "placement": 236
+    },
+    "marco belacca": {
+      "archetype": "Jeskai Control",
+      "placement": 237
+    },
+    "javier ramos": {
+      "archetype": "Izzet Prowess",
+      "placement": 238
+    },
+    "alan hubbard": {
+      "archetype": "Simic Rhythm",
+      "placement": 239
+    },
+    "guillermo loli": {
+      "archetype": "Rakdos Discard",
+      "placement": 240
+    },
+    "kevink1": {
+      "archetype": "Izzet Lessons",
+      "placement": 241
+    },
+    "ch4rm2nd0r": {
+      "archetype": "Mono Red Aggro",
+      "placement": 242
+    },
+    "matt costa": {
+      "archetype": "Izzet Prowess",
+      "placement": 243
+    },
+    "sethmanfieldmtg": {
+      "archetype": "Izzet Prowess",
+      "placement": 244
+    },
+    "pier paolo moro": {
+      "archetype": "Izzet Lessons",
+      "placement": 245
+    },
+    "se\u030dk-un kh\u00f3\u0358": {
+      "archetype": "Izzet Prowess",
+      "placement": 246
+    },
+    "isabel": {
+      "archetype": "Izzet Spellementals",
+      "placement": 247
+    },
+    "jason qiu": {
+      "archetype": "Izzet Maestro",
+      "placement": 248
+    },
+    "julian riedener": {
+      "archetype": "Mono Green Landfall",
+      "placement": 249
+    },
+    "jeff lin": {
+      "archetype": "Mono Green Landfall",
+      "placement": 250
+    },
+    "philip silberman": {
+      "archetype": "Mono Green Landfall",
+      "placement": 251
+    },
+    "toni portolan": {
+      "archetype": "Izzet Maestro",
+      "placement": 252
+    },
+    "willy edel": {
+      "archetype": "Four-Color Elemental...",
+      "placement": 253
+    },
+    "ken yukuhiro": {
+      "archetype": "Sultai Control",
+      "placement": 254
+    },
+    "michael nk young": {
+      "archetype": "Izzet Maestro",
+      "placement": 255
+    },
+    "claire tian": {
+      "archetype": "Izzet Prowess",
+      "placement": 256
+    },
+    "shinnosuke hando": {
+      "archetype": "Izzet Prowess",
+      "placement": 257
+    },
+    "matt sperling": {
+      "archetype": "Izzet Prowess",
+      "placement": 258
+    },
+    "ryouta mishina": {
+      "archetype": "Izzet Prowess",
+      "placement": 259
+    },
+    "horiuchi makoto": {
+      "archetype": "Izzet Prowess",
+      "placement": 260
+    },
+    "isael feitosa": {
+      "archetype": "Izzet Lessons",
+      "placement": 261
+    },
+    "neil estrada": {
+      "archetype": "Mono Green Landfall",
+      "placement": 262
+    },
+    "nick osterude": {
+      "archetype": "Izzet Prowess",
+      "placement": 263
+    },
+    "yuta hori": {
+      "archetype": "Izzet Prowess",
+      "placement": 264
+    },
+    "elijah herr": {
+      "archetype": "Dimir Excruciator",
+      "placement": 265
+    },
+    "daniel weiser": {
+      "archetype": "Izzet Lessons",
+      "placement": 266
+    },
+    "samuel chang": {
+      "archetype": "Izzet Prowess",
+      "placement": 267
+    },
+    "aylin davis": {
+      "archetype": "Azorius Momo",
+      "placement": 268
+    },
+    "carlos martinez": {
+      "archetype": "Dimir Midrange",
+      "placement": 269
+    },
+    "luisvenegas": {
+      "archetype": "Izzet Prowess",
+      "placement": 270
+    },
+    "marcelo rodrigues cavalcante": {
+      "archetype": "Izzet Lessons",
+      "placement": 271
+    },
+    "jake beardsley": {
+      "archetype": "Izzet Prowess",
+      "placement": 272
+    },
+    "adriano melo": {
+      "archetype": "Izzet Lessons",
+      "placement": 273
+    },
+    "nicolas cosgrove": {
+      "archetype": "Temur Lute",
+      "placement": 274
+    },
+    "jorge lopez": {
+      "archetype": "Mono Green Landfall",
+      "placement": 275
+    },
+    "robert wagner krankel": {
+      "archetype": "Izzet Prowess",
+      "placement": 276
+    },
+    "elad stettner": {
+      "archetype": "Golgari Midrange",
+      "placement": 277
+    },
+    "hei wo, johnathan ng": {
+      "archetype": "Mono Green Landfall",
+      "placement": 278
+    },
+    "sam bogue": {
+      "archetype": "Selesnya Landfall",
+      "placement": 279
+    },
+    "edgar emmanuel rangel p\u00e1ez": {
+      "archetype": "Dimir Excruciator",
+      "placement": 280
+    },
+    "aaronangeles": {
+      "archetype": "Golgari Control",
+      "placement": 281
+    },
+    "rodrigo pinheiro": {
+      "archetype": "Azorius Control",
+      "placement": 282
+    },
+    "tom white": {
+      "archetype": "Izzet Maestro",
+      "placement": 283
+    },
+    "cherukad sajan": {
+      "archetype": "Izzet Prowess",
+      "placement": 284
+    },
+    "phillip li": {
+      "archetype": "Izzet Prowess",
+      "placement": 285
+    },
+    "onoda kenji": {
+      "archetype": "Izzet Lessons",
+      "placement": 286
+    },
+    "klarke trezise": {
+      "archetype": "Izzet Lessons",
+      "placement": 287
+    },
+    "happysandwich": {
+      "archetype": "Mono Green Landfall",
+      "placement": 288
+    },
+    "karl ? sarap": {
+      "archetype": "Mono Green Landfall",
+      "placement": 289
+    },
+    "jake koenig": {
+      "archetype": "Azorius Momo",
+      "placement": 290
+    },
+    "coby schnepf": {
+      "archetype": "Selesnya Rhythm",
+      "placement": 291
+    },
+    "curtis lam": {
+      "archetype": "Golgari Midrange",
+      "placement": 292
+    },
+    "takuya hasegawa": {
+      "archetype": "Izzet Prowess",
+      "placement": 293
+    },
+    "megazoz33535": {
+      "archetype": "Izzet Spellementals",
+      "placement": 294
+    },
+    "tyler steinwand": {
+      "archetype": "Four-Color Elemental...",
+      "placement": 295
+    },
+    "gabriel nicholas": {
+      "archetype": "Izzet Prowess",
+      "placement": 296
+    },
+    "sophi seley": {
+      "archetype": "Izzet Maestro",
+      "placement": 297
+    },
+    "ivansaenz": {
+      "archetype": "Mono Green Landfall",
+      "placement": 298
+    },
+    "piotr szyi\u0144ski": {
+      "archetype": "Izzet Prowess",
+      "placement": 299
+    },
+    "gabriel bostic": {
+      "archetype": "Four-Color Control",
+      "placement": 300
+    },
+    "joao quege": {
+      "archetype": "Boros Dragons",
+      "placement": 301
+    },
+    "jonathan stange": {
+      "archetype": "Azorius Momo",
+      "placement": 302
+    },
+    "shaun henry": {
+      "archetype": "Mono Green Landfall",
+      "placement": 303
+    },
+    "nico ferrigno": {
+      "archetype": "Izzet Prowess",
+      "placement": 304
+    },
+    "allen norman": {
+      "archetype": "Mono Green Landfall",
+      "placement": 305
+    },
+    "david rood": {
+      "archetype": "Izzet Prowess",
+      "placement": 306
+    },
+    "david kerrigan": {
+      "archetype": "Simic Rhythm",
+      "placement": 307
+    },
+    "benji leaf": {
+      "archetype": "Boros Discard",
+      "placement": 308
+    },
+    "boshnroll_brian": {
+      "archetype": "Azorius Momo",
+      "placement": 309
+    },
+    "joshua saruga": {
+      "archetype": "Izzet Prowess",
+      "placement": 310
+    },
+    "justin schabel": {
+      "archetype": "Izzet Lessons",
+      "placement": 311
+    },
+    "ben tudman": {
+      "archetype": "Azorius Control",
+      "placement": 312
+    },
+    "arrick chaulk": {
+      "archetype": "Izzet Prowess",
+      "placement": 313
+    },
+    "terryedwards": {
+      "archetype": "Azorius Momo",
+      "placement": 314
+    },
+    "adam kinnaird": {
+      "archetype": "Azorius Momo",
+      "placement": 315
+    },
+    "truong hai nguyen": {
+      "archetype": "Izzet Maestro",
+      "placement": 316
+    },
+    "yang he": {
+      "archetype": "Four-Color Control",
+      "placement": 317
+    },
+    "mauricio iriarte valenzuela": {
+      "archetype": "Azorius Control",
+      "placement": 318
+    },
+    "manato hosomi": {
+      "archetype": "Izzet Prowess",
+      "placement": 319
+    },
+    "gavin teo": {
+      "archetype": "Temur Lessons",
+      "placement": 320
+    },
+    "guillaume petri": {
+      "archetype": "Izzet Prowess",
+      "placement": 321
+    },
+    "pedrom6744": {
+      "archetype": "Mono Green Landfall",
+      "placement": 322
+    },
+    "jayvdh": {
+      "archetype": "Izzet Prowess",
+      "placement": 323
+    },
+    "paul gabat": {
+      "archetype": "Golgari Kona",
+      "placement": 324
+    },
+    "petrkikac": {
+      "archetype": "Izzet Prowess",
+      "placement": 325
+    },
+    "Portolan, Toni": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Young, Michael NK": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "White, Tom": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Seley, Sophi": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Qiu, Jason": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Nguyen, Truong Hai": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Jade, Valerie": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Dubreuil, Eleanor": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Doherty, Shawn": {
+      "archetype": "Izzet Maestro",
+      "placement": null
+    },
+    "Yukuhiro, Ken": {
+      "archetype": "Sultai Control",
+      "placement": null
+    },
+    "Shibata, Akira": {
+      "archetype": "Sultai Control",
+      "placement": null
+    },
+    "Ozawa, Takeshi": {
+      "archetype": "Sultai Control",
+      "placement": null
+    },
+    "nakamura, shuhei": {
+      "archetype": "Sultai Control",
+      "placement": null
+    },
+    "Kihara, Atsuki": {
+      "archetype": "Sultai Control",
+      "placement": null
+    },
+    "Reid, Jason": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Xu, Matt": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Oswald, Kenny": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Nelson, Kye": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Hsu, Brendan": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Lam, Curtis": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Stettner, Elad": {
+      "archetype": "Golgari Midrange",
+      "placement": null
+    },
+    "Leaf, Benji": {
+      "archetype": "Boros Discard",
+      "placement": null
+    },
+    "Gabat, Paul": {
+      "archetype": "Golgari Kona",
+      "placement": null
+    },
+    "Cosgrove, Nicolas": {
+      "archetype": "Temur Lute",
+      "placement": null
+    },
+    "Bostic, Gabriel": {
+      "archetype": "Four-Color Control",
+      "placement": null
+    },
+    "Buonadonna, Mason": {
+      "archetype": "Bant Rhythm",
+      "placement": null
+    },
+    "Steuer, Nathan": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Larsen, Christoffer": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Adachi, Junichi": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "Adams, January": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "Bai, Huaxing": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Baker, Christian": {
+      "archetype": "Jeskai Control",
+      "placement": null
+    },
+    "Berrett, George": {
+      "archetype": "Jeskai Control",
+      "placement": null
+    },
+    "Branis, Antonin": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Brace, Adam": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Byrd, Mike": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Sigrist, Mike": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Stark, Ben": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Stefansson, Matthew": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Magalhaes, Edgar": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Manfield, Seth": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "masukado, kenta": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "Mazur, Spencer": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Mishina, Ryouta": {
+      "archetype": "Izzet Lessons",
+      "placement": null
+    },
+    "Morikis, Vasilios": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "MORIYAMA, MASAHIDE": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Mullens, Ryan": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Nass, Matt": {
+      "archetype": "Selesnya Ouroboroid",
+      "placement": null
+    },
+    "Nielsen, Simon": {
+      "archetype": "Dimir Midrange",
+      "placement": null
+    },
+    "Oomkes, Matthew": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Pardee, Samuel": {
+      "archetype": "Rakdos Midrange",
+      "placement": null
+    },
+    "Plummer, Michael": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "Potter, Jack": {
+      "archetype": "Izzet Lessons",
+      "placement": null
+    },
+    "Ramos, Javier": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Robb, Ian": {
+      "archetype": "Boros Aggro",
+      "placement": null
+    },
+    "Rockenbach, Bryan": {
+      "archetype": "Rakdos Midrange",
+      "placement": null
+    },
+    "Saenz, Ivan": {
+      "archetype": "Selesnya Landfall",
+      "placement": null
+    },
+    "Sajgalik, Eduardo": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Schnake, Abe": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Wright, Matthew": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "Wylde-LaRue, Tristan": {
+      "archetype": "Izzet Prowess",
+      "placement": null
+    },
+    "ZHANG, NEILSON": {
+      "archetype": "Mono-Red Aggro",
+      "placement": null
+    },
+    "Kominowski, Maxx": {
+      "archetype": "Izzet Spellementals",
+      "placement": null
+    },
+    "Schutz, Stefan": {
+      "archetype": "Mono-Green Landfall",
+      "placement": null
+    },
+    "Faust, Zevin": {
+      "archetype": "Azorius Tempo",
+      "placement": null
+    },
+    "Zhang, Rui": {
+      "archetype": "Izzet Lessons",
+      "placement": null
+    }
   },
   "rounds": {
     "4": [
@@ -8902,5 +10400,6 @@
       "Golgari Midrange",
       "Azorius Tempo"
     ]
-  }
+  },
+  "player_archetypes_source": "mtgdecks.net PT SOS final standings (event 11881) + magic.gg spiciest-decklists"
 }

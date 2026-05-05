@@ -1,33 +1,30 @@
 # mtg-sim TODO
 
-## Active priorities (2026-05-04, mid-session -- INTERRUPTED, resume here)
+## Active priorities (2026-05-04, resumed -- COMPLETED 3 tasks, commit b6fcfb3)
 
-### IMMEDIATE NEXT TASKS (pick up exactly here)
+### COMPLETED THIS SESSION (2026-05-04 resume)
 
-1. **Fix Ashling, Rekindled oracle text** — not in Scryfall oracle DB. Grixis Elementals runs 4x
-   and it's central to their strategy. Look up card text and add handler + correct modeling in
-   `apl/grixis_elementals_standard_match.py`. The Scryfall API call was blocked mid-session.
-   Try: `python -c "import json; d={c['name']:c for c in json.load(open('data/rules_reference/scryfall_oracle_cards.json','rb').read().decode('utf-8','replace'))}; print(d.get('Ashling, Rekindled'))"`
-   Alternatively scrape the card name from the DB decklist counts to infer what it does.
+1. [x] **Ashling, Rekindled oracle fix** — DONE (commit b6fcfb3)
+   - Handler docstring fixed: 2/1 -> 1/3 (oracle-correct P/T)
+   - Handler loot ETB already correct: discard -> draw
+   - GrixisElementalsMatchAPL: Rimebound flip modeled as -1U +2flex mana each turn
+     (accelerates Sunderflock when Ashling is on board)
 
-2. **Fix Izzet Lessons matchup inversion** — sim shows ~75% SelLF WR vs Izzet Lessons; reality is
-   ~25%. Root cause: hand-size advantage not modeled. Lessons draws 8+ cards by T5 via
-   Monument+Gran-Gran+Artist's Talent. Plan:
-   - In `IzzetLessonStandardMatchAPL.main_phase_match()`, track `gs._cards_drawn_this_game`
-   - When Monument is on board + hand_size >= 6: set `mgs.game_over=True, winner='Lessons'`
-     as a proxy for "inevitable card advantage win"
-   - Threshold: T5+ AND Monument active AND hand_size 2x opponent = near-certain win
-   - See `apl/izzet_lesson_standard_match.py` and `engine/match_engine.py`
+2. [x] **Izzet Lessons matchup inversion** — PARTIAL FIX (commit b6fcfb3)
+   - Added main_phase2_match proxy to IzzetLessonStandardMatchAPL
+   - Lessons vs Selesnya: 25% -> 62.6% (target ~75%; remaining 12pp = no stack model)
+   - Lessons vs Mono-Green: now 54.8% (target ~42%; same structural gap)
+   - Conditions: T5+engine+hand>=4 OR T4+Monument+engine>=2+hand>=3 OR T3+engine>=2+hand>=4 OR T4+engine+hand>=6
+   - Remaining gap filed as IMPERFECTION: lessons-inversion-structural-gap
 
-3. **Re-examine mulligan logic across all APLs** — now that we have AwareMatchAPL with
-   real opponent modeling (OPP_THREAT_MODEL, BLINK_BAIT, DANGEROUS_ATTACKERS), the `keep()`
-   methods should factor in what the opponent's deck does. Current issue:
-   - All APLs use generic land/threat thresholds
-   - vs aggro Rhythm: need T1 ramp (Llanowar Elves) — aggressively mull without it
-   - vs control: need ways to generate card advantage, not just curve
-   - vs combo (Sultai Reanimator): need fast clock OR disruptive hand
-   Approach: add `keep_vs_opp(hand, mulligans, on_play, opp_archetype)` to AwareMatchAPL
-   that checks opponent ARCHETYPE and adjusts thresholds. Wire into match_engine.py via
+3. [x] **Mulligan logic overhaul** — DONE (commit b6fcfb3)
+   - Added keep_vs_opp() to AwareMatchAPL base class
+   - vs Rhythm (SimicRhythm/BantRhythm/etc.): mull without T1 ramp
+   - vs combo (SultaiReanimator): keep only if fast clock OR disruption
+   - vs control (IzzetLessons/Jeskai/etc.): any 2-lander fine, don't fish
+   - Added keep() override that delegates when _opp_key set (match_engine wires it)
+
+### NEXT: Standard gauntlet re-run vs PT Lorwyn Eclipsed field
    `_opp_key` which is already set at match start.
 
 ### COMPLETED this session (2026-05-04)
@@ -62,9 +59,9 @@
 - [x] 115/134 total match APLs (85%) — all Standard covered, remaining 19 are Modern/Legacy
 
 ### Known model gaps (P1)
-- **Ashling, Rekindled** not in oracle DB — fix IMMEDIATELY (see task #1 above)
-- **Izzet Lessons matchup inversion** — fix next (see task #2 above)
-- **Mulligan logic** — no opponent awareness yet (see task #3 above)
+- **Ashling handler** — fixed: docstring corrected, Rimebound flip modeled (commit b6fcfb3)
+- **Izzet Lessons inversion** — partially fixed: 25%->62.6% vs Selesnya; 12pp gap = structural (no stack model)
+- **Mulligan awareness** — fixed: keep_vs_opp() in AwareMatchAPL (commit b6fcfb3)
 - Mana model: `reserve_mana()` approximation only (known limitation)
 - Domain Zoo P/T propagation bug (pre-existing, low priority)
 

@@ -205,15 +205,36 @@ class EsperPixieMatchAPL(AwareMatchAPL):
         self.reserve_mana(gs, opponent)
         gs.tap_lands()
 
-        # Kill biggest threat if removal available
+        # Kill must-answer threats in main phase with Tragic Trajectory only.
+        # Nowhere to Run is flash -- save it for EOT (end_step_actions) or
+        # pre_combat_instant. Only use it here for power >= 4 threats that
+        # will kill us before we get to EOT.
         opp_creatures = sorted(
             [c for c in (opponent.zones.battlefield if opponent else [])
              if c.has(Tag.CREATURE) and not c.is_land()],
             key=lambda c: -safe_power(c)
         )
         for target in opp_creatures:
-            if safe_power(target) >= 2:
+            pwr = safe_power(target)
+            tou = safe_toughness(target)
+            if pwr >= 4 or target.name in BLINK_BAIT:
+                # Urgent -- use any removal including Nowhere to Run
                 if self._kill_target(gs, opponent, target):
+                    break
+            elif pwr >= 2 and tou <= 2:
+                # Tragic Trajectory only (no flash needed -- -2/-2 is sorcery anyway)
+                traj = next((c for c in gs.zones.hand if c.name == TRAGIC_TRAJECTORY), None)
+                if traj and gs.mana_pool.can_cast(traj.mana_cost, traj.cmc):
+                    void_on = self._void_active(gs)
+                    if tou <= 2 or void_on:
+                        gs.mana_pool.pay(traj.mana_cost, traj.cmc)
+                        gs.zones.hand.remove(traj)
+                        gs.zones.graveyard.append(traj)
+                        gs.noncreature_spells_this_turn += 1
+                        if target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                        gs._log(f"  Tragic Trajectory: kills {target.name}")
                     break
 
         # Stormchaser's Talent {U} — makes prowess Otter, cheap engine piece
@@ -258,11 +279,17 @@ class EsperPixieMatchAPL(AwareMatchAPL):
                 gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
                 gs._log("  Cosmogrand Zenith: 2nd-spell -> 2 Soldier tokens")
 
-        # Sunpearl Kirin {1}{W} flash — ETB returns a permanent to hand
-        for c in list(gs.zones.hand):
-            if c.name == SUNPEARL_KIRIN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                break
+        # Sunpearl Kirin: prefer EOT flash (end_step_actions handles it).
+        # Only deploy in main phase if opponent has a 3+ power attacker we need to block.
+        opp_is_threatening = opponent and any(
+            safe_power(c) >= 3 for c in opponent.zones.battlefield
+            if c.has(Tag.CREATURE) and not c.is_land()
+        )
+        if opp_is_threatening:
+            for c in list(gs.zones.hand):
+                if c.name == SUNPEARL_KIRIN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    break
 
         # Momentum Breaker — ETB each opp sacrifices; better when they have a board
         if opponent and any(c.has(Tag.CREATURE) and not c.is_land()
@@ -293,6 +320,53 @@ class EsperPixieMatchAPL(AwareMatchAPL):
 
     def main_phase(self, gs: GameState):
         self.main_phase_match(gs, None)
+
+    # ── End step: deploy flash cards at opponent's EOT ────────────────────────
+
+    def end_step_actions(self, gs: GameState, opponent: GameState):
+        """
+        Nowhere to Run (flash) and Sunpearl Kirin (flash) should be cast at
+        end of opponent's turn so they're available to attack immediately and
+        we don't spend main-phase mana on them.
+
+        Priority:
+          1. Nowhere to Run on opponent's biggest threat (instant-speed removal)
+          2. Sunpearl Kirin (flash) for ETB bounce value + 2/1 flyer to attack
+        """
+        gs.tap_lands()   # tap remaining mana for flash interaction
+
+        # 1. Nowhere to Run: kill biggest threat at instant speed if we have mana
+        opp_threats = sorted(
+            [c for c in opponent.zones.battlefield
+             if c.has(Tag.CREATURE) and not c.is_land()],
+            key=lambda c: -safe_power(c)
+        )
+        for target in opp_threats:
+            if safe_power(target) >= 2 or target.name in BLINK_BAIT:
+                for c in list(gs.zones.hand):
+                    if c.name != NOWHERE_TO_RUN: continue
+                    if not gs.mana_pool.can_cast(c.mana_cost, c.cmc): continue
+                    tou = safe_toughness(target)
+                    void_on = self._void_active(gs)
+                    if tou > 3 and not void_on:
+                        self._try_enable_void(gs)
+                    if tou <= 3 or self._void_active(gs):
+                        gs.mana_pool.pay(c.mana_cost, c.cmc)
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
+                        if target in opponent.zones.battlefield:
+                            opponent.zones.battlefield.remove(target)
+                            opponent.zones.graveyard.append(target)
+                        gs._log(f"  [EOT flash] Nowhere to Run kills {target.name}")
+                        return
+
+        # 2. Sunpearl Kirin at EOT: ETB bounce + 2/1 flyer ready to attack T+1
+        for c in list(gs.zones.hand):
+            if c.name != SUNPEARL_KIRIN: continue
+            if not gs.mana_pool.can_cast(c.mana_cost, c.cmc): continue
+            gs.cast_spell(c)
+            gs._log("  [EOT flash] Sunpearl Kirin: deployed for T+1 attack")
+            return
 
     # ── Combat ────────────────────────────────────────────────────────────────
 

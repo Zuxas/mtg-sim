@@ -98,7 +98,7 @@ APL_REGISTRY = {
     "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
-    "jeskaicontrol":   ("apl.jeskai_control",   "JeskaiControlAPL",  "decks/jeskai_control_modern.txt"),
+    "jeskaicontrol":   ("apl.jeskai_control_standard", "JeskaiControlAPL",  "decks/jeskai_control_standard.txt"),
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
 
     # ── Standard / Pioneer ──

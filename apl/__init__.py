@@ -313,7 +313,7 @@ MATCH_APL_REGISTRY = {
     # ── PT Lorwyn Eclipsed dominant archetypes (2026-05-04) ─────────────────
     # Rhythm variants: 34.6% of PT Lorwyn Eclipsed field combined
     "simicrhythm":         ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),
-    "bantrhythm":          ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),   # proxy; same core game plan
+    "bantrhythm":          ("apl.bant_rhythm_standard_match",              "BantRhythmStandardMatchAPL"),
     "fivecolorrhythm":     ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),   # proxy
     # Sultai Reanimator: 10.1% of field; Bringer + Superior Spider-Man combo
     "sultaireanimator":    ("apl.sultai_reanimator_standard_match",        "SultaiReanimatorStandardMatchAPL"),
@@ -333,7 +333,7 @@ MATCH_APL_REGISTRY = {
     "golgaricontrol":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
     "golgarikona":         ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
     "selesnyarhythm":      ("apl.selesnya_landfall_standard_match",        "SelesnyaLandfallStandardMatchAPL"),
-    "bantrhythm":          ("apl.bant_airbending_standard_match",          "BantAirbendingStandardMatchAPL"),
+    # bantrhythm: now has dedicated APL (see PT Lorwyn Eclipsed section above)
     "simicomniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
     "bantomniscience":     ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
     "temuromniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),

@@ -929,13 +929,15 @@ def _ardyn_etb(gs, card):
 
 def _cecil_etb(gs, card):
     """Cecil, Dark Knight — {B} Legendary 2/3 Deathtouch.
-    'Deathtouch.
-     Darkness — Whenever Cecil deals damage, you lose that much life.
-     Then if your life total <= half starting life total, untap + transform.'
-    Transform not hooked (no combat-damage hook)."""
+    'Deathtouch. Darkness — Whenever Cecil deals damage, you lose that much life.
+     Then if your life total <= half starting, untap Cecil and transform.'
+    Transform to Cecil, Redeemed Paladin (4/4 Lifelink, attackers gain indestructible)
+    not hooked (no combat-damage hook). Darkness self-damage not modeled."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.DEATHTOUCH)
     gs._log("  Cecil, Dark Knight: 2/3 deathtouch")
+    # Fire Tinybones Joins Up trigger if active
+    _tinybones_legendary_trigger(gs)
 
 
 def _abrupt_inquiry_etb(gs, card):
@@ -1065,29 +1067,21 @@ def _faebloom_trick_spell(gs, card):
 def _fear_of_isolation_etb(gs, card):
     """Fear of Isolation — {1}{U} Enchantment Creature 2/3 Nightmare.
     'As an additional cost to cast this spell, return a permanent
-     you control to its owner's hand. Flying.
-     When enters, put a +1/+1 counter on another target creature you control.'
-    Additional cost: bounce cheapest non-land permanent (proxy for player choice)."""
+     you control to its owner's hand. Flying.'
+    No ETB effect — just the additional cost bounce and flying body.
+    Additional cost: bounce highest CMC non-land permanent (maximizes re-ETB value)."""
     from engine.keywords import KWTag
-    from data.card import Tag
     card.tags.add(KWTag.FLYING)
-    # Pay additional cost: return cheapest non-land permanent to hand
+    # Pay additional cost: bounce highest CMC non-land permanent for re-ETB value
     candidates = [c for c in gs.zones.battlefield
                   if c is not card and not c.is_land()]
     if candidates:
-        target = min(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        target = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
         gs.zones.battlefield.remove(target)
         gs.zones.hand.append(target)
-        gs._log(f"  Fear of Isolation: bounce {target.name}, 2/3 flying")
+        gs._log(f"  Fear of Isolation: bounce {target.name} (cost), 2/3 flying")
     else:
         gs._log("  Fear of Isolation: 2/3 flying (no bounce target)")
-    # ETB: +1/+1 counter on another creature
-    others = [c for c in gs.zones.battlefield
-              if c is not card and c.has(Tag.CREATURE) and not c.is_land()]
-    if others:
-        best = max(others, key=lambda c: getattr(c, 'cmc', 0))
-        best.counters = (getattr(best, 'counters', 0) or 0) + 1
-        gs._log(f"  Fear of Isolation ETB: +1/+1 on {best.name}")
 
 
 def _fear_of_missing_out_etb(gs, card):
@@ -2074,19 +2068,18 @@ def _into_the_flood_maw_spell(gs, card):
 
 
 def _kaito_bane_etb(gs, card):
-    """Kaito, Bane of Nightmares — {2}{U}{B} Loyalty 3.
-    'Ninjutsu {1}{U}{B}.
-     During your turn, Kaito with 1+ loyalty is a 3/4 Ninja with
-     hexproof.
-     +1: emblem "Ninjas can't be blocked by creatures with higher
-         power/toughness."
-     0: Return an attacking creature you control to hand. Then
-         return Kaito to his owner's hand, surveil 3.
-     −2: Target creature gets -3/-3 until EOT.'
-
-    ETB: Kaito enters. +1 mode as default loyalty gain → gives a
-    combat advantage to ninjas (ignored — no ninjas in sim)."""
-    gs._log("  Kaito, Bane of Nightmares: PW loyalty 3")
+    """Kaito, Bane of Nightmares — {2}{U}{B} Legendary Planeswalker Loyalty 3.
+    Ninjutsu {1}{U}{B}. During your turn with 1+ loyalty: 3/4 Ninja with hexproof.
+    +1: emblem Ninjas +1/+1. 0: Surveil 2, draw for each opp who lost life.
+    -2: Tap target creature, put two stun counters on it.
+    ETB as 3/4 body (ninjutsu mode). Loyalty abilities not modeled."""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    # Kaito enters as a creature during our turn (ninjutsu proxy)
+    card.tags.add(Tag.CREATURE)
+    gs._log("  Kaito, Bane of Nightmares: 3/4 Ninja (loyalty 3)")
+    # Fire Tinybones Joins Up trigger (Kaito is legendary)
+    _tinybones_legendary_trigger(gs)
 
 
 # Update installation
@@ -3622,29 +3615,33 @@ def _sunfall_spell(gs, card):
 
 
 def _sunpearl_kirin_etb(gs, card):
-    """Sunpearl Kirin — {1}{W} Flash 2/3 Kirin.
+    """Sunpearl Kirin — {1}{W} Flash 2/1 Kirin.
     'Flash. Flying.
-     When this creature enters, return up to one other target
-     nonland permanent you control to its owner's hand. If it was
-     a token, draw a card.'"""
+     When this creature enters, return up to one other target nonland
+     permanent you control to its owner's hand. If it was a token,
+     draw a card.'
+    Priority: tokens first (free draw), then highest CMC creature (best re-ETB)."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLASH)
     card.tags.add(KWTag.FLYING)
-    from data.card import Tag
-    # Find a token or worst permanent to bounce
     candidates = [c for c in gs.zones.battlefield
                   if c is not card and not c.is_land()]
-    # Prefer tokens (draw a card on return)
+    if not candidates:
+        gs._log("  Sunpearl Kirin: 2/1 flying flash (no bounce target)")
+        return
+    # Prefer tokens (bouncing = draw a card)
     tokens = [c for c in candidates if "Token" in (c.type_line or "")]
-    target = tokens[0] if tokens else (
-        candidates[0] if candidates else None)
-    if target:
+    if tokens:
+        target = tokens[0]
         gs.zones.battlefield.remove(target)
-        if "Token" not in (target.type_line or ""):
-            gs.zones.hand.append(target)
-        else:
-            gs.zones.draw(1)
-        gs._log(f"  Sunpearl Kirin: bounce {target.name}")
+        gs.zones.draw(1)
+        gs._log(f"  Sunpearl Kirin: bounce token {target.name}, draw 1")
+    else:
+        # Prefer highest CMC non-token for best re-ETB value (blink loop)
+        target = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        gs.zones.battlefield.remove(target)
+        gs.zones.hand.append(target)
+        gs._log(f"  Sunpearl Kirin: bounce {target.name} for re-ETB")
 
 
 def _surgical_suite_etb(gs, card):
@@ -3798,14 +3795,38 @@ def _tinybones_joins_up_etb(gs, card):
     'When Tinybones Joins Up enters, any number of target players
      each discard a card.
      Whenever a legendary creature you control enters, any number
-     of target players each mill a card and lose 1 life.'"""
+     of target players each mill a card and lose 1 life.'
+    ETB: opponent discards highest CMC card.
+    Triggered ability registered separately via _TINYBONES_LEGENDARY_TRIGGER
+    and called from legendary creature ETBs (Cecil, Kaito)."""
     opp = getattr(gs, "_match_opp", None)
-    if opp is None or not opp.zones.hand:
+    if opp is None:
         return
-    victim = max(opp.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
-    opp.zones.hand.remove(victim)
-    opp.zones.graveyard.append(victim)
-    gs._log(f"  Tinybones Joins Up ETB: opp discards {victim.name}")
+    if opp.zones.hand:
+        victim = max(opp.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
+        opp.zones.hand.remove(victim)
+        opp.zones.graveyard.append(victim)
+        gs._log(f"  Tinybones Joins Up ETB: opp discards {victim.name}")
+    # Mark Tinybones as active so legendary-creature ETBs can trigger it
+    gs._tinybones_active = True
+
+
+def _tinybones_legendary_trigger(gs):
+    """Fire Tinybones Joins Up triggered ability: opponent mills 1 and loses 1 life.
+    Called from ETB handlers of legendary creatures (Cecil, Kaito) when Tinybones is on BF."""
+    if not getattr(gs, '_tinybones_active', False):
+        return
+    # Check Tinybones is actually still on battlefield
+    if not any(c.name == "Tinybones Joins Up" for c in gs.zones.battlefield):
+        gs._tinybones_active = False
+        return
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        return
+    opp.life -= 1
+    if opp.zones.library:
+        opp.zones.graveyard.append(opp.zones.library.pop(0))
+    gs._log("  Tinybones trigger: opp mills 1, loses 1 life")
 
 
 # Update installation
@@ -32055,23 +32076,30 @@ def _interceptor_mechan_etb(gs, card):
         gs._log(f"  Interceptor Mechan ETB: flying + return {best.name} from GY")
 
 def _cosmogrand_zenith_etb(gs, card):
-    """Cosmogrand Zenith — {2}{W} 2/4.
+    """Cosmogrand Zenith — {2}{W} 2/4 Human Soldier.
     'Whenever you cast your second spell each turn, choose one:
-     - Create two 1/1 white Human Soldier tokens.
+     - Create two 1/1 white Human Soldier creature tokens.
      - Put a +1/+1 counter on each creature you control.'
     ETB fires if this is already the 2nd+ spell this turn.
-    The APL should also trigger this manually each subsequent turn
-    via _zenith_trigger() when 2 spells are cast."""
-    from data.card import Card, Tag
-    # Only fire tokens if this ETB counts as the 2nd spell this turn
+    Choice: pump when 3+ creatures on board (more value), else tokens."""
+    from data.card import Tag
     spells = getattr(gs, 'spells_cast_this_turn', 0) + \
              getattr(gs, 'noncreature_spells_this_turn', 0)
-    if spells >= 2:
-        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
-        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
-        gs._log("  Cosmogrand Zenith ETB: 2nd-spell trigger -> 2 Soldier tokens")
-    else:
+    if spells < 2:
         gs._log("  Cosmogrand Zenith ETB: on board (triggers on next 2nd spell)")
+        return
+    creatures = [c for c in gs.zones.battlefield
+                 if c.has(Tag.CREATURE) and not c.is_land()]
+    if len(creatures) >= 3:
+        # Pump all creatures — more value when board is wide
+        for c in creatures:
+            c.counters = (c.counters or 0) + 1
+        gs._log(f"  Cosmogrand Zenith: 2nd-spell -> +1/+1 on {len(creatures)} creatures")
+    else:
+        # Two tokens — better when board is thin
+        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
+        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
+        gs._log("  Cosmogrand Zenith: 2nd-spell -> 2 Soldier tokens")
 
 def _tractor_beam_etb(gs, card):
     """Tractor Beam -- Aura. 'ETB: tap enchanted. You control enchanted permanently.'

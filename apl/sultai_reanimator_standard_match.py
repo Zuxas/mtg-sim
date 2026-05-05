@@ -204,8 +204,30 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
                     gs._log(f"  Awaken: reanimate {target.name}")
                 break
 
-        # 6. Value creatures
-        for name in (KAVAERO, FORMIDABLE, ARDYN):
+        # 6. Formidable Speaker ({2G}): ETB discard a card, search library for a creature card
+        # Best use: discard a duplicate/bad card, tutor Bringer of the Last Gift to hand
+        for c in list(gs.zones.hand):
+            if c.name == FORMIDABLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
+                # ETB: discard worst card to GY, tutor Bringer (or best creature) to hand
+                discard_targets = [x for x in gs.zones.hand
+                                   if x.name not in {BRINGER, SPIDERMAN, AWAKEN_DEAD}]
+                if discard_targets:
+                    worst = min(discard_targets, key=lambda x: getattr(x, 'cmc', 0))
+                    gs.zones.hand.remove(worst)
+                    gs.zones.graveyard.append(worst)
+                    # Tutor: find Bringer in library if not in hand/battlefield
+                    bringer_in_hand = any(x.name == BRINGER for x in gs.zones.hand)
+                    if not bringer_in_hand:
+                        target = next((x for x in gs.zones.library if x.name == BRINGER), None)
+                        if target:
+                            gs.zones.library.remove(target)
+                            gs.zones.hand.append(target)
+                            gs._log(f"  Formidable Speaker: discarded {worst.name}, tutored {BRINGER}")
+                break
+
+        # 7. Value creatures
+        for name in (KAVAERO, ARDYN):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)

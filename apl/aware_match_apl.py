@@ -126,8 +126,9 @@ BLINK_BAIT = {
     "Mockingbird",                  # Copies another creature you control; exile to deny double ETB value
     "Bringer of the Last Gift",     # Sultai Reanimator target; MUST exile or they recur it infinitely
     "Superior Spider-Man",          # Enters as copy of Bringer = recursive ETB loop; exile both
-    "Nature's Rhythm",              # Rhythm enchantment giving all creatures bonus; exile vs destroy
-    "Formidable Speaker",           # Sultai Reanimator enabler; 47% of PT Lorwyn Eclipsed field plays it
+    # Nature's Rhythm is a SORCERY ({X}{G}{G}) -- puts creature directly to battlefield; NOT a permanent
+    # DO NOT add to BLINK_BAIT (resolves immediately, can't be exiled on stack without a counter)
+    "Formidable Speaker",           # Sultai Reanimator: ETB discard->tutor creature; {1}{T}: untap permanent
 }
 
 

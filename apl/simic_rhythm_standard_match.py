@@ -4,21 +4,28 @@ apl/simic_rhythm_standard_match.py -- Simic Rhythm match APL (Standard 2026)
 PT Lorwyn Eclipsed dominant archetype: 15.7% field share (48/306 players).
 Source: Andrea Fortunati RC Turin winning list + magic.gg meta breakdown.
 
-Game plan: ramp on T1-T3, develop board via ETB value creatures,
-           Craterhoof Behemoth as finisher (ETB: all creatures get +X/+X trample,
-           X = number of creatures you control).
+Game plan: ramp on T1-T3, Nature's Rhythm tutors finisher directly onto battlefield,
+           Craterhoof Behemoth ETB gives all creatures +N/+N trample (N = # creatures).
 
-Key cards:
-  Llanowar Elves {G}:          1/1 mana dork
-  Gene Pollinator {1G}:        ETB produces mana / landfall value
-  Badgermole Cub {1G}:         ETB landfall trigger; grows on each land
-  Spider Manifestation {1G}:   Creates spider tokens or generates mana
-  Nature's Rhythm {2G}:        Enchantment giving all creatures riot / extra mana
-  Mockingbird {2G}:            Copies another creature you control (double ETB)
-  Quantum Riddler {2UG}:       ETB scry+draw
-  Ouroboroid {3G}:             ETB self-mill + graveyard payoff
-  Brightglass Gearhulk {3UG}: ETB searches deck for a card (silver bullet)
-  Craterhoof Behemoth {5GGG}: ETB: all creatures +X/+X trample, X = # creatures
+KEY CARD ORACLE TEXT (confirmed from Scryfall):
+  Nature's Rhythm {X}{G}{G}: Sorcery -- search your library for creature with MV <= X,
+    put it directly onto the battlefield. X=3 -> Quantum Riddler; X=5 -> Brightglass;
+    X=8 -> Craterhoof Behemoth. ALSO has Harmonize {X}{G}{G}{G}{G} (cast from GY).
+    This is NOT an enchantment -- it resolves immediately as a tutor.
+
+  Spider Manifestation {1}{R/G}: Creature (Spider Avatar) -- reach, {T}: add R or G.
+    Untaps whenever you cast a spell with MV 4+. Mana dork that generates extra mana
+    when you cast big spells. Arena name = "Leyline Weaver".
+
+  Gene Pollinator {G}: Artifact Creature (Robot Insect) -- {T} + tap another untapped
+    permanent = add one mana of any color. Also {1}{T}: untap another permanent.
+    Essentially taps twice the permanents for mana.
+
+  Mockingbird {X}{U}: Bird Bard, Flying -- enters as copy of any creature on battlefield
+    with MV <= X. Most efficient copies: Quantum Riddler (X=3), Brightglass Gearhulk (X=5).
+
+  Craterhoof Behemoth {5}{G}{G}{G}: Haste, ETB: all creatures you control gain trample
+    and +X/+X where X = # creatures you control.
 
 Sideboard: Seam Rip (destroy enchantment/artifact), Rest in Peace, Soul-Guide Lantern,
            Sage of the Skies, Leatherhead + Surrak (hexproof finishers vs control)
@@ -152,22 +159,75 @@ class SimicRhythmStandardMatchAPL(AwareMatchAPL):
                     gs._log(f"  Craterhoof Behemoth ETB: {len(my_creatures)} creatures each +{n}/+{n}")
                     break
 
-        # Deploy in curve order
-        for name in CURVE:
+        # Nature's Rhythm ({X}{G}{G}): tutor a creature with MV <= X onto battlefield
+        # X is determined by available mana minus 2G (=2 for green costs)
+        # Priority: X=8 -> Craterhoof, X=5 -> Brightglass, X=3 -> Quantum Riddler, X=2 -> Ouroboroid
+        available_for_x = max(0, gs.mana_pool.total() - 2)  # subtract {G}{G} cost
+        NATURES_TARGETS = [
+            (8, CRATERHOOF),       # find Craterhoof with 10+ mana (X=8)
+            (5, BRIGHTGLASS),      # find Brightglass with 7+ mana (X=5)
+            (3, QUANTUM_RIDDLER),  # find Quantum Riddler with 5+ mana (X=3)
+            (2, OUROBOROID),       # find Ouroboroid with 4+ mana (X=2)
+        ]
+        for card in list(gs.zones.hand):
+            if card.name == NATURES_RHYTHM:
+                for x_needed, target_name in NATURES_TARGETS:
+                    if available_for_x >= x_needed:
+                        # Check if target is in library
+                        target_in_lib = next(
+                            (c for c in gs.zones.library if c.name == target_name), None)
+                        if target_in_lib:
+                            total_cost = x_needed + 2
+                            if gs.mana_pool.total() >= total_cost:
+                                gs.mana_pool.pay(card.mana_cost or "XGG", total_cost)
+                                gs.zones.hand.remove(card)
+                                gs.zones.graveyard.append(card)
+                                gs.zones.library.remove(target_in_lib)
+                                gs.zones.battlefield.append(target_in_lib)
+                                target_in_lib.summoning_sickness = True
+                                # Craterhoof ETB pump
+                                if target_in_lib.name == CRATERHOOF:
+                                    n = len(my_creatures) + 1
+                                    for c in gs.zones.battlefield:
+                                        if c.has(Tag.CREATURE) and not c.is_land():
+                                            c.counters = (c.counters or 0) + n
+                                gs._log(f"  Nature's Rhythm X={x_needed}: found {target_name}")
+                                break
+                        if target_in_lib and gs.mana_pool.total() >= x_needed + 2:
+                            break
+                break
+
+        # Mockingbird ({X}{U}): copy highest-CMC creature on board with MV <= X
+        for card in list(gs.zones.hand):
+            if card.name == MOCKINGBIRD:
+                available_x = max(0, gs.mana_pool.total() - 1)  # subtract {U}
+                copy_targets = [c for c in gs.zones.battlefield
+                                if c.has(Tag.CREATURE) and not c.is_land()
+                                and getattr(c, 'cmc', 0) <= available_x]
+                if copy_targets:
+                    template = max(copy_targets, key=lambda c: getattr(c, 'cmc', 0))
+                    total_x = getattr(template, 'cmc', 0) + 1
+                    if gs.mana_pool.total() >= total_x:
+                        gs.mana_pool.pay(card.mana_cost or "XU", total_x)
+                        gs.zones.hand.remove(card)
+                        from copy import copy as _copy
+                        token = _copy(template)
+                        token.summoning_sickness = True
+                        gs.zones.battlefield.append(token)
+                        gs._log(f"  Mockingbird X={getattr(template,'cmc',0)}: copied {template.name}")
+                break
+
+        # Deploy remaining curve pieces
+        for name in (LLANOWAR, GENE_POLL, BADGERMOLE, SPIDER_MAN,
+                     QUANTUM_RIDDLER, OUROBOROID, BRIGHTGLASS, CRATERHOOF):
             for card in list(gs.zones.hand):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
-                    # Mockingbird: copy the highest-CMC creature on board
-                    if card.name == MOCKINGBIRD:
-                        targets = [c for c in gs.zones.battlefield
-                                   if c.has(Tag.CREATURE) and not c.is_land() and c is not card]
-                        if targets:
-                            template = max(targets, key=lambda c: getattr(c, 'cmc', 0))
-                            from copy import copy as _copy
-                            token = _copy(template)
-                            token.summoning_sickness = True
-                            gs.zones.battlefield.append(token)
-                            gs._log(f"  Mockingbird: copied {template.name}")
+                    if card.name == CRATERHOOF:
+                        n = len(my_creatures)
+                        for c in gs.zones.battlefield:
+                            if c.has(Tag.CREATURE) and not c.is_land():
+                                c.counters = (c.counters or 0) + n
                     break
 
         self._cast_all_castable(gs)

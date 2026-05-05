@@ -162,10 +162,44 @@ class BantRhythmStandardMatchAPL(AwareMatchAPL):
                         gs._log(f"  Seam Rip: destroyed {target.name}")
                         break
 
-        for name in CURVE:
+        # Nature's Rhythm ({X}{G}{G}): tutor a creature with MV <= X directly onto battlefield
+        available_for_x = max(0, gs.mana_pool.total() - 2)
+        NATURES_TARGETS = [
+            (8, CRATERHOOF),
+            (5, BRIGHTGLASS),
+            (4, OUROBOROID),
+        ]
+        for card in list(gs.zones.hand):
+            if card.name == NATURES_RHYTHM:
+                for x_needed, target_name in NATURES_TARGETS:
+                    if available_for_x >= x_needed:
+                        target = next((c for c in gs.zones.library if c.name == target_name), None)
+                        if target and gs.mana_pool.total() >= x_needed + 2:
+                            gs.mana_pool.pay(card.mana_cost or "XGG", x_needed + 2)
+                            gs.zones.hand.remove(card)
+                            gs.zones.graveyard.append(card)
+                            gs.zones.library.remove(target)
+                            gs.zones.battlefield.append(target)
+                            target.summoning_sickness = True
+                            if target.name == CRATERHOOF:
+                                n = len(my_creatures) + 1
+                                for c in gs.zones.battlefield:
+                                    if c.has(Tag.CREATURE) and not c.is_land():
+                                        c.counters = (c.counters or 0) + n
+                            gs._log(f"  Nature's Rhythm X={x_needed}: found {target_name}")
+                            break
+                break
+
+        for name in (LLANOWAR, GENE_POLL, BADGERMOLE, LEYLINE_WEAVER,
+                     OUROBOROID, BRIGHTGLASS, ARCHDRUID, FIGURE_FABLE, CRATERHOOF):
             for card in list(gs.zones.hand):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
+                    if card.name == CRATERHOOF:
+                        n = len(my_creatures)
+                        for c in gs.zones.battlefield:
+                            if c.has(Tag.CREATURE) and not c.is_land():
+                                c.counters = (c.counters or 0) + n
                     break
 
         self._cast_all_castable(gs)

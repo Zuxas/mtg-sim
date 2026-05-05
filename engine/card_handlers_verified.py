@@ -928,16 +928,14 @@ def _ardyn_etb(gs, card):
 
 
 def _cecil_etb(gs, card):
-    """Cecil, Dark Knight — {B} Legendary 1/1 Deathtouch.
+    """Cecil, Dark Knight — {B} Legendary 2/3 Deathtouch.
     'Deathtouch.
      Darkness — Whenever Cecil deals damage, you lose that much life.
-     Then if your life total is less than or equal to half your
-     starting life total, untap Cecil and transform it.'
-
-    ETB: just the body. Transform trigger fires on combat-damage
-    resolution (not hooked)."""
-    gs._log("  Cecil, Dark Knight: 1/1 deathtouch "
-            "(transform trigger not wired)")
+     Then if your life total <= half starting life total, untap + transform.'
+    Transform not hooked (no combat-damage hook)."""
+    from engine.keywords import KWTag
+    card.tags.add(KWTag.DEATHTOUCH)
+    gs._log("  Cecil, Dark Knight: 2/3 deathtouch")
 
 
 def _abrupt_inquiry_etb(gs, card):
@@ -1065,16 +1063,31 @@ def _faebloom_trick_spell(gs, card):
 
 
 def _fear_of_isolation_etb(gs, card):
-    """Fear of Isolation — {1}{U} Enchantment Creature 3/3 Nightmare.
+    """Fear of Isolation — {1}{U} Enchantment Creature 2/3 Nightmare.
     'As an additional cost to cast this spell, return a permanent
-     you control to its owner's hand.
-     Flying.'
-
-    Additional cost payment: we don't enforce it. Body is a 3/3
-    flyer."""
+     you control to its owner's hand. Flying.
+     When enters, put a +1/+1 counter on another target creature you control.'
+    Additional cost: bounce cheapest non-land permanent (proxy for player choice)."""
     from engine.keywords import KWTag
+    from data.card import Tag
     card.tags.add(KWTag.FLYING)
-    gs._log("  Fear of Isolation: 3/3 flying (bounce-cost not enforced)")
+    # Pay additional cost: return cheapest non-land permanent to hand
+    candidates = [c for c in gs.zones.battlefield
+                  if c is not card and not c.is_land()]
+    if candidates:
+        target = min(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        gs.zones.battlefield.remove(target)
+        gs.zones.hand.append(target)
+        gs._log(f"  Fear of Isolation: bounce {target.name}, 2/3 flying")
+    else:
+        gs._log("  Fear of Isolation: 2/3 flying (no bounce target)")
+    # ETB: +1/+1 counter on another creature
+    others = [c for c in gs.zones.battlefield
+              if c is not card and c.has(Tag.CREATURE) and not c.is_land()]
+    if others:
+        best = max(others, key=lambda c: getattr(c, 'cmc', 0))
+        best.counters = (getattr(best, 'counters', 0) or 0) + 1
+        gs._log(f"  Fear of Isolation ETB: +1/+1 on {best.name}")
 
 
 def _fear_of_missing_out_etb(gs, card):
@@ -1516,12 +1529,16 @@ def _doppelgang_spell(gs, card):
 
 def _cryogen_relic_etb(gs, card):
     """Cryogen Relic — {1}{U} Artifact.
-    'When this artifact enters or leaves the battlefield, draw a
-     card.
-     {1}{U}, Sacrifice this artifact: Put a stun counter on up to
-     one target tapped creature.'"""
+    'When this artifact enters OR leaves the battlefield, draw a card.'
+    ETB draw. Leave-battlefield draw is registered via _LEAVE_BF_HANDLERS."""
     gs.zones.draw(1)
     gs._log("  Cryogen Relic ETB: draw 1")
+
+
+def _cryogen_relic_leave(gs, card):
+    """Cryogen Relic leaves-battlefield trigger: draw a card."""
+    gs.zones.draw(1)
+    gs._log("  Cryogen Relic leaves BF: draw 1")
 
 
 def _dauntless_scrapbot_etb(gs, card):
@@ -2577,24 +2594,20 @@ def _nowhere_to_run_etb(gs, card):
 
 def _nurturing_pixie_etb(gs, card):
     """Nurturing Pixie — {W} 1/1 Faerie Rogue flying.
-    'Flying.
-     When this creature enters, return up to one target non-Faerie,
-     nonland permanent you control to its owner's hand. If returned,
-     put a +1/+1 counter on this creature.'
-
-    Bounce our worst non-faerie permanent (for re-ETB value) and
-    pump self."""
+    'Flying. When this creature enters, return up to one target
+     non-Faerie, nonland permanent you control to its owner's hand.
+     If returned, put a +1/+1 counter on this creature.'
+    Bounces ANY non-Faerie nonland permanent (not just creatures).
+    Priority: prefer cards with ETB triggers (highest CMC as proxy)."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
-    from data.card import Tag
-    # Pick a non-faerie, non-land permanent with an ETB to rebound
+    # Any non-Faerie nonland permanent — creatures, enchantments, artifacts
     candidates = [c for c in gs.zones.battlefield
                   if c is not card and not c.is_land()
-                  and "Faerie" not in (c.type_line or "")
-                  and c.has(Tag.CREATURE)]
+                  and "Faerie" not in (c.type_line or "")]
     if candidates:
-        # Prefer bouncing cards with an ETB effect
-        target = min(candidates, key=lambda c: getattr(c, 'cmc', 0))
+        # Prefer highest CMC (better ETB value on re-entry)
+        target = max(candidates, key=lambda c: getattr(c, 'cmc', 0))
         gs.zones.battlefield.remove(target)
         gs.zones.hand.append(target)
         card.counters = (card.counters or 0) + 1
@@ -3496,10 +3509,21 @@ def _steamcore_scholar_etb(gs, card):
 
 
 def _stormchasers_talent_etb(gs, card):
-    """Stormchaser's Talent — {U} Class (already in CLASS_DEFS).
-    Level 1 creates a 1/1 Otter with prowess; Level 2/3 add value."""
-    # Framework already handles via class_etb → CLASS_DEFS
-    gs._log("  Stormchaser's Talent: Class (framework handles)")
+    """Stormchaser's Talent — {U} Class Enchantment.
+    Level 1 ETB: create a 1/1 blue-red Otter creature token with prowess.
+    Level 2: when reached, return target noncreature nonland from GY to hand.
+    Level 3: whenever a creature enters, it gets +1/+0 until EOT."""
+    from data.card import Card, Tag
+    from engine.keywords import KWTag
+    otter = Card(name="Otter Token", mana_cost="", cmc=0,
+                 type_line="Token Creature — Otter", oracle_text="Prowess",
+                 power="1", toughness="1", colors=["U", "R"])
+    otter.tags.add(Tag.CREATURE)
+    otter.tags.add(KWTag.PROWESS)
+    otter.turn_entered = gs.turn
+    otter.summoning_sickness = True
+    gs.zones.battlefield.append(otter)
+    gs._log("  Stormchaser's Talent: 1/1 Otter with prowess")
 
 
 def _strategic_betrayal_spell(gs, card):
@@ -3897,25 +3921,25 @@ def _torrent_of_stone_spell(gs, card):
 def _tragic_trajectory_spell(gs, card):
     """Tragic Trajectory — {B} Sorcery.
     'Target creature gets -2/-2 EOT.
-     Void — -10/-10 instead if a nonland permanent left BF this
-     turn or a spell was warped this turn.'
-
-    Kill an opp creature with toughness ≤ 2 (or up to 10 w/ Void)."""
+     Void — -10/-10 instead if a nonland permanent left BF this turn.'
+    Checks _void_enabled_this_turn on gs (set when Cryogen Relic sacrificed)."""
     from data.card import Tag
     from engine.match_state import safe_power, safe_toughness
     opp = getattr(gs, "_match_opp", None)
     if opp is None:
         return
-    # Assume non-Void for safety (T=2 threshold)
+    void_active = getattr(gs, '_void_enabled_this_turn', False)
+    max_toughness = 10 if void_active else 2
     targets = [c for c in opp.zones.battlefield
                if c.has(Tag.CREATURE) and not c.is_land()
-               and safe_toughness(c) <= 2]
+               and safe_toughness(c) <= max_toughness]
     if not targets:
         return
     t = max(targets, key=lambda c: safe_power(c))
     opp.zones.battlefield.remove(t)
     opp.zones.graveyard.append(t)
-    gs._log(f"  Tragic Trajectory: -2/-2 kills {t.name}")
+    label = "Void -10" if void_active else "-2"
+    gs._log(f"  Tragic Trajectory ({label}): kills {t.name}")
 
 
 def _turn_inside_out_spell(gs, card):
@@ -32031,16 +32055,23 @@ def _interceptor_mechan_etb(gs, card):
         gs._log(f"  Interceptor Mechan ETB: flying + return {best.name} from GY")
 
 def _cosmogrand_zenith_etb(gs, card):
-    """Cosmogrand Zenith -- 'When second spell cast each turn: create 2 Soldier tokens OR +3/+3 to target.'
-    ETB proxy: create 2 Soldier tokens."""
+    """Cosmogrand Zenith — {2}{W} 2/4.
+    'Whenever you cast your second spell each turn, choose one:
+     - Create two 1/1 white Human Soldier tokens.
+     - Put a +1/+1 counter on each creature you control.'
+    ETB fires if this is already the 2nd+ spell this turn.
+    The APL should also trigger this manually each subsequent turn
+    via _zenith_trigger() when 2 spells are cast."""
     from data.card import Card, Tag
-    for _ in range(2):
-        tok = Card(name="Soldier", mana_cost="", cmc=0,
-                   type_line="Creature — Human Soldier", oracle_text="",
-                   power="1", toughness="1", colors=["W"])
-        tok.tags.add(Tag.CREATURE)
-        gs.zones.battlefield.append(tok)
-    gs._log("  Cosmogrand Zenith ETB: second-spell trigger proxy (2 Soldier tokens)")
+    # Only fire tokens if this ETB counts as the 2nd spell this turn
+    spells = getattr(gs, 'spells_cast_this_turn', 0) + \
+             getattr(gs, 'noncreature_spells_this_turn', 0)
+    if spells >= 2:
+        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
+        gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
+        gs._log("  Cosmogrand Zenith ETB: 2nd-spell trigger -> 2 Soldier tokens")
+    else:
+        gs._log("  Cosmogrand Zenith ETB: on board (triggers on next 2nd spell)")
 
 def _tractor_beam_etb(gs, card):
     """Tractor Beam -- Aura. 'ETB: tap enchanted. You control enchanted permanently.'

@@ -241,6 +241,17 @@ class EsperPixieMatchAPL(AwareMatchAPL):
                     gs.cast_spell(c)
                     break
 
+        # Cosmogrand Zenith on-battlefield trigger: each turn we cast 2+ spells,
+        # Zenith fires (handler only fires at ETB; we model the ongoing trigger here).
+        zenith_on_bf = any(c.name == COSMOGRAND_ZENITH for c in gs.zones.battlefield)
+        spells_this_turn = (getattr(gs, 'spells_cast_this_turn', 0) +
+                            getattr(gs, 'noncreature_spells_this_turn', 0))
+        if zenith_on_bf and spells_this_turn >= 2:
+            from data.card import Card
+            for _ in range(2):
+                gs._make_token("Soldier", "1", "1", "Token Creature — Human Soldier")
+            gs._log("  Cosmogrand Zenith trigger: 2nd spell -> 2 Soldier tokens")
+
         # Sunpearl Kirin {1}{W} flash — ETB returns a permanent to hand
         for c in list(gs.zones.hand):
             if c.name == SUNPEARL_KIRIN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):

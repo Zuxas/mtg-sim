@@ -3283,12 +3283,14 @@ def _slickshot_show_off_etb(gs, card):
     """Slickshot Show-Off — {1}{R} 3/1 Bird Wizard.
     'Flying, haste.
      Whenever you cast a noncreature spell, this creature gets +2/+0
-     until end of turn.
-     Plot {1}{R}.'"""
+     until end of turn. Plot {1}{R}.'
+    PROWESS tag wires it into the engine prowess loop (+N/+N per N spells
+    as approximation for the +2N/+0 oracle text)."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.HASTE)
-    gs._log("  Slickshot Show-Off: 3/1 flying haste")
+    card.tags.add(KWTag.PROWESS)
+    gs._log("  Slickshot Show-Off: 3/1 flying haste prowess")
 
 
 def _smugglers_surprise_spell(gs, card):

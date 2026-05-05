@@ -364,15 +364,12 @@ class SelesnyaLandfallStandardMatchAPL(AwareMatchAPL):
                 gs.zones.battlefield.append(new_land)
                 new_land.tapped     = True
                 new_land.turn_entered = gs.turn
-                # Landfall: Badgermole Cub gets counter + Harmonizer fires
+                # Landfall: Badgermole Cub gets counter + Harmonizer fires once.
+                # _fire_landfall_triggers handles the Harmonizer doubling internally.
+                # Do NOT also manually double target_atk — that would be 4x total.
                 self._fire_landfall_triggers(gs)
-                # Harmonizer's doubling targets the chosen attacker
-                try:
-                    target_atk.power = str(int(target_atk.power) * 2)
-                except (ValueError, TypeError):
-                    pass
                 gs._log(f"  Escape Tunnel -> landfall -> Harmonizer doubles "
-                        f"{target_atk.name} to {target_atk.power} power!")
+                        f"{target_atk.name} (via _fire_landfall_triggers)")
             return  # used our trick
 
         # --- Trick 2: Bushwhack +2/+2 trample to save a dying attacker ---
@@ -384,19 +381,9 @@ class SelesnyaLandfallStandardMatchAPL(AwareMatchAPL):
             atk_t       = safe_toughness(atk)
 
             if total_blk_p >= atk_t:
-                for card in list(gs.zones.hand):
-                    if card.name == BUSHWHACK:
-                        if gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                            gs.mana_pool.pay(card.mana_cost, card.cmc)
-                            gs.zones.hand.remove(card)
-                            gs.zones.graveyard.append(card)
-                            try:
-                                atk.power     = str(int(atk.power) + 2)
-                                atk.toughness = str(int(atk.toughness) + 2)
-                            except (ValueError, TypeError):
-                                pass
-                            gs._log(f"  Bushwhack: +2/+2 trample on {atk.name}")
-                            return
+                # Bushwhack is a SORCERY -- cannot be cast during combat.
+                # Removed from combat_trick; use Snakeskin Veil (instant) instead.
+                pass
 
         # --- Trick 3: Snakeskin Veil as pump to save a dying attacker ---
         for atk in attackers:

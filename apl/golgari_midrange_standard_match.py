@@ -48,6 +48,10 @@ class GolgariMidrangeStandardMatchAPL(MatchAPL):
     def main_phase(self, gs): self.main_phase_match(gs, None)
 
     def main_phase_match(self, gs, opponent):
+        # Set _match_opp so removal handlers (Requiting Hex, Maelstrom Pulse, etc.)
+        # can find the opponent when fired via cast_spell's ETB/spell hooks.
+        if opponent is not None:
+            gs._match_opp = opponent
         self._play_land_if_able(gs)
         gs.tap_lands()
 
@@ -87,12 +91,7 @@ class GolgariMidrangeStandardMatchAPL(MatchAPL):
                                     gs.zones.graveyard.append(blight)
                             except (ValueError, TypeError):
                                 pass
-                            gs.cast_spell(c)
-                            target = max(opp_threats, key=lambda x: safe_power(x))
-                            if target in opponent.zones.battlefield:
-                                opponent.zones.battlefield.remove(target)
-                                opponent.zones.graveyard.append(target)
-                            gs._log(f"  Requiting Hex: destroy {target.name}")
+                            gs.cast_spell(c)  # _requiting_hex handler destroys target
                             break
 
         # 3. Maelstrom Pulse — destroy target + all with same name
@@ -102,15 +101,7 @@ class GolgariMidrangeStandardMatchAPL(MatchAPL):
             if opp_threats:
                 for c in list(gs.zones.hand):
                     if c.name == PULSE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                        target = max(opp_threats, key=lambda x: safe_power(x))
-                        name_matches = [x for x in list(opponent.zones.battlefield)
-                                        if x.name == target.name]
-                        gs.cast_spell(c)
-                        for t in name_matches:
-                            if t in opponent.zones.battlefield:
-                                opponent.zones.battlefield.remove(t)
-                                opponent.zones.graveyard.append(t)
-                        gs._log(f"  Maelstrom Pulse: destroy {len(name_matches)}x {target.name}")
+                        gs.cast_spell(c)  # _maelstrom_pulse_spell handler destroys target + copies
                         break
 
         # 4. Deploy threats cheapest first

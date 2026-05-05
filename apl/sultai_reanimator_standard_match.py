@@ -125,6 +125,8 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
         """Reanimator: loot → big creature in GY → reanimate."""
+        if opponent is not None:
+            gs._match_opp = opponent
         self._play_land_if_able(gs)
         gs.tap_lands()
 
@@ -166,19 +168,13 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
                     break
 
         # 3a. Superior Spider-Man — enters as copy of Bringer in GY
-        # Cast when Bringer is in GY and we have the mana
+        # cast_spell fires _superior_spider_man_etb which handles the copy + exile.
+        # Do NOT manually move the Bringer afterward -- the handler already exiled it.
         bringer_in_gy = any(c.name == BRINGER for c in gs.zones.graveyard if c.has(Tag.CREATURE))
         if bringer_in_gy:
             for c in list(gs.zones.hand):
                 if c.name == SPIDERMAN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
-                    # Spider-Man ETB: copy Bringer in GY → treat as another Bringer entering
-                    gy_bringer = next((x for x in gs.zones.graveyard if x.name == BRINGER), None)
-                    if gy_bringer:
-                        gs.zones.graveyard.remove(gy_bringer)
-                        gs.zones.battlefield.append(gy_bringer)
-                        gy_bringer.summoning_sickness = True
-                        gs._log("  Superior Spider-Man: enters as Bringer of the Last Gift")
+                    gs.cast_spell(c)  # ETB handler copies Bringer + exiles it
                     break
 
         # 3b. Bringer of the Last Gift — ETB reanimate is now wired

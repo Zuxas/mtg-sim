@@ -11,6 +11,7 @@ RAMP_UTILITY = {"Hydroelectric Specimen", "Sea Gate Restoration", "Waterlogged T
 FINISHER = "Whir of Invention"
 
 class BelcherAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Landless Belcher"
     win_condition_damage = 20
     max_turns = 15

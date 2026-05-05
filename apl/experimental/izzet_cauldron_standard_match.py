@@ -44,6 +44,7 @@ BURN_SPELLS = {FIRE_MAGIC, TERSA_LIGHTSHATTER, WILD_RIDE}
 
 
 class IzzetCauldronMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Izzet Cauldron Tempo"
     win_condition_damage = 20
     max_turns = 10

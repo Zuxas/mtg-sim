@@ -8,6 +8,7 @@ KEY_CARDS = {"Overlord of the Hauntwoods", "Overlord of the Mistmoors", "Yuna", 
 
 
 class FourColorOverlordsAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Four-Color Overlords"
 
     def keep(self, hand, mulligans, on_play):

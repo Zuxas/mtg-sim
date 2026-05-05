@@ -19,6 +19,7 @@ QUANTUM_RIDDLER = "Quantum Riddler"
 
 
 class SimicRhythmStandardMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Simic Rhythm"
     win_condition_damage = 20
     max_turns = 10

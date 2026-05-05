@@ -8,6 +8,7 @@ KEY_CARDS = {"Hollowmurk Siege", "Ouroboroid", "Pawpatch Recruit"}
 
 
 class SimicJackalAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Simic Jackal"
 
     def keep(self, hand, mulligans, on_play):

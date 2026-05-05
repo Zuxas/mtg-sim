@@ -49,6 +49,7 @@ INTERACTION_SPELLS = {
 }
 
 class FourColorOverlordsMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Four Color Overlords"
     win_condition_damage = 20
     max_turns = 12

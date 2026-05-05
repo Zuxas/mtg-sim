@@ -20,6 +20,7 @@ WISH = "Wish"
 GRAPESHOT = "Grapeshot"
 
 class RubyStormMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Ruby Storm"
     win_condition_damage = 20
     max_turns = 12

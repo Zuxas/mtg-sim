@@ -8,6 +8,7 @@ KEY_CARDS = {"Nature's Rhythm", "Quantum Riddler", "Mockingbird"}
 
 
 class SimicRhythmAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Simic Rhythm"
 
     def keep(self, hand, mulligans, on_play):

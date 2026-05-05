@@ -8,6 +8,7 @@ KEY_CARDS = {"Venerated Rotpriest", "Skrelv", "Defector Mite", "Serum Snare"}
 
 
 class AzoriusToxicAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Azorius Toxic"
 
     def keep(self, hand, mulligans, on_play):

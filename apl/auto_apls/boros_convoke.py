@@ -8,6 +8,7 @@ KEY_CARDS = {"Battlefield Forge", "Case of the Gateway Express", "Frontline Rush
 
 
 class BorosConvokeAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Boros Convoke"
 
     def keep(self, hand, mulligans, on_play):

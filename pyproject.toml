@@ -1,0 +1,25 @@
+# pyproject.toml -- mtg-sim project configuration
+# Created 2026-04-28 per harness/guides/vscode-extensions-setup-guide
+# Currently scoped to Ruff configuration; package metadata can be added later
+# if mtg-sim ever gets pip-installable.
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# Skip auto-generated and stash subdirs from the linter
+extend-exclude = [
+    "apl/auto_apls",
+    "engine/_research",
+    "data/auto_apls",
+]
+
+[tool.ruff.lint]
+# E/W = pycodestyle errors+warnings; F = pyflakes; I = isort;
+# N = pep8-naming; B = flake8-bugbear; UP = pyupgrade
+select = ["E", "F", "W", "I", "N", "B", "UP"]
+# Line length handled by formatter, not linter
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

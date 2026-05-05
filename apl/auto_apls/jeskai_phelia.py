@@ -10,6 +10,7 @@ UTILITY_SPELLS = {"Consign to Memory", "Fable of the Mirror-Breaker", "March of 
 LANDS = {"Arid Mesa", "Flooded Strand", "Scalding Tarn", "Hallowed Fountain", "Steam Vents", "Sacred Foundry", "Plains", "Island", "Mountain", "Arena of Glory", "Thundering Falls"}
 
 class JeskaiPheliaAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Jeskai Phelia"
     win_condition_damage = 20
     max_turns = 15

@@ -8,6 +8,7 @@ KEY_CARDS = {"Ill-Timed Explosion", "Fires of Victory", "Worldsoul's Rage"}
 
 
 class TemurAnalystAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Temur Analyst"
 
     def keep(self, hand, mulligans, on_play):

@@ -8,6 +8,7 @@ KEY_CARDS = {"Doomsday Excruciator", "Requiting Hex", "Kavaero", "Mind-Bitten"}
 
 
 class DimirExcruciatorAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Dimir Excruciator"
 
     def keep(self, hand, mulligans, on_play):

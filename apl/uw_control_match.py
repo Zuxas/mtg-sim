@@ -20,6 +20,7 @@ ORIMS_CHANT = "Orim's Chant"
 COUNTERSPELL = "Counterspell"
 
 class UWControlMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Uw Control"
     win_condition_damage = 20
     max_turns = 12

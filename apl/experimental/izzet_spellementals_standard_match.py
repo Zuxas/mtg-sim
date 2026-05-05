@@ -31,6 +31,7 @@ THREE_STEPS_AHEAD = "Three Steps Ahead"
 
 
 class IzzetSpellementalsStandardMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Izzet Spellementals"
     win_condition_damage = 20
     max_turns = 10

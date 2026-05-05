@@ -8,6 +8,7 @@ KEY_CARDS = {"Inspiring Vantage", "Knight-Errant of Eos", "Resolute Reinforcemen
 
 
 class AzoriusSoldiersAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Azorius Soldiers"
 
     def keep(self, hand, mulligans, on_play):

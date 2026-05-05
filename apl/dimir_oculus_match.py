@@ -20,6 +20,7 @@ SHOOT_THE_SHERIFF = "Shoot the Sheriff"
 COUNTERSPELL = "Counterspell"
 
 class DimirOculusMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Dimir Oculus"
     win_condition_damage = 20
     max_turns = 12

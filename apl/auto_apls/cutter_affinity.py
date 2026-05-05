@@ -6,6 +6,7 @@ from apl.base_apl import BaseAPL
 
 
 class CutterAffinityAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Cutter Affinity"
 
     def keep(self, hand, mulligans, on_play):

@@ -8,6 +8,7 @@ KEY_CARDS = {"Bitterbloom Bearer", "Get Lost", "Elspeth", "Storm Slayer"}
 
 
 class MonoWhiteAggroAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Mono White Aggro"
 
     def keep(self, hand, mulligans, on_play):

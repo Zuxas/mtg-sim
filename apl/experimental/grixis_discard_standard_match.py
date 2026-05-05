@@ -44,6 +44,7 @@ TEMPO_INTERACTION = {ABRADE, INTO_THE_FLOOD_MAW, MULTIVERSAL_PASSAGE}
 BURN_SPELLS = {TORCH_THE_TOWER, OBLITERATING_BOLT}
 
 class GrixisDiscardMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Grixis Discard Tempo"
     win_condition_damage = 20
     max_turns = 12

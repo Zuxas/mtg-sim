@@ -5,6 +5,7 @@ from data.card import Card, Tag
 from apl.base_apl import BaseAPL
 
 class IzzetLessonsAPL(BaseAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Izzet Lessons"
     win_condition_damage = 20
     max_turns = 15

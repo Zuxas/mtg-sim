@@ -20,6 +20,7 @@ MOCKINGBIRD = "Mockingbird"
 EPHEMERATE = "Ephemerate"
 
 class UWBlinkMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Uw Blink"
     win_condition_damage = 20
     max_turns = 12

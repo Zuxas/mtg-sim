@@ -14,6 +14,7 @@ FLOODPITS_DROWNER = "Floodpits Drowner"
 
 
 class SimicJackalStandardMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Simic Jackal"
     win_condition_damage = 20
     max_turns = 10

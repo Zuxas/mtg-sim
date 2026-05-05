@@ -1,0 +1,63 @@
+==============================================================
+PT Secrets of Strixhaven 2026 — Top 8 Bracket Simulation
+Best-of-5 | G1-2 pre-board | Higher seed plays G1
+==============================================================
+
+Loading players and measuring kill clocks...
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 1: Nathan Steuer            (Selesnya Landfall     ) T6.34
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 2: Christoffer Larsen       (Selesnya Landfall     ) T6.26
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 3: Rui Zhang                (Izzet Lessons         ) T10.18
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 4: Matt Nass                (Selesnya Ouroboroid   ) T5.50
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 5: Maxx Kominowski          (Izzet Spellementals   ) T9.41
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 6: Stefan Schütz            (Mono Green Landfall   ) T5.82
+  [22 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 7: Matthew Stefansson       (Mono Green Landfall   ) T5.78
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Seed 8: Zevin Faust              (Azorius Tempo         ) T7.10
+
+Simulating bracket (100 matches per pairing)...
+
+  QF1: Seed 1 Nathan Steuer          vs Seed 8 Zevin Faust           
+        ####################  Steuer 100% | Faust 0%
+        --> Nathan Steuer advances
+
+  QF2: Seed 4 Matt Nass              vs Seed 5 Maxx Kominowski       
+        ####################  Nass 100% | Kominowski 0%
+        --> Matt Nass advances
+
+  QF3: Seed 2 Christoffer Larsen     vs Seed 7 Matthew Stefansson    
+        ####################  Larsen 100% | Stefansson 0%
+        --> Christoffer Larsen advances
+
+  QF4: Seed 3 Rui Zhang              vs Seed 6 Stefan Schütz         
+        --------------------  Zhang 0% | Schütz 100%
+        --> Stefan Schütz advances
+
+Traceback (most recent call last):
+  File "E:\vscode ai project\mtg-sim\sim_pt_sos_top8.py", line 240, in <module>
+    main()
+    ~~~~^^
+  File "E:\vscode ai project\mtg-sim\sim_pt_sos_top8.py", line 207, in main
+    print("-" * 62)
+    ~~~~~^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-61: character maps to <undefined>

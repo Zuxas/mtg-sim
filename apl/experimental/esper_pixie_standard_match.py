@@ -35,6 +35,7 @@ PIXIE_THREATS = {NURTURING_PIXIE, SPYGLASS_SIREN}
 KEY_CREATURES = {CECIL, KAITO, MOMENTUM_BREAKER, COSMOGRAND_ZENITH, SUNPEARL_KIRIN}
 
 class EsperPixieMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Esper Pixie Tempo"
     win_condition_damage = 20
     max_turns = 12

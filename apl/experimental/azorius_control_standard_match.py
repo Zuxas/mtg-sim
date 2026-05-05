@@ -18,6 +18,7 @@ VOICE_OF_VICTORY = "Voice of Victory"
 
 
 class AzoriusControlStandardMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Azorius Control"
     win_condition_damage = 20
     max_turns = 15

@@ -20,6 +20,7 @@ NOURISHING_SHOAL = "Nourishing Shoal"
 GENEROUS_ENT = "Generous Ent"
 
 class NeoformMatchAPL(MatchAPL):
+    AUTO_GENERATED = True  # flagged for rewrite
     name = "Neoform"
     win_condition_damage = 20
     max_turns = 12

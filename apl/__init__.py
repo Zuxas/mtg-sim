@@ -209,6 +209,15 @@ APL_REGISTRY = {
     "superiordoomsday":     ("apl.superior_doomsday_standard",   "SuperiorDoomsdayAPL",               "decks/superior_doomsday_standard.txt"),
     "doomsday":             ("apl.superior_doomsday_standard",   "SuperiorDoomsdayAPL",               "decks/superior_doomsday_standard.txt"),
     "simiccub":             ("apl.simic_cub_standard_match",     "SimicCubStandardMatchAPL",          "decks/simic_cub_standard.txt"),
+    # PT Lorwyn Eclipsed: archetypes with match APLs but missing deck-file entries
+    # Grixis Elementals (Filipe Sousa EMT list): proxy to roaming elementals (same Elemental core)
+    "grixiselementals":     ("apl.roaming_elementals_standard",  "RoamingElementalsAPL",              "decks/roaming_elementals_standard.txt"),
+    "grixiselements":       ("apl.roaming_elementals_standard",  "RoamingElementalsAPL",              "decks/roaming_elementals_standard.txt"),
+    # Five-Color Rhythm: proxy to Simic Rhythm (same Nature's Rhythm engine, wider color splash)
+    "fivecolorrhythm":      ("apl.auto_apls.simic_rhythm",       "SimicRhythmAPL",                    "decks/simic_rhythm_standard.txt"),
+    # Izzet Blink: proxy to Izzet Spellementals (both U/R tempo with Elemental synergies)
+    "izzetblink":           ("apl.izzet_spellementals_standard", "IzzetSpellementalsAPL",             "decks/izzet_spellementals_standard.txt"),
+    "izzetblinkstandard":   ("apl.izzet_spellementals_standard", "IzzetSpellementalsAPL",             "decks/izzet_spellementals_standard.txt"),
 }
 
 

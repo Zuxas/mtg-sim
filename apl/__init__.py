@@ -318,6 +318,8 @@ MATCH_APL_REGISTRY = {
     # Sultai Reanimator: 10.1% of field; Bringer + Superior Spider-Man combo
     "sultaireanimator":    ("apl.sultai_reanimator_standard_match",        "SultaiReanimatorStandardMatchAPL"),
     "grixiselementals":    ("apl.grixis_elementals_standard_match",        "GrixisElementalsStandardMatchAPL"),
+    "izzetblink":          ("apl.izzet_blink_standard_match",              "IzzetBlinkStandardMatchAPL"),
+    "izzetblinkstandard":  ("apl.izzet_blink_standard_match",              "IzzetBlinkStandardMatchAPL"),
     "grixiselements":      ("apl.grixis_elementals_standard_match",        "GrixisElementalsStandardMatchAPL"),
     "izzetelementsstandard": ("apl.izzet_spellementals_standard_match",    "IzzetSpellementalsStandardMatchAPL"),  # Izzet Elementals proxy
     # ── New match APLs from guide-informed pass (2026-05-04) ─────────────────

@@ -198,6 +198,8 @@ class EsperPixieMatchAPL(AwareMatchAPL):
     # ── Main phase ────────────────────────────────────────────────────────────
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
+        if opponent is not None:
+            gs._match_opp = opponent
         self._opp_gs = opponent
         gs._void_enabled_this_turn = False
 

@@ -56,6 +56,8 @@ class BorosAggroMatchAPL(MatchAPL):
         self.main_phase_match(gs, None)
 
     def main_phase_match(self, gs, opponent):
+        if opponent is not None:
+            gs._match_opp = opponent
         self._play_land_if_able(gs)
         gs.tap_lands()
         leyline_active = duskmourn_spells.is_leyline_active(gs, LEYLINE_RES)

@@ -223,6 +223,10 @@ class MatchAPL(BaseAPL):
           3. main_phase2 (goldfish reactive dump)
         """
         self._opp_gs = opponent
+        # Set gs._match_opp so all ETB/spell handlers can find the opponent.
+        # Handlers read this attribute; without it they no-op and silently skip removal.
+        if opponent is not None:
+            gs._match_opp = opponent
         self._match_cast_removal(gs, opponent)
         self.main_phase(gs)
         if hasattr(self, "main_phase2"):

@@ -129,6 +129,8 @@ class BantRhythmStandardMatchAPL(AwareMatchAPL):
         gs.mana_reserve = 0
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
+        if opponent is not None:
+            gs._match_opp = opponent
         self._play_land_if_able(gs)
         gs.tap_lands()
         self._opp_gs = opponent

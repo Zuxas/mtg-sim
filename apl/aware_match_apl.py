@@ -63,6 +63,14 @@ OPP_THREAT_MODEL: dict[str, dict] = {
     "borosdiscard":         {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
     "simiccub":             {"removal": 0, "counters": 2, "pump": 3, "rep_mana": 1},
     "selesnyarhythm":       {"removal": 1, "counters": 0, "pump": 2, "rep_mana": 1},
+    # PT Lorwyn Eclipsed dominant archetypes (2026-05-04) -- from actual decklists
+    # Simic/Bant Rhythm: pure tap-out ramp; Seam Rip is sorcery-speed only
+    # 1 Bounce Off in Simic SB -- negligible instant interaction
+    "simicrhythm":          {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    "bantrhythm":           {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    "fivecolorrhythm":      {"removal": 0, "counters": 0, "pump": 0, "rep_mana": 0},
+    # Sultai Reanimator: Disdainful Stroke SB, Deceit main (bounce); holds no mana (taps out to combo)
+    "sultaireanimator":     {"removal": 1, "counters": 1, "pump": 0, "rep_mana": 0},
     # New archetypes added 2026-05-04
     # Temur Lute: Three Steps Ahead + Negate + Annul + Flashfreeze + Spell Pierce; holds 2 mana
     "temurlute":            {"removal": 2, "counters": 5, "pump": 0, "rep_mana": 2},
@@ -114,6 +122,12 @@ BLINK_BAIT = {
     "Bristly Bill, Spine Sower",    # Selesnya engine "glue"; removes it and their counter synergy stalls
     "Felidar Retreat",              # Selesnya/Bant post-board token engine; generates tokens on each land
     "Traveling Chocobo",            # Selesnya landfall doubler alongside Icetill; exile before engine fires
+    "Craterhoof Behemoth",          # ETB: gives ALL creatures +X/+X trample; instant lethal with 5+ creatures
+    "Mockingbird",                  # Copies another creature you control; exile to deny double ETB value
+    "Bringer of the Last Gift",     # Sultai Reanimator target; MUST exile or they recur it infinitely
+    "Superior Spider-Man",          # Enters as copy of Bringer = recursive ETB loop; exile both
+    "Nature's Rhythm",              # Rhythm enchantment giving all creatures bonus; exile vs destroy
+    "Formidable Speaker",           # Sultai Reanimator enabler; 47% of PT Lorwyn Eclipsed field plays it
 }
 
 

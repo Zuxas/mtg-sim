@@ -310,6 +310,13 @@ MATCH_APL_REGISTRY = {
     "superiordoomsday":    ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
     "doomsday":            ("apl.superior_doomsday_standard_match",        "SuperiorDoomsdayStandardMatchAPL"),
     "simiccub":            ("apl.simic_cub_standard_match",                "SimicCubStandardMatchAPL"),
+    # ── PT Lorwyn Eclipsed dominant archetypes (2026-05-04) ─────────────────
+    # Rhythm variants: 34.6% of PT Lorwyn Eclipsed field combined
+    "simicrhythm":         ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),
+    "bantrhythm":          ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),   # proxy; same core game plan
+    "fivecolorrhythm":     ("apl.simic_rhythm_standard_match",             "SimicRhythmStandardMatchAPL"),   # proxy
+    # Sultai Reanimator: 10.1% of field; Bringer + Superior Spider-Man combo
+    "sultaireanimator":    ("apl.sultai_reanimator_standard_match",        "SultaiReanimatorStandardMatchAPL"),
     # ── New match APLs from guide-informed pass (2026-05-04) ─────────────────
     "bantairbending":      ("apl.bant_airbending_standard_match",          "BantAirbendingStandardMatchAPL"),
     "temurlute":           ("apl.temur_lute_standard_match",               "TemurLuteStandardMatchAPL"),

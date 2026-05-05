@@ -34,6 +34,7 @@ REQUITING_HEX    = "Requiting Hex"
 BRINGER          = "Bringer of the Last Gift"
 BALEMURK         = "Overlord of the Balemurk"
 AWAKEN_DEAD      = "Awaken the Honored Dead"
+SPIDERMAN        = "Superior Spider-Man"   # enters as copy of target GY creature
 
 # Removal
 BITTER_TRIUMPH   = "Bitter Triumph"
@@ -43,9 +44,12 @@ KAVAERO          = "Kavaero, Mind-Bitten"
 FORMIDABLE       = "Formidable Speaker"
 ARDYN            = "Ardyn, the Usurper"
 WISTFULNESS      = "Wistfulness"
+BOOKWORM         = "Oblivious Bookworm"    # ETB mill 3
+HARVESTER        = "Harvester of Misery"
+ARMAGGON         = "Armaggon, Future Shark"
 
 
-CREATURES = {BRINGER, BALEMURK, KAVAERO, FORMIDABLE, ARDYN}
+CREATURES = {BRINGER, BALEMURK, KAVAERO, FORMIDABLE, ARDYN, BOOKWORM, HARVESTER, ARMAGGON}
 LOOT_SPELLS = {DECEIT, DREDGERS_INSIGHT, WISTFULNESS}
 REMOVAL_SPELLS = {BITTER_TRIUMPH, REQUITING_HEX}
 
@@ -56,28 +60,43 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 14
 
+    # Sideboard from Ishii Hiroyuki PT Lorwyn Eclipsed list
     SB_PLANS = {
         "aggro": (
-            ["3 Tragic Trajectory", "2 Intimidation Tactics",
-             "2 Deadly Cover-Up"],
-            ["3 Wistfulness", "2 Formidable Speaker", "2 Ardyn, the Usurper"],
+            # vs Aggro/Red: Glarb lifegain; Nowhere to Run removal; Urgent Necropsy exile
+            ["Glarb, Calamity's Augur", "Glarb, Calamity's Augur",
+             "Nowhere to Run", "Nowhere to Run", "Urgent Necropsy"],
+            [ARMAGGON, HARVESTER, WISTFULNESS, "Disruptive Stormbrood",
+             "Disruptive Stormbrood"],
         ),
         "control": (
-            ["2 Duress", "2 Quantum Riddler",
-             "1 Glarb, Calamity's Augur"],
-            ["3 Requiting Hex", "2 Bitter Triumph"],
-        ),
-        "combo": (
-            ["2 Duress", "2 Soul-Guide Lantern"],
-            ["2 Bitter Triumph", "2 Formidable Speaker"],
+            # vs Control: Disdainful Stroke for big spells; Spider-Sense for interaction
+            ["Disdainful Stroke", "Disdainful Stroke",
+             "Glarb, Calamity's Augur", "Glarb, Calamity's Augur", "Spider-Sense"],
+            [BITTER_TRIUMPH, BITTER_TRIUMPH, BITTER_TRIUMPH,
+             BALEMURK, "Disruptive Stormbrood"],
         ),
         "ramp": (
-            ["2 Duress", "2 Quantum Riddler"],
-            ["3 Requiting Hex", "1 Awaken the Honored Dead"],
+            # vs Rhythm: Nowhere to Run removes Craterhoof; Insidious Fungus disrupts
+            ["Nowhere to Run", "Nowhere to Run",
+             "Insidious Fungus", "Insidious Fungus", "Urgent Necropsy"],
+            [ARMAGGON, HARVESTER, WISTFULNESS,
+             "Disruptive Stormbrood", "Disruptive Stormbrood"],
+        ),
+        "combo": (
+            # vs Izzet Lessons: Disdainful Stroke; Glarb for grinding
+            ["Disdainful Stroke", "Disdainful Stroke",
+             "Glarb, Calamity's Augur", "Glarb, Calamity's Augur",
+             "Zero Point Ballad", "Zero Point Ballad"],
+            [BITTER_TRIUMPH, BITTER_TRIUMPH, BITTER_TRIUMPH,
+             ARMAGGON, "Disruptive Stormbrood", "Disruptive Stormbrood"],
         ),
         "tempo": (
-            ["2 Intimidation Tactics", "3 Tragic Trajectory"],
-            ["3 Wistfulness", "2 Formidable Speaker"],
+            # vs Prowess/Spellementals: Disdainful; Nowhere to Run
+            ["Disdainful Stroke", "Disdainful Stroke",
+             "Nowhere to Run", "Nowhere to Run", "Glarb, Calamity's Augur"],
+            [BALEMURK, WISTFULNESS, ARMAGGON,
+             "Disruptive Stormbrood", "Disruptive Stormbrood"],
         ),
     }
 
@@ -131,7 +150,23 @@ class SultaiReanimatorStandardMatchAPL(MatchAPL):
                         gs._log(f"  {name}: mill {victim.name} to GY")
                     break
 
-        # 3. Bringer of the Last Gift — ETB reanimate is now wired
+        # 3a. Superior Spider-Man — enters as copy of Bringer in GY
+        # Cast when Bringer is in GY and we have the mana
+        bringer_in_gy = any(c.name == BRINGER for c in gs.zones.graveyard if c.has(Tag.CREATURE))
+        if bringer_in_gy:
+            for c in list(gs.zones.hand):
+                if c.name == SPIDERMAN and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    # Spider-Man ETB: copy Bringer in GY → treat as another Bringer entering
+                    gy_bringer = next((x for x in gs.zones.graveyard if x.name == BRINGER), None)
+                    if gy_bringer:
+                        gs.zones.graveyard.remove(gy_bringer)
+                        gs.zones.battlefield.append(gy_bringer)
+                        gy_bringer.summoning_sickness = True
+                        gs._log("  Superior Spider-Man: enters as Bringer of the Last Gift")
+                    break
+
+        # 3b. Bringer of the Last Gift — ETB reanimate is now wired
         # via engine ETB_EFFECTS registry (pulls biggest creature
         # with CMC ≤ 5 from GY to battlefield).
         for c in list(gs.zones.hand):

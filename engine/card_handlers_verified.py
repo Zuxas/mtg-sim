@@ -11200,10 +11200,26 @@ def _lotus_bloom_etb(gs, card):
 
 def _lumbering_worldwagon_etb(gs, card):
     """Lumbering Worldwagon — {2}{G} Artifact Vehicle.
-    'P = # lands.
-     ETB/attack: may tutor a basic land onto BF tapped.'"""
-    gs.mana_pool.flex += 1
-    gs._log("  Lumbering Worldwagon: ramp basic land (+1 mana)")
+    'This Vehicle's power is equal to the number of lands you control.
+     Toughness 4. When this creature enters or attacks, you may search
+     your library for a basic land, put it onto the battlefield tapped.'
+    ETB: tutor a basic land (ramp). Power is dynamic (updated by APL each turn)."""
+    # Tutor a basic land
+    from data.card import Card, Tag
+    basics = [c for c in gs.zones.library
+              if c.is_land() and any(t in (c.type_line or '').lower()
+                                    for t in ('forest','plains','mountain','island','swamp'))]
+    if basics:
+        land = basics[0]
+        gs.zones.library.remove(land)
+        land.tapped = True
+        gs.zones.battlefield.append(land)
+        gs._log(f"  Lumbering Worldwagon: ETB tutor {land.name} (tapped)")
+    # Set initial power = current land count (static ability proxy)
+    land_count = sum(1 for c in gs.zones.battlefield if c.is_land())
+    card._base_power = 0  # track for APL power updates
+    card.counters = land_count
+    gs._log(f"  Lumbering Worldwagon: power = {land_count} (# lands)")
 
 
 def _lumen_class_frigate_etb(gs, card):

@@ -136,32 +136,25 @@ class BantRhythmStandardMatchAPL(AwareMatchAPL):
         my_creatures = [c for c in gs.zones.battlefield
                         if c.has(Tag.CREATURE) and not c.is_land()]
 
-        # Craterhoof lethal check
+        # Craterhoof lethal check -- ETB handler pumps automatically, no manual pump
         if len(my_creatures) >= 5:
             for card in list(gs.zones.hand):
                 if card.name == CRATERHOOF and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    n = len(my_creatures)
-                    for c in my_creatures:
-                        c.counters = (c.counters or 0) + n
-                    gs._log(f"  Craterhoof Behemoth: {n} creatures +{n}/+{n}")
+                    gs.cast_spell(card)  # _craterhoof_behemoth_etb fires automatically
                     break
 
-        # Seam Rip main phase (sorcery-speed): destroy opponent's key enchantments
+        # Seam Rip: exiles any nonland permanent with MV <= 2 (not just enchantments)
         if opponent:
-            opp_enchants = [c for c in opponent.zones.battlefield
-                            if not c.is_land() and not c.has(Tag.CREATURE)]
-            if opp_enchants:
-                target = max(opp_enchants, key=lambda c: getattr(c, 'cmc', 0))
+            opp_targets = sorted(
+                [c for c in opponent.zones.battlefield
+                 if not c.is_land() and getattr(c, 'cmc', 99) <= 2],
+                key=lambda c: -getattr(c, 'cmc', 0)
+            )
+            if opp_targets:
+                target = opp_targets[0]
                 for card in list(gs.zones.hand):
                     if card.name == SEAM_RIP and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                        gs.mana_pool.pay(card.mana_cost, card.cmc)
-                        gs.zones.hand.remove(card)
-                        gs.zones.graveyard.append(card)
-                        if target in opponent.zones.battlefield:
-                            opponent.zones.battlefield.remove(target)
-                            opponent.zones.graveyard.append(target)
-                        gs._log(f"  Seam Rip: destroyed {target.name}")
+                        gs.cast_spell(card)  # ETB handler exiles via _seam_rip_etb
                         break
 
         # Nature's Rhythm ({X}{G}{G}): tutor a creature with MV <= X directly onto battlefield
@@ -196,13 +189,24 @@ class BantRhythmStandardMatchAPL(AwareMatchAPL):
                      OUROBOROID, BRIGHTGLASS, ARCHDRUID, FIGURE_FABLE, CRATERHOOF):
             for card in list(gs.zones.hand):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    if card.name == CRATERHOOF:
-                        n = len(my_creatures)
-                        for c in gs.zones.battlefield:
-                            if c.has(Tag.CREATURE) and not c.is_land():
-                                c.counters = (c.counters or 0) + n
+                    gs.cast_spell(card)  # all ETB handlers fire automatically
                     break
+
+        # Ouroboroid per-combat trigger: +X/+X to all creatures where X = Ouroboroid power
+        for ouro in gs.zones.battlefield:
+            if ouro.name == OUROBOROID:
+                x = getattr(ouro, 'counters', 0) + getattr(ouro, '_base_power', 4)
+                for c in gs.zones.battlefield:
+                    if c.has(Tag.CREATURE) and not c.is_land():
+                        c.counters = (c.counters or 0) + x
+                gs._log(f"  Ouroboroid combat trigger: +{x}/+{x} to all creatures")
+                break
+
+        # Lumbering Worldwagon: dynamic power = # lands
+        for wagon in gs.zones.battlefield:
+            if wagon.name == "Lumbering Worldwagon":
+                land_count = sum(1 for c in gs.zones.battlefield if c.is_land())
+                wagon.counters = max(0, land_count - getattr(wagon, '_base_power', 0))
 
         self._cast_all_castable(gs)
 

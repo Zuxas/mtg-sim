@@ -146,17 +146,14 @@ class SimicRhythmStandardMatchAPL(AwareMatchAPL):
         self._opp_gs = opponent
 
         # Check for Craterhoof lethal: if 5+ creatures, cast Craterhoof and attack
+        # NOTE: do NOT manually pump here -- _craterhoof_behemoth_etb fires via cast_spell
+        # and pumps correctly. Manual pump would double-count.
         my_creatures = [c for c in gs.zones.battlefield
                         if c.has(Tag.CREATURE) and not c.is_land()]
         if len(my_creatures) >= 5:
             for card in list(gs.zones.hand):
                 if card.name == CRATERHOOF and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    # Craterhoof ETB: all creatures get +N/+N trample where N = # creatures
-                    n = len(my_creatures)
-                    for c in my_creatures:
-                        c.counters = (c.counters or 0) + n
-                    gs._log(f"  Craterhoof Behemoth ETB: {len(my_creatures)} creatures each +{n}/+{n}")
+                    gs.cast_spell(card)  # ETB handler pumps automatically
                     break
 
         # Nature's Rhythm ({X}{G}{G}): tutor a creature with MV <= X onto battlefield
@@ -217,18 +214,35 @@ class SimicRhythmStandardMatchAPL(AwareMatchAPL):
                         gs._log(f"  Mockingbird X={getattr(template,'cmc',0)}: copied {template.name}")
                 break
 
-        # Deploy remaining curve pieces
+        # Deploy remaining curve pieces (ETB handlers fire automatically via cast_spell)
         for name in (LLANOWAR, GENE_POLL, BADGERMOLE, SPIDER_MAN,
                      QUANTUM_RIDDLER, OUROBOROID, BRIGHTGLASS, CRATERHOOF):
             for card in list(gs.zones.hand):
                 if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
-                    if card.name == CRATERHOOF:
-                        n = len(my_creatures)
-                        for c in gs.zones.battlefield:
-                            if c.has(Tag.CREATURE) and not c.is_land():
-                                c.counters = (c.counters or 0) + n
                     break
+
+        # Ouroboroid per-combat trigger: 'At the beginning of combat on your turn,
+        # put X +1/+1 counters on each creature, where X = Ouroboroid's power.'
+        # The ETB handler proxies this once; we model the ongoing trigger here.
+        for ouro in gs.zones.battlefield:
+            if ouro.name == OUROBOROID:
+                x = getattr(ouro, 'counters', 0) + getattr(ouro, '_base_power', 4)
+                for c in gs.zones.battlefield:
+                    if c.has(Tag.CREATURE) and not c.is_land():
+                        c.counters = (c.counters or 0) + x
+                gs._log(f"  Ouroboroid combat trigger: +{x}/+{x} to all creatures")
+                break
+
+        # Lumbering Worldwagon: P = # lands you control (static ability, update each turn)
+        for wagon in gs.zones.battlefield:
+            if wagon.name == "Lumbering Worldwagon":
+                land_count = sum(1 for c in gs.zones.battlefield if c.is_land())
+                wagon.counters = max(0, land_count - getattr(wagon, '_base_power', 0))
+
+        # Spider Manifestation untap: if we cast a spell with MV >= 4 this turn, untap it.
+        # Track via gs.noncreature_spells_this_turn and check spells_cast_this_turn.
+        # (Simplified: untap after any main-phase cast of 4+ CMC spell via _cast_all_castable)
 
         self._cast_all_castable(gs)
 

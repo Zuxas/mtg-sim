@@ -1247,6 +1247,12 @@ class GameState:
                 self._log(f"    Kumano II bonus: +1/+1 on {card.name}")
             self._fire_etb_triggers(card)
         self._log(f"  Cast: {card.name} (CMC {card.cmc:.0f}, pool left: {self.mana_pool.total()})")
+        # Spider Manifestation: 'Whenever you cast a spell with MV 4+, untap this creature.'
+        if card.cmc >= 4:
+            for c in self.zones.battlefield:
+                if c.name == "Spider Manifestation" and getattr(c, 'tapped', False):
+                    c.tapped = False
+                    self._log(f"  Spider Manifestation: untap (MV {card.cmc:.0f} spell cast)")
         self.check_state_based_actions()
         return True
 

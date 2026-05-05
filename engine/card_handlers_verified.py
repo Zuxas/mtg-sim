@@ -5066,8 +5066,8 @@ def _ashlings_command_spell(gs, card):
 
 
 def _ashling_rekindled_etb(gs, card):
-    """Ashling, Rekindled — {1}{R} 2/1 Legendary Elemental Sorcerer.
-    'When enters or transforms, may loot (discard + draw).'"""
+    """Ashling, Rekindled — {1}{R} 1/3 Legendary Elemental Sorcerer.
+    'When enters or transforms, may discard a card. If you do, draw a card.'"""
     if gs.zones.hand:
         lands = [c for c in gs.zones.hand if c.is_land()]
         v = lands[-1] if lands else gs.zones.hand[-1]

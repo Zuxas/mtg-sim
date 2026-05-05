@@ -136,6 +136,15 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
         gs.tap_lands()
         self._opp_gs = opponent
 
+        # Ashling, Rimebound: pay {U} at start of main phase to transform.
+        # Rimebound adds 2 mana of any color (for MV 4+ spells only).
+        # Proxy: -1U +2flex (net +1 mana toward Sunderflock/Overlord).
+        if any(c.name == ASHLING for c in gs.zones.battlefield):
+            if gs.mana_pool.U >= 1:
+                gs.mana_pool.U -= 1
+                gs.mana_pool.flex += 2
+                gs._log("  Ashling -> Rimebound: -1U +2flex for big spells")
+
         opp_creatures = [c for c in opponent.zones.battlefield
                          if c.has(Tag.CREATURE) and not c.is_land()]
 

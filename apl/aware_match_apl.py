@@ -656,3 +656,75 @@ class AwareMatchAPL(MatchAPL):
                     gs.cast_spell(card)
                     gs._log(f"  [end step] flash in {card.name}")
                     return
+
+    # ---------------------------------------------------------------------------
+    # Opponent-aware mulligan logic
+    # ---------------------------------------------------------------------------
+
+    # Ramp card names that enable T1-T2 acceleration (critical vs fast Rhythm decks)
+    _RAMP_CARDS = {
+        "Llanowar Elves", "Badgermole Cub", "Leyline Weaver",
+        "Spider Manifestation", "Gene Pollinator", "Elvish Mystic",
+        "Arbor Elf", "Arboreal Grazer",
+    }
+    # Rhythm archetypes that curve out so fast a T1 ramp is mandatory
+    _RHYTHM_KEYS = {"simicrhythm", "bantrhythm", "fivecolorrhythm", "selesnyarhythm"}
+    # Control archetypes where fishing for perfect hands backfires
+    _CONTROL_KEYS = {
+        "izzetlessons", "izzetspellementals", "azoriusmomo",
+        "jeskaicontrol", "jeskaioculus", "azoriustempo",
+    }
+
+    def keep_vs_opp(self, hand: list, mulligans: int, on_play: bool,
+                    opp_archetype: str) -> bool:
+        """
+        Opponent-aware keep decision. Adjusts thresholds based on matchup:
+          - vs Rhythm (fast ramp): need T1 ramp or mull aggressively
+          - vs combo (Sultai Reanimator): need clock OR disruption
+          - vs control: any 2-lander is fine, don't fish for perfect hands
+          - default: call the subclass keep() without opponent awareness
+        """
+        if len(hand) <= 4:
+            return True   # always keep at 4 or fewer cards
+
+        lands = sum(1 for c in hand if c.is_land())
+        if lands < 2 or lands > 5:
+            return False
+
+        # vs Rhythm: mull without T1 ramp unless already mulliganed twice
+        if opp_archetype in self._RHYTHM_KEYS:
+            has_ramp = any(c.name in self._RAMP_CARDS for c in hand)
+            return has_ramp or mulligans >= 2
+
+        # vs Sultai Reanimator (combo): need fast clock OR disruption
+        if opp_archetype == "sultaireanimator":
+            has_clock = any(not c.is_land() and getattr(c, 'cmc', 99) <= 2
+                            for c in hand)
+            has_disruption = any(c.name in {"Duress", "Thoughtseize", "Negate",
+                                            "Spell Pierce", "Annul"}
+                                 for c in hand)
+            return has_clock or has_disruption or mulligans >= 2
+
+        # vs control: any functional 2-lander is fine (don't fish)
+        if opp_archetype in self._CONTROL_KEYS:
+            has_play = any(not c.is_land() for c in hand)
+            return lands >= 2 and has_play
+
+        # Default: delegate to subclass keep() logic (no opp awareness)
+        return self.keep(hand, mulligans, on_play)
+
+    def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
+        """
+        Override: call keep_vs_opp when _opp_key is set (match_engine wires it).
+        Falls back to generic land-count heuristic for goldfish/unknown opponents.
+        """
+        opp_key = getattr(self, "_opp_key", "")
+        if opp_key:
+            return self.keep_vs_opp(hand, mulligans, on_play, opp_key)
+        # Generic fallback: 2-5 lands, at least 1 nonland
+        if len(hand) <= 4:
+            return True
+        lands = sum(1 for c in hand if c.is_land())
+        if lands < 2 or lands > 5:
+            return False
+        return any(not c.is_land() for c in hand)

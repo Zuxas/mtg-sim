@@ -505,14 +505,16 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         # ({1}{R} 1/2 flying haste, +2/+0 per noncreature spell) or
         # Stormchaser's Talent, T3 Colorstorm + cantrip stack, T4-5 lethal
         # via pumped fliers + burn. KEY: Slickshot is 1/2 base, so Long
-        # Goodbye ({B}) kills it pre-pump for trivial mana. Tishana strips
-        # the flying/haste, leaving a 1/2 ground body. Floodpits stuns.
+        # Goodbye ({1}{B} -- can't be countered, kills <=3 CMC) takes it
+        # out pre-pump. Tishana strips ABILITIES (counter the prowess
+        # trigger or the levelup trigger -- can't counter the spell itself).
         elif vs_prowess and opponent is not None:
             opp_creatures = [c for c in opponent.zones.battlefield
                              if not c.is_land() and c.has(Tag.CREATURE)]
 
-            # 1. PRIORITY: Long Goodbye on Slickshot ({B} = 1 mana, kills 1/2
-            #    base or 3/2 after one pump). Cheapest answer in the deck.
+            # 1. PRIORITY: Long Goodbye ({1}{B} = 2 mana, can't be countered)
+            #    on Slickshot. Kills 1/2 base or up to 3-mana threats. NOT
+            #    {B} as I once mis-noted -- it's a 2-mana instant.
             slickshots = [c for c in opp_creatures if c.name == "Slickshot Show-Off"
                           and safe_toughness(c) <= 2]
             if slickshots:

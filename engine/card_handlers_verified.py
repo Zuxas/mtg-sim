@@ -3323,11 +3323,12 @@ def _slickshot_show_off_etb(gs, card):
      Whenever you cast a noncreature spell, this creature gets +2/+0
      until end of turn. Plot {1}{R}.'
     +2/+0 per noncreature spell handled in _do_combat via _SLICKSHOT_CARDS check
-    (power-only boost, toughness unchanged, restored post-combat)."""
+    (power-only boost, toughness unchanged, restored post-combat).
+    Base body is 1/2 per Scryfall; the +2/+0 stacks per noncreature spell."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.HASTE)
-    gs._log("  Slickshot Show-Off: 3/1 flying haste (+2/+0 per noncreature spell)")
+    gs._log("  Slickshot Show-Off: 1/2 flying haste (+2/+0 per noncreature spell)")
 
 
 def _smugglers_surprise_spell(gs, card):

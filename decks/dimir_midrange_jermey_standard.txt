@@ -1,43 +1,40 @@
-// Dimir Midrange - Jermey personal build (Standard 2026)
-// Cecil + Kaito + Floodpits Drowner shell
-// Tested: RC prep May 2026
-2 Azure Beastbinder
+// Dimir Midrange - Jermey personal build (Standard 2026, RC DC prep v2)
+// Cecil + Kaito + Floodpits Drowner + Deep-Cavern Bat + Malcolm shell
+// Variant test: dropped Spell Snare/Loch Mare/Into Flood Maw/Azure Beastbinder/Qarsi
+// Added Deep-Cavern Bat (4) for hand disruption, Faebloom Trick (2) for tempo,
+// Malcolm Alluring Scoundrel (1) and Sunset Saboteur (1) as finishers.
+// Tested: RC prep May 2026 v2
 1 Bitter Triumph
 2 Cecil, Dark Knight
-3 Enduring Curiosity
+4 Deep-Cavern Bat
+4 Enduring Curiosity
+2 Faebloom Trick
 4 Floodpits Drowner
+1 Fountainport
 4 Gloomlake Verge
-2 Into the Flood Maw
 5 Island
-4 Kaito, Bane of Nightmares
-1 Loch Mare
-1 Long Goodbye
+2 Kaito, Bane of Nightmares
+2 Long Goodbye
+1 Malcolm, Alluring Scoundrel
 2 Multiversal Passage
-1 Phantom Interference
-1 Qarsi Revenant
-3 Requiting Hex
+2 Phantom Interference
+1 Requiting Hex
 2 Restless Reef
 2 Shoot the Sheriff
 2 Soulstone Sanctuary
-1 Spell Snare
 4 Spyglass Siren
-1 Starting Town
-4 Swamp
-4 Tishana's Tidebinder
+1 Sunset Saboteur
+5 Swamp
+3 Tishana's Tidebinder
 4 Watery Grave
 
 Sideboard
-1 Annul
-1 Bitter Triumph
-1 Day of Black Sun
-1 Disdainful Stroke
-1 Duress
-1 Essence Scatter
-1 Kaito, Cunning Infiltrator
-1 Requiting Hex
-2 Soul-Guide Lantern
+2 Day of Black Sun
+2 Duress
+2 Intimidation Tactics
+1 Negate
 1 Spell Pierce
 1 Spider-Sense
-1 Strategic Betrayal
+2 Strategic Betrayal
 1 The Unagi of Kyoshi Island
-1 Wan Shi Tong, Librarian
+1 Tishana's Tidebinder

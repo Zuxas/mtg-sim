@@ -30,17 +30,26 @@ SIREN        = "Spyglass Siren"
 TISHANA      = "Tishana's Tidebinder"
 FLOODPITS    = "Floodpits Drowner"
 KAITO        = "Kaito, Bane of Nightmares"
-AZURE        = "Azure Beastbinder"
+AZURE        = "Azure Beastbinder"          # legacy: not in current build, kept for code paths
 ENDURING     = "Enduring Curiosity"
-LOCH_MARE    = "Loch Mare"
+LOCH_MARE    = "Loch Mare"                  # legacy
 MULTIVERSAL  = "Multiversal Passage"
-INTO_FLOOD   = "Into the Flood Maw"
+INTO_FLOOD   = "Into the Flood Maw"         # legacy
 PHANTOM      = "Phantom Interference"
 REQUITING    = "Requiting Hex"
 SHOOT        = "Shoot the Sheriff"
 BITTER       = "Bitter Triumph"
 LONG_GOODBYE = "Long Goodbye"
-QARSI        = "Qarsi Revenant"
+QARSI        = "Qarsi Revenant"             # legacy
+CECIL        = "Cecil, Dark Knight"
+SPELL_SNARE  = "Spell Snare"                # legacy
+
+# v2 build additions (RC DC prep)
+DEEP_BAT     = "Deep-Cavern Bat"            # 1B 1/1 flash flying lifelink, ETB: exile from opp hand
+FAEBLOOM     = "Faebloom Trick"             # 2U instant, 2x 1/1 flying tokens + tap target
+MALCOLM      = "Malcolm, Alluring Scoundrel"  # 1U flash flying 2/1, draws on hit
+SUNSET_SAB   = "Sunset Saboteur"            # 1B 4/1 menace ward-discard
+FOUNTAINPORT = "Fountainport"               # utility land, value engine
 
 # Mana producers — stun/strip these first vs green
 MANA_DORK_NAMES = {
@@ -137,6 +146,13 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
     }
     _HN_LOCK_PIECES = {"High Noon", "Voice of Victory"}        # priority counter targets
     _HN_THREATS     = {"Aven Interrupter", "Aang, Swift Savior"}  # priority kill targets
+    # Izzet Prowess detection — Slickshot is uniquely Prowess (Spellementals
+    # shares Eddymurk but doesn't run Slickshot)
+    _PROWESS_CARDS = {
+        "Slickshot Show-Off", "Stormchaser's Talent", "Colorstorm Stallion",
+        "Burst Lightning", "Boomerang Basics", "Flow State",
+    }
+    _PROWESS_THREATS = {"Slickshot Show-Off", "Colorstorm Stallion"}  # Tishana strips these
 
     def _vs_green(self, opponent: GameState) -> bool:
         if opponent is None:
@@ -163,6 +179,20 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                      + list(getattr(opponent.zones, 'hand', []))
                      + list(getattr(opponent.zones, 'library', []))[:15])
         return sum(1 for c in all_cards if c.name in self._HIGH_NOON_CARDS) >= 2
+
+    def _vs_prowess(self, opponent: GameState) -> bool:
+        """True if opponent is Izzet Prowess (Slickshot Show-Off shell).
+        Distinguishes from Spellementals: Prowess runs Slickshot + Burst Lightning;
+        Spellementals runs Sunderflock + Hearth Elemental and no Slickshot."""
+        if opponent is None:
+            return False
+        all_cards = (list(opponent.zones.battlefield)
+                     + list(getattr(opponent.zones, 'hand', []))
+                     + list(getattr(opponent.zones, 'library', []))[:15])
+        # Slickshot is the strongest signal — exclusive to Prowess
+        has_slickshot = any(c.name == "Slickshot Show-Off" for c in all_cards)
+        prowess_count = sum(1 for c in all_cards if c.name in self._PROWESS_CARDS)
+        return has_slickshot or prowess_count >= 3
 
     def _vs_airbending(self, opponent: GameState) -> bool:
         """True if opponent is a flying-heavy deck (Bant Airbending, etc.)."""
@@ -211,30 +241,48 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         else:
             gs.mana_reserve = 0
 
-    # ── End-step flash: Floodpits Drowner during opponent's upkeep ─────────
+    # ── End-step flash: Deep-Cavern Bat (hand exile), Floodpits, Malcolm ─────
     def end_step_actions(self, gs: GameState, opponent: GameState):
         """
-        Flash Floodpits Drowner at end of our turn = hits opponent's upkeep.
-        ETB taps their mana dork. Stun counter prevents untap on their next
-        untap step. Net result: 2 full turns of mana denial on one creature.
+        End-of-opp-turn flashes:
+          1. Deep-Cavern Bat: hand-exile their key card (Monument/HN/big threat)
+             before they can play it next turn. Fires whenever opp has 2+ cards.
+          2. Floodpits: stun a mana dork pre-upkeep (vs green only).
+          3. Malcolm Alluring Scoundrel: flash deploy as a 2/1 flying threat.
         """
         if opponent is None:
             return
-        if not self._vs_green(opponent):
-            return
 
-        opp_dorks = [c for c in opponent.zones.battlefield
-                     if c.name in MANA_DORK_NAMES
-                     and not getattr(c, 'tapped', False)]
-        if not opp_dorks:
-            return
+        # 1. Deep-Cavern Bat — fire if opp has nonland cards in hand
+        opp_hand_nonlands = [c for c in opponent.zones.hand if not c.is_land()]
+        if len(opp_hand_nonlands) >= 1:
+            for card in list(gs.zones.hand):
+                if card.name == DEEP_BAT and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs._match_opp = opponent
+                    gs.cast_spell(card)
+                    gs._log(f"  [end-step] Deep-Cavern Bat -> exile from opp hand "
+                            f"({len(opp_hand_nonlands)} nonlands)")
+                    return
 
+        # 2. Floodpits to stun mana dork (vs green)
+        if self._vs_green(opponent):
+            opp_dorks = [c for c in opponent.zones.battlefield
+                         if c.name in MANA_DORK_NAMES
+                         and not getattr(c, 'tapped', False)]
+            if opp_dorks:
+                for card in list(gs.zones.hand):
+                    if card.name == FLOODPITS and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs._target_mana_dork = True
+                        gs.cast_spell(card)
+                        gs._target_mana_dork = False
+                        gs._log("  [end-step flash] Floodpits -> stun mana dork")
+                        return
+
+        # 3. Malcolm: flash 2/1 flying threat with card-advantage trigger
         for card in list(gs.zones.hand):
-            if card.name == FLOODPITS and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                gs._target_mana_dork = True
+            if card.name == MALCOLM and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 gs.cast_spell(card)
-                gs._target_mana_dork = False
-                gs._log("  [end-step flash] Floodpits -> stun their mana dork pre-upkeep")
+                gs._log("  [end-step] Malcolm Alluring Scoundrel deployed")
                 return
 
     # ── Kaito -2: double-stun their biggest threat ─────────────────────────
@@ -375,6 +423,7 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         gs.tap_lands()
 
         vs_high_noon  = self._vs_high_noon(opponent)
+        vs_prowess    = self._vs_prowess(opponent)
         vs_green      = self._vs_green(opponent)
         vs_lessons    = self._vs_lessons(opponent)
         vs_airbending = self._vs_airbending(opponent)
@@ -427,9 +476,10 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                     if card.name == FLOODPITS and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
                         break
-            # 5. Deploy threats: Spyglass Siren (flash) for ninjutsu enabler,
-            #    then non-Kaito creatures
-            for name in (SIREN, AZURE, TISHANA, ENDURING):
+            # 5. Deploy threats: Spyglass Siren (flash, ninjutsu enabler),
+            #    Deep-Cavern Bat (hand exile), Tishana, Cecil, Sunset Saboteur,
+            #    Enduring Curiosity, then hardcast Kaito if affordable
+            for name in (SIREN, DEEP_BAT, TISHANA, CECIL, SUNSET_SAB, ENDURING):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
@@ -439,6 +489,86 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                 if card.name == KAITO and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs.cast_spell(card)
                     break
+
+        # ── IZZET PROWESS: kill on sight, Slickshot is 1/2 baseline ──────
+        # Largest field share at PT SOS (24.5%). Their plan: T2 Slickshot
+        # ({1}{R} 1/2 flying haste, +2/+0 per noncreature spell) or
+        # Stormchaser's Talent, T3 Colorstorm + cantrip stack, T4-5 lethal
+        # via pumped fliers + burn. KEY: Slickshot is 1/2 base, so Long
+        # Goodbye ({B}) kills it pre-pump for trivial mana. Tishana strips
+        # the flying/haste, leaving a 1/2 ground body. Floodpits stuns.
+        elif vs_prowess and opponent is not None:
+            opp_creatures = [c for c in opponent.zones.battlefield
+                             if not c.is_land() and c.has(Tag.CREATURE)]
+
+            # 1. PRIORITY: Long Goodbye on Slickshot ({B} = 1 mana, kills 1/2
+            #    base or 3/2 after one pump). Cheapest answer in the deck.
+            slickshots = [c for c in opp_creatures if c.name == "Slickshot Show-Off"
+                          and safe_toughness(c) <= 2]
+            if slickshots:
+                target = slickshots[0]
+                long_goodbye = next((c for c in gs.zones.hand
+                                      if c.name == LONG_GOODBYE
+                                      and gs.mana_pool.can_cast(c.mana_cost, c.cmc)), None)
+                if long_goodbye:
+                    gs.cast_spell(long_goodbye)
+                    if target in opponent.zones.battlefield:
+                        opponent.zones.battlefield.remove(target)
+                        opponent.zones.graveyard.append(target)
+                    gs._log(f"  [vs Prowess] Long Goodbye on Slickshot Show-Off (T{safe_toughness(target)})")
+
+            # 2. Tishana strips abilities of any remaining Slickshot/Stallion
+            #    (now-1/2 vanilla blocker, no flying)
+            opp_threats_on_bf = [c for c in opponent.zones.battlefield
+                                 if not c.is_land() and c.has(Tag.CREATURE)
+                                 and c.name in self._PROWESS_THREATS]
+            if opp_threats_on_bf:
+                tishana_in_hand = any(c.name == TISHANA for c in gs.zones.hand)
+                if tishana_in_hand:
+                    for card in list(gs.zones.hand):
+                        if card.name == TISHANA and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                            gs.cast_spell(card)
+                            gs._log(f"  [vs Prowess] Tishana strips {opp_threats_on_bf[0].name}")
+                            break
+
+            # 3. Bitter Triumph / Shoot the Sheriff / Requiting Hex on whatever
+            #    remains (Colorstorm Stallion is 3/3 base, harder to kill cheap)
+            opp_creatures = [c for c in opponent.zones.battlefield
+                             if not c.is_land() and c.has(Tag.CREATURE)]
+            if opp_creatures:
+                target = max(opp_creatures, key=lambda c: safe_power(c))
+                if self._kill_target(gs, target):
+                    gs._log(f"  [vs Prowess] killed {target.name} (P{safe_power(target)})")
+
+            # 3. Floodpits Drowner: tap + stun on remaining threat
+            opp_creatures = [c for c in opponent.zones.battlefield
+                             if not c.is_land() and c.has(Tag.CREATURE)
+                             and not getattr(c, 'tapped', False)]
+            if opp_creatures:
+                for card in list(gs.zones.hand):
+                    if card.name == FLOODPITS and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs.cast_spell(card)
+                        break
+
+            # 4. Bounce Stormchaser's Talent if visible (they grow as enchantment)
+            stormchaser_on_bf = [c for c in opponent.zones.battlefield
+                                 if c.name == "Stormchaser's Talent"]
+            if stormchaser_on_bf:
+                for card in list(gs.zones.hand):
+                    if card.name == INTO_FLOOD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs._bounce_target_name = "Stormchaser's Talent"
+                        gs.cast_spell(card)
+                        gs._bounce_target_name = None
+                        break
+
+            # 5. Deploy threats — Spyglass Siren (flash, ninjutsu enabler),
+            #    Deep-Cavern Bat (hand exile a Stock Up etc), Cecil, Sunset
+            #    Saboteur (4-power menace race), Enduring (CA), Kaito hardcast
+            for name in (SIREN, DEEP_BAT, CECIL, SUNSET_SAB, ENDURING, KAITO):
+                for card in list(gs.zones.hand):
+                    if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs.cast_spell(card)
+                        break
 
         # ── IZZET LESSONS: ninjutsu Kaito T3, hold Tishana for Monument ───
         elif vs_lessons and opponent is not None:
@@ -466,21 +596,27 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                         gs._bounce_target_name = None
                         break
 
-        # ── BANT AIRBENDING: bounce fliers, not counter creatures ──────────
+        # ── BANT AIRBENDING: kill fliers, contest with Faebloom + Malcolm ───
         elif vs_airbending and opponent is not None:
             from engine.keywords import KWTag
             opp_fliers = [c for c in opponent.zones.battlefield
                           if KWTag.FLYING in getattr(c, 'tags', set()) and not c.is_land()]
+            # Faebloom Trick: 2x 1/1 flyer tokens + tap their best flier (great here)
+            if opp_fliers:
+                for card in list(gs.zones.hand):
+                    if card.name == FAEBLOOM and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs.cast_spell(card)
+                        gs._log("  [vs Airbending] Faebloom Trick: 2 fliers + tap")
+                        break
+            # Kill biggest flier with removal (Bitter Triumph / Shoot the Sheriff
+            # / Requiting Hex). Long Goodbye covers small fliers cheaply.
             if opp_fliers:
                 biggest_flier = max(opp_fliers, key=lambda c: safe_power(c))
-                for card in list(gs.zones.hand):
-                    if card.name == INTO_FLOOD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                        gs._bounce_target_name = biggest_flier.name
-                        gs.cast_spell(card)
-                        gs._bounce_target_name = None
-                        break
-            # Kill removal, deploy threats normally
-            for name in (SIREN, AZURE, TISHANA, FLOODPITS, ENDURING, KAITO):
+                if self._kill_target(gs, biggest_flier):
+                    gs._log(f"  [vs Airbending] killed flier {biggest_flier.name}")
+            # Deploy threats — flying-relevant first (Malcolm 2/1 flying flash,
+            # Deep-Cavern Bat 1/1 flying lifelink, Tishana strip)
+            for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL, ENDURING, KAITO):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
@@ -531,7 +667,7 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
             kaito_minus2_fired = any(getattr(c, '_minus2_used', False)
                                      for c in gs.zones.battlefield if c.name == KAITO)
             deploy_kaito = opp_power <= my_toughness or kaito_minus2_fired
-            for name in (SIREN, AZURE, ENDURING):
+            for name in (SIREN, DEEP_BAT, CECIL, SUNSET_SAB, ENDURING):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
@@ -544,7 +680,8 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
 
         else:
             # ── STANDARD: curve normally ───────────────────────────────────
-            for name in (SIREN, AZURE, TISHANA, FLOODPITS, ENDURING, KAITO):
+            for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL,
+                         SUNSET_SAB, ENDURING, KAITO):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)

@@ -4,24 +4,23 @@
 // Added Deep-Cavern Bat (4) for hand disruption, Faebloom Trick (2) for tempo,
 // Malcolm Alluring Scoundrel (1) and Sunset Saboteur (1) as finishers.
 // Tested: RC prep May 2026 v2
-1 Bitter Triumph
-2 Cecil, Dark Knight
+3 Bitter Triumph
+3 Cecil, Dark Knight
 4 Deep-Cavern Bat
 4 Enduring Curiosity
-2 Faebloom Trick
-4 Floodpits Drowner
-1 Fountainport
+3 Faebloom Trick
+3 Floodpits Drowner
 4 Gloomlake Verge
 5 Island
 2 Kaito, Bane of Nightmares
-2 Long Goodbye
+1 Long Goodbye
 1 Malcolm, Alluring Scoundrel
 2 Multiversal Passage
 2 Phantom Interference
 1 Requiting Hex
 2 Restless Reef
 2 Shoot the Sheriff
-2 Soulstone Sanctuary
+1 Soulstone Sanctuary
 4 Spyglass Siren
 1 Sunset Saboteur
 5 Swamp

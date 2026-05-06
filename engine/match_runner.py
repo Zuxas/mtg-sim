@@ -624,13 +624,17 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     # a +1/+1 counter on target creature an opponent controls." The target
     # is opp's CHOICE; we model as their largest power creature (best pick).
     # If opp has no creatures, the trigger does nothing (no legal target).
+    # Note: APL attacks SS unconditionally, so this drawback fires more often
+    # in sim than a smart human pilot would let it. Real-play impact is
+    # smaller -- pilot would skip attack when no legal-but-useless target.
     sunset_count = sum(1 for a in attackers if a.name == "Sunset Saboteur")
     if sunset_count > 0:
-        # Defending player's battlefield = side that's NOT attacking
+        # Defending player's battlefield = side that's NOT attacking.
+        # Real card text targets ANY creature an opponent controls --
+        # including Defender creatures.
         defender_bf = gs.bf_b if attacker == "a" else gs.bf_a
         defender_creatures = [c for c in defender_bf
                               if not c.is_land()
-                              and KWTag.DEFENDER not in c.tags  # Not super relevant but keeps it sane
                               and getattr(c, 'power', None) is not None]
         for _ in range(sunset_count):
             if not defender_creatures:

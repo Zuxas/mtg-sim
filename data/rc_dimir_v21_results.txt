@@ -1,0 +1,24 @@
+Jermey Dimir Midrange -- 13 matchups, 500 G1 each, 8 workers parallel
+Date: 2026-05-05  Format: PT SOS Standard + Azorius High Noon (Zevin)
+
+Matchup                             WR    share     time
+------------------------------------------------------------
+  Simic Rhythm              224/500   45%    2.9%     2.8s
+  Selesnya Landfall         209/500   42%    4.9%     3.0s
+  Mono Green Landfall       335/500   67%    4.9%     3.0s
+  Sultai Reanimator         312/500   62%    2.9%     3.1s
+  Bant Rhythm               222/500   44%    4.9%     3.1s
+  Selesnya Ouroboroid       206/500   41%    2.0%     3.2s
+  Bant Airbending           186/500   37%    3.9%     3.5s
+  Azorius High Noon         225/500   45%    1.5%     3.5s
+  Izzet Lessons             169/500   34%   11.8%     2.7s
+  Izzet Spellementals       452/500   90%    7.8%     2.8s
+  Izzet Prowess             249/500   50%   24.5%     3.0s
+  Gruul Aggro               133/500   27%    2.9%     2.8s
+  Jeskai Lute               447/500   89%    3.0%     3.0s
+  Jeskai Control            288/500   58%    6.9%     3.4s
+
+============================================================
+Field-weighted WR (all 85% of field): 52.2%
+Tuning-target WR (Landfall/Cub/HN bloc, 15% of field): 49.1%
+Total wall time: 11.0s (8 workers)

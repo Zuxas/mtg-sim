@@ -620,6 +620,30 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         if KWTag.VIGILANCE not in atk.tags:
             atk.tapped_from_attack = True
 
+    # Sunset Saboteur attack trigger -- "Whenever this creature attacks, put
+    # a +1/+1 counter on target creature an opponent controls." The target
+    # is opp's CHOICE; we model as their largest power creature (best pick).
+    # If opp has no creatures, the trigger does nothing (no legal target).
+    sunset_count = sum(1 for a in attackers if a.name == "Sunset Saboteur")
+    if sunset_count > 0:
+        # Defending player's battlefield = side that's NOT attacking
+        defender_bf = gs.bf_b if attacker == "a" else gs.bf_a
+        defender_creatures = [c for c in defender_bf
+                              if not c.is_land()
+                              and KWTag.DEFENDER not in c.tags  # Not super relevant but keeps it sane
+                              and getattr(c, 'power', None) is not None]
+        for _ in range(sunset_count):
+            if not defender_creatures:
+                break  # No legal target -- trigger fizzles
+            target = max(defender_creatures, key=_safe_power)
+            try:
+                target.power = str(int(target.power) + 1)
+                target.toughness = str(int(target.toughness) + 1)
+                gs._log(f"  Sunset Saboteur attack trigger: +1/+1 to {target.name} "
+                        f"(now {target.power}/{target.toughness})")
+            except (ValueError, TypeError):
+                pass
+
     # Slickshot Show-Off: +2/+0 per noncreature spell cast this turn (power only)
     _SLICKSHOT_NAMES = {"Slickshot Show-Off"}
     n_spells = gs.noncreature_spells_a if attacker == "a" else gs.noncreature_spells_b

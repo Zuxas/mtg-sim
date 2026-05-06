@@ -21010,10 +21010,14 @@ def _virtue_of_loyalty_etb(gs, card):
 
 def _sunset_saboteur_etb(gs, card):
     """Sunset Saboteur — {1}{B} Creature — Human Rogue (4/1 menace, ward-discard).
-    'Attack → +1/+1 counter on target opp creature.'
+    'Whenever this creature attacks, put a +1/+1 counter on target creature
+     an opponent controls.'
 
-    ETB vanilla. Attack trigger is a ward-to-opp penalty."""
-    gs._log("  Sunset Saboteur ETB: 4/1 menace ward-discard")
+    ETB vanilla. Attack-trigger drawback is wired in match_runner._resolve_combat
+    (engine/match_runner.py near line 623): each Sunset Saboteur attack puts
+    +1/+1 on opp's largest creature (their best pick); fizzles if opp has no
+    creatures (no legal target)."""
+    gs._log("  Sunset Saboteur ETB: 4/1 menace ward-discard (attack drawback wired)")
 
 
 def _maelstrom_of_the_spirit_dragon_etb(gs, card):

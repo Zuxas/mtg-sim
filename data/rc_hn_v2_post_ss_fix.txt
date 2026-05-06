@@ -1,0 +1,108 @@
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+Azorius High Noon v2 (post-hill-climb) -- 15 matchups, 500 G1 each
+Date: 2026-05-06  Format: PT SOS Standard + extras
+
+Matchup                             WR    share    time  
+------------------------------------------------------------
+  Selesnya Landfall            221/500  44%   4.9%     4.8s
+  Mono Green Landfall          389/500  77%   4.9%     4.8s
+  Bant Airbending              295/500  59%   3.9%     5.4s
+  Bant Rhythm                  292/500  58%   4.9%     4.7s
+  Simic Rhythm                 202/500  40%   2.9%     4.5s
+  Sultai Reanimator            320/500  64%   2.9%     4.9s
+  Selesnya Ouroboroid          312/500  62%   2.0%     5.0s
+  Izzet Prowess                295/500  59%  24.5%     5.1s
+  Izzet Lessons                279/500  55%  11.8%     4.7s
+  Izzet Spellementals          424/500  84%   7.8%     4.5s
+  Jeskai Control               348/500  69%   6.9%     5.4s
+  Gruul Aggro                  115/500  23%   2.9%     4.4s
+  Jeskai Lute                  475/500  95%   3.0%     4.8s
+  Dimir Excruciator            275/500  55%   8.0%     5.0s
+  Golgari Midrange             396/500  79%   4.0%     4.4s
+
+============================================================
+Field-weighted WR (over 95% of field): 61.9%
+Total wall time: 16.9s (8 workers)

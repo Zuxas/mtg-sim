@@ -25,6 +25,7 @@ FIELD_SHARE = {
     'Sultai Reanimator':   0.03,
     'Simic Rhythm':        0.03,
     'Gruul Aggro':         0.03,
+    'Jeskai Lute':         0.03,
 }
 
 
@@ -70,6 +71,7 @@ def main():
         ('Sultai Reanimator',   'sultaireanimator',     'decks/sultai_reanimator_standard.txt'),
         ('Simic Rhythm',        'simicrhythm',          'decks/simic_rhythm_standard.txt'),
         ('Gruul Aggro',         'gruulaggro',           'decks/gruul_aggro_standard.txt'),
+        ('Jeskai Lute',         'jeskailute',           'decks/jeskai_lute_standard.txt'),
     ]
     n_games = 500
     n_workers = 8

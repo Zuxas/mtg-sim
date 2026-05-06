@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Field shares: PT SOS roster + HN slotted in at conservative 1.5%
 # (Zevin made T8 with it; some copycats expected at RCs)
 FIELD_SHARE = {
+    # PT SOS field (legacy weights — for backward comparison)
     'Izzet Prowess':       0.245,
     'Izzet Lessons':       0.118,
     'Izzet Spellementals': 0.078,
@@ -26,7 +27,8 @@ FIELD_SHARE = {
     'Simic Rhythm':        0.029,
     'Gruul Aggro':         0.029,
     'Selesnya Ouroboroid': 0.020,
-    'Azorius High Noon':   0.015,   # Zevin Faust T8, expected slight uptick
+    'Azorius High Noon':   0.015,   # Zevin Faust T8
+    'Jeskai Lute':         0.030,   # post-PT Resonating Lute control variant
 }
 
 
@@ -79,6 +81,8 @@ def main():
         ('Jeskai Control',      'jeskaicontrol',        'decks/jeskai_control_standard.txt'),
         # Aggro
         ('Gruul Aggro',         'gruulaggro',           'decks/gruul_aggro_standard.txt'),
+        # Post-PT-SOS additions
+        ('Jeskai Lute',         'jeskailute',           'decks/jeskai_lute_standard.txt'),
     ]
     n_games = 500
     n_workers = 8

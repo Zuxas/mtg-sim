@@ -51,6 +51,14 @@ MALCOLM      = "Malcolm, Alluring Scoundrel"  # 1U flash flying 2/1, draws on hi
 SUNSET_SAB   = "Sunset Saboteur"            # 1B 4/1 menace ward-discard
 FOUNTAINPORT = "Fountainport"               # utility land, value engine
 
+# v3 build additions (Rat-flavor variant)
+HEARTLESS    = "Heartless Act"              # 1B instant, destroy creature with no counters
+STAB         = "Stab"                       # B instant, -2/-2 (kills T<=2)
+SPIDER_SENSE = "Spider-Sense"               # 1U or U via web-slinging, counters instant/sorcery/trigger
+LORD_SKITTER = "Lord Skitter, Sewer King"   # 2B 3/3 legendary, GY exile + rat tokens at combat
+RAVEN_EAGLE  = "Raven Eagle"                # 2B 2/3 flying, GY exile + clue + drain on 2nd draw
+MOCKINGBIRD  = "Mockingbird"                # XU flash flying, copies a creature with cmc<=X
+
 # Mana producers — stun/strip these first vs green
 MANA_DORK_NAMES = {
     "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
@@ -75,13 +83,15 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
     ARCHETYPE = "tempo"
 
     COUNTER_COST  = 1
-    COUNTER_CARDS = {PHANTOM, INTO_FLOOD}
+    COUNTER_CARDS = {PHANTOM, INTO_FLOOD, SPELL_SNARE, SPIDER_SENSE}
 
     MATCH_REMOVAL = {
         REQUITING:    ("UB",  None),
         SHOOT:        ("1B",  None),
         BITTER:       ("1B",  None),
         LONG_GOODBYE: ("B",   2),
+        HEARTLESS:    ("1B",  None),  # destroy creature with no counters
+        STAB:         ("B",   2),     # -2/-2; kills T<=2 baseline
     }
     MATCH_BOUNCE = {INTO_FLOOD}
     MATCH_EXILE  = set()
@@ -616,7 +626,8 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                     gs._log(f"  [vs Airbending] killed flier {biggest_flier.name}")
             # Deploy threats — flying-relevant first (Malcolm 2/1 flying flash,
             # Deep-Cavern Bat 1/1 flying lifelink, Tishana strip)
-            for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL, ENDURING, KAITO):
+            for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL,
+                         MALCOLM, RAVEN_EAGLE, ENDURING, KAITO):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
@@ -667,7 +678,8 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
             kaito_minus2_fired = any(getattr(c, '_minus2_used', False)
                                      for c in gs.zones.battlefield if c.name == KAITO)
             deploy_kaito = opp_power <= my_toughness or kaito_minus2_fired
-            for name in (SIREN, DEEP_BAT, CECIL, SUNSET_SAB, ENDURING):
+            for name in (SIREN, DEEP_BAT, CECIL, SUNSET_SAB, RAVEN_EAGLE,
+                         LORD_SKITTER, ENDURING):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
@@ -681,7 +693,8 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         else:
             # ── STANDARD: curve normally ───────────────────────────────────
             for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL,
-                         SUNSET_SAB, ENDURING, KAITO):
+                         SUNSET_SAB, RAVEN_EAGLE, LORD_SKITTER,
+                         MOCKINGBIRD, ENDURING, KAITO):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)

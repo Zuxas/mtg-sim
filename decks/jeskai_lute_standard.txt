@@ -1,0 +1,41 @@
+// Jeskai Control (Resonating Lute) -- Nakazima Syunsuke 1st place 2026-04-26
+// Post-PT-SOS Standard control with Resonating Lute mana doubler
+// Source: mtg_meta DB deck_id 137714
+4 Consult the Star Charts
+4 Great Hall of the Biblioplex
+4 Hallowed Fountain
+4 Lightning Helix
+4 No More Lies
+4 Stock Up
+3 Floodfarm Verge
+3 Get Lost
+3 Jeskai Revelation
+3 Resonating Lute
+3 Steam Vents
+2 Day of Judgment
+2 Meticulous Archive
+2 Seam Rip
+2 Spell Snare
+2 Sunbillow Verge
+2 Three Steps Ahead
+1 Elegant Parlor
+1 Flashback
+1 Island
+1 Mountain
+1 Plains
+1 Restless Anchorage
+1 Riverpyre Verge
+1 Sundown Pass
+1 Thundering Falls
+
+Sideboard
+3 Rest in Peace
+2 Fire Magic
+2 Torpor Orb
+2 Voice of Victory
+1 Abrade
+1 Disdainful Stroke
+1 Flashfreeze
+1 Seam Rip
+1 The Unagi of Kyoshi Island
+1 Wan Shi Tong, Librarian

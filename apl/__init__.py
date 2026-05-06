@@ -99,6 +99,7 @@ APL_REGISTRY = {
     "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
     "jeskaicontrol":   ("apl.jeskai_control_standard", "JeskaiControlAPL",  "decks/jeskai_control_standard.txt"),
+    "jeskailute":      ("apl.jeskai_control_standard", "JeskaiControlAPL",  "decks/jeskai_lute_standard.txt"),
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
 
     # ── Standard / Pioneer ──
@@ -273,6 +274,7 @@ MATCH_APL_REGISTRY = {
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
     "jeskaicontrol":   ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
+    "jeskailute":      ("apl.jeskai_lute_standard_match", "JeskaiLuteMatchAPL"),
     "jeskaienergycontrol": ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
     "jeskaimodern":    ("apl.jeskai_control_match",  "JeskaiControlMatchAPL"),  # Modern variant (Teferi/Narset)
     # Standard APLs (2026-04-29)

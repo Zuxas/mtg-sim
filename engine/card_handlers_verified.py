@@ -31002,10 +31002,19 @@ def _potioners_trove_etb(gs, card):
     gs._log("  Potioner's Trove ETB: mana + life-gain artifact active")
 
 def _resonating_lute_etb(gs, card):
-    """Resonating Lute -- {2}{U} Artifact. 'Lands have: {T}: Add two mana (i/s only).'
-    ETB proxy: effectively doubles mana for i/s casts. Proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
-    gs._log("  Resonating Lute ETB: land mana-doubling for i/s (+2 mana proxy)")
+    """Resonating Lute -- {2}{U}{R} CMC 4 Artifact (sos).
+    'Lands you control have "{T}: Add two mana of any one color. Spend
+     this mana only to cast instant and sorcery spells."
+     {T}: Draw a card. Activate only if you have seven or more cards in hand.'
+
+    Real card doubles all land mana for i/s casts and is a card-draw engine.
+    Sim proxy: tag for ongoing mana boost via gs._lute_active + give a
+    front-loaded +6 mana (~3 turns of doubled instant/sorcery mana for
+    a 3-4 land control board, matching the card's actual snowball power).
+    Without this, the bare +2 proxy massively understated the card."""
+    gs.mana_pool.floating = gs.mana_pool.floating + 6
+    gs._lute_active = True
+    gs._log("  Resonating Lute ETB: land mana-doubling for i/s (+6 mana proxy, ongoing flag set)")
 
 def _page_loose_leaf_etb(gs, card):
     """Page, Loose Leaf -- {2} Artifact Creature. '{T}: Add {C}.

@@ -26,6 +26,7 @@ FIELD_SHARE = {
     'Simic Rhythm':        0.03,
     'Gruul Aggro':         0.03,
     'Jeskai Lute':         0.03,
+    'Dimir Excruciator':   0.08,
 }
 
 
@@ -72,6 +73,7 @@ def main():
         ('Simic Rhythm',        'simicrhythm',          'decks/simic_rhythm_standard.txt'),
         ('Gruul Aggro',         'gruulaggro',           'decks/gruul_aggro_standard.txt'),
         ('Jeskai Lute',         'jeskailute',           'decks/jeskai_lute_standard.txt'),
+        ('Dimir Excruciator',   'dimirexcruciator',     'decks/dimir_excruciator_standard.txt'),
     ]
     n_games = 500
     n_workers = 8

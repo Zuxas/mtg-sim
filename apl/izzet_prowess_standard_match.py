@@ -193,8 +193,8 @@ class IzzetProwessStandardMatchAPL(AwareMatchAPL, IzzetProwessAPL):
                 # ── Chain noncreature spells for MAXIMUM pump ─────────────
                 # Slickshot gets +2/+0 per noncreature spell — dump everything.
                 # Order: cheap cantrips first (draw fuel), then burn (removal + pump)
-                changed = True
-                while changed:
+                # Capped at 30 iterations to prevent engine hang.
+                for _ in range(30):
                     changed = False
                     for card in sorted(list(gs.zones.hand),
                                        key=lambda c: getattr(c, 'cmc', 0)):
@@ -203,6 +203,8 @@ class IzzetProwessStandardMatchAPL(AwareMatchAPL, IzzetProwessAPL):
                                 gs.cast_spell(card)
                                 changed = True
                                 break
+                    if not changed:
+                        break
                 return  # done with this turn's main phase
 
         # ── Lethal check: can we kill without the Plot ────────────────────

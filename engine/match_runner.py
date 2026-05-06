@@ -67,6 +67,8 @@ class TwoPlayerGameState:
         self.mana_a   = 0
         self.land_played_a = False
         self.damage_to_b = 0   # damage A has dealt to B
+        self.noncreature_spells_a = 0  # noncreature spells cast this turn by A
+        self.spells_cast_a = 0  # total spells cast this turn by A (High Noon lock)
 
         # Player B state
         self.hand_b   = []
@@ -76,6 +78,8 @@ class TwoPlayerGameState:
         self.mana_b   = 0
         self.land_played_b = False
         self.damage_to_a = 0   # damage B has dealt to A
+        self.noncreature_spells_b = 0  # noncreature spells cast this turn by B
+        self.spells_cast_b = 0  # total spells cast this turn by B (High Noon lock)
 
         # Deep-copy decks to isolate per-game Card state.
         # Pre-fix: shallow `list(deck)` shared Card refs across games,
@@ -165,6 +169,14 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             v.zones.library     = lib
             v.life              = life
             v.land_played       = land_played
+            # Sync spell counters from TwoPlayerGameState (High Noon needs this
+            # to persist across main_phase / main_phase2 / end_step view recreations)
+            if for_player == "a":
+                v.spells_cast_this_turn        = gs.spells_cast_a
+                v.noncreature_spells_this_turn = gs.noncreature_spells_a
+            else:
+                v.spells_cast_this_turn        = gs.spells_cast_b
+                v.noncreature_spells_this_turn = gs.noncreature_spells_b
             # Color-aware mana via ManaPool.add_land — handles basics,
             # duals, fetchlands (flex), Wasteland (colorless), etc.
             for c in v.zones.battlefield:
@@ -178,6 +190,8 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         view     = _build_view(player)
         opp      = "b" if player == "a" else "a"
         opp_view = _build_view(opp)
+        # Wire opponent reference so cast_spell can check High Noon on opp's bf
+        view._match_opp = opp_view
 
         # Auto-upgrade goldfish APLs to opp-aware removal play.
         # Hand-tuned MatchAPLs (BorosEnergyMatchAPL etc.) keep their own logic.
@@ -194,11 +208,15 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
                 file=sys.stderr,
             )
 
-        # Sync back — APL may have played a land this turn
+        # Sync back — APL may have played a land this turn; also sync spell counts
         if player == "a":
             gs.land_played_a = view.land_played
+            gs.noncreature_spells_a = getattr(view, 'noncreature_spells_this_turn', 0)
+            gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', 0)
         else:
             gs.land_played_b = view.land_played
+            gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', 0)
+            gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', 0)
         return
 
     # -------- Legacy heuristic fallback (apl is None) --------
@@ -277,6 +295,14 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     for c in own_bf:
         c.tapped_from_attack = False
 
+    # Reset spell counts for this player's new turn (High Noon + Slickshot tracking)
+    if player == "a":
+        gs.noncreature_spells_a = 0
+        gs.spells_cast_a = 0
+    else:
+        gs.noncreature_spells_b = 0
+        gs.spells_cast_b = 0
+
     # Draw step
     if not skip_draw:
         if player == "a":
@@ -290,7 +316,7 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     # Combat (Phase 3: keyword-aware -- first strike, deathtouch,
     # lifelink, trample, flying-vs-blocker, indestructible.
     # Phase 3.5 Stage B: 5-tuple return adds defender_lifelink_gain.)
-    dmg, attacker_lost, defender_lost, lifelink_gain, defender_lifelink_gain = _resolve_combat(gs, player)
+    dmg, attacker_lost, defender_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, player)
     if player == "a":
         gs.damage_to_b += dmg
         gs.life_b      -= dmg
@@ -308,6 +334,16 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
             _safe_remove(gs.bf_b, c, "bf_b"); gs.gy_b.append(c)
         for c in defender_lost:
             _safe_remove(gs.bf_a, c, "bf_a"); gs.gy_a.append(c)
+
+    # Enduring Curiosity: draw 1 per creature that dealt combat damage to a player
+    _EC_NAMES = {"Enduring Curiosity"}
+    if creatures_hit > 0:
+        atk_bf = gs.bf_a if player == "a" else gs.bf_b
+        if any(c.name in _EC_NAMES for c in atk_bf):
+            if player == "a":
+                gs.draw_a(creatures_hit)
+            else:
+                gs.draw_b(creatures_hit)
 
     # Main phase 2 (Phase 1 wiring, commit a31f360)
     _run_post_combat_phase(gs, player, apl)
@@ -379,6 +415,13 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     view.life              = life
     view.land_played       = land_played
     view.damage_dealt      = prev_damage
+    # Sync spell counters (High Noon needs persistence across views)
+    if player == "a":
+        view.spells_cast_this_turn        = gs.spells_cast_a
+        view.noncreature_spells_this_turn = gs.noncreature_spells_a
+    else:
+        view.spells_cast_this_turn        = gs.spells_cast_b
+        view.noncreature_spells_this_turn = gs.noncreature_spells_b
 
     for c in view.zones.battlefield:
         if c.is_land():
@@ -399,6 +442,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     opp_view.zones.battlefield = opp_bf
     opp_view.zones.graveyard = opp_gy
     opp_view.life = opp_life
+    view._match_opp = opp_view  # for High Noon check (looks at opp's battlefield)
 
     match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
 
@@ -421,10 +465,14 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         gs.damage_to_b = view.damage_dealt
         gs.life_b -= delta_damage
         gs.life_a = view.life
+        gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
+        gs.noncreature_spells_a = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_a)
     else:
         gs.damage_to_a = view.damage_dealt
         gs.life_a -= delta_damage
         gs.life_b = view.life
+        gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', gs.spells_cast_b)
+        gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_b)
 
 
 def _safe_power(card) -> int:
@@ -563,7 +611,7 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
                      and not getattr(c, 'tapped_from_attack', False)]
 
     if not attackers:
-        return 0, [], [], 0, 0
+        return 0, [], [], 0, 0, 0
 
     # Phase 3.5 Stage B: mark non-vigilance attackers as tapped from attack.
     # Vigilance creatures don't tap to attack, so they remain available
@@ -571,6 +619,20 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     for atk in attackers:
         if KWTag.VIGILANCE not in atk.tags:
             atk.tapped_from_attack = True
+
+    # Slickshot Show-Off: +2/+0 per noncreature spell cast this turn (power only)
+    _SLICKSHOT_NAMES = {"Slickshot Show-Off"}
+    n_spells = gs.noncreature_spells_a if attacker == "a" else gs.noncreature_spells_b
+    slickshot_boosted = []
+    if n_spells > 0:
+        for atk in attackers:
+            if atk.name in _SLICKSHOT_NAMES:
+                try:
+                    orig_pwr = atk.power
+                    atk.power = str(int(atk.power) + n_spells * 2)
+                    slickshot_boosted.append((atk, orig_pwr))
+                except (ValueError, TypeError):
+                    pass
 
     atk_sorted = sorted(attackers, key=lambda c: -_safe_power(c))
     blk_sorted = sorted(blockers,  key=lambda c: -_safe_power(c))
@@ -604,6 +666,7 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     total_dmg = 0
     lifelink_gain = 0           # attacker-side lifelink (gains attacking player)
     defender_lifelink_gain = 0  # blocker-side lifelink (gains defending player)
+    creatures_hit_player = 0    # count of attackers that dealt damage to defending player
 
     def _is_indestructible(c):
         return KWTag.INDESTRUCTIBLE in c.tags
@@ -617,7 +680,7 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         Attacker assigns damage among blockers in list order (biggest-
         first); deathtouch makes 1 damage lethal to each blocker.
         """
-        nonlocal total_dmg, lifelink_gain, defender_lifelink_gain
+        nonlocal total_dmg, lifelink_gain, defender_lifelink_gain, creatures_hit_player
         for atk in strike_attackers:
             if id(atk) in atk_dead:
                 continue
@@ -634,7 +697,9 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
             if not live_blockers:
                 # Unblocked (or all blockers died in first-strike step):
                 # full damage to defending player
-                total_dmg += atk_pwr
+                if atk_pwr > 0:
+                    total_dmg += atk_pwr
+                    creatures_hit_player += 1   # for Enduring Curiosity trigger
                 if atk_ll:
                     lifelink_gain += atk_pwr
                 continue
@@ -701,7 +766,11 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     atk_losses = [atk_lookup[i] for i in atk_dead]
     blk_losses = [blk_lookup[i] for i in blk_dead]
 
-    return total_dmg, atk_losses, blk_losses, lifelink_gain, defender_lifelink_gain
+    # Restore Slickshot power after damage is resolved
+    for card, orig_pwr in slickshot_boosted:
+        card.power = orig_pwr
+
+    return total_dmg, atk_losses, blk_losses, lifelink_gain, defender_lifelink_gain, creatures_hit_player
 
 
 class ComboKillSampler:
@@ -808,6 +877,100 @@ def _run_match_with_combo(
     return result
 
 
+def _run_end_step(gs: TwoPlayerGameState, active_player: str,
+                  reactive_player: str, reactive_apl) -> None:
+    """
+    End-step window: reactive player's APL may flash instants/creatures
+    at the end of the active player's turn (e.g. Floodpits Drowner during
+    opponent's upkeep timing, Eddymurk Crab EOT bounce, etc.).
+
+    Builds a GameState view for the reactive player and calls end_step_actions.
+    """
+    import os, sys
+    if reactive_apl is None:
+        return
+    from engine.game_state import GameState
+    from apl.match_apl import MatchAPL, RemovalAwareGoldfishAdapter
+
+    match_apl = (reactive_apl if isinstance(reactive_apl, MatchAPL)
+                 else RemovalAwareGoldfishAdapter(reactive_apl))
+    if not hasattr(match_apl, 'end_step_actions'):
+        return
+
+    # ── Voice of Victory lock ─────────────────────────────────────────────
+    # 'Your opponents can't cast spells during your turn.'
+    # If active player controls Voice, the reactive player cannot cast
+    # spells in this end-step window. Skip the call entirely.
+    active_bf = gs.bf_a if active_player == "a" else gs.bf_b
+    if any(c.name == "Voice of Victory" for c in active_bf):
+        return
+
+    if reactive_player == "a":
+        on_play = gs.on_play
+        hand, bf, gy, lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
+        life, land_played = gs.life_a, gs.land_played_a
+        opp_hand, opp_bf, opp_gy, opp_lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
+        opp_life = gs.life_b
+    else:
+        on_play = not gs.on_play
+        hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
+        life, land_played = gs.life_b, gs.land_played_b
+        opp_hand, opp_bf, opp_gy, opp_lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
+        opp_life = gs.life_a
+
+    view = GameState(mainboard=[], on_play=on_play)
+    view.turn              = gs.turn
+    view.zones.hand        = hand
+    view.zones.battlefield = bf
+    view.zones.graveyard   = gy
+    view.zones.library     = lib
+    view.life              = life
+    view.land_played       = land_played
+    for c in bf:
+        if c.is_land():
+            try:
+                view.mana_pool.add_land(c.type_line or "", c.name or "")
+            except Exception:
+                view.mana_pool.add("C", 1)
+
+    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.turn              = gs.turn
+    opp_view.zones.hand        = opp_hand
+    opp_view.zones.battlefield = opp_bf
+    opp_view.zones.graveyard   = opp_gy
+    opp_view.zones.library     = opp_lib
+    opp_view.life              = opp_life
+    view._match_opp = opp_view
+    # Reactive cast flag: cast_spell will check opp's Voice of Victory and
+    # also enforce the High Noon symmetric lock against this player's
+    # already-cast spells this turn.
+    view._is_reactive_cast = True
+    if reactive_player == "a":
+        view.spells_cast_this_turn        = gs.spells_cast_a
+        view.noncreature_spells_this_turn = gs.noncreature_spells_a
+    else:
+        view.spells_cast_this_turn        = gs.spells_cast_b
+        view.noncreature_spells_this_turn = gs.noncreature_spells_b
+
+    try:
+        match_apl.end_step_actions(view, opp_view)
+    except Exception as e:
+        if os.environ.get("SIM_DEBUG"):
+            raise
+        print(f"  [WARN end_step {type(reactive_apl).__name__}: {e}]",
+              file=sys.stderr)
+
+    # Sync hand/bf/gy back (APL may have moved cards)
+    if reactive_player == "a":
+        gs.land_played_a = view.land_played
+        gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
+        gs.noncreature_spells_a = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_a)
+    else:
+        gs.land_played_b = view.land_played
+        gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', gs.spells_cast_b)
+        gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_b)
+
+
 def run_match(
     apl_a,
     deck_a:   list,
@@ -878,12 +1041,16 @@ def run_match(
                             skip_draw=(turn_num == 1),
                             result=result, turn_num=turn_num):
             return result
+        # End-step: second player's APL may flash instants at end of first's turn
+        _run_end_step(gs, first, second, second_apl)
 
         # Second player's turn (always draws)
         if _run_player_turn(gs, second, second_apl,
                             skip_draw=False,
                             result=result, turn_num=turn_num):
             return result
+        # End-step: first player's APL may flash instants at end of second's turn
+        _run_end_step(gs, second, first, first_apl)
 
     # Time out — call it based on life totals
     result.won       = gs.life_b < gs.life_a

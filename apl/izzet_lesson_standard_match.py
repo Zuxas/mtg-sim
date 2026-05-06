@@ -540,6 +540,20 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
         """
         if gs.turn < 3:
             return
+
+        # Suppress proxy under opposing spell-lock: High Noon, Voice of Victory,
+        # Kutzil, etc. all force "1 spell per turn" / "no spells on your turn".
+        # The proxy assumes Monument+Gran-Gran exhaust opp's hand via card
+        # advantage; under a spell-lock, our fat hand is a SYMPTOM of being
+        # locked out, not evidence of winning. Without this guard, HN matchup
+        # was ~10% WR for HN (90% Lessons).
+        if opponent is not None:
+            opp_lock_pieces = {"High Noon", "Voice of Victory",
+                               "Kutzil, Malamet Exemplar"}
+            for c in opponent.zones.battlefield:
+                if c.name in opp_lock_pieces:
+                    return
+
         bf_names = {c.name for c in gs.zones.battlefield}
         monument_up  = MONUMENT    in bf_names
         gran_gran_up = GRAN_GRAN_C in bf_names

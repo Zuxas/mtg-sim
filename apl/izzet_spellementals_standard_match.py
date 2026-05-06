@@ -149,8 +149,11 @@ class IzzetSpellementalsStandardMatchAPL(AwareMatchAPL, IzzetProwessAPL):
         elementals = [c for c in gs.zones.battlefield
                       if not c.is_land() and c.name in ELEMENTALS]
         max_mv = max((getattr(c, 'cmc', 0) for c in elementals), default=0)
-        if max_mv:
-            gs.mana_pool.cost_reduction = max(gs.mana_pool.cost_reduction, int(max_mv))
+        # NOTE: do NOT set gs.mana_pool.cost_reduction here. The Eddymurk
+        # discount applies only to Sunderflock per oracle text, and the
+        # Sunderflock branch below sets/resets it locally. A global setter
+        # here makes Winternight Stories ({2}{U}) free and creates an
+        # infinite cantrip loop in _cast_cantrips.
         self._opp_gs = opponent
         self._match_cast_removal(gs, opponent)
         self.main_phase(gs)

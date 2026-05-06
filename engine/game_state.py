@@ -487,17 +487,33 @@ class GameState:
         restless = self.activate_restless_lands()
         attackers.extend(restless)
 
-        # ── Prowess: +1/+0 per noncreature spell cast this turn ──────
-        prowess_boosted = []
+        # ── Prowess: +1/+1 per noncreature spell cast this turn ─────
+        # Standard Prowess: +1/+1 per spell (via counters, reversed post-combat).
+        # Slickshot Show-Off: +2/+0 per spell (power only, not toughness).
+        #   Uses direct power string edit so toughness is unaffected.
+        prowess_boosted   = []   # (card, counter_bonus) — counters reversed post-combat
+        slickshot_boosted = []   # (card, orig_power_str) — power string restored post-combat
+
+        _SLICKSHOT_CARDS = {"Slickshot Show-Off"}   # +2/+0 per noncreature spell
+
         if self.noncreature_spells_this_turn > 0:
+            n = self.noncreature_spells_this_turn
             for c in attackers:
-                if KWTag.PROWESS in c.tags:
-                    bonus = self.noncreature_spells_this_turn
-                    c.counters += bonus
-                    prowess_boosted.append((c, bonus))
+                if c.name in _SLICKSHOT_CARDS:
+                    # +2/+0 per noncreature spell — power only, toughness unchanged
+                    try:
+                        orig = c.power
+                        c.power = str(int(c.power) + n * 2)
+                        slickshot_boosted.append((c, orig))
+                    except (ValueError, TypeError):
+                        pass
+                elif KWTag.PROWESS in c.tags:
+                    c.counters += n
+                    prowess_boosted.append((c, n))
+            if slickshot_boosted:
+                self._log(f"  Slickshot: +{n*2}/+0 (power only) from {n} spell(s)")
             if prowess_boosted:
-                self._log(f"  Prowess: +{self.noncreature_spells_this_turn}/+0 to "
-                          f"{len(prowess_boosted)} creature(s)")
+                self._log(f"  Prowess: +{n}/+{n} to {len(prowess_boosted)} creature(s)")
 
         # ── 5. Combat damage — two steps for first strike / double strike ─
         # First strike damage step: any creature with FIRST_STRIKE or
@@ -543,6 +559,9 @@ class GameState:
         # Remove prowess bonus (temporary until EOT, but counters is permanent in our model)
         for card, bonus in prowess_boosted:
             card.counters -= bonus
+        # Restore Slickshot Show-Off power to pre-combat value
+        for card, orig_power in slickshot_boosted:
+            card.power = orig_power
 
         # ── Post-damage cleanup ────────────────────────────────────────────
         # Remove temporary Coppercoat Vanguard bonus
@@ -1209,6 +1228,28 @@ class GameState:
         # costs {X} less' — Hearth Elemental, Eddymurk Crab, etc.)
         effective_cmc = _effective_cmc(card, self)
         if not self.mana_pool.can_cast(card.mana_cost, effective_cmc):
+            return False
+        # ── High Noon lock (symmetric: both players limited to 1 spell/turn) ──
+        # 'Each player can't cast more than one spell each turn.'
+        # Check before paying mana so the cast is properly blocked.
+        opp = getattr(self, '_match_opp', None)
+        high_noon_in_play = (
+            any(c.name == "High Noon" for c in self.zones.battlefield)
+            or (opp is not None
+                and any(c.name == "High Noon" for c in opp.zones.battlefield))
+        )
+        if high_noon_in_play and self.spells_cast_this_turn >= 1:
+            self._log(f"  [High Noon lock] {card.name} blocked (1 spell/turn limit)")
+            return False
+        # ── Voice of Victory lock: opp's Voice blocks our casts on their turn ──
+        # 'Your opponents can't cast spells during your turn.'
+        # If opp controls Voice and this is a reactive window (we're casting
+        # during their turn), block. Active player's main phase casts are
+        # unaffected (their _is_reactive_cast flag is False/unset).
+        if (opp is not None
+                and getattr(self, '_is_reactive_cast', False)
+                and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
+            self._log(f"  [Voice of Victory lock] {card.name} blocked (opp's turn)")
             return False
         self.mana_pool.pay(card.mana_cost, effective_cmc)
         self.spells_cast_this_turn += 1

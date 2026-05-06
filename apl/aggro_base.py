@@ -189,8 +189,10 @@ class AggroAPL(SBPlanMixin, BaseAPL):
         """Cast every CANTRIP_SPELL we can afford. Their draw/filter
         effects resolve via card_effects.SPELL_EFFECTS; the cast itself
         pumps prowess for same-turn combat attackers."""
-        changed = True
-        while changed:
+        # Cap iterations so a misconfigured cost_reduction or a cantrip
+        # that draws another cantrip cannot hang the engine. Real Standard
+        # decks never chain >20 cantrips a turn.
+        for _ in range(30):
             changed = False
             for name in self.CANTRIP_SPELLS:
                 for card in list(gs.hand()):
@@ -203,6 +205,8 @@ class AggroAPL(SBPlanMixin, BaseAPL):
                     break
                 if changed:
                     break
+            if not changed:
+                return
 
     def _cast_burn(self, gs: GameState, pre_combat: bool):
         """Cast burn spells from BURN_SPELLS until we can't afford any.

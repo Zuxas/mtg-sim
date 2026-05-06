@@ -1,0 +1,31 @@
+Azorius High Noon -- 12 matchups, 30 G1 games each, lock enforcement WIRED
+
+Matchup                            WR
+----------------------------------------
+  Bant Airbending            16/30 (53%)
+  Izzet Lessons              3/30 (10%)
+  Jeskai Control             15/30 (50%)
+  Bant Rhythm                15/30 (50%)
+  Selesnya Landfall          8/30 (27%)
+  Gruul Aggro                7/30 (23%)
+  Mono Green Landfall        16/30 (53%)
+  Sultai Reanimator          17/30 (57%)
+  Simic Rhythm               10/30 (33%)
+
+-- continuation: 3 missing matchups --
+
+-- continuation: 3 missing matchups --
+
+-- continuation: 3 missing matchups (serial) --
+
+-- continuation: 3 missing matchups (serial) --
+
+-- continuation: 3 missing matchups (serial) --
+  Selesnya Ouroboroid        5/10 (50%)
+
+-- continuation: 3 missing matchups (serial) --
+
+-- continuation: 3 missing matchups (serial) --
+  Selesnya Ouroboroid        14/30 (47%)
+  Izzet Spellementals        24/30 (80%)
+  Izzet Prowess              11/30 (37%)

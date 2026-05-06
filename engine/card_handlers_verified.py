@@ -1141,7 +1141,7 @@ def _flame_javelin_spell(gs, card):
 
 
 def _floodpits_drowner_etb(gs, card):
-    """Floodpits Drowner — {1}{U} Flash 2/3 Merfolk.
+    """Floodpits Drowner — {1}{U} Flash 2/1 Merfolk Wizard.
     'Flash. Vigilance.
      When this creature enters, tap target creature an opponent
      controls and put a stun counter on it.
@@ -1149,8 +1149,9 @@ def _floodpits_drowner_etb(gs, card):
      stun counter on it into their owners' libraries.'
 
     Goldfish ETB: tap opp's biggest creature. Stun counter (skips
-    next untap) approximated as permanent-tapped state (combat
-    heuristic sees it as tapped)."""
+    next untap) approximated as permanent-tapped state.
+    NOTE: The {1}{U},{T} shuffle ability is hard removal but is not
+    yet wired (it's a tap ability, sorcery speed)."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLASH)
     card.tags.add(KWTag.VIGILANCE)
@@ -1160,13 +1161,23 @@ def _floodpits_drowner_etb(gs, card):
     if opp is None:
         gs._log("  Floodpits Drowner: 2/3 flash vigilance")
         return
+    _MANA_DORK_NAMES = {
+        "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
+        "Leyline Weaver", "Spider Manifestation", "Elvish Mystic",
+        "Birds of Paradise", "Utopia Sprawl",
+    }
     cr = [c for c in opp.zones.battlefield
           if c.has(Tag.CREATURE) and not c.is_land()
           and not getattr(c, 'tapped', False)]
     if cr:
-        t = max(cr, key=lambda c: safe_power(c))
+        if getattr(gs, '_target_mana_dork', False):
+            # APL hint: stun their mana producer before anything else
+            dorks = [c for c in cr if c.name in _MANA_DORK_NAMES]
+            t = dorks[0] if dorks else max(cr, key=lambda c: safe_power(c))
+        else:
+            t = max(cr, key=lambda c: safe_power(c))
         t.tapped = True
-        t._stun_counter = True  # informational
+        t._stun_counter = True
         gs._log(f"  Floodpits Drowner ETB: tap + stun {t.name}")
     else:
         gs._log("  Floodpits Drowner: 2/3 flash vigilance (no tap target)")
@@ -2058,13 +2069,40 @@ def _into_the_flood_maw_spell(gs, card):
     if opp is None:
         return
     targets = [c for c in opp.zones.battlefield
-               if not c.is_land() and c.has(Tag.CREATURE)]
+               if not c.is_land() and (c.has(Tag.CREATURE)
+               or "Enchantment" in (c.type_line or "")
+               or "Planeswalker" in (c.type_line or ""))]
     if not targets:
         return
-    t = max(targets, key=lambda c: safe_power(c))
+    # APL hint: bounce a specific named permanent
+    preferred_name = getattr(gs, '_bounce_target_name', None)
+    if preferred_name:
+        named = next((c for c in targets if c.name == preferred_name), None)
+        if named:
+            named.counters = 0
+            opp.zones.battlefield.remove(named)
+            opp.zones.hand.append(named)
+            gs._log(f"  Into the Flood Maw: bounce {named.name} (named target, counters reset)")
+            return
+    # Priority: bounce counter-laden creatures (losing counters on re-entry is
+    # the biggest tempo swing: Badgermole Cub, Ouroboroid, etc.)
+    _COUNTER_TARGETS = {
+        "Badgermole Cub", "Ouroboroid", "Lumbering Worldwagon",
+        "Mightform Harmonizer", "Sazh's Chocobo",
+    }
+    counter_targets = [c for c in targets
+                       if c.name in _COUNTER_TARGETS
+                       or (getattr(c, 'counters', 0) or 0) >= 2]
+    if counter_targets:
+        # Bounce biggest counter-creature (strips all counters permanently)
+        t = max(counter_targets, key=lambda c: getattr(c, 'counters', 0) or safe_power(c))
+    else:
+        t = max(targets, key=lambda c: safe_power(c))
     opp.zones.battlefield.remove(t)
+    # Reset counters — they lose them when returned to hand
+    t.counters = 0
     opp.zones.hand.append(t)
-    gs._log(f"  Into the Flood Maw: bounce {t.name}")
+    gs._log(f"  Into the Flood Maw: bounce {t.name} (counters reset)")
 
 
 def _kaito_bane_etb(gs, card):
@@ -3284,13 +3322,12 @@ def _slickshot_show_off_etb(gs, card):
     'Flying, haste.
      Whenever you cast a noncreature spell, this creature gets +2/+0
      until end of turn. Plot {1}{R}.'
-    PROWESS tag wires it into the engine prowess loop (+N/+N per N spells
-    as approximation for the +2N/+0 oracle text)."""
+    +2/+0 per noncreature spell handled in _do_combat via _SLICKSHOT_CARDS check
+    (power-only boost, toughness unchanged, restored post-combat)."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.HASTE)
-    card.tags.add(KWTag.PROWESS)
-    gs._log("  Slickshot Show-Off: 3/1 flying haste prowess")
+    gs._log("  Slickshot Show-Off: 3/1 flying haste (+2/+0 per noncreature spell)")
 
 
 def _smugglers_surprise_spell(gs, card):
@@ -3882,13 +3919,22 @@ def _tishanas_tidebinder_etb(gs, card):
     opp = getattr(gs, "_match_opp", None)
     if opp is None:
         return
-    # Target opp's best non-land permanent
-    candidates = [c for c in opp.zones.battlefield
-                  if not c.is_land()]
+    _MANA_DORK_NAMES = {
+        "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
+        "Leyline Weaver", "Spider Manifestation", "Elvish Mystic",
+        "Birds of Paradise",
+    }
+    candidates = [c for c in opp.zones.battlefield if not c.is_land()]
     if not candidates:
         return
-    t = max(candidates, key=lambda c: safe_power(c)
-            if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
+    if getattr(gs, '_target_mana_dork', False):
+        # APL hint: kill their mana production, not their biggest threat
+        dorks = [c for c in candidates if c.name in _MANA_DORK_NAMES]
+        t = dorks[0] if dorks else max(
+            candidates, key=lambda c: safe_power(c) if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
+    else:
+        t = max(candidates, key=lambda c: safe_power(c)
+                if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
     # Strip keywords (proxy for loses all abilities)
     for kw in (KWTag.FLYING, KWTag.TRAMPLE, KWTag.HASTE, KWTag.LIFELINK,
                 KWTag.FIRST_STRIKE, KWTag.DOUBLE_STRIKE, KWTag.DEATHTOUCH,
@@ -4185,14 +4231,20 @@ def _vivien_reid_etb(gs, card):
 
 
 def _voice_of_victory_etb(gs, card):
-    """Voice of Victory — {1}{W} 2/3 Human Bard.
-    'Mobilize 2 (on attack, create 2 tapped attacking 1/1 red
-     Warrior tokens. Sac at EOT.)
+    """Voice of Victory — {1}{W} 1/3 Human Bard.
+    'Mobilize 2: whenever this creature attacks, create two tapped and
+     attacking 1/1 red Warrior tokens. Sacrifice them at beginning of
+     next end step.
      Your opponents can't cast spells during your turn.'
 
-    ETB: body only. Mobilize and spell-lock applied at combat/
-    reactive hook."""
-    gs._log("  Voice of Victory: 2/3 (spell-lock wired in match_engine)")
+    Prison effect: while Voice is on battlefield, opponent cannot cast
+    spells during your turn (reactive windows). Modeled via flag
+    gs._voice_of_victory_lock = True checked in opp's reactive windows.
+    Mobilize 2: +2 attacking 1/1 tokens each combat — modeled as
+    +2 unblockable damage proxy when this creature attacks unblocked.
+    Tokens sac at next end step so they don't block on opp's turn."""
+    gs._voice_of_victory_lock = True
+    gs._log("  Voice of Victory: 1/3 (opponents can't cast during your turn, Mobilize 2)")
 
 
 def _wan_shi_tong_etb(gs, card):
@@ -4401,13 +4453,15 @@ def _aangs_iceberg_etb(gs, card):
 def _aang_swift_savior_etb(gs, card):
     """Aang, Swift Savior — {1}{W}{U} Flash 2/3 Legendary Ally.
     'Flash. Flying.
-     When Aang enters, airbend up to one other target creature or
-     spell. (Exile it; controller may cast for {2}.)
-     Waterbend {8}: Transform Aang.'"""
+     When Aang enters, airbend up to one other target creature or spell.
+     (Exile it. While exiled, owner may cast for {2} rather than mana cost.)
+     Waterbend {8}: Transform Aang.'
+
+    Airbend = temporary exile (opponent may recast for {2}). Proxy:
+    remove from battlefield, tag as airbent so APL knows it can return."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.FLASH)
-    # Airbend an opp creature (tempo)
     from data.card import Tag
     from engine.match_state import safe_power
     opp = getattr(gs, "_match_opp", None)
@@ -4417,8 +4471,9 @@ def _aang_swift_savior_etb(gs, card):
         if cr:
             t = max(cr, key=lambda c: safe_power(c))
             opp.zones.battlefield.remove(t)
+            t._airbent = True   # temporary — opponent may recast for {2}
             opp.zones.exile.append(t)
-            gs._log(f"  Aang, Swift Savior: airbend {t.name}")
+            gs._log(f"  Aang, Swift Savior: airbend {t.name} (temporary, recast {2})")
 
 
 def _aang_crossroads_etb(gs, card):
@@ -4624,12 +4679,19 @@ _ETB_HANDLERS.update({
 def _airbender_ascension_etb(gs, card):
     """Airbender Ascension — {1}{W} Enchantment.
     'When this enchantment enters, airbend up to one target creature.
-     (Exile it. Controller may cast for {2}.)
-     Whenever a creature you control enters, put a quest counter on
-     this enchantment.
-     At EOT, if quest counters >= 4, ...'"""
+     (Exile it. While exiled, owner may cast for {2} rather than mana cost.)
+     Whenever a creature you control enters, put a quest counter on this.
+     At the beginning of your end step, if this has 4+ quest counters:
+     exile up to one target creature you control, then return it to the
+     battlefield under its owner's control.'
+
+    ETB airbend is tempo. Quest accumulates as more fliers enter (Aang,
+    Floodpits, Skycoach). At 4 counters: blink your best ETB creature
+    to re-trigger (Aang airbends again, Floodpits stuns again). This is
+    the engine's value engine — each blink resets flash ETBs."""
     from data.card import Tag
     from engine.match_state import safe_power
+    card.counters = card.counters or 0   # quest counters start at 0
     opp = getattr(gs, "_match_opp", None)
     if opp is None:
         return
@@ -4638,8 +4700,9 @@ def _airbender_ascension_etb(gs, card):
     if cr:
         t = max(cr, key=lambda c: safe_power(c))
         opp.zones.battlefield.remove(t)
+        t._airbent = True
         opp.zones.exile.append(t)
-        gs._log(f"  Airbender Ascension: airbend {t.name}")
+        gs._log(f"  Airbender Ascension: airbend {t.name}, quest={card.counters}")
 
 
 def _ajani_nacatl_pariah_etb(gs, card):
@@ -5253,31 +5316,81 @@ def _aurora_awakener_etb(gs, card):
 
 def _avatars_wrath_spell(gs, card):
     """Avatar's Wrath — {2}{W}{W} Sorcery.
-    'Choose up to one target creature, then airbend all OTHER
-     creatures (exile; controller may cast for {2}).'
+    'Choose up to one target creature, then airbend all OTHER creatures.
+     (Exile them. While each one is exiled, its owner may cast it for
+     {2} rather than its mana cost.)
+     Until your next turn, opponents can't cast spells from anywhere
+     other than their hands.
+     Exile Avatar's Wrath.'
 
-    Exile all opp creatures (proxy)."""
+    Spares the smallest creature (opp's optimal choice — they keep the
+    worst one). Airbends the rest (temporary, recastable for {2}).
+    Sets gs._avatar_wrath_lock = True (no GY/exile casts until our turn)."""
     from data.card import Tag
+    from engine.match_state import safe_power
     opp = getattr(gs, "_match_opp", None)
     if opp is None:
         return
+    creatures = [c for c in opp.zones.battlefield
+                 if c.has(Tag.CREATURE) and not c.is_land()]
+    if not creatures:
+        gs._avatar_wrath_lock = True
+        gs._log("  Avatar's Wrath: no creatures, lock on GY/exile casts")
+        return
+    # Opp chooses their best creature to keep (we model as smallest power)
+    keep = min(creatures, key=lambda c: safe_power(c))
     exiled = 0
-    for c in list(opp.zones.battlefield):
-        if c.has(Tag.CREATURE) and not c.is_land():
-            opp.zones.battlefield.remove(c)
-            opp.zones.exile.append(c)
-            exiled += 1
-    gs._log(f"  Avatar's Wrath: exile {exiled} opp creatures")
+    for c in list(creatures):
+        if c is keep:
+            continue
+        opp.zones.battlefield.remove(c)
+        c._airbent = True
+        opp.zones.exile.append(c)
+        exiled += 1
+    # Lock: opponents can't cast from GY or exile until our next turn
+    gs._avatar_wrath_lock = True
+    gs._log(f"  Avatar's Wrath: airbend {exiled} creatures (spare {keep.name}), lock GY/exile casts")
 
 
 def _aven_interrupter_etb(gs, card):
-    """Aven Interrupter — {1}{W}{W} Flash 3/3 Bird Rogue.
-    'Flash. Flying. ETB: exile target spell (becomes plotted).
-     Opp plotted spells cost +2.'"""
+    """Aven Interrupter — {1}{W}{W} Flash 2/2 Bird Rogue Outlaw.
+    'Flash. Flying.
+     When this creature enters, exile target spell. It becomes plotted.
+     (Owner may cast it as a sorcery on a later turn without paying its
+     mana cost.)
+     Spells your opponents cast from graveyards or from exile cost {2}
+     more to cast.'
+
+    NOTE: This creature is a Rogue, which makes it an OUTLAW — it cannot
+    be killed by Shoot the Sheriff (which only hits non-Outlaw creatures).
+
+    Sim approximation: no stack model, so we proxy "exile target spell"
+    by removing opp's highest-CMC non-land card from hand to exile (the
+    most likely 'on-the-stack' target). Per oracle the plotted card may
+    be cast for free as a sorcery later, but under a lock most opponents
+    can't profitably do that, so it's a clean removal in practice. The
+    +{2} tax flag still fires for any other GY/exile casts."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLASH)
     card.tags.add(KWTag.FLYING)
-    gs._log("  Aven Interrupter: 3/3 flash flying (stack target not wired)")
+    gs._aven_interrupter_tax = True
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        # Prefer their key engine pieces if visible; otherwise highest CMC
+        priority_targets = {"Stormchaser's Talent", "Slickshot Show-Off",
+                            "Monument to Endurance", "Artist's Talent",
+                            "Earthbender Ascension", "Sapling Nursery"}
+        spells = [c for c in opp.zones.hand if not c.is_land()]
+        if spells:
+            priority = [c for c in spells if c.name in priority_targets]
+            t = priority[0] if priority else max(spells, key=lambda c: getattr(c, 'cmc', 0))
+            opp.zones.hand.remove(t)
+            opp.zones.exile.append(t)
+            t._plotted_by_aven = True
+            gs._log(f"  Aven Interrupter: 3/3 flash flying, exile {t.name} from hand "
+                    f"(plotted, +{2} tax on any recast)")
+        else:
+            gs._log("  Aven Interrupter: 3/3 flash flying (no hand target)")
 
 
 def _aven_mindcensor_etb(gs, card):
@@ -9895,9 +10008,16 @@ def _hidetsugus_second_rite_spell(gs, card):
 def _high_noon_etb(gs, card):
     """High Noon — {1}{W} Enchantment.
     'Each player can't cast more than one spell each turn.
-     {4}{R}, sac: 5 damage to any target.'"""
-    gs._spell_lock_one_per_turn = True
-    gs._log("  High Noon: one-spell-per-turn lock")
+     {4}{R}, Sacrifice this enchantment: It deals 5 damage to any target.'
+
+    Symmetric lock: BOTH players limited to one spell per turn.
+    This is the Prison namesake — combined with Voice of Victory
+    (opponent can't cast during your turn), opponent effectively can't
+    cast at all when both are in play.
+    Proxy: gs._high_noon_active = True. APLs check this and stop casting
+    after their first spell each turn."""
+    gs._high_noon_active = True
+    gs._log("  High Noon: both players one-spell-per-turn lock")
 
 
 def _hobgoblin_etb(gs, card):
@@ -14701,6 +14821,41 @@ def _skred_spell(gs, card):
             gs._log(f"  Skred: {snows} dmg kills {t.name}")
 
 
+def _skycoach_conductor_etb(gs, card):
+    """Skycoach Conductor // All Aboard — {2}{U} // {U}
+    Front face: Flash 2/3 Bird Pilot. Flying, Vigilance.
+    'This creature enters prepared. (While it's prepared, you may cast
+     a copy of its spell. Doing so unprepares it.)'
+
+    Back face — All Aboard {U} Instant:
+    'Exile target non-Pilot creature you control, then return that card
+     to the battlefield under its owner's control.'
+    (Blinks your own creature to re-trigger ETBs — Aang, Floodpits,
+    Aven Interrupter. Core engine piece of Azorius High Noon.)
+
+    ETB: Flying + Vigilance. 'Prepared' copy = effectively 4/6 stats
+    worth of flash bodies across two casts. All Aboard proxy: blink
+    highest-CMC own creature to re-trigger its ETB."""
+    from engine.keywords import KWTag
+    from data.card import Tag
+    from engine.match_state import safe_power
+    card.tags.add(KWTag.FLYING)
+    card.tags.add(KWTag.VIGILANCE)
+    card.tags.add(KWTag.FLASH)
+    # Prepared: may cast a copy immediately (same stats, same ETB effects)
+    # Proxy: if we can afford {2}{U}, put a copy token onto battlefield
+    if gs.mana_pool.total() >= 3:
+        from copy import copy as _copy
+        token = _copy(card)
+        token._is_prepared_copy = True
+        token.summoning_sickness = True
+        gs.zones.battlefield.append(token)
+        gs.mana_pool.pay("2U", 3)
+        gs._log("  Skycoach Conductor: 2/3 flash flying vigilance + prepared copy")
+    else:
+        gs._log("  Skycoach Conductor: 2/3 flash flying vigilance (no mana for prepared copy)")
+
+
 def _skullcrack_spell(gs, card):
     """Skullcrack — {1}{R} Instant.
     'No life gain this turn. Damage can't be prevented.
@@ -14855,6 +15010,7 @@ _ETB_HANDLERS.update({
     "Six":                     _six_etb,
     "Skateboard":              _skateboard_etb,
     "Skyclave Apparition":     _skyclave_apparition_etb,
+    "Skycoach Conductor":      _skycoach_conductor_etb,
     "Skysovereign, Consul Flagship": _skysovereign_etb,
     "Snapcaster Mage":         _snapcaster_mage_etb,
     "Snarling Gorehound":      _snarling_gorehound_etb,
@@ -17445,10 +17601,22 @@ def _sanctum_of_ugin_etb(gs, card):
 
 
 def _abandoned_air_temple_etb(gs, card):
-    """Abandoned Air Temple — utility land with free-cast ability
-    for a colorless or specific color."""
-    card.tapped = True
-    gs._log("  Abandoned Air Temple")
+    """Abandoned Air Temple — Land.
+    'This land enters tapped unless you control a basic land.
+     {T}: Add {W}.
+     {3}{W}, {T}: Put a +1/+1 counter on each creature you control.'
+
+    Enters untapped if you control any basic land (Island/Plains common
+    in Azorius High Noon). Adds {W}. Pump ability: {3}{W},{T} gives all
+    your fliers +1/+1 counters — relevant in go-wide flash builds."""
+    my_basics = sum(1 for c in gs.zones.battlefield
+                    if c.is_land() and c.name in ("Island", "Plains", "Mountain",
+                                                   "Forest", "Swamp"))
+    if my_basics == 0:
+        card.tapped = True
+        gs._log("  Abandoned Air Temple: enters tapped (no basic land)")
+    else:
+        gs._log("  Abandoned Air Temple: enters untapped (have basic)")
 
 
 def _agna_qela_etb(gs, card):
@@ -17487,6 +17655,35 @@ def _multiversal_passage_etb(gs, card):
     """Multiversal Passage — any-color utility land."""
     card.tapped = True
     gs._log("  Multiversal Passage")
+
+
+def _petrified_hamlet_etb(gs, card):
+    """Petrified Hamlet — Land.
+    'When this land enters, choose a land card name.
+     Activated abilities of sources with the chosen name can't be
+     activated unless they're mana abilities.
+     Lands with the chosen name have \"{T}: Add {C}.\"
+     {T}: Add {C}.'
+
+    Prison sideboard land: shuts down opponent's best utility land
+    non-mana activated ability (Restless Anchorage manland mode,
+    Abandoned Air Temple pump, etc.). Produces {C} itself.
+    Match proxy: target and lock the highest-CMC non-basic land's
+    activated ability (sets _petrified_hamlet_lock on that card)."""
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        gs._log("  Petrified Hamlet: produces {C} (no opp to lock)")
+        return
+    # Find opp's best utility land (non-basic with an activated ability)
+    utility_lands = [c for c in opp.zones.battlefield
+                     if c.is_land() and c.name not in (
+                         "Island", "Plains", "Forest", "Mountain", "Swamp")]
+    if utility_lands:
+        target = max(utility_lands, key=lambda c: getattr(c, 'cmc', 0))
+        target._petrified_hamlet_lock = True   # non-mana abilities can't activate
+        gs._log(f"  Petrified Hamlet: lock non-mana abilities of {target.name}")
+    else:
+        gs._log("  Petrified Hamlet: no utility land to lock, produces {C}")
 
 
 def _promising_vein_etb(gs, card):
@@ -17541,8 +17738,19 @@ def _soulstone_sanctuary_etb(gs, card):
 
 
 def _starting_town_etb(gs, card):
-    """Starting Town — utility land. Any-color for creature."""
-    gs._log("  Starting Town")
+    """Starting Town — Land — Town.
+    'This land enters tapped unless it's your first, second, or third
+     turn of the game.
+     {T}: Add {C}.
+     {T}, Pay 1 life: Add one mana of any color.'
+
+    Key land in flash/tempo decks — untapped T1-T3, any color with 1
+    life. After T3 it enters tapped like a CIPT dual."""
+    if gs.turn <= 3:
+        gs._log("  Starting Town: enters untapped (T1-T3)")
+    else:
+        card.tapped = True
+        gs._log("  Starting Town: enters tapped (T4+)")
 
 
 def _basic_etb(gs, card):
@@ -17620,6 +17828,7 @@ _ETB_HANDLERS.update({
     "Escape Tunnel":          _escape_tunnel_etb,
     "Mistrise Village":       _mistrise_village_etb,
     "Multiversal Passage":    _multiversal_passage_etb,
+    "Petrified Hamlet":       _petrified_hamlet_etb,
     "Promising Vein":         _promising_vein_etb,
     "Rockface Village":       _rockface_village_etb,
     "Secluded Courtyard":     _secluded_courtyard_etb,

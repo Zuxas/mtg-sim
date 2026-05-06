@@ -114,8 +114,9 @@ class SelesnyaOuroboroidAPL(BaseAPL):
                         break
 
         # Deploy in curve order: Ouroboroid is T3 priority #1
-        deployed = True
-        while deployed:
+        # Capped at 30 iterations to prevent engine hang if cast_spell does
+        # not actually drain the hand (e.g., return-to-hand interactions).
+        for _ in range(30):
             deployed = False
             for group in [ONE_DROPS, TWO_DROPS, THREE_DROPS, FOUR_DROPS]:
                 for card in list(gs.zones.hand):
@@ -127,6 +128,8 @@ class SelesnyaOuroboroidAPL(BaseAPL):
                         break
                 if deployed:
                     break
+            if not deployed:
+                break
 
     def main_phase2(self, gs):
         gs.tap_lands()

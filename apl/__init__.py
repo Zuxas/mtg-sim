@@ -218,6 +218,10 @@ APL_REGISTRY = {
     # Izzet Blink: proxy to Izzet Spellementals (both U/R tempo with Elemental synergies)
     "izzetblink":           ("apl.izzet_spellementals_standard", "IzzetSpellementalsAPL",             "decks/izzet_spellementals_standard.txt"),
     "izzetblinkstandard":   ("apl.izzet_spellementals_standard", "IzzetSpellementalsAPL",             "decks/izzet_spellementals_standard.txt"),
+    # Azorius High Noon (Zevin Faust UW Prison-Tempo) -- distinct from Bant Airbending
+    "azoriushighnoon":      ("apl.azorius_high_noon_standard_match", "AzoriusHighNoonMatchAPL",       "decks/azorius_high_noon_standard.txt"),
+    "highnoon":             ("apl.azorius_high_noon_standard_match", "AzoriusHighNoonMatchAPL",       "decks/azorius_high_noon_standard.txt"),
+    "azoriusprison":        ("apl.azorius_high_noon_standard_match", "AzoriusHighNoonMatchAPL",       "decks/azorius_high_noon_standard.txt"),
 }
 
 
@@ -342,6 +346,7 @@ MATCH_APL_REGISTRY = {
     # Proxy mappings: route to nearest strategic equivalent
     "dimirmidrangestd":    ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
     "dimirmidrangestdstd": ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
+    "dimirmidrangejermey": ("apl.dimir_midrange_jermey_match",             "JermeyDimirMatchAPL"),
     "fourcolorcontrol":    ("apl.jeskai_control_standard_match",           "JeskaiControlStandardMatchAPL"),
     "fourcolorelemental":  ("apl.izzet_spellementals_standard_match",      "IzzetSpellementalsStandardMatchAPL"),
     "golgaricontrol":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
@@ -365,6 +370,10 @@ MATCH_APL_REGISTRY = {
     "rakdosmidrange":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"), # Rakdos Midrange
     "standardaggro":       ("apl.mono_red_match",                          "MonoRedMatchAPL"),                 # generic aggro -> MonoRed proxy
     "temuomniscience":     ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),     # typo of temuromniscience
+    # Azorius High Noon -- Zevin Faust's UW Prison-Tempo (NOT Bant Airbending)
+    "azoriushighnoon":     ("apl.azorius_high_noon_standard_match",        "AzoriusHighNoonMatchAPL"),
+    "highnoon":            ("apl.azorius_high_noon_standard_match",        "AzoriusHighNoonMatchAPL"),
+    "azoriusprison":       ("apl.azorius_high_noon_standard_match",        "AzoriusHighNoonMatchAPL"),
 }
 
 

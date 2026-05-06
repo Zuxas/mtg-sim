@@ -30,6 +30,7 @@ FIELD_SHARE = {
     'Azorius High Noon':   0.015,   # Zevin Faust T8
     'Jeskai Lute':         0.030,   # post-PT Resonating Lute control variant
     'Dimir Excruciator':   0.080,   # Doomsday combo deck, 8% of current Standard
+    'Golgari Midrange':    0.040,   # 4% of current Standard
 }
 
 
@@ -85,6 +86,7 @@ def main():
         # Post-PT-SOS additions
         ('Jeskai Lute',         'jeskailute',           'decks/jeskai_lute_standard.txt'),
         ('Dimir Excruciator',   'dimirexcruciator',     'decks/dimir_excruciator_standard.txt'),
+        ('Golgari Midrange',    'golgarimidrange',      'decks/golgari_midrange_standard.txt'),
     ]
     n_games = 500
     n_workers = 8

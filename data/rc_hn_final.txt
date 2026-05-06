@@ -1,0 +1,24 @@
+Azorius High Noon -- 12 matchups, 500 G1 each, 8 workers parallel
+Date: 2026-05-05  Format: PT SOS Standard
+
+Matchup                             WR    share     time
+------------------------------------------------------------
+  Selesnya Landfall         179/500   36%    5.0%     2.9s
+  Mono Green Landfall       333/500   67%    5.0%     3.0s
+  Bant Rhythm               276/500   55%    5.0%     2.9s
+  Izzet Prowess             266/500   53%   25.0%     3.3s
+  Izzet Lessons             291/500   58%   12.0%     3.3s
+  Izzet Spellementals       401/500   80%    8.0%     3.2s
+  Bant Airbending           261/500   52%    4.0%     3.4s
+  Jeskai Control            331/500   66%    7.0%     3.7s
+  Simic Rhythm              156/500   31%    3.0%     2.6s
+  Selesnya Ouroboroid       274/500   55%    2.0%     3.0s
+  Sultai Reanimator         303/500   61%    3.0%     3.0s
+  Gruul Aggro               100/500   20%    3.0%     2.8s
+  Jeskai Lute               468/500   94%    3.0%     3.2s
+  Dimir Excruciator         257/500   51%    8.0%     3.2s
+  Golgari Midrange          393/500   79%    4.0%     2.9s
+
+============================================================
+Field-weighted WR (over 97% of field): 57.5%
+Total wall time: 10.9s (8 workers)

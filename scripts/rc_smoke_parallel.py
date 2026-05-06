@@ -27,6 +27,7 @@ FIELD_SHARE = {
     'Gruul Aggro':         0.03,
     'Jeskai Lute':         0.03,
     'Dimir Excruciator':   0.08,
+    'Golgari Midrange':    0.04,
 }
 
 
@@ -74,6 +75,7 @@ def main():
         ('Gruul Aggro',         'gruulaggro',           'decks/gruul_aggro_standard.txt'),
         ('Jeskai Lute',         'jeskailute',           'decks/jeskai_lute_standard.txt'),
         ('Dimir Excruciator',   'dimirexcruciator',     'decks/dimir_excruciator_standard.txt'),
+        ('Golgari Midrange',    'golgarimidrange',      'decks/golgari_midrange_standard.txt'),
     ]
     n_games = 500
     n_workers = 8

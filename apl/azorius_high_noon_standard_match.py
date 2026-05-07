@@ -371,6 +371,16 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
                     gs.cast_spell(card)
                     break
 
+        # ── 6b. Quantum Riddler Warp ({1}{U}, exiles next EOT) ──────────────
+        # If hardcast not affordable but Warp is, deploy as 2-mana flash 4/6
+        # for tempo (exiles at next end step). Especially valuable T2-T4
+        # before we can hardcast for the empty-hand draw bonus.
+        if gs.mana_pool.can_cast("1U", 2):
+            for card in list(gs.zones.hand):
+                if card.name == RIDDLER:
+                    if gs.cast_spell_warp(card):
+                        break
+
         # ── 7. Airbender Ascension (sorcery-speed, fine to main-phase) ──────
         for card in list(gs.zones.hand):
             if card.name == AIRBENDER_ASC and gs.mana_pool.can_cast(card.mana_cost, card.cmc):

@@ -609,6 +609,10 @@ class GameState:
         # permanent becomes a creature.
         self._tick_impending()
 
+        # Warp: exile any creature that was cast for its warp cost.
+        # 'Exile this creature at the beginning of the next end step.'
+        self._tick_warp()
+
 
     def _update_ml_trackers(self):
         """Track milestone features for richer ML training data."""
@@ -666,6 +670,87 @@ class GameState:
         # Balemurk: Impending 5—{1}{B} = 2 mana
         "Overlord of the Balemurk":     (2, 5),
     }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Warp keyword (EOE 2026): alternate cheaper cast cost.
+    # 'You may cast this card from your hand for its warp cost. Exile this
+    #  creature at the beginning of the next end step, then you may cast
+    #  it from exile on a later turn.'
+    # The card enters as a normal creature (full P/T, all keywords, ETB
+    # triggers fire). At the beginning of the next end step it goes to
+    # exile, and (in real Magic) can be hardcast from there later.
+    # We don't currently support cast-from-warp-exile (sim-equivalent: it
+    # just disappears and you draw fresh copies). Modeling the Warp ENTRY
+    # is the main correctness win.
+    # ─────────────────────────────────────────────────────────────────────
+    _WARP_CARDS = {
+        # name: (warp_cost_str, warp_cmc)
+        "Quantum Riddler":      ("1U", 2),  # full {3U U} CMC 5; warp 2-mana
+        "Starbreach Whale":     ("1U", 2),  # full {4U} CMC 5
+        "Starfield Shepherd":   ("1W", 2),  # full {3W W}
+        "Close Encounter":      ("1G", 2),  # has Warp via additional cost
+        "Gravitic Herald":      ("1U", 2),
+        "Warped Tusker":        ("1G", 2),
+        "Knight Luminary":      ("1W", 2),
+    }
+
+    def cast_spell_warp(self, card: Card) -> bool:
+        """Cast a card for its Warp cost. Card enters battlefield normally
+        (full P/T, ETB fires); at next end step it exiles. Returns True
+        if cast succeeded."""
+        spec = self._WARP_CARDS.get(card.name)
+        if spec is None:
+            return False
+        warp_cost_str, warp_cmc = spec
+        if not self.mana_pool.can_cast(warp_cost_str, warp_cmc):
+            return False
+        if card not in self.zones.hand:
+            return False
+        # High Noon / Voice of Victory locks still apply
+        opp = getattr(self, "_match_opp", None)
+        high_noon_in_play = (
+            any(c.name == "High Noon" for c in self.zones.battlefield)
+            or (opp is not None
+                and any(c.name == "High Noon" for c in opp.zones.battlefield))
+        )
+        if high_noon_in_play and self.spells_cast_this_turn >= 1:
+            return False
+        if (opp is not None
+                and getattr(self, "_is_reactive_cast", False)
+                and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
+            return False
+        # Pay the warp cost (cheaper than full)
+        self.mana_pool.pay(warp_cost_str, warp_cmc)
+        self.spells_cast_this_turn += 1
+        # Card enters battlefield normally as a creature
+        self.zones.play_from_hand(card)
+        card.turn_entered = self.turn
+        from engine.keywords import KWTag
+        if card.has(Tag.CREATURE) and KWTag.HASTE not in card.tags:
+            card.summoning_sickness = True
+        # Mark for end-step exile
+        card._warp_cast = True
+        # Fire ETB normally (Quantum Riddler's draw, Starbreach's surveil, etc.)
+        self._fire_etb_triggers(card)
+        self._log(f"  Cast {card.name} via Warp ({warp_cost_str}, exiles next end step)")
+        # Cosmogrand 2nd-spell trigger still applies
+        if self.spells_cast_this_turn == 2:
+            from engine.card_effects import on_cosmogrand_second_spell
+            on_cosmogrand_second_spell(self)
+        self.check_state_based_actions()
+        return True
+
+    def _tick_warp(self):
+        """End-step: exile any battlefield creature cast via Warp.
+        In real Magic the card is exiled and can be hardcast later from
+        exile; here we just send it to exile and don't track recast (4-of
+        deck consistency means a fresh copy gets drawn anyway)."""
+        for c in list(self.zones.battlefield):
+            if getattr(c, "_warp_cast", False):
+                self.zones.battlefield.remove(c)
+                self.zones.exile.append(c)
+                c._warp_cast = False  # clear so it doesn't re-fire
+                self._log(f"  EOT: {c.name} (warp) exiled")
 
     def cast_spell_impending(self, card: Card) -> bool:
         """Cast a card for its Impending cost. The card enters the

@@ -720,11 +720,31 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                         gs.cast_spell(card)
                         break
 
-            # Boomerang Basics: opportunistic bounce
-            self._try_boomerang_basics(gs, opponent)
+        # ── Bounce-engine fallback (runs after every branch) ─────────────────
+        # These cards aren't in the per-matchup deploy lists. Try them
+        # opportunistically once the matchup-specific deploys finish.
 
-            # Stormchaser's Talent: level 3 activation (sorcery speed)
-            self._try_stormchaser_levelup(gs)
+        # 1. Stormchaser's Talent / Tinybones / Boomerang / Quantum Riddler
+        #    pickup (in case the matchup-branch didn't deploy them).
+        for name in (STORMCHASER, "Tinybones Joins Up", FLITTERWING):
+            for card in list(gs.zones.hand):
+                if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                    gs.cast_spell(card)
+                    break
+
+        # 2. Quantum Riddler Warp: if hardcast not possible but Warp
+        #    cost ({1}{U}) is, cast as 2-mana 4/6 flier (exiles next EOT).
+        for card in list(gs.zones.hand):
+            if card.name == QUANTUM_RIDDLER and gs.mana_pool.can_cast("1U", 2):
+                if gs.cast_spell_warp(card):
+                    break
+
+        # 3. Boomerang Basics: opportunistic bounce (target opp threat or
+        #    self-bounce a re-triggerable enchantment for cantrip).
+        self._try_boomerang_basics(gs, opponent)
+
+        # 4. Stormchaser's Talent level activation (sorcery speed).
+        self._try_stormchaser_levelup(gs)
 
         self._cast_all_castable(gs)
 

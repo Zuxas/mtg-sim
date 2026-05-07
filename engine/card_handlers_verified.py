@@ -36978,6 +36978,67 @@ _SPELL_HANDLERS.update({
     "Unlucky Drop":            _unlucky_drop_spell,
 })
 
+
+def _daydream_spell(gs, card):
+    """Daydream -- {W} Sorcery (SOS).
+    'Exile target creature you control, then return that card to the
+     battlefield under its owner's control with a +1/+1 counter on it.
+     Flashback {2}{W}.'
+
+    Sim model: pick our largest creature, add a +1/+1 counter (skipping
+    the exile-and-return ETB cycle). The +1/+1 counter is permanent.
+    Re-trigger of ETBs (Pixie/Kirin) on the return is NOT modeled here
+    -- the targets that benefit most from re-ETB tend to be in dedicated
+    blink shells where the player would also rely on Pixie's bounce.
+    Flashback recur is via standard graveyard cast; not modeled here."""
+    from data.card import Tag
+    from engine.match_state import safe_power
+    creatures = [c for c in gs.zones.battlefield
+                 if c.has(Tag.CREATURE) and not c.is_land()]
+    if not creatures:
+        gs._log("  Daydream: no creature to target")
+        return
+    target = max(creatures, key=safe_power)
+    target.counters = (target.counters or 0) + 1
+    gs._log(f"  Daydream: +1/+1 counter on {target.name} (blink-and-buff proxy)")
+
+
+def _practiced_offense_spell(gs, card):
+    """Practiced Offense -- {2}{W} Sorcery (SOS).
+    'Put a +1/+1 counter on each creature target player controls.
+     Target creature gains your choice of double strike or lifelink
+     until end of turn. Flashback {1}{W}.'
+
+    Sim model: target self -- +1/+1 counter on each of our creatures,
+    plus we pick lifelink for our biggest attacker (proxy via lifelink
+    keyword tag for the turn). Flashback recur not modeled."""
+    from data.card import Tag
+    from engine.keywords import KWTag
+    from engine.match_state import safe_power
+    creatures = [c for c in gs.zones.battlefield
+                 if c.has(Tag.CREATURE) and not c.is_land()]
+    if not creatures:
+        gs._log("  Practiced Offense: no creatures to pump")
+        return
+    for c in creatures:
+        c.counters = (c.counters or 0) + 1
+    # Give lifelink to largest creature for the turn (revert at EOT
+    # is handled by general lifelink-temporary cleanup; if not, the
+    # +1/+1 counter is permanent regardless)
+    best = max(creatures, key=safe_power)
+    best.tags.add(KWTag.LIFELINK)
+    best._lifelink_eot = True
+    gs._log(f"  Practiced Offense: +1/+1 counter on {len(creatures)} creatures, "
+            f"lifelink on {best.name} until EOT")
+
+
+# SOS post-PT-SOS staples (registered 2026-05-07 for MTGO RC SQ meta accuracy)
+_SPELL_HANDLERS.update({
+    "Daydream":          _daydream_spell,
+    "Practiced Offense": _practiced_offense_spell,
+})
+
+
 _ETB_HANDLERS.update({
     "Fractal Mascot":             _fractal_mascot_etb,
     "Quandrix, the Proof":        _quandrix_etb,

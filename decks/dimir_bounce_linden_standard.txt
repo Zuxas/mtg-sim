@@ -1,0 +1,44 @@
+// Dimir Bounce - Linden Koot (Decktionary, 2026-02-21)
+// Linden_43, RC Montreal 2025 winner. Standard 2026.
+// UB version of "pixieless pixie" -- bounce engine with Boomerang Basics
+// instead of Pixie/Kirin. Stormchaser + Kaito + Quantum Riddler engine.
+// Source: https://decktionary.com/  (Dimir Bounce Sideboard Guide)
+3 Cecil, Dark Knight
+1 Deceit
+1 Duress
+2 Flitterwing Nuisance
+4 Kaito, Bane of Nightmares
+4 Quantum Riddler
+4 Stormchaser's Talent
+1 Tinybones Joins Up
+1 Momentum Breaker
+1 Nowhere to Run
+4 Boomerang Basics
+2 Get Out
+1 Into the Flood Maw
+1 Requiting Hex
+1 Spell Pierce
+1 Spell Snare
+2 Shoot the Sheriff
+3 Strategic Betrayal
+1 Agna Qel'a
+2 Multiversal Passage
+3 Starting Town
+1 Swamp
+6 Island
+1 Fabled Passage
+1 Restless Reef
+4 Gloomlake Verge
+4 Watery Grave
+
+Sideboard
+1 Annul
+1 Duress
+1 Bitter Triumph
+1 Disdainful Stroke
+1 Negate
+2 Elegy Acolyte
+2 Wan Shi Tong, Librarian
+2 Requiting Hex
+2 Tishana's Tidebinder
+2 Day of Black Sun

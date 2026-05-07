@@ -59,6 +59,19 @@ LORD_SKITTER = "Lord Skitter, Sewer King"   # 2B 3/3 legendary, GY exile + rat t
 RAVEN_EAGLE  = "Raven Eagle"                # 2B 2/3 flying, GY exile + clue + drain on 2nd draw
 MOCKINGBIRD  = "Mockingbird"                # XU flash flying, copies a creature with cmc<=X
 
+# Linden UB Bounce hybrid (2026-05-07): bounce-engine extension
+STORMCHASER   = "Stormchaser's Talent"        # U Class, ETB Otter; lvl 2 {3U} GY return; lvl 3 {5U} Otter per I/S
+BOOMERANG     = "Boomerang Basics"            # U sorcery, bounce nonland; draw if you owned it (cantrip on self-bounce)
+QUANTUM_RIDDLER = "Quantum Riddler"           # 3UU 4/6 flying flash; Warp {1U}; empty-hand draw bonus (Warp not sim-modeled)
+FLITTERWING   = "Flitterwing Nuisance"        # U flying 2/2 with -1/-1 counter; {2U} pay-to-draw on combat
+DECEIT        = "Deceit"                      # 4U/B U/B 5/5; Evoke U/B U/B for bounce or hand strip
+GET_OUT       = "Get Out"                     # UU instant, counter creature/enchantment OR self-bounce 1-2
+
+# Bounce targets you WANT to re-trigger when bouncing your own permanent
+# (each cast triggers another ETB or value moment)
+BOUNCE_RECAST_TARGETS = {STORMCHASER, "Tinybones Joins Up", "Momentum Breaker",
+                          "Nowhere to Run", DEEP_BAT, FLOODPITS, FAEBLOOM}
+
 # Mana producers — stun/strip these first vs green
 MANA_DORK_NAMES = {
     "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
@@ -694,15 +707,96 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
 
         else:
             # ── STANDARD: curve normally ───────────────────────────────────
-            for name in (SIREN, DEEP_BAT, TISHANA, FLOODPITS, CECIL,
+            # T1 enchantments first (Stormchaser's Talent for Otter engine,
+            # Tinybones Joins Up for discard + legendary mill trigger).
+            # Then 1-mana creatures, then 2-mana flash, then up the curve.
+            for name in (STORMCHASER, "Tinybones Joins Up", SIREN, CECIL,
+                         FLITTERWING, DEEP_BAT, FLOODPITS, TISHANA,
+                         "Momentum Breaker", "Nowhere to Run",
                          SUNSET_SAB, RAVEN_EAGLE, LORD_SKITTER,
-                         MOCKINGBIRD, ENDURING, KAITO):
+                         MOCKINGBIRD, ENDURING, KAITO, QUANTUM_RIDDLER):
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)
                         break
 
+            # Boomerang Basics: opportunistic bounce
+            self._try_boomerang_basics(gs, opponent)
+
+            # Stormchaser's Talent: level 3 activation (sorcery speed)
+            self._try_stormchaser_levelup(gs)
+
         self._cast_all_castable(gs)
+
+    # ── Boomerang Basics targeting ───────────────────────────────────────────
+    def _try_boomerang_basics(self, gs: GameState, opponent):
+        """Cast Boomerang Basics if we have one and a good target.
+        Priority:
+          1. Bounce an opp creature that's threatening us (highest power)
+          2. Bounce one of our own enchantment/creature ETBs for re-trigger
+             (must own it -- draws a card via Boomerang's own text)
+        """
+        boomerang = next((c for c in gs.zones.hand
+                         if c.name == BOOMERANG and gs.mana_pool.can_cast(c.mana_cost, c.cmc)),
+                        None)
+        if boomerang is None or opponent is None:
+            return
+
+        # Priority 1: bounce opp's biggest creature if we have one threatening
+        opp_threats = [c for c in opponent.zones.battlefield
+                       if c.has(Tag.CREATURE) and not c.is_land()
+                       and safe_power(c) >= 3]
+        if opp_threats:
+            # Letting engine pick target is fine; just cast it
+            try:
+                gs.cast_spell(boomerang)
+                gs._log(f"  [Boomerang] bounce opp threat (biggest P{max(safe_power(c) for c in opp_threats)})")
+                return
+            except Exception:
+                pass
+
+        # Priority 2: self-bounce a re-triggerable enchantment for cantrip + re-ETB
+        my_recast_targets = [c for c in gs.zones.battlefield
+                             if c.name in BOUNCE_RECAST_TARGETS]
+        if my_recast_targets:
+            try:
+                gs.cast_spell(boomerang)
+                gs._log(f"  [Boomerang] self-bounce {my_recast_targets[0].name} for cantrip + re-trigger")
+                return
+            except Exception:
+                pass
+
+    # ── Stormchaser's Talent level activation ────────────────────────────────
+    def _try_stormchaser_levelup(self, gs: GameState):
+        """Activate Stormchaser's Talent levels at sorcery speed:
+          Level 2 ({3}{U}): return I/S from GY to hand
+          Level 3 ({5}{U}): each I/S cast creates a 1/1 prowess Otter
+        Level 3 is the bigger payoff -- each Boomerang Basics, Bitter Triumph,
+        Faebloom Trick, etc. = another Otter.
+        """
+        sct = next((c for c in gs.zones.battlefield
+                   if c.name == STORMCHASER), None)
+        if sct is None:
+            return
+        level = getattr(sct, '_class_level', 1)
+        # Try Level 3 first if we're at level 2 and have {5}{U}
+        if level >= 2:
+            if gs.mana_pool.can_cast("5U", 6):
+                try:
+                    gs.mana_pool.pay_cost("5U", 6)
+                    sct._class_level = 3
+                    gs._log("  [Stormchaser] level 3 -- each I/S now creates an Otter")
+                    return
+                except Exception:
+                    pass
+        # Otherwise try Level 2 if we have {3}{U}
+        if level == 1 and gs.mana_pool.can_cast("3U", 4):
+            try:
+                gs.mana_pool.pay_cost("3U", 4)
+                sct._class_level = 2
+                gs._log("  [Stormchaser] level 2")
+            except Exception:
+                pass
 
     # ── Attackers: always include ninjutsu enablers ─────────────────────────
     def declare_attackers(self, gs: GameState, opponent: GameState):

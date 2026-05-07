@@ -295,6 +295,25 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     for c in own_bf:
         c.tapped_from_attack = False
 
+    # Azure Beastbinder strip wears off "until your next turn".
+    # On the attacker's next untap, restore stashed tags + P/T on
+    # any opp permanents we previously stripped.
+    opp_bf = gs.bf_b if player == "a" else gs.bf_a
+    for c in opp_bf:
+        if getattr(c, '_abilities_stripped', False):
+            stashed = getattr(c, '_beastbind_stashed_tags', None)
+            if stashed is not None:
+                c.tags = set(stashed)
+                c._beastbind_stashed_tags = None
+            orig_p = getattr(c, '_beastbind_orig_power', None)
+            orig_t = getattr(c, '_beastbind_orig_toughness', None)
+            if orig_p is not None:
+                c.power = orig_p
+                c.toughness = orig_t
+                c._beastbind_orig_power = None
+                c._beastbind_orig_toughness = None
+            c._abilities_stripped = False
+
     # Reset spell counts for this player's new turn (High Noon + Slickshot tracking)
     if player == "a":
         gs.noncreature_spells_a = 0
@@ -649,43 +668,79 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
                 pass
 
     # Azure Beastbinder attack trigger -- "Whenever this creature attacks,
-    # up to one target artifact/creature/PW an opponent controls loses
-    # all abilities until your next turn. If creature, base P/T 2/2 too."
-    # Functionally: a Tishana's Tidebinder-on-attack effect. Marks target
-    # as ability-stripped via _abilities_stripped_until = turn+1, plus
-    # P/T override to 2/2 if creature.
+    # up to one target ARTIFACT, CREATURE, or PLANESWALKER an opponent
+    # controls loses all abilities until your next turn. If creature,
+    # base P/T 2/2 too." (Cannot target enchantments.)
+    #
+    # Priority ranking for target choice (best first):
+    #   T1: Opp planeswalkers (Kaito, Aang, Ral, etc.) -- removing
+    #       loyalty abilities is huge tempo
+    #   T2: High-value artifacts with activated/triggered abilities
+    #       (Monument to Endurance, Resonating Lute, Cryogen Relic,
+    #       Cauldron of Essence, Springleaf Drum, Ghost Vacuum)
+    #   T3: Combat-engine creatures (Slickshot, Sunderflock, Mightform,
+    #       Lumbering Worldwagon, Sage of the Skies)
+    #   T4: Largest-power opp creature
+    #
+    # NOTE: Stormchaser's Talent / Earthbender Ascension / Sapling
+    # Nursery are ENCHANTMENTS -- Beastbinder cannot target them.
     abb_count = sum(1 for a in attackers if a.name == "Azure Beastbinder")
     if abb_count > 0:
         defender_bf = gs.bf_b if attacker == "a" else gs.bf_a
-        # Highest-priority targets: cards with attack-engine abilities
-        # (Slickshot, Stormchaser's Talent, Monument to Endurance,
-        # Earthbender Ascension, etc.). Pick by simple priority ranking.
-        priority_names = {"Monument to Endurance", "Stormchaser's Talent",
-                          "Slickshot Show-Off", "Earthbender Ascension",
-                          "Sapling Nursery", "Resonating Lute",
-                          "Mightform Harmonizer"}
-        priority_targets = [c for c in defender_bf
-                            if c.name in priority_names and not c.is_land()]
+        priority_artifacts = {"Monument to Endurance", "Resonating Lute",
+                              "Cryogen Relic", "Cauldron of Essence",
+                              "Springleaf Drum", "Ghost Vacuum",
+                              "Aether Vial", "Soul-Guide Lantern"}
+        priority_creatures = {"Slickshot Show-Off", "Sunderflock",
+                              "Mightform Harmonizer", "Lumbering Worldwagon",
+                              "Sage of the Skies", "Stormchaser",
+                              "Eddymurk Crab", "Hearth Elemental",
+                              "Quantum Riddler"}
+        # T1: planeswalkers (any opp PW)
+        pw_targets = [c for c in defender_bf
+                      if 'Planeswalker' in (c.type_line or '')]
+        # T2: priority artifacts
+        artifact_targets = [c for c in defender_bf
+                            if c.name in priority_artifacts
+                            and 'Artifact' in (c.type_line or '')]
+        # T3: priority creatures
+        priority_creature_targets = [c for c in defender_bf
+                                     if c.name in priority_creatures
+                                     and c.has(Tag.CREATURE)]
+        # T4: any other creature (largest-power fallback)
         non_priority_creatures = [c for c in defender_bf
                                   if c.has(Tag.CREATURE) and not c.is_land()
-                                  and getattr(c, 'power', None) is not None
-                                  and c not in priority_targets]
+                                  and c not in priority_creature_targets
+                                  and getattr(c, 'power', None) is not None]
         for _ in range(abb_count):
             target = None
-            if priority_targets:
-                target = priority_targets.pop(0)
+            if pw_targets:
+                target = pw_targets.pop(0)
+            elif artifact_targets:
+                target = artifact_targets.pop(0)
+            elif priority_creature_targets:
+                target = priority_creature_targets.pop(0)
             elif non_priority_creatures:
                 target = max(non_priority_creatures, key=_safe_power)
                 non_priority_creatures.remove(target)
             if target is None:
                 continue
             target._abilities_stripped = True
+            # Stash original keyword tags so we can restore later
+            target._beastbind_stashed_tags = set(target.tags)
             try:
+                # Strip keyword abilities (flying, deathtouch, lifelink, etc.)
+                # so the target loses combat-relevant keywords
+                for kw in (KWTag.FLYING, KWTag.DEATHTOUCH, KWTag.LIFELINK,
+                           KWTag.TRAMPLE, KWTag.HASTE, KWTag.MENACE,
+                           KWTag.VIGILANCE, KWTag.REACH, KWTag.INDESTRUCTIBLE):
+                    target.tags.discard(kw)
                 # Override base P/T to 2/2 if creature
                 if target.has(Tag.CREATURE):
+                    target._beastbind_orig_power = target.power
+                    target._beastbind_orig_toughness = target.toughness
                     target.power = "2"
                     target.toughness = "2"
-                # (skip log -- TwoPlayerGameState has no _log)
             except (ValueError, TypeError):
                 pass
 

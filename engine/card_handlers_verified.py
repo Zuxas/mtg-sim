@@ -2954,10 +2954,14 @@ _ETB_HANDLERS.update({
 # ═══════════════════════════════════════════════════════════════════
 
 def _qarsi_revenant_etb(gs, card):
-    """Qarsi Revenant — {1}{B}{B} 2/2 Vampire.
+    """Qarsi Revenant — {1}{B}{B} 3/3 Vampire (TDM rare).
     'Flying, deathtouch, lifelink.
      Renew — {2}{B}, Exile from graveyard: Put flying/deathtouch/
-     lifelink counters on target creature. Sorcery speed.'"""
+     lifelink counters on target creature. Sorcery speed only.'
+
+    Renew now wired in apl/dimir_midrange_jermey_match.py
+    via _try_qarsi_renew (sorcery-speed activation in main_phase).
+    Picks largest creature without all 3 keywords as target."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.DEATHTOUCH)

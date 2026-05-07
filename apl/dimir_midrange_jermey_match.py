@@ -746,6 +746,13 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         # 4. Stormchaser's Talent level activation (sorcery speed).
         self._try_stormchaser_levelup(gs)
 
+        # 5. Loch Mare activation (sorcery speed): {1}{U} remove counter -> draw
+        self._try_loch_mare_draw(gs)
+
+        # 6. Qarsi Revenant Renew (sorcery speed): {2}{B} from GY -> grant
+        #    flying/deathtouch/lifelink to a creature
+        self._try_qarsi_renew(gs)
+
         self._cast_all_castable(gs)
 
     # ── Boomerang Basics targeting ───────────────────────────────────────────
@@ -817,6 +824,72 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                 gs._log("  [Stormchaser] level 2")
             except Exception:
                 pass
+
+    # ── Loch Mare activated ability ──────────────────────────────────────────
+    def _try_loch_mare_draw(self, gs: GameState):
+        """Activate Loch Mare: {1}{U}, remove a -1/-1 counter -> draw a card.
+        Loch Mare enters with 3 -1/-1 counters (effective 1/2).
+        Each activation removes a counter (effectively makes it bigger AND
+        draws). At 0 counters left, no more activations possible.
+        Stop after the first activation per turn so we don't dump all 3."""
+        from data.card import Tag
+        loch = next((c for c in gs.zones.battlefield
+                    if c.name == "Loch Mare" and c.has(Tag.CREATURE)), None)
+        if loch is None:
+            return
+        # Loch Mare enters with -3 counters; activations subtract more
+        # (negative counters = -1/-1 stacked). So counters < 0 means
+        # we still have -1/-1 counters to remove.
+        # Convention: we used `card.counters -= 3` on ETB. Each draw
+        # activation: counters += 1 (remove one -1/-1 counter).
+        if (loch.counters or 0) >= 0:
+            return  # No counters left to remove
+        if not gs.mana_pool.can_cast("1U", 2):
+            return
+        try:
+            gs.mana_pool.pay_cost("1U", 2)
+            loch.counters += 1  # remove one -1/-1 counter
+            gs.zones.draw(1)
+            gs._log(f"  [Loch Mare] removed -1/-1 counter, drew a card "
+                    f"(counters now {loch.counters})")
+        except Exception:
+            pass
+
+    # ── Qarsi Revenant Renew (GY-cast) ───────────────────────────────────────
+    def _try_qarsi_renew(self, gs: GameState):
+        """Activate Qarsi Revenant Renew: {2}{B}, exile from graveyard ->
+        target creature gains flying/deathtouch/lifelink counters.
+        Sorcery speed only. We pick our largest creature without those
+        keywords as the target."""
+        from data.card import Tag
+        from engine.keywords import KWTag
+        from engine.match_state import safe_power
+        qarsi = next((c for c in gs.zones.graveyard
+                     if c.name == QARSI), None)
+        if qarsi is None:
+            return
+        if not gs.mana_pool.can_cast("2B", 3):
+            return
+        # Target: our largest creature that doesn't already have all 3 keywords
+        my_creatures = [c for c in gs.zones.battlefield
+                       if c.has(Tag.CREATURE) and not c.is_land()
+                       and not (KWTag.FLYING in c.tags
+                                and KWTag.DEATHTOUCH in c.tags
+                                and KWTag.LIFELINK in c.tags)]
+        if not my_creatures:
+            return
+        target = max(my_creatures, key=safe_power)
+        try:
+            gs.mana_pool.pay_cost("2B", 3)
+            gs.zones.graveyard.remove(qarsi)
+            gs.zones.exile.append(qarsi)
+            target.tags.add(KWTag.FLYING)
+            target.tags.add(KWTag.DEATHTOUCH)
+            target.tags.add(KWTag.LIFELINK)
+            gs._log(f"  [Qarsi Renew] exile from GY, granted "
+                    f"flying/DT/LL to {target.name}")
+        except Exception:
+            pass
 
     # ── Attackers: always include ninjutsu enablers ─────────────────────────
     def declare_attackers(self, gs: GameState, opponent: GameState):

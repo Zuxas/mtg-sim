@@ -1,0 +1,55 @@
+// Dimir Midrange - Jermey's currently-sleeved physical deck (2026-05-07)
+// What the user actually owns and has played with. Closest to their
+// original v1 + Marcelo AC11 trophy shape (4 Kaito, Wan Shi Tong SB).
+//
+// Notable cards:
+//   4 Kaito (full set, matches Marcelo)
+//   Spell Snare 1 main (Marcelo runs 2)
+//   Wan Shi Tong, Librarian SB (Marcelo runs main)
+//   Preacher of the Schism (NEW 1-of -- LCI rare, 2/4 deathtouch + tokens)
+//   Old tech: Azure Beastbinder, Into the Flood Maw, Loch Mare, Qarsi Revenant
+//   Strategic Betrayal mainboard (Marcelo runs in SB)
+
+2 Azure Beastbinder
+1 Bitter Triumph
+2 Cecil, Dark Knight
+3 Enduring Curiosity
+4 Floodpits Drowner
+4 Gloomlake Verge
+2 Into the Flood Maw
+5 Island
+4 Kaito, Bane of Nightmares
+1 Loch Mare
+1 Long Goodbye
+2 Multiversal Passage
+1 Phantom Interference
+1 Preacher of the Schism
+1 Qarsi Revenant
+2 Requiting Hex
+2 Restless Reef
+2 Shoot the Sheriff
+2 Soulstone Sanctuary
+1 Spell Snare
+4 Spyglass Siren
+1 Starting Town
+1 Strategic Betrayal
+4 Swamp
+3 Tishana's Tidebinder
+4 Watery Grave
+
+Sideboard
+1 Annul
+1 Bitter Triumph
+1 Day of Black Sun
+1 Disdainful Stroke
+1 Duress
+1 Essence Scatter
+1 Ghost Vacuum
+1 Kaito, Cunning Infiltrator
+1 Requiting Hex
+1 Soul-Guide Lantern
+1 Spell Pierce
+1 Spider-Sense
+1 Strategic Betrayal
+1 The Unagi of Kyoshi Island
+1 Wan Shi Tong, Librarian

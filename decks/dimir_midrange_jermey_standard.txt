@@ -1,31 +1,42 @@
-// Dimir Midrange - Jermey personal build (Standard 2026, RC DC prep v4)
-// Cecil + Kaito + Floodpits Drowner + Deep-Cavern Bat + Malcolm shell
-// v4 (2026-05-06): -1 Sunset Saboteur, +1 4th Tishana's Tidebinder
-// (Sunset Saboteur attack drawback engine fix made it net negative;
-//  4th Tishana provides flash counter-ability + flying body.)
-// v3: Bitter Triumph 1->3, Cecil 2->3, Faebloom 2->3, Floodpits 4->3,
-//     Long Goodbye 2->1, Soulstone 2->1, Fountainport 1->0
-// Sim (post-engine fix, 500g/matchup, 15 archetypes): 59.0% FW WR.
+// Dimir Midrange - Jermey personal build (Standard 2026, RC DC prep v5)
+// User-directed config 2026-05-07: keep Kaito 2 + Bat 4, add Spell Snare 2,
+// bump to 25 lands, add Wan Shi Tong (Marcelo-aligned).
+//
+// v5 changes from v4b (24-land):
+//   +2 Spell Snare (mainboard) -- "too good into the field of 2-drops"
+//   +1 Wan Shi Tong, Librarian -- midrange control finisher (per Marcelo AC11)
+//   +1 Multiversal Passage (24 -> 25 lands)
+//   -1 Long Goodbye, -1 Malcolm, -1 Requiting Hex, -1 Phantom Interference (2->1)
+//
+// User preferences kept against Marcelo's list:
+//   Kaito stays at 2 (Marcelo runs 4)
+//   Deep-Cavern Bat stays at 4 (not in Marcelo's)
+//   Cecil at 3 (flex slot per user "idk how good Cecil is into the field")
+//
+// v4b (prior): -1 Faebloom +1 Fountainport (24 lands attempt; sim 57.7%)
+// v4: -1 Sunset Saboteur +1 4th Tishana (sim 59.0%)
+// Sim FW WR (current meta, 500g): TBD pending re-run
+
 3 Bitter Triumph
 3 Cecil, Dark Knight
 4 Deep-Cavern Bat
 4 Enduring Curiosity
-3 Faebloom Trick
+2 Faebloom Trick
 3 Floodpits Drowner
+1 Fountainport
 4 Gloomlake Verge
 5 Island
 2 Kaito, Bane of Nightmares
-1 Long Goodbye
-1 Malcolm, Alluring Scoundrel
-2 Multiversal Passage
-2 Phantom Interference
-1 Requiting Hex
+3 Multiversal Passage
+1 Phantom Interference
 2 Restless Reef
 2 Shoot the Sheriff
 1 Soulstone Sanctuary
+2 Spell Snare
 4 Spyglass Siren
 5 Swamp
 4 Tishana's Tidebinder
+1 Wan Shi Tong, Librarian
 4 Watery Grave
 
 Sideboard

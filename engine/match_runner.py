@@ -648,6 +648,78 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
             except (ValueError, TypeError):
                 pass
 
+    # Azure Beastbinder attack trigger -- "Whenever this creature attacks,
+    # up to one target artifact/creature/PW an opponent controls loses
+    # all abilities until your next turn. If creature, base P/T 2/2 too."
+    # Functionally: a Tishana's Tidebinder-on-attack effect. Marks target
+    # as ability-stripped via _abilities_stripped_until = turn+1, plus
+    # P/T override to 2/2 if creature.
+    abb_count = sum(1 for a in attackers if a.name == "Azure Beastbinder")
+    if abb_count > 0:
+        defender_bf = gs.bf_b if attacker == "a" else gs.bf_a
+        # Highest-priority targets: cards with attack-engine abilities
+        # (Slickshot, Stormchaser's Talent, Monument to Endurance,
+        # Earthbender Ascension, etc.). Pick by simple priority ranking.
+        priority_names = {"Monument to Endurance", "Stormchaser's Talent",
+                          "Slickshot Show-Off", "Earthbender Ascension",
+                          "Sapling Nursery", "Resonating Lute",
+                          "Mightform Harmonizer"}
+        priority_targets = [c for c in defender_bf
+                            if c.name in priority_names and not c.is_land()]
+        non_priority_creatures = [c for c in defender_bf
+                                  if c.has(Tag.CREATURE) and not c.is_land()
+                                  and getattr(c, 'power', None) is not None
+                                  and c not in priority_targets]
+        for _ in range(abb_count):
+            target = None
+            if priority_targets:
+                target = priority_targets.pop(0)
+            elif non_priority_creatures:
+                target = max(non_priority_creatures, key=_safe_power)
+                non_priority_creatures.remove(target)
+            if target is None:
+                continue
+            target._abilities_stripped = True
+            try:
+                # Override base P/T to 2/2 if creature
+                if target.has(Tag.CREATURE):
+                    target.power = "2"
+                    target.toughness = "2"
+                # (skip log -- TwoPlayerGameState has no _log)
+            except (ValueError, TypeError):
+                pass
+
+    # Preacher of the Schism attack triggers -- two life-total-conditional
+    # triggers fire on attack:
+    #   - If opp has most life (or tied): create 1/1 lifelink Vampire token
+    #   - If you have most life (or tied): draw a card + lose 1 life
+    preacher_count = sum(1 for a in attackers if a.name == "Preacher of the Schism")
+    if preacher_count > 0:
+        attacker_life = gs.life_a if attacker == "a" else gs.life_b
+        defender_life = gs.life_b if attacker == "a" else gs.life_a
+        for _ in range(preacher_count):
+            if defender_life >= attacker_life:
+                # Opp has most life -- token trigger
+                # Add a 1/1 lifelink Vampire token to attacker's board
+                attacker_bf = gs.bf_a if attacker == "a" else gs.bf_b
+                from data.card import Card, Tag as _Tag
+                token = Card(name="Vampire Token", mana_cost="", cmc=0,
+                             type_line="Token Creature - Vampire",
+                             power="1", toughness="1", colors=["W"])
+                token.tags = {_Tag.CREATURE, KWTag.LIFELINK}
+                token.summoning_sickness = True
+                attacker_bf.append(token)
+            if attacker_life >= defender_life:
+                # You have most life -- draw + lose 1
+                if attacker == "a":
+                    gs.life_a -= 1
+                    if gs.lib_a:
+                        gs.hand_a.append(gs.lib_a.pop(0))
+                else:
+                    gs.life_b -= 1
+                    if gs.lib_b:
+                        gs.hand_b.append(gs.lib_b.pop(0))
+
     # Slickshot Show-Off: +2/+0 per noncreature spell cast this turn (power only)
     _SLICKSHOT_NAMES = {"Slickshot Show-Off"}
     n_spells = gs.noncreature_spells_a if attacker == "a" else gs.noncreature_spells_b

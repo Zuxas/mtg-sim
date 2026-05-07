@@ -1842,17 +1842,24 @@ def _earthbender_ascension_etb(gs, card):
     'When this enchantment enters, earthbend 2. Then search your
      library for a basic land card, put it onto the battlefield
      tapped, then shuffle.
-     Landfall — quest counter; at 4, +1/+1 counter on target
-     creature with trample EOT.' (Landfall handled by
-     LANDFALL_QUEST registry.)
+     Landfall — quest counter; at 4 quests, +1/+1 counter on target
+     creature with trample EOT.'
 
-    ETB: ramp a basic (simulated as +1 mana via search_basic_land
-    equivalent) and earthbend 2 (animate a land — we skip the body
-    animation, just +1 damage proxy for the 2/2 attacker)."""
-    gs.mana_pool.flex += 1  # search basic land proxy
-    gs.damage_dealt += 2    # earthbend 2 = animated 0/0 + 2 counters
-    gs._log("  Earthbender Ascension ETB: ramp (+1 mana), "
-            "earthbend 2 (+2 dmg proxy)")
+    BUG FIX 2026-05-07: previous handler did `gs.damage_dealt += 2`
+    on ETB. That was wrong -- earthbend 2 makes an animated 2/2 LAND
+    with summoning sickness; damage requires a future attack. The
+    landfall quest pump (at 4 quests, +1/+1 + trample to a creature)
+    is also not modeled (no LANDFALL_QUEST registry exists in the
+    engine despite the docstring claim).
+
+    Conservative model: only credit ramp (basic land tapped, +1 mana
+    next turn). Skip the earthbend-2 immediate damage and the
+    landfall-quest pump. This UNDER-models EA but avoids the
+    over-credit that previously gave Selesnya/MGL Landfall opponents
+    free damage on cast."""
+    gs.mana_pool.flex += 1  # search basic land tapped (real ramp value)
+    gs._log("  Earthbender Ascension ETB: ramp +1 mana (earthbend 2 + "
+            "landfall quest not modeled -- under-credit)")
 
 
 def _glacial_dragonhunt_spell(gs, card):

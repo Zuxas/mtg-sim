@@ -37,6 +37,7 @@ CANDIDATES = [
     ('Hybrid (UB Bounce + Jermey)',  'dimirmidrangejermey', 'decks/dimir_bounce_jermey_hybrid_standard.txt'),
     ('Esper Pixie v2',               'esperpixie',          'decks/esper_pixie_standard.txt'),
     ('HN v2 (post-Warp)',            'azoriushighnoon',     'decks/azorius_high_noon_standard.txt'),
+    ('Marcelo AC11 (12-0-1)',        'dimirmidrangejermey', 'decks/dimir_midrange_marcelo_standard.txt'),
     ('Dimir Jermey v4',              'dimirmidrangejermey', 'decks/dimir_midrange_jermey_standard.txt'),
     ('Azorius Blink (itstime)',      'azoriusblink',        'decks/azorius_blink_standard.txt'),
     ('Linden Dimir Bounce',          'dimirmidrangejermey', 'decks/dimir_bounce_linden_standard.txt'),

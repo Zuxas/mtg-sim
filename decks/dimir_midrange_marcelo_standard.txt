@@ -1,0 +1,44 @@
+// Dimir Midrange -- Marcelo Rodrigues Cavalcante, AC11 winner (12-0-1)
+// Arena Championship 11, Feb 21 2026 (post-DSK pre-SOS meta)
+// First-place finish across 13 rounds; only loss R1 vs Rakdos Monument.
+// Reference list for the Dimir Midrange archetype your Jermey build sits in.
+//
+// Differences from Jermey v4 (your current build):
+//   +2 Kaito (full 4 vs Jermey's 2)
+//   +2 Spell Snare mainboard
+//   +1 Wan Shi Tong, Librarian
+//   +1 Soulstone Sanctuary, +2 Multiversal Passage (25 lands vs 23)
+//   -1 Bitter Triumph, -1 Requiting Hex (off Marcelo's 2-of removal density)
+//   No Long Goodbye / Malcolm / Phantom Interference / Faebloom Trick
+
+4 Kaito, Bane of Nightmares
+4 Deep-Cavern Bat
+4 Enduring Curiosity
+4 Spyglass Siren
+4 Tishana's Tidebinder
+3 Cecil, Dark Knight
+3 Floodpits Drowner
+1 Wan Shi Tong, Librarian
+2 Bitter Triumph
+2 Requiting Hex
+2 Shoot the Sheriff
+2 Spell Snare
+5 Island
+4 Gloomlake Verge
+4 Swamp
+4 Watery Grave
+3 Multiversal Passage
+3 Soulstone Sanctuary
+2 Restless Reef
+
+Sideboard
+2 Annul
+2 Disdainful Stroke
+2 Duress
+2 Requiting Hex
+2 Soul-Guide Lantern
+1 Essence Scatter
+1 Intimidation Tactics
+1 Strategic Betrayal
+1 The End
+1 The Unagi of Kyoshi Island

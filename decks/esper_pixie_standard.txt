@@ -1,10 +1,12 @@
-// Esper Pixie - Alex Sanchez (31/08/25)
-// Event: Sunday ReCQ 12:00 pm, Place: 2
-1 Bleachbone Verge
+// Esper Pixie v2 - Alex Sanchez base, hill-climb refined 2026-05-06
+// Original: Alex Sanchez 2nd Place Sunday ReCQ (31/08/25)
+// v2 changes (3 swaps, +5pp at 100g): -1 Bleachbone Verge, -2 Cryogen Relic,
+//   +1 Concealed Courtyard (4th), +1 Tishana's Tidebinder, +1 Spyglass Siren (4th)
+// Sim: 72.4% FW WR vs current Standard (15 archetypes, 500 G1 each)
+// Mirror: 54% vs HN v2, 60.5% vs Dimir v4 -- top tier candidate
 3 Cecil, Dark Knight
-3 Concealed Courtyard
+4 Concealed Courtyard
 4 Cosmogrand Zenith
-2 Cryogen Relic
 1 Fear of Isolation
 2 Floodfarm Verge
 3 Gloomlake Verge
@@ -14,12 +16,13 @@
 3 Momentum Breaker
 3 Nowhere to Run
 4 Nurturing Pixie
-3 Spyglass Siren
+4 Spyglass Siren
 3 Starting Town
 3 Stormchaser's Talent
 4 Sunpearl Kirin
 1 Swamp
 2 Tinybones Joins Up
+1 Tishana's Tidebinder
 3 Tragic Trajectory
 4 Watery Grave
 

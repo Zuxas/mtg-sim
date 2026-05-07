@@ -1,0 +1,1980 @@
+[start] baseline: 60 mainboard cards
+[baseline] running gauntlet...
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[baseline] FW WR = 66.89%  (7.3s)
+
+=== Hill-climbing 28 candidates (threshold +0.5pp) ===
+  [ 1] -1 Bleachbone Verge             +1 Watery Grave              SKIP
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 2] -1 Bleachbone Verge             +1 Concealed Courtyard       68.85% (+1.96pp) 7.2s ACCEPT
+  [ 3] -1 Bleachbone Verge             +1 Godless Shrine            SKIP
+  [ 4] -1 Bleachbone Verge             +1 Swamp                     SKIP
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 5] -1 Fear of Isolation            +1 Long Goodbye              67.04% (-1.81pp) 6.6s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 6] -1 Fear of Isolation            +1 Bitter Triumph            65.61% (-3.24pp) 6.6s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 7] -1 Fear of Isolation            +1 Floodpits Drowner         66.78% (-2.07pp) 6.6s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 8] -1 Cryogen Relic                +1 Long Goodbye              66.95% (-1.90pp) 6.7s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [ 9] -1 Cryogen Relic                +1 Bitter Triumph            64.75% (-4.10pp) 6.7s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [10] -1 Cryogen Relic                +1 Floodpits Drowner         67.81% (-1.04pp) 6.6s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [11] -1 Cryogen Relic                +1 Tishana's Tidebinder      69.47% (+0.62pp) 6.7s ACCEPT
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [12] -1 Tinybones Joins Up           +1 Long Goodbye              66.61% (-2.86pp) 7.6s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [13] -1 Tinybones Joins Up           +1 Bitter Triumph            65.57% (-3.90pp) 7.4s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [14] -1 Tinybones Joins Up           +1 Floodpits Drowner         67.76% (-1.71pp) 7.3s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [15] -1 Tinybones Joins Up           +1 Tishana's Tidebinder      68.82% (-0.65pp) 7.1s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [16] -1 Cryogen Relic                +1 Cecil, Dark Knight        67.58% (-1.89pp) 7.3s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17] -1 Cryogen Relic                +1 Spyglass Siren            71.96% (+2.49pp) 7.2s ACCEPT
+  [18] -1 Cryogen Relic                +1 Stormchaser's Talent      SKIP
+  [19] -1 Cryogen Relic                +1 Tragic Trajectory         SKIP
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20] -1 Tinybones Joins Up           +1 Cecil, Dark Knight        69.34% (-2.62pp) 7.3s reject
+  [21] -1 Tinybones Joins Up           +1 Spyglass Siren            SKIP
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [22] -1 Tinybones Joins Up           +1 Stormchaser's Talent      72.34% (+0.38pp) 7.2s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23] -1 Momentum Breaker             +1 Long Goodbye              69.48% (-2.48pp) 7.3s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24] -1 Momentum Breaker             +1 Bitter Triumph            63.79% (-8.17pp) 7.9s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25] -1 Momentum Breaker             +1 Floodpits Drowner         70.27% (-1.69pp) 7.5s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26] -1 Nowhere to Run               +1 Long Goodbye              70.78% (-1.19pp) 7.2s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [27] -1 Nowhere to Run               +1 Bitter Triumph            66.04% (-5.92pp) 7.2s reject
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [29 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28] -1 Nowhere to Run               +1 Tishana's Tidebinder      70.18% (-1.78pp) 7.2s reject
+
+=== Final ===
+  Baseline FW WR: 66.89%
+  Final    FW WR: 71.96%  (delta: +5.08pp)
+  Accepted swaps: 3
+    -1 Bleachbone Verge         +1 Concealed Courtyard    -> 68.85%
+    -1 Cryogen Relic            +1 Tishana's Tidebinder   -> 69.47%
+    -1 Cryogen Relic            +1 Spyglass Siren         -> 71.96%
+
+Final mainboard diff:
+  +1 Spyglass Siren
+  -1 Bleachbone Verge
+  +1 Concealed Courtyard
+  +1 Tishana's Tidebinder
+  -2 Cryogen Relic

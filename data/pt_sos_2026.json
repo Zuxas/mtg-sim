@@ -9449,51 +9449,67 @@
   "top8": [
     {
       "rank": 1,
-      "player": "Zhang, Rui",
-      "archetype": "Izzet Lessons",
-      "country": "China"
+      "player": "Steuer, Nathan",
+      "archetype": "Selesnya Landfall",
+      "country": "USA",
+      "record": "15-4",
+      "wr": 0.78
     },
     {
       "rank": 2,
-      "player": "Nass, Matt",
-      "archetype": "Selesnya Ouroboroid",
-      "country": "USA"
+      "player": "Larsen, Christoffer",
+      "archetype": "Selesnya Landfall",
+      "country": "Denmark",
+      "record": "15-4",
+      "wr": 0.78
     },
     {
       "rank": 3,
-      "player": "Kominowski, Maxx",
-      "archetype": "Izzet Spellementals",
-      "country": "USA"
+      "player": "cftsoc",
+      "archetype": "Izzet Lessons",
+      "country": "?",
+      "record": "16-2",
+      "wr": 0.88
     },
     {
       "rank": 4,
-      "player": "Larsen, Christoffer",
-      "archetype": "Selesnya Landfall",
-      "country": "Denmark"
+      "player": "Nass, Matt",
+      "archetype": "Selesnya Ouroboroid",
+      "country": "USA",
+      "record": "15-3",
+      "wr": 0.83
     },
     {
       "rank": 5,
       "player": "Schutz, Stefan",
       "archetype": "Mono-Green Landfall",
-      "country": "Germany"
+      "country": "Germany",
+      "record": "13-4",
+      "wr": 0.76
     },
     {
       "rank": 6,
-      "player": "Steuer, Nathan",
-      "archetype": "Selesnya Landfall",
-      "country": "USA"
+      "player": "Kominowski, Maxx",
+      "archetype": "Izzet Spellementals",
+      "country": "USA",
+      "record": "13-4",
+      "wr": 0.76
     },
     {
       "rank": 7,
       "player": "Stefansson, Matthew",
       "archetype": "Mono-Green Landfall",
-      "country": "Canada"
+      "country": "Canada",
+      "record": "12-5",
+      "wr": 0.7
     },
     {
       "rank": 8,
       "player": "Faust, Zevin",
       "archetype": "Azorius Tempo",
-      "country": "USA"
+      "country": "USA",
+      "record": "12-5",
+      "wr": 0.7
     }
   ],
   "top8_archetype_breakdown": {
@@ -9504,7 +9520,7 @@
     "Selesnya Ouroboroid": 1,
     "Azorius Tempo": 1
   },
-  "top8_notes": "Izzet Prowess (31% of field) has ZERO Top 8. Landfall strategies dominated (4/8 slots: Selesnya Landfall x2, Mono-Green Landfall x2). Zhang Rui on Izzet Lessons is the 1-seed. Matt Nass piloted Selesnya Ouroboroid -- new archetype not in current sim field. Izzet Spellementals x1, Azorius Tempo x1.",
+  "top8_notes": "Corrected by user 2026-05-07 -- previous version had stale Day 2 standings rather than final placements. Landfall variants took 4 of 8 with Steuer winning; cftsoc (16-2 record) had highest WR but went out at T4.",
   "constructed_wr_analysis": {
     "rounds": "R4-8 (Day1) + R12-16 (Day2)",
     "method": "both-player-identified matches only, 837 matches scored",
@@ -10137,5 +10153,6 @@
       "Azorius Tempo"
     ]
   },
-  "player_archetypes_source": "mtgdecks.net PT SOS final standings (325 players with placement)"
+  "player_archetypes_source": "mtgdecks.net PT SOS final standings (325 players with placement)",
+  "top8_corrected_2026-05-07": true
 }

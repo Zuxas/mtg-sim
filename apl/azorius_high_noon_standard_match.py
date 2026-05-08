@@ -193,6 +193,30 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
                             if c.has(Tag.CREATURE) and not c.is_land())
         return opp_creatures >= 2
 
+    def _opp_is_aggro(self, opponent: GameState) -> bool:
+        """True when opp is fast aggro -- low curve, creature-dense.
+
+        Pilot rule (2026-05-08): Avatar's Wrath threshold lowers from 3 to 2
+        creatures vs aggro. Waiting for the third creature is how you die at
+        12 life with a wipe in hand."""
+        if opponent is None:
+            return False
+        # Archetype-key fast path -- TRUE 1-2 mana creature aggro only.
+        # Pilot 2026-05-08 (revision): wider threshold cost -3.4pp on
+        # Selesnya Landfall and similar wide-but-big decks. Only include
+        # archetypes whose curve tops out at 3.
+        AGGRO_KEYS = {"gruulaggro", "borosaggro", "monowhiteaggro",
+                      "borosconvoke", "monoredaggro"}
+        if getattr(self, '_opp_key', None) in AGGRO_KEYS:
+            return True
+        # Fallback: 2+ creatures on board with avg CMC <= 2.5
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if c.has(Tag.CREATURE) and not c.is_land()]
+        if len(opp_creatures) < 2:
+            return False
+        avg_cmc = sum(getattr(c, 'cmc', 0) for c in opp_creatures) / len(opp_creatures)
+        return avg_cmc <= 2.5
+
     # ── Pre-combat: kill mana dorks / engines before they swing ──────────────
     def pre_combat_instant(self, gs: GameState, opponent: GameState):
         if opponent is None:
@@ -238,8 +262,10 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
         if opponent is None:
             return
 
-        # Aven Interrupter — fire FIRST when opp has a key engine threat in hand.
-        # Aven's ETB will pull it out before they can deploy it next turn.
+        # Aven Interrupter — pilot rule (2026-05-08): prefer turn-skip force
+        # over generic priority list. If opp will only have ONE castable card
+        # next turn, exile that card to skip their turn entirely. Otherwise
+        # fall back to the priority engine list.
         AVEN_PRIORITY_TARGETS = {"Stormchaser's Talent", "Slickshot Show-Off",
                                   "Monument to Endurance", "Artist's Talent",
                                   "Earthbender Ascension", "Sapling Nursery",
@@ -247,14 +273,35 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
                                   "Lumbering Worldwagon", "Surrak, Elusive Hunter",
                                   "Mossborn Hydra", "Felidar Retreat",
                                   "Icetill Explorer", "Kaito, Bane of Nightmares"}
+
+        def _opp_castable_next_turn(opp_hand, opp_lands):
+            # Project opp's mana next turn: current lands (all untap) + 1 land drop
+            mana_next = opp_lands + 1
+            return [c for c in opp_hand
+                    if not c.is_land()
+                    and getattr(c, 'cmc', 99) <= mana_next]
+
+        opp_lands_in_play = sum(1 for c in opponent.zones.battlefield if c.is_land())
+        castable = _opp_castable_next_turn(opponent.zones.hand, opp_lands_in_play)
+
+        # Tier 1: turn-skip force (exactly one castable nonland in opp hand)
+        turn_skip_target = None
+        if len(castable) == 1:
+            turn_skip_target = castable[0]
+
+        # Tier 2: priority engine card in hand (existing behavior)
         opp_has_priority = any(c.name in AVEN_PRIORITY_TARGETS
                                 for c in opponent.zones.hand)
-        if opp_has_priority:
+
+        if turn_skip_target or opp_has_priority:
             for card in list(gs.zones.hand):
                 if card.name == AVEN and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                     gs._match_opp = opponent
                     gs.cast_spell(card)
-                    gs._log("  [end-step] Aven Interrupter -> exile priority threat")
+                    if turn_skip_target:
+                        gs._log(f"  [end-step] Aven -> turn-skip exile {turn_skip_target.name}")
+                    else:
+                        gs._log("  [end-step] Aven Interrupter -> exile priority threat")
                     return
 
         # Floodpits Drowner: flash to stun a threat
@@ -305,31 +352,31 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
         self._play_land_if_able(gs)
         gs.tap_lands()
 
-        # Postboard High Noon timing per guide:
-        # vs control matchups, hold High Noon until T5+ (don't lock yourself out)
-        is_control = self._opp_is_control(opponent)
         is_creature_matchup = self._opp_is_creature_deck(opponent)
+        is_aggro            = self._opp_is_aggro(opponent)
 
-        # ── 1. T2 High Noon (preboard / vs creature decks) ──────────────────
-        if not is_control or gs.turn >= 5:
-            for card in list(gs.zones.hand):
-                if card.name == HIGH_NOON and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    # Don't cast if we've already got one
-                    if not any(c.name == HIGH_NOON for c in gs.zones.battlefield):
-                        gs.cast_spell(card)
-                        break
+        # ── 1. High Noon T2 ASAP (pilot 2026-05-08: always slam when castable)
+        # Removed prior is_control gating per pilot rule. The lock IS the plan,
+        # tempo loss is fine because opp loses more.
+        for card in list(gs.zones.hand):
+            if card.name == HIGH_NOON and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                if not any(c.name == HIGH_NOON for c in gs.zones.battlefield):
+                    gs.cast_spell(card)
+                    break
 
         # ── 2. Avatar's Wrath if creature board is threatening ──────────────
-        # Original: 3+ creatures. New: 3+ creatures OR (2+ creatures with one
-        # at power >= 3). Landfall decks ramp into single big bodies (Mightform
-        # Harmonizer, Lumbering Worldwagon) where waiting for 3 creatures means
-        # we're already dead.
+        # Pilot 2026-05-08: vs aggro, threshold lowers to 2 creatures (don't
+        # wait for the third while at 12 life). Vs midrange/control keep the
+        # 3-or-2-with-big-body rule.
         if is_creature_matchup:
             opp_creatures = [c for c in opponent.zones.battlefield
                              if c.has(Tag.CREATURE) and not c.is_land()]
             opp_cr_count = len(opp_creatures)
             has_big = any(safe_power(c) >= 3 for c in opp_creatures)
-            should_wipe = opp_cr_count >= 3 or (opp_cr_count >= 2 and has_big)
+            if is_aggro:
+                should_wipe = opp_cr_count >= 2
+            else:
+                should_wipe = opp_cr_count >= 3 or (opp_cr_count >= 2 and has_big)
             if should_wipe:
                 for card in list(gs.zones.hand):
                     if card.name == AVATARS_WRATH and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
@@ -395,10 +442,17 @@ class AzoriusHighNoonMatchAPL(AwareMatchAPL):
 
         # Cast remaining flash threats only if we'd otherwise float mana
         # AND it's a good window (e.g. opp tapped out, or T2 with no other plays)
+        # Pilot 2026-05-08 v2: Floodpits restored to main-phase dump on tapped
+        # opp creatures (its ETB stun targets a tapped creature). Vs Gruul Aggro
+        # specifically, hold Floodpits for end-step (the user's "at all costs"
+        # rule). Vs other matchups the value of denying their next attack
+        # exceeds the value of holding for an end-step that may not come.
+        is_aggro_for_floodpits = is_aggro
         if gs.mana_pool.total() >= 2 and not any(c.name in self.COUNTER_CARDS
                                                   for c in gs.zones.hand):
-            # No counters held; might as well dump mana into a flash creature
-            for name in (AVEN, AANG, SKYCOACH, FLOODPITS, RIDDLER):
+            dump_order = (AVEN, AANG, SKYCOACH, RIDDLER) if is_aggro_for_floodpits \
+                         else (AVEN, AANG, SKYCOACH, FLOODPITS, RIDDLER)
+            for name in dump_order:
                 for card in list(gs.zones.hand):
                     if card.name == name and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                         gs.cast_spell(card)

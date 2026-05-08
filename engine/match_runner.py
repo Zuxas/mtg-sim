@@ -192,6 +192,10 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         opp_view = _build_view(opp)
         # Wire opponent reference so cast_spell can check High Noon on opp's bf
         view._match_opp = opp_view
+        # Wire opp's APL ref so cast_spell can ask them about counterspells
+        view._match_opp_apl = gs.apl_b if player == "a" else gs.apl_a
+        opp_view._match_opp_apl = gs.apl_a if player == "a" else gs.apl_b
+        opp_view._match_opp = view
 
         # Auto-upgrade goldfish APLs to opp-aware removal play.
         # Hand-tuned MatchAPLs (BorosEnergyMatchAPL etc.) keep their own logic.
@@ -462,6 +466,9 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     opp_view.zones.graveyard = opp_gy
     opp_view.life = opp_life
     view._match_opp = opp_view  # for High Noon check (looks at opp's battlefield)
+    view._match_opp_apl = gs.apl_b if player == "a" else gs.apl_a
+    opp_view._match_opp_apl = gs.apl_a if player == "a" else gs.apl_b
+    opp_view._match_opp = view
 
     match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
 
@@ -1096,6 +1103,10 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     opp_view.zones.library     = opp_lib
     opp_view.life              = opp_life
     view._match_opp = opp_view
+    # In end_step, view is the REACTIVE player; opp's APL is the active player's APL
+    view._match_opp_apl = gs.apl_b if active_player == "a" else gs.apl_a
+    opp_view._match_opp_apl = gs.apl_a if active_player == "a" else gs.apl_b
+    opp_view._match_opp = view
     # Reactive cast flag: cast_spell will check opp's Voice of Victory and
     # also enforce the High Noon symmetric lock against this player's
     # already-cast spells this turn.
@@ -1141,6 +1152,11 @@ def run_match(
     """
     result = MatchResult()
     gs = TwoPlayerGameState(deck_a, deck_b, on_play=on_play, seed=seed)
+    # Stash APLs on TwoPlayerGameState so view-builders can wire
+    # _match_opp_apl onto per-player GameStates (cast_spell needs this
+    # to ask the opponent whether to counter).
+    gs.apl_a = apl_a
+    gs.apl_b = apl_b
 
     # Opening hands
     gs.draw_a(7)

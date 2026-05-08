@@ -1345,6 +1345,28 @@ class GameState:
         if self.spells_cast_this_turn == 2:
             from engine.card_effects import on_cosmogrand_second_spell
             on_cosmogrand_second_spell(self)
+        # ── Counter window: opponent gets one chance to counter ──
+        # Skip if we're already inside a counter window (no counter-
+        # the-counter chains in this approximation), or if the spell
+        # itself is a counterspell (countering counters is allowed but
+        # would need stack semantics we don't model).
+        if not getattr(self, '_in_counter_window', False):
+            opp_apl = getattr(self, '_match_opp_apl', None)
+            opp_gs  = getattr(self, '_match_opp', None)
+            if opp_apl is not None and opp_gs is not None:
+                self._in_counter_window = True
+                try:
+                    from engine.counter_resolver import try_counter_spell
+                    countered = try_counter_spell(opp_apl, opp_gs, self, card)
+                finally:
+                    self._in_counter_window = False
+                if countered:
+                    # Spell cost was paid but the spell does nothing.
+                    # Move to graveyard, skip resolution.
+                    self.zones.graveyard.append(card)
+                    self._log(f"  [COUNTERED] {card.name}")
+                    self.check_state_based_actions()
+                    return True
         if card.has(Tag.INSTANT) or card.has(Tag.SORCERY):
             self.zones.cast_to_graveyard(card)
             self.noncreature_spells_this_turn += 1

@@ -1365,6 +1365,68 @@ def _day_of_judgment_spell(gs, card):
     gs._log(f"  Day of Judgment: destroy all creatures ({my}/{op})")
 
 
+# Removal narrowness map for Bat targeting.
+# Higher = more restrictive target. Take the NARROWER removal so opp
+# must spend their FLEXIBLE removal on the Bat itself (and the narrow
+# one rots in hand). Tempo trick — Bat is a tempo card, not a lock.
+_BAT_REMOVAL_NARROWNESS = {
+    # Very narrow (CMC<=2 or single mode)
+    "Requiting Hex":         9,   # CMC <=2 creature only
+    "Cut Down":              8,   # CMC <=3 creature
+    "Torch the Tower":       7,   # toughness <=2
+    "Lightning Strike":      6,   # 3 dmg to any (CMC <=3 effective)
+    # Mid-narrow (creature/PW only, soft restrictions)
+    "Long Goodbye":          5,   # creature/PW <=3, can't be countered
+    "Sheltered by Ghosts":   5,   # creature only, drawback
+    "Get Lost":              4,   # creature/PW/enchantment, gives Maps
+    "Sunset Saboteur":       4,   # creature ETB exile, drawback
+    # Flexible removal (lowest narrowness — opp must use these on Bat)
+    "Bitter Triumph":        2,   # any creature/PW, life cost
+    "Shoot the Sheriff":     2,   # any creature, 4 dmg, lifelink
+    "Lightning Helix":       2,   # any target, 3 dmg + 3 life
+    "Sunfall":               1,   # board wipe, can't be a Bat-pick precedent
+}
+
+# Engine/payoff cards — snowballing CA or lock pieces. Bat priority 3
+# (when opp has no removal in hand). User: "the card you cant beat".
+# Includes Standard 2026-era engines across all major archetypes.
+_BAT_ENGINE_CARDS = {
+    # Izzet Lessons / Prowess
+    "Monument to Endurance",
+    "Stormchaser's Talent",
+    "Artist's Talent",
+    "Phlage, Titan of Fire's Fury",
+    # Mono-Green / Selesnya Landfall
+    "Sapling Nursery",
+    "Pawpatch Recruit",
+    "Earthbender Ascension",
+    "Lumbering Worldwagon",
+    # Selesnya / Esper Blink
+    "Overlord of the Mistmoors",
+    "Aetherspouts",
+    # Boros High Noon
+    "High Noon",
+    "Voice of Victory",
+    "Sunfall",
+    "Aang, Avatar of the Air",
+    # Jeskai Lute
+    "Resonating Lute",
+    "Stock Up",
+    # Mirror / Dimir
+    "Enduring Curiosity",
+    "Kaito, Bane of Nightmares",
+    "Wan Shi Tong, Librarian",
+    # Excruciator combo
+    "Bringer of the Last Gift",
+    "Doomsday Excruciator",
+    # Esper Pixie
+    "Pixie Guide",
+    "Nowhere to Run",
+    # Sheoldred / generic finishers
+    "Sheoldred, the Apocalypse",
+}
+
+
 def _deep_cavern_bat_etb(gs, card):
     """Deep-Cavern Bat — {1}{B} Creature 1/1 Bat.
     'Flying, lifelink.
@@ -1372,7 +1434,13 @@ def _deep_cavern_bat_etb(gs, card):
      may exile a nonland card from it until this creature leaves
      the battlefield.'
 
-    Pick highest-cmc nonland from opp hand and exile it."""
+    Targeting priority (per pilot rules — Bat is tempo, not disruption,
+    expect it to die):
+      1. Their removal (take the NARROWEST so they spend flex on Bat)
+      2. Force a turn skip (early game, if opp has 1 castable next turn)
+      3. Snowballing engine / payoff card you can't beat
+      4. Highest-CMC nonland (fallback)
+    """
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     card.tags.add(KWTag.LIFELINK)
@@ -1384,12 +1452,48 @@ def _deep_cavern_bat_etb(gs, card):
     if not nonlands:
         gs._log("  Deep-Cavern Bat: 1/1 flying lifelink (opp hand empty of nonlands)")
         return
-    victim = max(nonlands, key=lambda c: getattr(c, 'cmc', 0))
+
+    victim = None
+    reason = ""
+
+    # ── Priority 1: take their NARROWEST removal ──
+    # Bat will die; force opp's flexible removal onto the Bat by leaving
+    # them only the narrow one in hand.
+    removals = [c for c in nonlands if c.name in _BAT_REMOVAL_NARROWNESS]
+    if removals:
+        victim = max(removals,
+                     key=lambda c: _BAT_REMOVAL_NARROWNESS.get(c.name, 0))
+        reason = f"narrow removal (force flex onto Bat)"
+
+    # ── Priority 2: force a turn skip ──
+    # Early game, if opp has exactly 1 castable card for next turn and
+    # only 2-3 nonlands total, take that card to skip their turn.
+    if victim is None and gs.turn <= 4:
+        opp_lands = sum(1 for c in opp.zones.battlefield if c.is_land())
+        next_turn_mana = opp_lands + 1   # likely land drop
+        castable_next = [c for c in nonlands
+                         if getattr(c, 'cmc', 0) <= next_turn_mana]
+        if len(castable_next) == 1 and len(nonlands) <= 3:
+            victim = castable_next[0]
+            reason = "force turn skip (only castable next turn)"
+
+    # ── Priority 3: snowballing engine / payoff card ──
+    if victim is None:
+        engines = [c for c in nonlands if c.name in _BAT_ENGINE_CARDS]
+        if engines:
+            victim = max(engines, key=lambda c: getattr(c, 'cmc', 0))
+            reason = "engine/payoff card"
+
+    # ── Priority 4: highest-CMC nonland (fallback) ──
+    if victim is None:
+        victim = max(nonlands, key=lambda c: getattr(c, 'cmc', 0))
+        reason = "fallback (highest CMC)"
+
     opp.zones.hand.remove(victim)
     opp.zones.exile.append(victim)
     # Note: real card says "until this leaves the battlefield" — we
     # don't track return-on-leave. Permanent exile is an approximation.
-    gs._log(f"  Deep-Cavern Bat ETB: exile {victim.name} from opp hand")
+    gs._log(f"  Deep-Cavern Bat ETB: exile {victim.name} ({reason})")
 
 
 def _devout_decree_spell(gs, card):
@@ -2117,12 +2221,27 @@ def _kaito_bane_etb(gs, card):
     Ninjutsu {1}{U}{B}. During your turn with 1+ loyalty: 3/4 Ninja with hexproof.
     +1: emblem Ninjas +1/+1. 0: Surveil 2, draw for each opp who lost life.
     -2: Tap target creature, put two stun counters on it.
-    ETB as 3/4 body (ninjutsu mode). Loyalty abilities not modeled."""
+
+    Sim approximation: treat as a 3/4 hexproof Ninja whenever on the
+    battlefield (real rule is "during your turn while loyalty > 0";
+    sim doesn't model per-turn creature toggle). Without setting
+    power/toughness explicitly, Kaito enters with None/None and dies
+    to state-based-actions immediately -- silent killer-bug for the
+    Dimir Midrange archetype."""
     from data.card import Tag
     from engine.keywords import KWTag
     # Kaito enters as a creature during our turn (ninjutsu proxy)
     card.tags.add(Tag.CREATURE)
-    gs._log("  Kaito, Bane of Nightmares: 3/4 Ninja (loyalty 3)")
+    # CRITICAL: set creature stats so SBA doesn't kill him on entry.
+    # Real card: 3/4 while loyalty > 0 on your turn.
+    card.power = 3
+    card.toughness = 4
+    # Hexproof during your turn (approximated as always-hexproof here)
+    card.tags.add(KWTag.HEXPROOF)
+    # Loyalty starts at 3 (already in card_db, but ensure it's set)
+    if getattr(card, 'loyalty', None) in (None, 0):
+        card.loyalty = 3
+    gs._log("  Kaito, Bane of Nightmares: 3/4 Ninja hexproof (loyalty 3)")
     # Fire Tinybones Joins Up trigger (Kaito is legendary)
     _tinybones_legendary_trigger(gs)
 
@@ -3454,13 +3573,26 @@ def _splitskin_doll_etb(gs, card):
 def _spyglass_siren_etb(gs, card):
     """Spyglass Siren — {U} 1/1 Siren Pirate.
     'Flying.
-     When this creature enters, create a Map token.'
+     When this creature enters, create a Map token.
+     ({1}, {T}, Sacrifice this token: Target creature you control
+      explores. Activate only as a sorcery.)'
 
-    Map = sac/tap for explore (proxy: +1 card)."""
+    Pre-fix (2026-05-08 audit): handler auto-drew +1 card on ETB,
+    over-modeling Map's value (Map costs {1}+T to sac for explore on
+    a future turn). Inflated Spyglass relative to Dream Beavers and
+    other 1-drop alternatives.
+
+    Post-fix: Map proxy is delayed -- +1 card only on T3+ ETBs (when
+    you'd realistically have the {1} spare to sac the Map). T1-T2
+    ETBs just give the body. Closer to real-world Map activation
+    pattern."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
-    gs.zones.draw(1)
-    gs._log("  Spyglass Siren: 1/1 flying + Map (+1 card)")
+    if gs.turn >= 3:
+        gs.zones.draw(1)
+        gs._log("  Spyglass Siren: 1/1 flying + Map sac (+1 card)")
+    else:
+        gs._log("  Spyglass Siren: 1/1 flying + Map (unsac'd, no draw)")
 
 
 def _stab_spell(gs, card):
@@ -7723,13 +7855,27 @@ def _dreadmaws_ire_spell(gs, card):
 
 def _dream_beavers_etb(gs, card):
     """Dream Beavers — {B} 1/1 Beaver Nightmare.
-    'Flying. ETB: each opp loses 1, you gain 1, scry 1.'"""
+    'Flying. ETB: each opp loses 1, you gain 1, scry 1.'
+
+    Scry 1 proxy: 50% chance of +1 card draw. Engine doesn't model
+    scry properly; convention from Kutzil's Flanker is scry 2 = +1
+    card. Scry 1 is half that, so probabilistic +1 with 50% rate.
+    Compared to Spyglass Siren's Map (proxied as immediate +1 card,
+    line 3573), this is slightly less generous -- which is correct
+    because Map's eventual explore activation is stronger than
+    a one-time scry 1."""
     from engine.keywords import KWTag
     card.tags.add(KWTag.FLYING)
     gs.life += 1
     opp = getattr(gs, "_match_opp", None)
-    if opp is not None: opp.life -= 1
-    gs._log("  Dream Beavers: 1/1 flying, -1 opp +1 me")
+    if opp is not None:
+        opp.life -= 1
+    # Scry 1 proxy: deterministic 50% via turn parity (avoids RNG state issues)
+    if (gs.turn + len(gs.zones.battlefield)) % 2 == 0:
+        gs.zones.draw(1)
+        gs._log("  Dream Beavers: 1/1 flying, -1 opp +1 me, scry 1 hit (+1 card)")
+    else:
+        gs._log("  Dream Beavers: 1/1 flying, -1 opp +1 me, scry 1 (no draw)")
 
 
 def _dreams_of_steel_oil_spell(gs, card):

@@ -177,6 +177,70 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
     }
     _PROWESS_THREATS = {"Slickshot Show-Off", "Colorstorm Stallion"}  # Tishana strips these
 
+    # Manlands: a 2-lander with manlands plays better than the count suggests
+    _MANLANDS = {"Restless Reef", "Soulstone Sanctuary",
+                 "Multiversal Passage", "Starting Town"}
+
+    # Mulligan: pilot rules per dimir-jermey-v2-sb-guide-rc-dc.md
+    #   - NO 1-landers ever (snap mull)
+    #   - 2-lander with low curve (all <=2 CMC nonlands) keep all day
+    #   - 7-card all-reactive (no creature) usually mull, manlands lean keep
+    def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
+        """Dimir Midrange mulligan rules (overrides AwareMatchAPL default).
+
+        Reject:
+          - 0-1 lands (snap mull, no exception)
+          - 6+ lands
+          - All 5+ CMC nonlands (no early plays)
+          - 7-card all-reactive hand (0 creatures, 0 manlands) -- need
+            pressure or a manland to threaten
+
+        Conditional:
+          - 2-lander: keep iff at least 1 nonland is <=3 CMC and at
+            least 1 creature OR a manland on board path
+          - 3-4 lander: keep iff at least 1 creature OR Kaito with a
+            2-drop OR has a manland
+        """
+        if len(hand) <= 4:
+            return True   # London mull floor
+
+        lands = [c for c in hand if c.is_land()]
+        nonlands = [c for c in hand if not c.is_land()]
+        n_lands = len(lands)
+
+        # Hard rejects
+        if n_lands <= 1 or n_lands >= 6:
+            return False
+        if not nonlands:
+            return False
+
+        # All 5+ CMC reject
+        cheap_nonlands = [c for c in nonlands if (getattr(c, 'cmc', 99) or 99) <= 4]
+        if not cheap_nonlands:
+            return False
+
+        creatures = [c for c in nonlands if c.has(Tag.CREATURE)]
+        has_manland = any(c.name in self._MANLANDS for c in lands)
+
+        # All-reactive 7-card hand (no creature, no manland): mull
+        if len(hand) == 7 and not creatures and not has_manland:
+            return False
+
+        # 2-lander: needs early-curve play AND (creature or manland)
+        if n_lands == 2:
+            has_early = any((getattr(c, 'cmc', 99) or 99) <= 3 for c in nonlands)
+            return has_early and (bool(creatures) or has_manland)
+
+        # 3-4 lander with stuff: keep
+        # 5-lander: keep iff have a 2-drop creature
+        if n_lands == 5:
+            has_two_drop = any((getattr(c, 'cmc', 99) or 99) <= 2 and c.has(Tag.CREATURE)
+                               for c in nonlands)
+            return has_two_drop
+
+        # 3-4 lander default: keep
+        return True
+
     def _vs_green(self, opponent: GameState) -> bool:
         if opponent is None:
             return False
@@ -250,17 +314,47 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         return (lands[4:] + spells)[:n]
 
     # ── Mana holdback ──────────────────────────────────────────────────────
+    # Counter cards we hold up mana for (pilot rule: tempo deck wins by
+    # turning 1-2 mana counters into eating opp's 3+ mana spells).
+    _HOLDUP_COUNTERS = {
+        SPELL_SNARE,           # {U} -- hits CMC=2 (most removal + 2-drops)
+        PHANTOM,               # {U} Spree, counter mode {1}{U}
+        "Negate",              # {1}{U} noncreature
+        "Spell Pierce",        # {U} noncreature unless paid 2
+        "Disdainful Stroke",   # {1}{U} CMC>=4
+        "Essence Scatter",     # {1}{U} creature
+        "Spider-Sense",        # {1}{U} insta/sorcery/triggered (Web-slinging {U})
+        "Annul",               # {U} artifact/enchantment
+    }
+
     def reserve_mana(self, gs: GameState, opponent: GameState):
         has_floodpits = any(c.name == FLOODPITS for c in gs.zones.hand)
         opp_has_dorks = (opponent is not None and any(
             c.name in MANA_DORK_NAMES and not getattr(c, 'tapped', False)
             for c in opponent.zones.battlefield
         ))
+
+        # Count counters in hand (each one wants 1-2 mana held up)
+        counters_in_hand = [c for c in gs.zones.hand
+                            if c.name in self._HOLDUP_COUNTERS]
+        has_counter = bool(counters_in_hand)
+
+        # Total lands available (need to reserve only if we have spare)
+        n_lands = sum(1 for c in gs.zones.battlefield if c.is_land()
+                      and not getattr(c, 'tapped', False))
+
         if has_floodpits and opp_has_dorks and self._vs_green(opponent):
             # Hold {1}{U} = 2 mana to flash Floodpits during their upkeep
             gs.mana_reserve = 2
+        elif has_counter and n_lands >= 3:
+            # Hold up enough for the cheapest counter we have
+            min_cmc = min(int(getattr(c, 'cmc', 1) or 1)
+                          for c in counters_in_hand)
+            # Cap reserve at 2 so we still develop board (don't sit on
+            # 4 mana doing nothing)
+            gs.mana_reserve = min(min_cmc, 2)
         elif opponent and self._vs_lessons(opponent):
-            gs.mana_reserve = 1   # hold 1 for counter / Into the Flood Maw
+            gs.mana_reserve = 1   # hold 1 for Into the Flood Maw fallback
         else:
             gs.mana_reserve = 0
 
@@ -309,11 +403,31 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                 return
 
     # ── Kaito -2: double-stun their biggest threat ─────────────────────────
+    # Opp removal cards Kaito should fear (will kill the planeswalker)
+    _KAITO_THREAT_REMOVAL = {
+        "Bitter Triumph", "Long Goodbye", "Get Lost",
+        "Sheltered by Ghosts", "Vanish into Eternity",
+        "Hopeless Nightmare", "Lightning Helix",
+        "Shoot the Sheriff", "Requiting Hex",
+    }
+
     def _kaito_minus2(self, gs: GameState, opponent: GameState):
         """
-        Kaito, Bane of Nightmares -2: tap target creature, put 2 stun counters.
-        2 stun counters = misses 2 untap steps. vs green this is 2 turns of silence
-        on their biggest threat. Fire once when Kaito enters or early in main phase.
+        Kaito -2: tap target creature + 2 stun counters.
+
+        Pilot rule: -2 is rarely correct. Default is to PRESERVE loyalty
+        for the hexproof-on-your-turn body and the +0 surveil-draw line.
+        Only fire -2 when ONE of the following holds:
+
+        (a) Kaito is going to die on opp's turn anyway -- spend the
+            loyalty before they steal it (opp board can outdamage
+            current loyalty, OR opp has known PW-killing removal in hand)
+        (b) We're so far ahead that loyalty is fungible (life lead 8+,
+            or empty opp board with us at healthy life)
+        (c) Game-ending threat must be locked: opp creature would lethal
+            us next turn AND we can't otherwise remove it
+
+        Otherwise: skip the -2 and prefer +0 (draw) or +1 (emblem) lines.
         """
         if opponent is None:
             return
@@ -323,20 +437,168 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         if getattr(kaito_on_bf, '_minus2_used', False):
             return  # already used this turn
 
-        opp_creatures = [c for c in opponent.zones.battlefield
-                         if c.has(Tag.CREATURE) and not c.is_land()
-                         and not getattr(c, 'tapped', False)]
+        opp_creatures_all = [c for c in opponent.zones.battlefield
+                             if c.has(Tag.CREATURE) and not c.is_land()]
+        opp_creatures = [c for c in opp_creatures_all
+                         if not getattr(c, 'tapped', False)]
         if not opp_creatures:
             return
 
-        # Target biggest threat (vs green: biggest creature, vs others: same)
+        # ── Gate: should we even -2 this turn? ──
+        loyalty = getattr(kaito_on_bf, 'loyalty', 3) or 3
+
+        # (a) Kaito dying check: opp's untapped power vs loyalty,
+        # plus removal-in-hand check (opp can target the PW directly).
+        opp_attack_power = sum(safe_power(c) for c in opp_creatures)
+        opp_removal_in_hand = sum(
+            1 for c in opponent.zones.hand
+            if c.name in self._KAITO_THREAT_REMOVAL
+        )
+        kaito_dying = (opp_attack_power >= loyalty) or (opp_removal_in_hand >= 1)
+
+        # (b) Clearly-ahead check: big life lead OR clear board + healthy life
+        life_lead = gs.life - opponent.life
+        empty_opp_board = len(opp_creatures_all) == 0
+        clearly_ahead = (life_lead >= 8) or (empty_opp_board and gs.life >= 12)
+
+        # (c) Must-lock check: opp has a creature that can lethal us next
+        # turn AND we have no removal in hand for it.
+        biggest_threat_power = max((safe_power(c) for c in opp_creatures), default=0)
+        my_removal_in_hand = any(
+            c.name in {LONG_GOODBYE, REQUITING, SHOOT, BITTER}
+            and gs.mana_pool.can_cast(c.mana_cost, c.cmc)
+            for c in gs.zones.hand
+        )
+        must_lock = (biggest_threat_power >= gs.life) and not my_removal_in_hand
+
+        if not (kaito_dying or clearly_ahead or must_lock):
+            return  # default: preserve loyalty, don't -2
+
+        # ── Fire -2 ──
         target = max(opp_creatures, key=lambda c: safe_power(c))
         target.tapped = True
         target._stun_counter = True
         # Two stun counters = 2 missed untap steps (proxy via attribute count)
         target._stun_count = getattr(target, '_stun_count', 0) + 2
         kaito_on_bf._minus2_used = True
-        gs._log(f"  [Kaito -2] double-stun {target.name} (2 untap steps missed)")
+        # Reduce loyalty by 2
+        if hasattr(kaito_on_bf, 'loyalty') and kaito_on_bf.loyalty is not None:
+            kaito_on_bf.loyalty = max(0, kaito_on_bf.loyalty - 2)
+        reason = ("kaito-dying" if kaito_dying else
+                  ("ahead" if clearly_ahead else "must-lock"))
+        gs._log(f"  [Kaito -2] double-stun {target.name} ({reason}, loyalty->{getattr(kaito_on_bf, 'loyalty', '?')})")
+
+    # ── Kaito +1: emblem "Ninjas you control get +1/+1" ───────────────────
+    def _kaito_plus_one(self, gs: GameState, opponent: GameState):
+        """
+        Kaito +1: 'You get an emblem with "Ninjas you control get +1/+1."'
+
+        SIM APPROXIMATION: the emblem buff itself is NOT wired in combat
+        -- `gs._ninja_emblem = True` is set as a marker but nothing reads
+        it. The real value modelled here is loyalty banking: +1 increases
+        Kaito's loyalty, which means he survives longer (more attacks,
+        more +0 draws on subsequent turns). When the engine adds combat
+        Ninja-buff support, this will become a true emblem activation.
+
+        Pilot rule (option B from the Kaito tree): when we have a 2nd Kaito
+        in hand, +1 Kaito1 to bank loyalty and set up the swing → ninjutsu
+        Kaito2 over Kaito1 line.
+
+        Fire when:
+          (a) Kaito on board this turn AND (-2 not used) AND (+0 not used)
+          (b) We have 2nd Kaito in hand OR we have other Ninjas
+              (note: emblem buff is NOT applied in current engine; see above)
+          (c) We're not in a desperate position (life lead OK, opp board
+              not threatening lethal next turn)
+        """
+        if opponent is None:
+            return
+        kaito_on_bf = next((c for c in gs.zones.battlefield if c.name == KAITO), None)
+        if kaito_on_bf is None:
+            return
+        if getattr(kaito_on_bf, '_minus2_used', False):
+            return
+        if getattr(kaito_on_bf, '_zero_used_turn', -1) == gs.turn:
+            return
+        if getattr(kaito_on_bf, '_plus1_used_turn', -1) == gs.turn:
+            return
+
+        # Need a Ninja to buff (Kaito2 in hand for ninjutsu chain, or
+        # other Ninjas/ninjutsu-capable creatures on board)
+        kaito_in_hand = any(c.name == KAITO for c in gs.zones.hand)
+        # Floodpits is a Merfolk not Ninja, but Spyglass Siren creates
+        # tokens; ninjutsu lines benefit from emblem on any future Ninja.
+        ninjas_on_bf = [c for c in gs.zones.battlefield
+                        if c.has(Tag.CREATURE) and not c.is_land()
+                        and 'ninja' in (getattr(c, 'type_line', '') or '').lower()]
+        if not kaito_in_hand and not ninjas_on_bf:
+            return  # nothing to buff
+
+        # Don't +1 in desperate position -- -2 lock or +0 draw might be
+        # more urgent. Skip if opp board pressure is meaningful.
+        opp_creatures = [c for c in opponent.zones.battlefield
+                         if c.has(Tag.CREATURE) and not c.is_land()
+                         and not getattr(c, 'tapped', False)]
+        opp_attack_power = sum(safe_power(c) for c in opp_creatures)
+        if opp_attack_power >= gs.life - 4:
+            return  # too risky -- prefer -2 or removal
+
+        # Fire +1 -- bank loyalty
+        kaito_on_bf._plus1_used_turn = gs.turn
+        if hasattr(kaito_on_bf, 'loyalty') and kaito_on_bf.loyalty is not None:
+            kaito_on_bf.loyalty += 1
+        # Track emblem state on GameState so future Ninja casts can buff
+        gs._ninja_emblem = True
+        gs._log(f"  [Kaito +1] emblem 'Ninjas +1/+1' "
+                f"(loyalty -> {getattr(kaito_on_bf, 'loyalty', '?')})")
+
+    # ── Kaito +0: surveil 2, draw if opp lost life this turn ──────────────
+    def _kaito_plus_zero(self, gs: GameState, opponent: GameState):
+        """
+        Kaito +0: 'Surveil 2. Then draw a card for each opponent who lost
+        life this turn.' Default action when -2 isn't justified.
+
+        Pilot rule: don't plan for the draw -- it's opportunistic. Fire
+        +0 whenever Kaito is on board, an ability hasn't already been
+        used this turn, and we're past the trivial cases.
+
+        Surveil 2 is approximated as a no-op (sim doesn't model deck
+        ordering). The draw fires if opp.life dropped from our turn
+        start (combat damage, painlands tapped, etc.).
+        """
+        if opponent is None:
+            return
+        kaito_on_bf = next((c for c in gs.zones.battlefield if c.name == KAITO), None)
+        if kaito_on_bf is None:
+            return
+        if getattr(kaito_on_bf, '_minus2_used', False):
+            return  # we already used -2 this turn
+        if getattr(kaito_on_bf, '_zero_used_turn', -1) == gs.turn:
+            return  # already +0'd this turn
+
+        loyalty = getattr(kaito_on_bf, 'loyalty', 3) or 3
+        if loyalty <= 0:
+            return
+
+        # Mark used
+        kaito_on_bf._zero_used_turn = gs.turn
+
+        # Did opp lose life this turn? (combat, painlands, drain effects)
+        opp_life_now = opponent.life
+        opp_life_start = getattr(self, '_opp_life_at_turn_start', 20)
+        opp_lost_life = opp_life_now < opp_life_start
+
+        if opp_lost_life:
+            # Draw a card (surveil 2 effect is approximated by the draw alone)
+            if gs.zones.library:
+                drawn = gs.zones.library.pop(0)
+                gs.zones.hand.append(drawn)
+                gs._log(f"  [Kaito +0] surveil 2 + draw {drawn.name} "
+                        f"(opp lost {opp_life_start - opp_life_now} life)")
+            else:
+                gs._log("  [Kaito +0] surveil 2 (library empty, no draw)")
+        else:
+            gs._log("  [Kaito +0] surveil 2 (no draw -- opp life stable)")
 
     # ── Loch Mare tap ability: {2}{U}, remove 2 counters, tap creature ─────
     def _loch_mare_tap(self, gs: GameState, opponent: GameState):
@@ -369,16 +631,46 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         gs._log(f"  [Loch Mare] tap {target.name} ({loch.counters} counters remain)")
 
     # ── Kill a specific target ─────────────────────────────────────────────
+    # Outlaw types Shoot the Sheriff CAN'T target (non-outlaw only)
+    _OUTLAW_TYPES = {"assassin", "mercenary", "pirate", "rogue", "warlock"}
+
     def _kill_target(self, gs: GameState, target) -> bool:
-        """Try to kill target creature with removal spells. Returns True if killed."""
-        toughness = safe_toughness(target)
+        """Try to kill target creature/planeswalker with removal.
+
+        Validity gates per Scryfall:
+          - Requiting Hex     {B}  : creature with MV <= 2
+          - Long Goodbye      {1B} : creature/PW with MV <= 3, uncounterable
+          - Shoot the Sheriff {1B} : non-outlaw creature (any MV)
+                              outlaws: Assassin, Mercenary, Pirate, Rogue, Warlock
+          - Bitter Triumph    {1B} : any creature/PW (cost: 3 life or discard)
+
+        Prefer narrowest legal removal (saves flex for harder targets).
+        """
+        target_cmc = getattr(target, 'cmc', 0) or 0
+        target_types_lower = (getattr(target, 'type_line', '') or '').lower()
+        is_outlaw = any(t in target_types_lower for t in self._OUTLAW_TYPES)
+        is_planeswalker = "planeswalker" in target_types_lower
+
+        # Build prioritized candidate list (narrowest legal first)
         for card in list(gs.zones.hand):
             if not gs.mana_pool.can_cast(card.mana_cost, card.cmc):
                 continue
-            if card.name == LONG_GOODBYE and toughness <= 2:
+            name = card.name
+
+            # 1. Requiting Hex: narrowest, MV<=2 creature only (no PW)
+            if name == REQUITING and target_cmc <= 2 and not is_planeswalker:
                 gs.cast_spell(card)
                 return True
-            if card.name in {REQUITING, SHOOT, BITTER}:
+            # 2. Long Goodbye: MV<=3, creature OR PW, uncounterable
+            if name == LONG_GOODBYE and target_cmc <= 3:
+                gs.cast_spell(card)
+                return True
+            # 3. Shoot the Sheriff: any MV creature, but NON-OUTLAW only
+            if name == SHOOT and not is_planeswalker and not is_outlaw:
+                gs.cast_spell(card)
+                return True
+            # 4. Bitter Triumph: any creature/PW (most flexible, saved last)
+            if name == BITTER:
                 gs.cast_spell(card)
                 return True
         return False
@@ -451,9 +743,22 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
         vs_lessons    = self._vs_lessons(opponent)
         vs_airbending = self._vs_airbending(opponent)
 
-        # ── Always: Kaito -2 and Loch Mare tap fire every main phase ──────
+        # ── Snapshot opp life at start of my turn (for Kaito +0 draw) ──
+        # The +0 ability draws iff opp lost life this turn. Snapshot once
+        # per turn so we can detect mid-turn life loss via combat or
+        # painlands/spell-cost damage.
+        if getattr(self, '_kaito_life_snap_turn', -1) != gs.turn:
+            self._opp_life_at_turn_start = (opponent.life if opponent else 20)
+            self._kaito_life_snap_turn = gs.turn
+
+        # ── Kaito ability priority: -2 (gated) > +0 (draw) > +1 (emblem) ──
+        # Real pilot tree: prefer to LOCK threats (-2) when needed, DRAW
+        # value (+0) when opp lost life, otherwise BANK loyalty (+1) for
+        # the ninjutsu chain. Each method gates on its own preconditions.
         self._kaito_minus2(gs, opponent)
         self._loch_mare_tap(gs, opponent)
+        self._kaito_plus_zero(gs, opponent)
+        self._kaito_plus_one(gs, opponent)
 
         # ── AZORIUS HIGH NOON: priority kill on lock pieces & Aven/Aang ───
         # Zevin's deck wins by chaining High Noon + Voice + Aven exiles.
@@ -653,6 +958,36 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
             opp_creatures = [c for c in opponent.zones.battlefield
                              if c.has(Tag.CREATURE) and not c.is_land()]
 
+            # ── PRIORITY 0 (T1-T3 only): Into the Flood Maw on opp's
+            # earthbended-land creature OR biggest threat. Vs landfall /
+            # rhythm / Ouroboroid the early-tempo bounce is huge --
+            # resets counters, stops landfall pump, sets back their
+            # mana sequence by a turn. After T3, the bounce loses
+            # tempo value (they've already deployed key threats).
+            if gs.turn <= 3:
+                # Earthbended land = land that's also a creature on
+                # opp's side. Fall back to opp's biggest creature.
+                earthbended_lands = [c for c in opponent.zones.battlefield
+                                     if c.is_land() and c.has(Tag.CREATURE)]
+                # Otherwise pick highest-power non-land creature
+                non_land_threats = [c for c in opp_creatures
+                                    if getattr(c, 'power', None) is not None]
+                target = None
+                if earthbended_lands:
+                    target = earthbended_lands[0]
+                elif non_land_threats:
+                    target = max(non_land_threats, key=safe_power)
+                if target is not None:
+                    for card in list(gs.zones.hand):
+                        if card.name == INTO_FLOOD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                            gs._bounce_target_name = target.name
+                            gs.cast_spell(card)
+                            gs._bounce_target_name = None
+                            gs._log(f"  [vs landfall/rhythm/ouro T{gs.turn}] "
+                                    f"Into the Flood Maw -> {target.name} "
+                                    f"({'earthbended land' if target.is_land() else 'biggest threat'})")
+                            break
+
             # 1. Kill mana producers first
             gs._target_mana_dork = True
             for c in sorted(opp_creatures,
@@ -667,11 +1002,14 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
                     gs.cast_spell(card)
                     break
 
-            # 3. Into the Flood Maw: bounce counter-laden creatures (resets all counters)
-            for card in list(gs.zones.hand):
-                if card.name == INTO_FLOOD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
-                    gs.cast_spell(card)
-                    break
+            # 3. Into the Flood Maw: late-game (post-T3) fallback bounce
+            #    of counter-laden creatures (resets all counters).
+            #    The early-priority bounce is handled in PRIORITY 0 above.
+            if gs.turn > 3:
+                for card in list(gs.zones.hand):
+                    if card.name == INTO_FLOOD and gs.mana_pool.can_cast(card.mana_cost, card.cmc):
+                        gs.cast_spell(card)
+                        break
 
             gs._target_mana_dork = False
 
@@ -795,35 +1133,27 @@ class JermeyDimirMatchAPL(AwareMatchAPL):
 
     # ── Stormchaser's Talent level activation ────────────────────────────────
     def _try_stormchaser_levelup(self, gs: GameState):
-        """Activate Stormchaser's Talent levels at sorcery speed:
-          Level 2 ({3}{U}): return I/S from GY to hand
-          Level 3 ({5}{U}): each I/S cast creates a 1/1 prowess Otter
-        Level 3 is the bigger payoff -- each Boomerang Basics, Bitter Triumph,
-        Faebloom Trick, etc. = another Otter.
+        """Activate Stormchaser's Talent levels via engine.classes.level_up,
+        which BOTH pays the cost AND fires the level effect (Level 2: return
+        target instant/sorcery from GY to hand; Level 3: each I/S cast
+        creates a 1/1 prowess Otter via class_on_spell_cast hook).
+
+        Pre-fix (2026-05-08): this method set sct._class_level manually,
+        which never fired the level-2/3 effects (they read card.counters,
+        not _class_level). Recursion engine was effectively dead. This
+        is the bug audit identified -- Stormchaser's Talent only Level 1
+        Otter ETB was firing in sim.
         """
+        from engine.classes import level_up
         sct = next((c for c in gs.zones.battlefield
                    if c.name == STORMCHASER), None)
         if sct is None:
             return
-        level = getattr(sct, '_class_level', 1)
-        # Try Level 3 first if we're at level 2 and have {5}{U}
-        if level >= 2:
-            if gs.mana_pool.can_cast("5U", 6):
-                try:
-                    gs.mana_pool.pay_cost("5U", 6)
-                    sct._class_level = 3
-                    gs._log("  [Stormchaser] level 3 -- each I/S now creates an Otter")
-                    return
-                except Exception:
-                    pass
-        # Otherwise try Level 2 if we have {3}{U}
-        if level == 1 and gs.mana_pool.can_cast("3U", 4):
-            try:
-                gs.mana_pool.pay_cost("3U", 4)
-                sct._class_level = 2
-                gs._log("  [Stormchaser] level 2")
-            except Exception:
-                pass
+        # Try to advance level repeatedly until cost can't be paid.
+        # level_up returns True on success. Two attempts max (Lvl 1->2, Lvl 2->3).
+        for _ in range(2):
+            if not level_up(sct, gs):
+                break
 
     # ── Loch Mare activated ability ──────────────────────────────────────────
     def _try_loch_mare_draw(self, gs: GameState):

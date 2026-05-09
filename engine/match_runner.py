@@ -358,6 +358,22 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
         for c in defender_lost:
             _safe_remove(gs.bf_a, c, "bf_a"); gs.gy_a.append(c)
 
+    # Cecil Darkness drawback (2026-05-08 audit fix):
+    # "Whenever Cecil deals damage, you lose that much life."
+    # Approximation: if Cecil attacked AND survived (not in attacker_lost),
+    # he likely dealt damage. Lose life equal to Cecil's power (default 2).
+    # This makes Cecil a real tempo trade vs free deathtouch.
+    attacker_bf = gs.bf_a if player == "a" else gs.bf_b
+    cecil_in_attacker = any(c.name == "Cecil, Dark Knight" for c in attacker_bf)
+    cecil_died = any(c.name == "Cecil, Dark Knight" for c in attacker_lost)
+    if cecil_in_attacker and not cecil_died and creatures_hit > 0:
+        cecils_alive = sum(1 for c in attacker_bf if c.name == "Cecil, Dark Knight")
+        cecil_dmg = 2 * cecils_alive  # Cecil's base power = 2
+        if player == "a":
+            gs.life_a -= cecil_dmg
+        else:
+            gs.life_b -= cecil_dmg
+
     # Enduring Curiosity: draw 1 per creature that dealt combat damage to a player
     _EC_NAMES = {"Enduring Curiosity"}
     if creatures_hit > 0:

@@ -147,8 +147,20 @@ class CardDB:
 
     def oracle_text(self, card_name: str) -> str:
         card = self.get(card_name)
-        if card:
-            return card.get("oracle_text", "") or ""
+        if not card:
+            return ""
+        text = card.get("oracle_text", "") or ""
+        if text:
+            return text
+        # DFC / MDFC / Room / Adventure / Split cards: top-level oracle_text
+        # is empty; combine the per-face oracle text. Use the " // " separator
+        # Scryfall uses for compound names so face boundaries stay parseable.
+        faces = card.get("card_faces") or []
+        if faces:
+            parts = [f.get("oracle_text", "") or "" for f in faces]
+            parts = [p for p in parts if p]
+            if parts:
+                return "\n // \n".join(parts)
         return ""
 
     def cmc(self, card_name: str) -> float:

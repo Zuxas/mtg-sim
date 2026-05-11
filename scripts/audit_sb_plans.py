@@ -1,20 +1,20 @@
-"""Audit MATCHUP_SB_PLANS across every match APL.
+"""Audit deck data + MATCHUP_SB_PLANS health across the project.
 
-For each (apl, matchup, plan):
-  - Parse IN/OUT card lists (qty + name)
-  - Verify OUT cards exist in mainboard with >= requested qty
-  - Verify IN cards exist in sideboard with >= requested qty
-  - Verify IN/OUT counts balance (same total)
-  - Report plans with issues
+Two audit modes:
+  --sb-plans (default): for each (apl, matchup, plan), verify cards exist
+    in deck/sb with correct counts and IN/OUT balance
+  --decks: scan every decks/*.txt for empty-oracle / unknown / banned cards
+  --all: run both
 
-Run: python scripts/audit_sb_plans.py [--verbose]
+Run: python scripts/audit_sb_plans.py [--sb-plans | --decks | --all] [--verbose]
 """
-import sys, os, importlib, pkgutil, collections
+import sys, os, glob, collections
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from apl import APL_REGISTRY, MATCH_APL_REGISTRY, get_match_apl
 from data.deck import load_deck_from_file
 from engine.sideboard import parse_sb_string
+from engine.card_db import CardDB, get_oracle
 
 
 def audit_plan(apl, opp_key, plan, deck, sb):
@@ -53,8 +53,107 @@ def audit_plan(apl, opp_key, plan, deck, sb):
     return issues
 
 
+def audit_decks(verbose=False):
+    """Scan every decks/*.txt for data quality issues.
+
+    Reports:
+      - Cards with empty oracle text (likely token / art-series / unknown)
+      - Cards not found in card_db
+      - Banned cards (Standard format only — hard-coded list)
+      - Non-60 mainboards (already flagged with audit:* markers in headers)
+    """
+    db = CardDB()
+    # Hard-coded banned-in-Standard list (as of 2026-05). Add cards here as
+    # the format changes.
+    BANNED_STANDARD = {
+        "Cori-Steel Cutter",      # banned 2025-06-30
+        "Mana Confluence",         # banned for power level
+        "Detect Intrusion",        # Unhinged joke card, never legal
+        "Belion",                  # Unhinged joke card
+    }
+
+    issue_lines = []
+    decks_scanned = 0
+    decks_with_issues = 0
+    empty_oracles = collections.defaultdict(list)
+    unknown_cards = collections.defaultdict(list)
+    banned_finds = collections.defaultdict(list)
+
+    for path in sorted(glob.glob("decks/*.txt")):
+        try:
+            deck, sb = load_deck_from_file(path)
+        except Exception as e:
+            issue_lines.append(f"{path}: load failed ({e})")
+            continue
+        decks_scanned += 1
+        deck_issues = []
+
+        # Card-level checks — dedup by name to avoid spam
+        seen = set()
+        for c in deck + sb:
+            if c.name in seen:
+                continue
+            seen.add(c.name)
+            card_data = db.get(c.name)
+            if not card_data:
+                unknown_cards[c.name].append(os.path.basename(path))
+                deck_issues.append(f"  UNKNOWN: {c.name!r}")
+            elif not get_oracle(c.name):
+                empty_oracles[c.name].append(os.path.basename(path))
+            if c.name in BANNED_STANDARD and "_standard" in path:
+                banned_finds[c.name].append(os.path.basename(path))
+                deck_issues.append(f"  BANNED in Standard: {c.name!r}")
+
+        if deck_issues:
+            decks_with_issues += 1
+            if verbose:
+                issue_lines.append(f"\n=== {os.path.basename(path)} ===")
+                issue_lines.extend(deck_issues)
+
+    print(f"Decks scanned: {decks_scanned}")
+    print(f"Decks with issues: {decks_with_issues}")
+
+    if empty_oracles:
+        print(f"\nCards with EMPTY oracle text ({len(empty_oracles)} unique):")
+        for name, paths in sorted(empty_oracles.items()):
+            print(f"  {name!r:50s} in {len(paths)} deck(s): {paths[0]}")
+
+    if unknown_cards:
+        print(f"\nUNKNOWN cards (not in card_db, {len(unknown_cards)} unique):")
+        for name, paths in sorted(unknown_cards.items()):
+            print(f"  {name!r:50s} in {len(paths)} deck(s): {paths[0]}")
+
+    if banned_finds:
+        print(f"\nBANNED cards in Standard decks ({len(banned_finds)} unique):")
+        for name, paths in sorted(banned_finds.items()):
+            for p in paths:
+                print(f"  {name!r:40s} in {p}")
+
+    if not (empty_oracles or unknown_cards or banned_finds):
+        print("\nNo deck data issues found.")
+
+
 def main():
     verbose = "--verbose" in sys.argv
+    mode = "sb"  # default
+    if "--decks" in sys.argv:
+        mode = "decks"
+    elif "--all" in sys.argv:
+        mode = "all"
+
+    if mode in ("decks", "all"):
+        print("=" * 60)
+        print("DECK DATA AUDIT")
+        print("=" * 60)
+        audit_decks(verbose=verbose)
+        print()
+
+    if mode == "decks":
+        return
+
+    print("=" * 60)
+    print("SB PLAN AUDIT")
+    print("=" * 60)
     total_apls = 0
     total_plans = 0
     apls_with_issues = 0

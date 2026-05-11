@@ -139,15 +139,18 @@ class IzzetProwessNickTokyoMatchAPL(IzzetProwessStandardMatchAPL):
              "1 Roaring Furnace // Steaming Sauna"],
         ),
         "izzetlesson": None,  # alias resolved at lookup
+        # 7 IN / 7 OUT — balanced. Less aggressive Slickshot cut than before
+        # (still 4 in plan was costly per re-tune findings, but vs HN/UW Tempo
+        # Slickshot is genuinely dead per primer "can't plot vs T2 HN").
         "azoriushighnoon": (
             ["1 Spell Pierce", "2 Ral, Crackling Wit", "1 Abrade",
              "1 Wan Shi Tong, Librarian", "1 Broadside Barrage", "1 Get Out"],
-            ["4 Slickshot Show-Off", "2 Burst Lightning"],
+            ["4 Slickshot Show-Off", "2 Burst Lightning", "1 Impractical Joke"],
         ),
         "azoriustempo": (
             ["1 Spell Pierce", "2 Ral, Crackling Wit", "1 Abrade",
              "1 Wan Shi Tong, Librarian", "1 Broadside Barrage", "1 Get Out"],
-            ["4 Slickshot Show-Off", "2 Burst Lightning"],
+            ["4 Slickshot Show-Off", "2 Burst Lightning", "1 Impractical Joke"],
         ),
         "temuromniscience": (
             ["1 Spell Pierce", "1 Disdainful Stroke", "1 Get Out", "1 Bounce Off",

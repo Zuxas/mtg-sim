@@ -205,15 +205,19 @@ class IzzetLootingStandardMatchAPL(AwareMatchAPL, IzzetLootingAPL):
         # 2026-05-12: explicit empty plan = keep maindeck, sideboarding hurts.
         # Human pilot: trust your reads; sim says don't change anything.
         "gruulaggro": ([], []),
+        # Mono Red Aggro: bring full burn/wipe package (Pyroclasm hits MR
+        # weenie curve), drop slow engine. 8 IN / 8 OUT balanced.
         "monoredaggro": (
             ["3 Pyroclasm", "2 Sear", "2 Abrade", "1 Flashfreeze"],
             ["2 Spell Snare", "2 Frostcliff Siege", "2 Stormchaser's Talent",
-             "1 Ghost Vacuum"],
+             "1 Ghost Vacuum", "1 Burst Lightning"],
         ),
+        # Mono Green Aggro: similar but +1 Flashfreeze (counters Sapling, etc.)
+        # 9 IN / 9 OUT balanced.
         "monogreenaggro": (
             ["3 Pyroclasm", "2 Sear", "2 Abrade", "2 Flashfreeze"],
             ["2 Spell Snare", "2 Frostcliff Siege", "2 Stormchaser's Talent",
-             "1 Ghost Vacuum"],
+             "1 Ghost Vacuum", "1 Burst Lightning", "1 Boomerang Basics"],
         ),
 
         # Sultai Reanimator -- MEDIUM confidence (Portland 1-2 loss; refined post-event)
@@ -234,33 +238,39 @@ class IzzetLootingStandardMatchAPL(AwareMatchAPL, IzzetLootingAPL):
         # UW Tempo (Crab Control mode) -- MEDIUM confidence
         # Their threats are 2-toughness flash creatures (Voice 1/3 lives Pyroclasm,
         # Drowner 2/1 dies); main plan is counter-wars. Bring counters + Tidebinder
-        # to neutralize Voice/Drowner ETB+trigger, drop expensive removal (Sear/Burst)
-        # since their creatures are cheap and removal-eating is bad tempo.
+        # to neutralize Voice/Drowner ETB+trigger, cut slow/dead cards.
+        # 6 IN / 6 OUT balanced. (was 6 IN / 6 OUT but Sear was a typo — not in main.)
         "azoriustempo": (
             ["2 Annul", "1 Disdainful Stroke", "1 Tishana's Tidebinder",
              "2 Flashfreeze"],
-            ["2 Burst Lightning", "1 Sear", "1 Frostcliff Siege",
-             "2 Into the Flood Maw"],
+            ["2 Burst Lightning", "1 Frostcliff Siege",
+             "2 Into the Flood Maw", "1 Stormchaser's Talent"],
         ),
 
         # Jeskai Control -- MEDIUM confidence
-        # Counter their Sunfall (cmc 5 -> Disdainful Stroke), bait their counters with
-        # cheap threats, Tidebinder for planeswalker abilities. Drop Pyroclasm + Sear
-        # (no creatures to wipe / too slow); keep some 2-mana threats to grind.
+        # Counter their Sunfall (cmc 5 -> Disdainful Stroke), bait counters with
+        # cheap threats, Tidebinder for planeswalker abilities. Cut dead 2-mana
+        # counter (Snare misses cmc 4+ Sunfall) + dead burn (no creatures).
+        # 6 IN / 6 OUT balanced. (Pyroclasm/Sear typos removed — those are SB cards.)
         "jeskaicontrol": (
             ["1 Disdainful Stroke", "1 Tishana's Tidebinder", "2 Flashfreeze",
              "2 Abrade"],
-            ["3 Pyroclasm", "2 Sear", "1 Boomerang Basics"],
+            ["2 Spell Snare", "2 Burst Lightning", "1 Tiger-Seal",
+             "1 Frostcliff Siege"],
         ),
 
         # Izzet Spellementals (Crab Control mode) -- MEDIUM confidence
         # Mirror-like vs UR spell-heavy shell. GY hate for Phlage recursion is huge.
         # Flashfreeze counters Crab/Hearth/Phlage; Tidebinder strips their Talent.
-        # Drop Pyroclasm + Sear (no creature density), Boomerang (low-value target set).
+        # 2026-05-12 A/B: light swap (keep Snare/Tiger-Seal in) beats aggressive
+        # cut by +4.5pp (84% vs 79.5%). Tiger-Seal is the 1-drop snap-keep;
+        # Snare hits Crab (cmc 2). Cut only redundant/slow stuff.
+        # 6 IN / 6 OUT balanced.
         "izzetspellementals": (
             ["1 Soul-Guide Lantern", "1 Ghost Vacuum", "1 Disdainful Stroke",
              "1 Tishana's Tidebinder", "2 Flashfreeze"],
-            ["3 Pyroclasm", "2 Sear", "1 Boomerang Basics"],
+            ["2 Burst Lightning", "2 Frostcliff Siege", "1 Boomerang Basics",
+             "1 Stormchaser's Talent"],
         ),
     }
 

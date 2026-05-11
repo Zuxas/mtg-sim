@@ -1,0 +1,54 @@
+// Izzet Prowess -- Nick Odenheimer (Worldly Counsel) PT Secrets of Strixhaven (2026-05-01)
+// Source: A Primer on Izzet Prowess, original PT SOS submitted list
+// PT SOS finish: Nick place 15 (Worldly Counsel team, 11 PT pilots clustered places 12-35)
+//
+// Note: This is the PT SOS version. For RC use, see izzet_prowess_nick_tokyo_standard.txt
+// which has Nick's post-PT updates (2nd Prismari Charm, refined SB).
+
+// CREATURES (8)
+4 Eddymurk Crab
+4 Slickshot Show-Off
+
+// INSTANTS (13)
+4 Opt
+4 Sleight of Hand
+4 Burst Lightning
+1 Get Out
+
+// SORCERIES (5)
+4 Boomerang Basics
+1 Stock Up
+
+// ENCHANTMENTS (9)
+4 Stormchaser's Talent
+4 Flow State
+1 Prismari Charm
+
+// SPLIT / OTHER (4)
+2 Roaring Furnace // Steaming Sauna
+1 Impractical Joke
+1 Spell Pierce
+
+// LANDS (21)
+6 Island
+4 Steam Vents
+4 Spirebluff Canal
+4 Riverpyre Verge
+1 Multiversal Passage
+1 Stormcarved Coast
+1 Great Hall of the Biblioplex
+
+Sideboard
+2 Bounce Off
+2 Ral, Crackling Wit
+1 Disdainful Stroke
+1 Wan Shi Tong, Librarian
+1 Slagstorm
+1 Get Out
+1 Ghost Vacuum
+1 Abrade
+1 Pyroclasm
+1 Spell Pierce
+1 Spell Snare
+1 Negate
+1 Broadside Barrage

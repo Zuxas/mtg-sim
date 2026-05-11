@@ -1,27 +1,32 @@
-// Mono Green Landfall -- Stefan Schutz (Top 5, PT SOS 2026-05-01)
-// Source: magic.gg/news/pro-tour-secrets-of-strixhaven-top-8-players-and-decks
-// PT overall WR: 55.45% (N=514). Beats Prowess 62.7%, loses to Selesnya 34.6%
-// audit:pt_top8
+// Mono Green Landfall — post-Sapling Nursery meta shift (~2026-04-30)
+// Source: meta-analyzer DB deck_id=79064 (aggregated current build)
+// Previous version: Stefan Schutz PT SOS Top 5 (kept at decks/pt_sos_top8/)
+// Change: +3 Sapling Nursery main, +1 SB; trims via Promising Vein land sub
+// and Forest/Cavern shaving. Reflects the post-PT Nursery shift documented
+// in 2026-05-11 Looting handoff (MGL sim was over-favorable pre-Nursery).
+// audit:current_meta
+
+3 Ba Sing Se
+4 Badgermole Cub
 4 Earthbender Ascension
-4 Mightform Harmonizer
-4 Escape Tunnel
-4 Ba Sing Se
-4 Sazh's Chocobo
+3 Escape Tunnel
+3 Esper Origins
+4 Fabled Passage
+13 Forest
 4 Icetill Explorer
 4 Llanowar Elves
-4 Badgermole Cub
-4 Fabled Passage
-3 Meltstrider's Resolve
-2 Edge Rover
-17 Forest
-1 Cavern of Souls
-1 Esper Origins
+4 Meltstrider's Resolve
+4 Mightform Harmonizer
+3 Promising Vein
+3 Sapling Nursery
+4 Sazh's Chocobo
 
 Sideboard
-2 Pawpatch Formation
-2 Royal Treatment
-1 Cavern of Souls
-3 Soul-Guide Lantern
+1 Archdruid's Charm
+2 Eumidian Terrabotanist
 4 Mossborn Hydra
-2 Sapling Nursery
-1 Leatherhead, Swamp Stalker
+2 Pawpatch Formation
+1 Sapling Nursery
+1 Scrapshooter
+2 Soul-Guide Lantern
+2 Torpor Orb

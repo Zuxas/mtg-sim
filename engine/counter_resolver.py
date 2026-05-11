@@ -56,6 +56,12 @@ COUNTER_VALIDITY = {
     "Force of Negation":    (_is_noncreature,                              5),
     "Subtlety":             (lambda s: True,                               4),
     "Consign to Memory":    (_is_noncreature,                              2),
+    # Get Out modes: 1) counter creature/enchantment spell  2) bounce 1-2 owned (handled in APL)
+    # Effective cmc=3 in the value gate -- it's {U}{U} actual cost but bouncing own
+    # for tempo is usually higher value than countering a cheap creature. Forces it
+    # to fire only on priority targets (Sapling Nursery, Earthbender Ascension, etc.)
+    # or CMC>=3 spells.
+    "Get Out":              (lambda s: s.has(Tag.CREATURE) or s.has(Tag.ENCHANTMENT), 3),
 }
 
 # Spells worth countering (high-impact engines / removal / finishers).

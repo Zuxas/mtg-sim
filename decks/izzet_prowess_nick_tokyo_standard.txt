@@ -1,0 +1,60 @@
+// Izzet Prowess -- Nick Odenheimer (Worldly Counsel) RC Tokyo update (2026-05-10)
+// Source: A Primer on Izzet Prowess, post-PT SOS, RC Tokyo submitted list
+//
+// Diff vs PT SOS list:
+//   Main: -1 Stock Up, +1 Prismari Charm (now 2 main)
+//   SB:   -1 Pyroclasm, -1 Ghost Vacuum, -1 Spell Snare, -1 Negate, -1 Bounce Off (-1 to 1 Bounce Off)
+//   SB:   +1 Disdainful Stroke (now 2), +1 Slagstorm (now 2), +1 Wan Shi Tong (now 2),
+//         +1 Annul, +1 Sear
+//
+// Rationale (per primer):
+//   - 2nd Prismari Charm > 1st Stock Up: cantrip-heavy mirror hands, charm is bounce vs MGL
+//   - 2nd Disdainful Stroke > 1st Negate: Negate underbrought at PT, Stroke covers Crab matchups too
+//   - Cut Ghost Vacuum: only useful T1, would prefer Leyline of the Void
+//   - Sear vs 2nd Joke: hedge for Colorstorm Stallion / Cosmos Prowess
+//   - 2nd Wan Shi Tong > 2nd Bounce Off: GW landfall (not MGL) expected, fewer bounce targets
+
+// CREATURES (8)
+4 Eddymurk Crab
+4 Slickshot Show-Off
+
+// INSTANTS (13)
+4 Opt
+4 Sleight of Hand
+4 Burst Lightning
+1 Get Out
+
+// SORCERIES (4)
+4 Boomerang Basics
+
+// ENCHANTMENTS (10)
+4 Stormchaser's Talent
+4 Flow State
+2 Prismari Charm
+
+// SPLIT / OTHER (4)
+2 Roaring Furnace // Steaming Sauna
+1 Impractical Joke
+1 Spell Pierce
+
+// LANDS (21)
+6 Island
+4 Steam Vents
+4 Spirebluff Canal
+4 Riverpyre Verge
+1 Multiversal Passage
+1 Stormcarved Coast
+1 Great Hall of the Biblioplex
+
+Sideboard
+2 Disdainful Stroke
+2 Wan Shi Tong, Librarian
+2 Ral, Crackling Wit
+2 Slagstorm
+1 Get Out
+1 Spell Pierce
+1 Abrade
+1 Broadside Barrage
+1 Bounce Off
+1 Annul
+1 Sear

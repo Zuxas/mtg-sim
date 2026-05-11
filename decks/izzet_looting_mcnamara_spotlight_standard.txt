@@ -1,0 +1,49 @@
+// Izzet Looting -- Scott McNamara Spotlight Series Atlanta/Lyon (Jan 2026)
+// Source: C:/Users/jerme/OneDrive/Desktop/Looting ScottMcNamara.txt
+// Reference build for comparison vs user's Portland/Store-Champ tuning.
+//
+// Diff vs Jermey lists: 0 Tiger-Seal (vs 3-4), 4 Frostcliff Siege (vs 2-3),
+//   2 Roaring Furnace // Steaming Sauna (vs 0), 2 Soul-Guide Lantern main (vs 0),
+//   no Steam Vents (uses 7 Island + 3 Mountain + 4 Multiversal Passage + 4 Spirebluff + 4 Verge)
+
+// CREATURES (8)
+4 Duelist of the Mind
+4 Fear of Missing Out
+
+// THREATS (4)
+4 Quantum Riddler
+
+// SPELLS (16)
+4 Stormchaser's Talent
+4 Boomerang Basics
+4 Torch the Tower
+3 Into the Flood Maw
+1 Spell Pierce
+
+// PERMANENTS (8)
+4 Frostcliff Siege
+2 Roaring Furnace // Steaming Sauna
+2 Soul-Guide Lantern
+
+// FLEX (2)
+1 Agna Qel'a
+1 Abrade
+
+// LANDS (22)
+7 Island
+3 Mountain
+4 Multiversal Passage
+4 Spirebluff Canal
+4 Riverpyre Verge
+
+Sideboard
+2 Pyroclasm
+2 Iroh's Demonstration
+2 Flashfreeze
+2 Annul
+2 Kaito, Cunning Infiltrator
+1 Disdainful Stroke
+1 Abrade
+1 Spell Pierce
+1 Soul-Guide Lantern
+1 Broadside Barrage

@@ -167,7 +167,7 @@ class SelesnyaOuroboroidAPL(BaseAPL):
         if opp is None:
             return
         opp_power = sum(
-            int(getattr(c, "power", 0) or 0)
+            c.effective_power()
             for c in opp.zones.battlefield
             if not c.is_land() and c.has(Tag.CREATURE)
         )

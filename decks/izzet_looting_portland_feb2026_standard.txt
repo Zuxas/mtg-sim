@@ -1,0 +1,47 @@
+// Izzet Looting -- Jermey (Zuxas) Portland Feb 2026 field-tested 75
+// Source: Team Resolve/guides/looting_portland_side_events.md
+// Performance: 3-2 dropped after R5 (R1 W vs Jund Leyline, R2 W vs Selesnya Landfall pre-Nursery,
+//   R3 L vs Izzet Lessons, R4 W vs Izzet Monument, R5 L vs Sultai Reanimator)
+// Diff vs Store Champ May 2026: +1 Winternight Stories main, -1 Frostcliff Siege main (2 vs 3)
+
+// CREATURES (11)
+4 Duelist of the Mind
+4 Fear of Missing Out
+3 Tiger-Seal
+
+// THREATS (4)
+4 Quantum Riddler
+
+// SPELLS (15)
+4 Stormchaser's Talent
+4 Boomerang Basics
+4 Torch the Tower
+3 Into the Flood Maw
+2 Burst Lightning
+2 Spell Snare
+1 Winternight Stories
+
+// PERMANENTS (3)
+2 Frostcliff Siege
+1 Ghost Vacuum
+
+// LANDS (22)
+4 Steam Vents
+4 Spirebluff Canal
+4 Riverpyre Verge
+4 Island
+2 Mountain
+2 Multiversal Passage
+1 Agna Qel'a
+1 Starting Town
+
+Sideboard
+3 Pyroclasm
+2 Abrade
+2 Annul
+2 Flashfreeze
+2 Sear
+1 Disdainful Stroke
+1 Ghost Vacuum
+1 Soul-Guide Lantern
+1 Tishana's Tidebinder

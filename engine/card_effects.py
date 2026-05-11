@@ -554,6 +554,17 @@ def on_landfall(gs):
                 target.counters = (target.counters or 0) + 1
                 gs._log(f"  Bristly Bill: landfall +1/+1 on "
                         f"{target.name}")
+        elif c.name == "Sapling Nursery":
+            # "Landfall — Create a 3/4 green Treefolk creature token
+            # with reach." Fires every land drop after Nursery is on
+            # the battlefield. This is the real engine — the field
+            # data showed 5-7 tokens by T6 in MGL post-Nursery, the
+            # sim was previously only spawning 1 (one-shot ETB).
+            from engine.keywords import KWTag
+            tok = gs._make_token("Treefolk", "3", "4",
+                                  "Token Creature — Treefolk")
+            tok.tags.add(KWTag.REACH)
+            gs._log(f"  Sapling Nursery: landfall +1 3/4 Treefolk reach")
 
 
 # Back-compat alias — old code may import LANDFALL_TOKEN / ASCENSION.

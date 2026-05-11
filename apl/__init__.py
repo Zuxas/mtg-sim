@@ -191,6 +191,15 @@ APL_REGISTRY = {
     "blink":              ("apl.azorius_blink_standard",       "AzoriusBlinkAPL",       "decks/azorius_blink_standard.txt"),
     # Izzet Prowess Standard goldfish APL (separate from Modern "izzetprowess")
     "izzetprowessstandard": ("apl.izzet_prowess_standard",    "IzzetProwessAPL",        "decks/izzet_prowess_standard.txt"),
+    # Nick Odenheimer / Worldly Counsel RC Tokyo build (post-PT SOS, 2026-05-10)
+    "izzetprowessstandardtokyo": ("apl.izzet_prowess_nick_tokyo_standard", "IzzetProwessNickTokyoAPL", "decks/izzet_prowess_nick_tokyo_standard.txt"),
+    "prowessnicktokyo":          ("apl.izzet_prowess_nick_tokyo_standard", "IzzetProwessNickTokyoAPL", "decks/izzet_prowess_nick_tokyo_standard.txt"),
+    # Izzet Looting (Jermey Store Champ May 2026 -- locked) + Portland Feb 2026 + McNamara Spotlight
+    "izzetlootingstorechamp": ("apl.izzet_looting_standard", "IzzetLootingAPL", "decks/izzet_looting_store_champ_may2026_standard.txt"),
+    "izzetlootingportland":   ("apl.izzet_looting_standard", "IzzetLootingAPL", "decks/izzet_looting_portland_feb2026_standard.txt"),
+    "izzetlootingmcnamara":   ("apl.izzet_looting_standard", "IzzetLootingAPL", "decks/izzet_looting_mcnamara_spotlight_standard.txt"),
+    "izzetlooting":           ("apl.izzet_looting_standard", "IzzetLootingAPL", "decks/izzet_looting_store_champ_may2026_standard.txt"),
+    "looting":                ("apl.izzet_looting_standard", "IzzetLootingAPL", "decks/izzet_looting_store_champ_may2026_standard.txt"),
     # ── Standard match APLs promoted from GoldfishAdapter (2026-05-04) ──────
     "azoriusaggro":         ("apl.azorius_aggro_standard",       "AzoriusAggroAPL",                   "decks/azorius_aggro_standard.txt"),
     "azoriustempo":         ("apl.azorius_tempo_standard",       "AzoriusTempoAPL",                   "decks/azorius_tempo_standard.txt"),
@@ -233,6 +242,14 @@ MATCH_APL_REGISTRY = {
     "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern
     "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern alias
     "izzetprowessstandard": ("apl.izzet_prowess_standard_match", "IzzetProwessStandardMatchAPL"),
+    "izzetprowessstandardtokyo": ("apl.izzet_prowess_nick_tokyo_standard_match", "IzzetProwessNickTokyoMatchAPL"),
+    "prowessnicktokyo":          ("apl.izzet_prowess_nick_tokyo_standard_match", "IzzetProwessNickTokyoMatchAPL"),
+    # Izzet Looting (single match APL backs all 3 deck variants via different deck files)
+    "izzetlootingstorechamp": ("apl.izzet_looting_standard_match", "IzzetLootingStandardMatchAPL"),
+    "izzetlootingportland":   ("apl.izzet_looting_standard_match", "IzzetLootingStandardMatchAPL"),
+    "izzetlootingmcnamara":   ("apl.izzet_looting_standard_match", "IzzetLootingStandardMatchAPL"),
+    "izzetlooting":           ("apl.izzet_looting_standard_match", "IzzetLootingStandardMatchAPL"),
+    "looting":                ("apl.izzet_looting_standard_match", "IzzetLootingStandardMatchAPL"),
     "domainzoo":       ("apl.domain_zoo_match",     "DomainZooMatchAPL"),
     "domain":          ("apl.domain_zoo_match",     "DomainZooMatchAPL"),
     "amulettitan":     ("apl.amulet_titan_match",   "AmuletTitanMatchAPL"),

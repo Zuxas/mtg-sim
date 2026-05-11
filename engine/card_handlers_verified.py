@@ -3186,15 +3186,11 @@ def _sapling_nursery_etb(gs, card):
      Landfall — Create a 3/4 green Treefolk creature token with reach.
      {1}{G}, Exile: Treefolk and Forests gain indestructible EOT.'
 
-    ETB: log only. Landfall triggers create Treefolk tokens going
-    forward — but our landfall registry doesn't create tokens yet.
-    One-time ETB bonus: create a 3/4 Treefolk as compensation for
-    the forests-in-play we already have."""
-    from engine.keywords import KWTag
-    tok = gs._make_token("Treefolk", "3", "4",
-                          "Token Creature — Treefolk")
-    tok.tags.add(KWTag.REACH)
-    gs._log("  Sapling Nursery: +1 3/4 Treefolk (landfall tokens not auto-wired)")
+    ETB: log only. Landfall is wired in card_effects.on_landfall and
+    fires on every subsequent land drop. The {1}{G}, Exile activated
+    indestructible ability is not modeled (control utility, not
+    goldfish-relevant)."""
+    gs._log("  Sapling Nursery ETB (landfall wired in on_landfall)")
 
 
 def _sazhs_chocobo_etb(gs, card):

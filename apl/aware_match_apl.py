@@ -426,10 +426,14 @@ class AwareMatchAPL(MatchAPL):
                     total_damage += base_p - safe_toughness(best_blk)
 
         # Add burn spells we can fire pre-combat or post-combat
+        # (defensive getattr -- APLs that don't define MATCH_BOUNCE/MATCH_WIPES
+        # crashed here pre-2026-05-10; see line 355 for the existing pattern)
+        _bounce = getattr(self, 'MATCH_BOUNCE', set())
+        _wipes  = getattr(self, 'MATCH_WIPES',  set())
         for card in gs.zones.hand:
             spec = self.MATCH_REMOVAL.get(card.name)
-            if spec and card.name not in self.MATCH_BOUNCE and \
-               card.name not in self.MATCH_WIPES:
+            if spec and card.name not in _bounce and \
+               card.name not in _wipes:
                 _, max_tgh = spec
                 if max_tgh is None or max_tgh >= 20:  # face burn
                     pass  # could add, but conservative
@@ -710,17 +714,35 @@ class AwareMatchAPL(MatchAPL):
             has_play = any(not c.is_land() for c in hand)
             return lands >= 2 and has_play
 
-        # Default: delegate to subclass keep() logic (no opp awareness)
-        return self.keep(hand, mulligans, on_play)
+        # Default: generic land-count heuristic (DON'T re-dispatch to self.keep -
+        # that creates an infinite loop because self.keep routes back to keep_vs_opp
+        # via _opp_key. Bug fixed 2026-05-10 -- prior version recursed.)
+        return self._keep_generic_fallback(hand)
+
+    def _keep_generic_fallback(self, hand: list) -> bool:
+        """Generic mulligan fallback: 2-5 lands, at least 1 nonland."""
+        if len(hand) <= 4:
+            return True
+        lands = sum(1 for c in hand if c.is_land())
+        if lands < 2 or lands > 5:
+            return False
+        return any(not c.is_land() for c in hand)
 
     def keep(self, hand: list, mulligans: int, on_play: bool) -> bool:
         """
         Override: call keep_vs_opp when _opp_key is set (match_engine wires it).
         Falls back to generic land-count heuristic for goldfish/unknown opponents.
+        Re-entrancy guard prevents the keep <-> keep_vs_opp ping-pong fixed 2026-05-10.
         """
+        if getattr(self, "_in_keep_dispatch", False):
+            return self._keep_generic_fallback(hand)
         opp_key = getattr(self, "_opp_key", "")
         if opp_key:
-            return self.keep_vs_opp(hand, mulligans, on_play, opp_key)
+            self._in_keep_dispatch = True
+            try:
+                return self.keep_vs_opp(hand, mulligans, on_play, opp_key)
+            finally:
+                self._in_keep_dispatch = False
         # Generic fallback: 2-5 lands, at least 1 nonland
         if len(hand) <= 4:
             return True

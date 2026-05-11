@@ -134,11 +134,21 @@ class MonoGreenLandfallStandardMatchAPL(MatchAPL):
                 gs.cast_spell(c)
                 break
 
-        # 5. Sapling Nursery
+        # 5. Sapling Nursery — Affinity for Forests ({1} less per Forest you
+        # control). At 6 Forests, base {6}{G}{G} costs just {G}{G} = 2 mana.
+        # Set cost_reduction = Forest count on the pool, then cast, then reset
+        # (per the affinity_match.py pattern).
+        forest_count = sum(
+            1 for x in gs.zones.battlefield
+            if x.is_land() and "forest" in (x.type_line or "").lower()
+        )
+        prev_cr = gs.mana_pool.cost_reduction
+        gs.mana_pool.cost_reduction = max(prev_cr, forest_count)
         for c in list(gs.zones.hand):
             if c.name == SAPLING_NURSERY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
                 break
+        gs.mana_pool.cost_reduction = prev_cr
 
         # 6. Deploy landfall creatures by CMC
         for name in (BADGERMOLE_CUB, ICETILL_EXPLORER, SAZHS_CHOCOBO,

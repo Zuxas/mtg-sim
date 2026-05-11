@@ -55,6 +55,73 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
   6. Self-return replays don't consume extra land drops
 - Kill sources: ~90% combat, ~8% Analyst loop, ~2% Scapeshift OHKO
 
+### Izzet Prowess (Worldly Counsel Nick Tokyo) — added 2026-05-10
+
+- Goldfish APL: `apl/izzet_prowess_nick_tokyo_standard.py`
+- Match APL:    `apl/izzet_prowess_nick_tokyo_standard_match.py`
+- Decklists:    `decks/izzet_prowess_nick_tokyo_standard.txt` (current),
+                `decks/izzet_prowess_nick_pt_sos_standard.txt` (PT version)
+- Registry:     `izzetprowessstandardtokyo` (alias `prowessnicktokyo`)
+- Source:       Nick Odenheimer / Worldly Counsel primer (RC Tokyo update)
+- Bo3 sim:      67.8-68.0% FW match WR vs 15-archetype Standard field at N=200,
+                +7.4pp over PT consensus (`izzetprowessstandard`), 12-1-2 W/T/L
+- Features:     16-matchup MATCHUP_SB_PLANS dict, Crab Control mode toggle
+                (`CRAB_CONTROL_MATCHUPS`), Stormchaser L3 leveling helper, Roaring Furnace
+                cast logic, Sauna timing approximation, Get Out mode 2 (bounce own),
+                Ral combo-kill detection, primer-derived mulligan rules
+- Cheat sheet:  `Team Resolve/rcdc_prowess_sb_plans.md` (printable)
+- Source guide: `Team Resolve/worldly_council_prowess_guide.md`
+
+### Izzet Looting (3 variants) — added 2026-05-11
+
+- Goldfish APL: `apl/izzet_looting_standard.py` (shared base for all 3 variants)
+- Match APL:    `apl/izzet_looting_standard_match.py` (single class, 3 deck files)
+- Decklists:
+  - `decks/izzet_looting_store_champ_may2026_standard.txt` — Jermey locked Store Champ list
+  - `decks/izzet_looting_portland_feb2026_standard.txt` — Jermey Portland 3-2 field-tested
+  - `decks/izzet_looting_mcnamara_spotlight_standard.txt` — Scott McNamara Atlanta/Lyon reference
+- Registry:     `izzetlootingstorechamp`, `izzetlootingportland`, `izzetlootingmcnamara`
+                (aliases: `izzetlooting`, `looting` -> Store Champ)
+- Source guides:
+  - `Team Resolve/handoffs/2026-05-11_post-compact_looting_session.md` (full context)
+  - `Team Resolve/guides/looting_sb_plans_verified.md` (verified per-matchup SB plans)
+  - `Team Resolve/guides/looting_portland_side_events.md` (Portland 3-2 + 5 opp lists)
+- Bo3 sim:      Portland 64.0% / Store Champ 63.3% / McNamara 56.2% FW Match WR vs
+                15-archetype field at N=200, 14/15 coverage. **Jermey tuning beats
+                McNamara by ~7-8pp** (Tiger-Seal main, Spell Snare main, Steam Vents
+                manabase validated). Head-to-head vs Tokyo Prowess: Portland 50%,
+                Store Champ 48% — essentially even when both pilots are well-tuned.
+- Features:     11 matchup-keyed MATCHUP_SB_PLANS, Crab Control mode toggle
+                (`CRAB_CONTROL_MATCHUPS`), Frostcliff Siege Jeskai/Temur mode
+                selection per matchup, Quantum Riddler warp helper ({1}{U} early
+                tempo), Tishana's Tidebinder flash on opp end step, primer-derived
+                mulligan rules (1-lander on draw with 2 cantrips OK, mirror requires
+                cantrips)
+- Card-text audit: NO Cori-Steel (banned 2025-06-30), NO Detect Intrusion/Belion
+                (Unhinged joke cards), Flow State as sorcery, Voice as creature 1/3,
+                Aven at 3 CMC (Snare misses), Monument at 3 CMC (Annul/Abrade hit),
+                Sear (4 dmg) kills Sapling Nursery 3/4 reach Treefolk tokens.
+
+### Framework patches landed 2026-05-10
+
+Three pre-existing bugs in `apl/aware_match_apl.py` and `engine/counter_resolver.py`
+were patched while building the Tokyo APL. These affect ALL APLs inheriting
+AwareMatchAPL, not just Prowess:
+
+1. **`keep` <-> `keep_vs_opp` infinite recursion** (line ~720): default fallback
+   re-entered the dispatcher. Patched with `_in_keep_dispatch` re-entrancy guard.
+   Pre-fix, any APL that didn't override `keep` would crash on Bo3 sim with
+   RecursionError.
+2. **MATCH_BOUNCE/MATCH_WIPES non-defensive access** (line ~431): `_lethal_this_turn`
+   used `self.MATCH_BOUNCE` directly while line 355 used `getattr(..., set())`.
+   APLs without these attributes crashed at lethal calc. Patched to use defensive
+   getattr matching the line-355 pattern. Unblocked Bo3 errors on Spellementals,
+   Jeskai Control, Jeskai Lute, Dimir Excruciator.
+3. **Get Out missing from COUNTER_VALIDITY** in `engine/counter_resolver.py`: counter
+   mode wasn't wired. Added with effective cmc=3 gate (prevents over-countering
+   1-mana cheap aggro creatures while still firing on priority targets like
+   Sapling Nursery / Earthbender Ascension).
+
 ### Standard match APLs — 38/38 decks covered (as of 2026-05-04)
 
 Two-player engine is fully wired. Both players call their APLs each turn.

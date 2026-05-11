@@ -22,29 +22,47 @@ def parse_sb_string(raw: str) -> list[tuple[int, str]]:
     Parse sideboard strings from tac team guides.
 
     Handles formats like:
-      "1 Clarion Conqueror +1 Damping Sphere +3 Charmaw"
-      "-2 Blood Moon -3 Ragavan"
-      "2 Spell Pierce, 3 Ral, 1 Crab"
-      "+2 Wear//Tear +1 Wrath of the Skies"
+      "1 Clarion Conqueror" — single entry (most common in MATCHUP_SB_PLANS)
+      "1 Slickshot Show-Off" — names with hyphens
+      "2 Ral, Crackling Wit" — names with commas
+      "1 Roaring Furnace // Steaming Sauna" — double-faced names
+      "1 Clarion Conqueror +1 Damping Sphere +3 Charmaw" — multi-entry
+      "-2 Blood Moon -3 Ragavan" — minus-prefix multi-entry
+      "+2 Wear//Tear +1 Wrath of the Skies" — plus-prefix multi-entry
+
+    Returns [(qty, name), ...] in order. Returns empty list if nothing parsed.
     """
-    raw = raw.strip().lstrip('+-"')
-    # Normalize separators
-    raw = re.sub(r'\s*[,;]\s*', ' +', raw)
-    raw = re.sub(r'\s+', ' ', raw)
+    raw = raw.strip().strip('"').lstrip('+- ').rstrip()
+    if not raw:
+        return []
 
-    results = []
-    # Pattern: optional +/- then qty then card name until next +/- qty
-    pattern = re.compile(r'[+\-]?\s*(\d+)\s+([A-Za-z][^+\-\d][^+\-]*?)(?=\s*[+\-]?\s*\d+\s+[A-Za-z]|\Z)')
+    # Detect multi-entry form: a "+" or " -" appears followed by qty digits.
+    # We split on those separators only — commas/hyphens inside names stay intact.
+    has_multi = bool(re.search(r'(?:\s\+|\s-)\s*\d+\s+', raw))
 
-    for m in pattern.finditer(raw):
-        qty  = int(m.group(1))
-        name = m.group(2).strip().strip('"-')
-        # Clean trailing punctuation
-        name = re.sub(r'\s+$', '', name)
-        if qty > 0 and len(name) > 2:
-            results.append((qty, name))
+    if has_multi:
+        # Split before each "+N name" or "-N name" boundary
+        parts = re.split(r'\s+(?=[+\-]\d)', raw)
+        # First part has no leading sign; subsequent parts start with +/-
+        results = []
+        for p in parts:
+            p = p.strip().lstrip('+-').strip()
+            m = re.match(r'(\d+)\s+(.+)', p)
+            if m:
+                qty = int(m.group(1))
+                name = m.group(2).strip()
+                if qty > 0 and len(name) >= 2:
+                    results.append((qty, name))
+        return results
 
-    return results
+    # Single-entry form: leading digit + rest is the card name
+    m = re.match(r'(\d+)\s+(.+)', raw)
+    if m:
+        qty = int(m.group(1))
+        name = m.group(2).strip()
+        if qty > 0 and len(name) >= 2:
+            return [(qty, name)]
+    return []
 
 
 def _fuzzy_match(card_name: str, deck_names: list[str]) -> Optional[str]:
@@ -75,10 +93,10 @@ def _fuzzy_match(card_name: str, deck_names: list[str]) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 def apply_sideboard_plan(
-    mainboard:  list,     # list[Card] — will be copied
-    sideboard:  dict,     # {card_name: qty} — available sb cards
-    sb_in_raw:  list[str],  # raw sb_in strings from matchup
-    sb_out_raw: list[str],  # raw sb_out strings from matchup
+    mainboard:  list,         # list[Card] — will be copied
+    sideboard,                # dict {name: qty} OR list[Card] — auto-normalized
+    sb_in_raw:  list[str],    # raw sb_in strings from matchup
+    sb_out_raw: list[str],    # raw sb_out strings from matchup
 ) -> list:
     """
     Apply a sideboard plan to a deck and return the modified 60-card list.
@@ -86,11 +104,25 @@ def apply_sideboard_plan(
     Parses the raw strings, matches card names fuzzily, removes sb_out
     cards from mainboard and adds sb_in cards from sideboard.
     Returns a new list without modifying the originals.
+
+    sideboard accepts either {name: qty} dict OR a list[Card] (e.g. what
+    load_deck_from_file returns) — list form is auto-converted to a dict.
     """
     from copy import deepcopy
+    from collections import Counter
 
     deck = deepcopy(mainboard)
-    sb   = deepcopy(sideboard)  # {name: qty}
+    # Keep a name -> list[Card] index from the original sideboard so we can
+    # copy real Card objects (with full mana_cost / oracle / etc.) instead of
+    # going to the Scryfall cache. dict-form sideboard has no Card objects so
+    # falls back to _make_sb_card.
+    sb_card_pool: dict = {}
+    if isinstance(sideboard, dict):
+        sb = deepcopy(sideboard)
+    else:
+        sb = dict(Counter(c.name for c in sideboard))
+        for c in sideboard:
+            sb_card_pool.setdefault(c.name, []).append(c)
 
     # Parse all in/out strings
     cards_in:  list[tuple[int, str]] = []
@@ -131,15 +163,18 @@ def apply_sideboard_plan(
         if to_add <= 0:
             continue
 
-        # Find a template card from sideboard
-        from data.card import Card
-        template = None
-        # We'll create placeholder cards — Scryfall data loaded lazily
+        # Prefer copies of the real Card objects from the supplied sideboard;
+        # fall back to Scryfall-cache placeholder if only a dict was provided.
+        pool = sb_card_pool.get(matched, [])
         for _ in range(to_add):
-            card = _make_sb_card(matched)
-            if card:
-                deck.append(card)
+            if pool:
+                deck.append(deepcopy(pool.pop()))
                 added += 1
+            else:
+                card = _make_sb_card(matched)
+                if card:
+                    deck.append(card)
+                    added += 1
 
         sb[matched] = available - to_add
 

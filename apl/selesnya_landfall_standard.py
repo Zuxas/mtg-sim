@@ -148,7 +148,7 @@ class SelesnyaLandfallAPL(BaseAPL):
         if opp is None:
             return  # goldfish: Erode is a no-op, don't waste mana
         opp_power = sum(
-            int(getattr(c, "power", 0) or 0)
+            c.effective_power()
             for c in opp.zones.battlefield
             if not c.is_land() and c.has(Tag.CREATURE)
         )

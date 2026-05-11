@@ -180,12 +180,14 @@ class IzzetLootingStandardMatchAPL(AwareMatchAPL, IzzetLootingAPL):
             ["2 Burst Lightning", "1 Frostcliff Siege", "1 Tiger-Seal"],
         ),
 
-        # Selesnya Landfall (pre-Sapling-Nursery) -- HIGH confidence (Portland 2-0 win)
-        # Note: post-Nursery would use the MGL plan
+        # Selesnya Landfall: keep Snare in (hits Badgermole / Llanowar cmc 2),
+        # bring Abrade instead of Annul (more flexible). 2026-05-12 A/B beat
+        # original by +1.5pp (29.5% -> 31.0%). Still a bad matchup; G1 31.5%
+        # is the floor (sim says SB barely helps).
         "selesnyalandfall": (
-            ["3 Pyroclasm", "2 Sear", "2 Annul", "1 Flashfreeze"],
-            ["2 Spell Snare", "2 Burst Lightning", "2 Frostcliff Siege",
-             "1 Tiger-Seal", "1 Ghost Vacuum"],
+            ["3 Pyroclasm", "2 Sear", "2 Abrade", "1 Flashfreeze"],
+            ["2 Burst Lightning", "2 Frostcliff Siege",
+             "2 Stormchaser's Talent", "1 Tiger-Seal", "1 Ghost Vacuum"],
         ),
 
         # Mono-Green Landfall (post-Sapling-Nursery) -- MEDIUM confidence
@@ -228,12 +230,17 @@ class IzzetLootingStandardMatchAPL(AwareMatchAPL, IzzetLootingAPL):
             ["3 Torch the Tower", "2 Burst Lightning", "2 Frostcliff Siege"],
         ),
 
-        # Dimir Excruciator / Demon -- MEDIUM (similar shell to Reanimator but tempo-leaning)
-        "dimirexcruciator": (
-            ["1 Disdainful Stroke", "1 Tishana's Tidebinder", "2 Annul",
-             "1 Soul-Guide Lantern"],
-            ["2 Burst Lightning", "2 Frostcliff Siege", "1 Stormchaser's Talent"],
-        ),
+        # Dimir Excruciator: 2026-05-12 A/B test showed every dedicated SB
+        # plan regresses vs NONE (43.5% Current / 46% NONE / 39-40% other
+        # variants). Maindeck has the right tools — Tiger-Seal exiles
+        # Excruciator on cast, Boomerang bounces Spider-Man. Empty plan.
+        "dimirexcruciator": ([], []),
+
+        # Simic Rhythm: same finding — Looting's burn+bounce package is
+        # already the right shape; SB pivots regress (24-25% vs NONE 27.5%).
+        # The deck's wide-board + Ouroboroid lifelink is just hard for tempo.
+        # Empty plan = explicit "don't sideboard, this matchup is what it is".
+        "simicrhythm": ([], []),
 
         # UW Tempo (Crab Control mode) -- MEDIUM confidence
         # Their threats are 2-toughness flash creatures (Voice 1/3 lives Pyroclasm,

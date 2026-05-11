@@ -189,6 +189,39 @@ class IzzetProwessNickTokyoMatchAPL(IzzetProwessStandardMatchAPL):
              "1 Wan Shi Tong, Librarian", "1 Abrade", "1 Broadside Barrage"],
             ["4 Slickshot Show-Off", "2 Eddymurk Crab", "1 Spell Pierce", "1 Flow State"],
         ),
+
+        # Bant/Simic Rhythm: shell of 1/1-2/2 creatures (Llanowar, Gene
+        # Pollinator, Spider Manifestation) + Riddler/Ouroboroid finishers.
+        # Slagstorm 2-dmg wipes most of the board; Burst Lightning is dead
+        # vs token spam. 2026-05-12: covers 9-31% pre-plan matchups.
+        # 6 IN / 6 OUT balanced.
+        "bantrhythm": (
+            ["2 Slagstorm", "1 Sear", "1 Abrade", "1 Get Out", "1 Bounce Off"],
+            ["1 Slickshot Show-Off", "2 Burst Lightning",
+             "1 Roaring Furnace // Steaming Sauna", "2 Flow State"],
+        ),
+        "simicrhythm": (
+            ["2 Slagstorm", "1 Sear", "1 Abrade", "1 Get Out", "1 Bounce Off"],
+            ["1 Slickshot Show-Off", "2 Burst Lightning",
+             "1 Roaring Furnace // Steaming Sauna", "2 Flow State"],
+        ),
+
+        # Selesnya Ouroboroid: similar wide-board with Llanowar/Pawpatch/
+        # Badgermole + 4 Ouroboroid (4/3 lifelink). Slagstorm + Annul (hits
+        # Brightglass Gearhulk artifact) + Get Out for value bounce.
+        # 6 IN / 6 OUT balanced.
+        "selesnyaouroboroid": (
+            ["2 Slagstorm", "1 Sear", "1 Abrade", "1 Get Out", "1 Annul"],
+            ["1 Slickshot Show-Off", "2 Burst Lightning",
+             "1 Impractical Joke", "1 Roaring Furnace // Steaming Sauna",
+             "1 Spell Pierce"],
+        ),
+
+        # Gruul Ramp/Overlord: structurally hard matchup. Same finding as
+        # Looting: maindeck has the best mix of tools for the matchup, every
+        # SB pivot tested (Disdainful-heavy / Slagstorm-heavy / Lean removal)
+        # regresses by 2-5pp from no-SB at 33.5%. Empty plan = preserve maindeck.
+        "gruulaggro": ([], []),
     }
 
     # ── Lessons sub-plans (Nick's primer, page on Izzet Lessons) ─────

@@ -1,4 +1,4 @@
-// Izzet Looting -- Jermey (Zuxas) Store Championship build (May 2026, locked)
+// Izzet Looting -- Store Championship build (May 2026, locked)
 // Source: Team Resolve/guides/looting_store_champ_may2026.md
 // Net change vs Portland Feb 2026: -1 Winternight Stories, +1 Frostcliff Siege
 //

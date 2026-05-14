@@ -1,4 +1,4 @@
-// Izzet Looting -- Jermey (Zuxas) Portland Feb 2026 field-tested 75
+// Izzet Looting -- Portland Feb 2026 field-tested 75
 // Source: Team Resolve/guides/looting_portland_side_events.md
 // Performance: 3-2 dropped after R5 (R1 W vs Jund Leyline, R2 W vs Selesnya Landfall pre-Nursery,
 //   R3 L vs Izzet Lessons, R4 W vs Izzet Monument, R5 L vs Sultai Reanimator)

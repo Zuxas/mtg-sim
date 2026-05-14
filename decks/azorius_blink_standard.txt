@@ -32,3 +32,4 @@ Sideboard
 1 Curious Farm Animals
 1 Split Up
 1 Erode
+1 Detect Intrusion

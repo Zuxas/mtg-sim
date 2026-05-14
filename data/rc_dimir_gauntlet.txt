@@ -3,21 +3,24 @@ Date: 2026-05-05  Format: PT SOS Standard + Azorius High Noon (Zevin)
 
 Matchup                             WR    share     time
 ------------------------------------------------------------
-  Mono Green Landfall       347/500   69%    4.9%     4.1s
-  Simic Rhythm              241/500   48%    2.9%     4.0s
-  Selesnya Landfall         217/500   43%    4.9%     4.1s
-  Sultai Reanimator         316/500   63%    2.9%     4.2s
-  Bant Rhythm               242/500   48%    4.9%     4.2s
-  Selesnya Ouroboroid       239/500   48%    2.0%     4.3s
-  Azorius High Noon         241/500   48%    1.5%     4.6s
-  Bant Airbending           202/500   40%    3.9%     4.7s
-  Izzet Lessons             167/500   33%   11.8%     3.7s
-  Izzet Spellementals       468/500   94%    7.8%     3.7s
-  Izzet Prowess             262/500   52%   24.5%     4.1s
-  Gruul Aggro               137/500   27%    2.9%     3.9s
-  Jeskai Control            295/500   59%    6.9%     4.2s
+  Selesnya Landfall         257/500   51%    4.9%     4.4s
+  Simic Rhythm              254/500   51%    2.9%     4.2s
+  Mono Green Landfall       382/500   76%    4.9%     4.5s
+  Bant Rhythm               279/500   56%    4.9%     4.5s
+  Selesnya Ouroboroid       268/500   54%    2.0%     4.7s
+  Sultai Reanimator         341/500   68%    2.9%     4.6s
+  Azorius High Noon         252/500   50%    1.5%     5.0s
+  Bant Airbending           232/500   46%    3.9%     5.0s
+  Izzet Lessons             177/500   35%   11.8%     4.1s
+  Izzet Spellementals       469/500   94%    7.8%     4.1s
+  Gruul Aggro               172/500   34%    2.9%     4.2s
+  Izzet Prowess             289/500   58%   24.5%     4.7s
+  Jeskai Lute               462/500   92%    3.0%     4.6s
+  Dimir Excruciator         301/500   60%    8.0%     4.6s
+  Golgari Midrange          379/500   76%    4.0%     4.4s
+  Jeskai Control            321/500   64%    6.9%     5.0s
 
 ============================================================
-Field-weighted WR (all 82% of field): 53.0%
-Tuning-target WR (Landfall/Cub/HN bloc, 15% of field): 51.5%
-Total wall time: 13.5s (8 workers)
+Field-weighted WR (all 97% of field): 59.7%
+Tuning-target WR (Landfall/Cub/HN bloc, 15% of field): 58.1%
+Total wall time: 14.6s (8 workers)

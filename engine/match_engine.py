@@ -222,6 +222,11 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             # Living End mass-reanimate, etc.) can reach across.
             gs._match_opp = opp_gs
             opp_gs._match_opp = gs
+            # Also wire APL refs so cast_spell can ask the opponent
+            # whether to counter at the right window. Set both ways so
+            # each player can counter the other's spells.
+            gs._match_opp_apl = opp_apl
+            opp_gs._match_opp_apl = apl
 
             # Untap
             for card in gs.zones.battlefield:

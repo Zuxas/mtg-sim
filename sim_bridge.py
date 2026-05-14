@@ -85,8 +85,8 @@ ARCHETYPE_CLOCKS = {
     "simicneoform":       {5: 4.4, 6: 10.0, 7: 13.8, 8: 11.2, 9: 11.8, 10: 9.8, 11: 7.0, 12: 6.4},
     "uwblink":            {4: 8.4, 5: 36.2, 6: 24.4, 7: 14.8, 8: 7.6, 9: 3.4, 10: 2.4, 11: 1.2},
     # Hand-tuned for Modern archetypes not in playbooks
-    "grinding breach":    {3: 10.0, 4: 35.0, 5: 30.0, 6: 15.0, 7: 7.0, 8: 3.0},   # Grinding Station combo T4 avg
-    "grindingbreach":     {3: 10.0, 4: 35.0, 5: 30.0, 6: 15.0, 7: 7.0, 8: 3.0},
+    # ("grinding breach" / "grindingbreach" removed 2026-05-14 -- the deck file
+    # was actually a Temur storm-ritual list, no real Grinding Breach modeled.)
     "temur breach":       {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},    # Underworld Breach cascade T4-5
     "temurbreach":        {3: 8.0, 4: 30.0, 5: 32.0, 6: 18.0, 7: 8.0, 8: 4.0},
     "mono blue belcher":  {1: 15.0, 2: 40.0, 3: 30.0, 4: 10.0, 5: 5.0},            # Glass cannon T1-2

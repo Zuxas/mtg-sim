@@ -55,8 +55,13 @@ APL_REGISTRY = {
     "eldraziramp":     ("apl.eldrazi_ramp",     "EldraziRampAPL",    "decks/eldrazi_ramp_modern.txt"),
     "neoform":         ("apl.neoform_combo",    "NeoformComboAPL",   "decks/neoform_modern.txt"),
     "neoformcombo":    ("apl.neoform_combo",    "NeoformComboAPL",   "decks/neoform_modern.txt"),
-    "grindingbreach":  ("apl.grinding_breach",  "GrindingBreachAPL", "decks/grinding_breach_modern.txt"),
-    "breach":          ("apl.grinding_breach",  "GrindingBreachAPL", "decks/grinding_breach_modern.txt"),
+    # "grindingbreach" + "breach" alias both formerly pointed at
+    # apl.grinding_breach + decks/grinding_breach_modern.txt -- but the deck
+    # file was a bit-identical copy of decks/temur_breach_modern.txt (Teg
+    # storm-ritual list, NOT an Underworld Breach + Grinding Station combo).
+    # Removed 2026-05-14 alongside apl/grinding_breach.py. "breach" now
+    # redirects to TemurBreach since that's the actual breach deck we model.
+    "breach":          ("apl.temur_breach",     "TemurBreachAPL",    "decks/temur_breach_modern.txt"),
     "rubystorm":       ("apl.ruby_storm",       "RubyStormAPL",      "decks/ruby_storm_modern.txt"),
     "belcher":         ("apl.belcher_match",     "BelcherMatchAPL",   "decks/belcher_modern.txt"),
     "goblincharbelcher":("apl.belcher_match",    "BelcherMatchAPL",   "decks/belcher_modern.txt"),

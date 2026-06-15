@@ -176,11 +176,7 @@ jobs:
           if git diff --exit-code engine/standard_auto_handlers.py; then
             echo "standard_auto_handlers.py unchanged -- nothing to commit"
           else
-            TOTAL=$(python -c "
-import sys; sys.path.insert(0,'.')
-from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
-print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))
-" 2>/dev/null || echo "?")
+            TOTAL=$(python -c "import sys; sys.path.insert(0, '.'); from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS; print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))" 2>/dev/null || echo "?")
             git add engine/standard_auto_handlers.py
             git commit -m "auto: regenerate standard_auto_handlers.py (total handlers: $TOTAL)"
             git push

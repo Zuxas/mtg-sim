@@ -181,6 +181,31 @@ jobs:
             git commit -m "auto: regenerate standard_auto_handlers.py (total handlers: $TOTAL)"
             git push
           fi
+      - name: Report failure
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = `[CI] handler-regen failed — mtg-sim`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              labels: 'needs-fix', state: 'open',
+            });
+            const existing = issues.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, labels: ['needs-fix'],
+                body: `**Job:** handler-regen\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nRegeneration or auto-commit of standard_auto_handlers.py failed (e.g. python not on PATH on the self-hosted runner, or push perms). Check the runner.`,
+              });
+            }
 
   goldfish-guard:
     name: Goldfish baseline guard

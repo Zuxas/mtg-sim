@@ -1,7 +1,7 @@
 // Amulet Titan - reidq7 (2026-04-29)
 // Event: MTGO Modern Challenge 64 #12840702
 // Source: mtg_meta.db deck_id=133107 pulled 2026-04-30
-// Main: 61 | Sideboard: 15
+// Main: 61 | Sideboard: 15  (audit:intentional -- faithful 61-card copy of a real MTGO Challenge list; do not trim)
 
 4 Amulet of Vigor
 4 Arboreal Grazer

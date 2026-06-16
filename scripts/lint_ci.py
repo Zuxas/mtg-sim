@@ -282,6 +282,16 @@ def _parse_deck_file(path: Path) -> tuple[list[str], list[str]] | None:
     except OSError:
         return None
 
+    # Prefer an explicit Sideboard marker. Decks commonly separate mainboard
+    # sections (CREATURES / SPELLS / LANDS) with blank lines, so a blank line
+    # must NOT be treated as the mainboard->sideboard delimiter when an explicit
+    # marker exists -- otherwise the first section break dumps the rest of the
+    # mainboard into the sideboard (e.g. 11 main / 64 SB for a real 60/15 deck).
+    def _is_sb_marker(s: str) -> bool:
+        return s.lower().startswith(("sideboard", "sb:", "// sideboard", "#sb"))
+
+    has_marker = any(_is_sb_marker(raw.strip()) for raw in lines)
+
     mainboard: list[str] = []
     sideboard: list[str] = []
     target = mainboard
@@ -290,14 +300,14 @@ def _parse_deck_file(path: Path) -> tuple[list[str], list[str]] | None:
     for raw in lines:
         line = raw.strip()
         if not line:
-            # Blank line = transition to SB on first occurrence
-            if not sb_seen and mainboard:
+            # Blank line delimits the sideboard only when there is no explicit
+            # marker to split on.
+            if not has_marker and not sb_seen and mainboard:
                 target = sideboard
                 sb_seen = True
             continue
 
-        lower = line.lower()
-        if lower.startswith(("sideboard", "sb:", "// sideboard", "#sb")):
+        if _is_sb_marker(line):
             target = sideboard
             sb_seen = True
             continue

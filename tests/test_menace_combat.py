@@ -44,7 +44,7 @@ def test_menace_damage_accumulates_kills_attacker():
     gs.bf_a = [atk]
     gs.bf_b = [blk1, blk2]
 
-    dmg, atk_losses, blk_losses, ll, dll = _resolve_combat(gs, "a")
+    dmg, atk_losses, blk_losses, ll, dll, creatures_hit = _resolve_combat(gs, "a")
 
     assert atk in atk_losses, "menace attacker should die from accumulated 2+2=4 damage"
     assert dmg == 0, "blocked menace attacker (no trample) deals no damage to defender"
@@ -62,7 +62,7 @@ def test_menace_forces_two_blocker_requirement():
     gs.bf_a = [atk]
     gs.bf_b = [blk]
 
-    dmg, atk_losses, blk_losses, ll, dll = _resolve_combat(gs, "a")
+    dmg, atk_losses, blk_losses, ll, dll, creatures_hit = _resolve_combat(gs, "a")
 
     assert atk_losses == [], "unblocked menace attacker survives"
     assert blk_losses == [], "lone blocker can't legally block menace -- doesn't engage"
@@ -81,7 +81,7 @@ def test_non_menace_only_takes_one_blocker():
     gs.bf_a = [atk]
     gs.bf_b = [blk1, blk2]
 
-    dmg, atk_losses, blk_losses, ll, dll = _resolve_combat(gs, "a")
+    dmg, atk_losses, blk_losses, ll, dll, creatures_hit = _resolve_combat(gs, "a")
 
     # Only 1 blocker assigned -> attacker takes 2 dmg < 4 toughness -> survives
     assert atk_losses == [], "non-menace 3/4 with 1 blocker assigned survives 2 damage"

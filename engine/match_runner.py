@@ -623,9 +623,9 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     Vigilance is no-op (match-runner doesn't model tap state).
     Menace not modeled (not BE-relevant, deferred).
 
-    Returns (damage_dealt, attacker_losses, defender_losses,
-    lifelink_gain). Lifelink applied to attacking-player's life by
-    caller.
+    Returns a 6-tuple: (damage_dealt, attacker_losses, defender_losses,
+    lifelink_gain, defender_lifelink_gain, creatures_hit). Lifelink gains
+    are applied to each player's life by the caller.
     """
     from engine.keywords import KWTag
 
@@ -1033,8 +1033,8 @@ def _run_match_with_combo(
 
         _simple_play_turn(gs, "a")
 
-        # Player A attacks (Phase 3: keyword-aware; Phase 3.5 Stage B 5-tuple)
-        dmg, a_lost, b_lost, lifelink_gain, defender_lifelink_gain = _resolve_combat(gs, "a")
+        # Player A attacks (Phase 3: keyword-aware; _resolve_combat returns a 6-tuple)
+        dmg, a_lost, b_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, "a")
         gs.damage_to_b += dmg
         # Note: combo path doesn't track gs.life_a directly; lifelink no-op here
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)

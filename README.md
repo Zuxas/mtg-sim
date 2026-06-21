@@ -1,5 +1,11 @@
 # mtg-sim
 
+![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
+![Monte Carlo](https://img.shields.io/badge/engine-Monte%20Carlo-FF6F00)
+![Win Probability](https://img.shields.io/badge/ML-gradient%20boosting-F7931E?logo=scikitlearn&logoColor=white)
+![Size](https://img.shields.io/badge/code-414%20modules%20%7C%20121k%20LOC-555555)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A Magic: The Gathering simulator for competitive deck analysis: goldfish kill-clocks, archetype action priority lists (APLs), Monte Carlo matchup runs, and AI-assisted tuning.
 
 Built to answer questions like *"if I mulligan to six with this hand on the play against Boros Energy, what's my turn-7 win probability?"* — with enough fidelity that the answer is actionable at a tournament.

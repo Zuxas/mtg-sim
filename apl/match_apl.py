@@ -43,6 +43,15 @@ class MatchAPL(BaseAPL):
     # this True to route casts through the real on-stack LIFO priority loop.
     WANTS_PRIORITY_STACK = False
 
+    # R2 instant-speed combat opt-in gate (design 1.5). Default OFF so every
+    # existing deck keeps the legacy shallow combat hooks and the gate-OFF
+    # combat path stays byte-identical. The single tempo APL that flips this
+    # True (MurktideMatchAPL) routes the two combat windows (post-attackers,
+    # post-blockers) through the SHARED engine.priority_stack.run_priority_pass
+    # core. When OFF, _instant_combat_enabled returns False on both runners and
+    # none of the R2 window code is reached.
+    WANTS_INSTANT_COMBAT = False
+
     def priority_action(self, my_gs, opp_gs, stack):
         """R1 priority hook: respond to the current top of `stack`.
 
@@ -50,6 +59,20 @@ class MatchAPL(BaseAPL):
         Base implementation always passes, so every non-opted-in deck is inert
         in run_priority_stack (and the gate is OFF for it anyway). Subclasses
         that set WANTS_PRIORITY_STACK = True override this.
+        """
+        return None
+
+    def combat_priority_action(self, my_gs, their_gs, stack, window):
+        """R2 combat priority hook: respond inside a gated combat window.
+
+        `window` is 1 (after attackers declared, before blockers) or 2 (after
+        blockers declared, before combat damage). Returns (card, target) to
+        cast an instant at this priority, or None to pass.
+
+        Base implementation always passes, so every non-opted-in deck is a
+        no-op inside the combat window (and the gate is OFF for it anyway).
+        The single tempo subclass that sets WANTS_INSTANT_COMBAT = True
+        overrides this (design 1.5).
         """
         return None
 

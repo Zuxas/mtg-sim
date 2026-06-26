@@ -145,6 +145,150 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
                 mgs.win_method = 'combat'
 
 
+# ---------------------------------------------------------------------------
+# R2 instant-speed combat windows (design 1.3 / 1.4 / 1.7).
+#
+# Two gated priority windows reuse the SHARED R1 pass loop
+# (engine.priority_stack.run_priority_pass) instead of mirroring it:
+#   WINDOW 1 -- after attackers declared, before blockers (removal: kill the
+#              sole blocker so damage connects; defender may remove an attacker).
+#   WINDOW 2 -- after blockers declared, before combat damage (pump: a +X/+X
+#              instant changes the strike-step math on a blocked attacker).
+# Both are APNAP (active player gets priority first). The whole block is reached
+# ONLY when _instant_combat_enabled is True, so the gate-OFF path is byte-
+# identical to today's shallow-hook combat (design 1.3).
+# ---------------------------------------------------------------------------
+
+# Test-only instrumentation, mirrors R1 COUNTERS_CAST. Incremented only when a
+# combat instant is actually placed on the stack inside a WINDOW pass. The
+# gate-OFF path never reaches it, so any nonzero value is direct evidence R2
+# fired in real play. Pure integer bookkeeping -> determinism preserved.
+TRICKS_CAST = 0
+
+
+def reset_trick_count():
+    global TRICKS_CAST
+    TRICKS_CAST = 0
+
+
+# Pump instants castable for free via Phyrexian mana (pitched, no land tap).
+# Their "cost" is the card moving hand -> graveyard (design 4.1 TEST 1(d)).
+_FREE_PITCH_PUMP = {"Mutagenic Growth"}
+
+
+def _instant_combat_enabled(gs, opp_gs) -> bool:
+    """R2 gate: True iff EITHER seat's APL opts into instant-speed combat.
+
+    Mirrors the R1 gate exactly (design 1.4). Reads the APL refs that
+    run_match wires onto each GameState (_self_apl / _match_opp_apl). All
+    getattr lookups default to None/False, so any path that has not wired the
+    APL refs (or any non-tempo deck) returns False -> the gate-OFF combat path
+    is untouched.
+    """
+    self_apl = getattr(gs, '_self_apl', None)
+    opp_apl = getattr(gs, '_match_opp_apl', None) or getattr(opp_gs, '_self_apl', None)
+    return bool(getattr(self_apl, 'WANTS_INSTANT_COMBAT', False)
+                or getattr(opp_apl, 'WANTS_INSTANT_COMBAT', False))
+
+
+def _pay_for_combat(gs, card) -> bool:
+    """Pay a combat instant's cost from ACTUAL untapped mana (design 2).
+
+    Free Phyrexian pump (Mutagenic Growth) is paid by pitch (no mana). Every
+    other instant reuses R1's _pay_for_counter, which honors gs.mana_reserve
+    and taps real untapped lands. A misjudged-affordability action that cannot
+    pay returns False and is treated as a pass by the loop.
+    """
+    if card.name in _FREE_PITCH_PUMP:
+        return True
+    from engine.priority_stack import _pay_for_counter
+    return _pay_for_counter(gs, card)
+
+
+def _run_combat_window(active_gs, active_apl, opp_gs, opp_apl, window):
+    """Run ONE gated combat priority window via the shared R1 pass loop.
+
+    Seeds an EMPTY stack and offers priority APNAP (active/attacking player
+    first). Each side's combat_priority_action returns (card, target) or None.
+    A cast instant is enqueued as a StackItem with its interaction_type and
+    resolved through engine.stack.resolve_interaction (the path R1 deferred):
+      - PUMP  -> targets[0].counters += 2 (read by effective_power/_toughness
+                 at damage time, so resolve_combat reflects it for free).
+      - REMOVAL/BURN -> the target leaves the battlefield, so blocks/damage
+                 recompute without it.
+    Returns None (the loop closes when the stack drains to empty). ZERO
+    random() -- determinism preserved (design 1.7 / abort G).
+    """
+    from engine.priority_stack import run_priority_pass
+
+    sides = {
+        "caster": (active_gs, active_apl),   # active/attacking player
+        "opp":    (opp_gs, opp_apl),         # defending player
+    }
+
+    def _ask(apl, my_gs, their_gs, stack):
+        if apl is None or my_gs is None:
+            return None
+        fn = getattr(apl, 'combat_priority_action', None)
+        if fn is None:
+            return None
+        try:
+            return fn(my_gs, their_gs, stack, window)
+        except TypeError:
+            return None
+
+    def _apply(action, gs, priority, stack):
+        card, target = action
+        if card is None:
+            return False
+        if card not in gs.zones.hand:
+            return False
+        if not _pay_for_combat(gs, card):
+            return False
+        gs.zones.hand.remove(card)
+        itype = classify_card(card)
+        dmg = get_burn_damage(card) if itype == InteractionType.BURN else 0
+        item = stack.cast(card, priority,
+                          targets=[target] if target is not None else [],
+                          interaction_type=itype, damage=dmg)
+        global TRICKS_CAST
+        TRICKS_CAST += 1
+        log_fn = getattr(gs, '_log', None)
+        if callable(log_fn):
+            log_fn(f"  [combat W{window}] {priority} casts {card.name}")
+        return True
+
+    def _resolve_top(stack, sides, base, owner_gs):
+        # stack.resolve_one() returns a Resolution (or None on empty stack).
+        resolution = stack.resolve_one()
+        if resolution is None:
+            return None
+        caster_gs = sides[resolution.item.caster][0]
+        target_gs = sides[_combat_other(resolution.item.caster)][0]
+        # Apply the spell's effect (REMOVAL/BURN move the TARGET; PUMP adds
+        # counters). resolve_interaction does NOT move the spell card itself.
+        resolve_interaction(resolution, caster_gs, target_gs)
+        # The instant itself goes to its caster's graveyard (mirrors R1's
+        # counter -> graveyard; satisfies the "cost actually paid" proof).
+        if caster_gs is not None:
+            caster_gs.zones.graveyard.append(resolution.item.card)
+        return None   # never terminal: the window ends only on an empty stack
+
+    stack = Stack()
+    run_priority_pass(
+        sides, stack,
+        base=None, owner_gs=active_gs,
+        first="caster",            # APNAP: active/attacking player first
+        ask=_ask,
+        apply_action=_apply,
+        resolve_top=_resolve_top,
+    )
+
+
+def _combat_other(side: str) -> str:
+    return "opp" if side == "caster" else "caster"
+
+
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
@@ -287,10 +431,17 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 result._on_play = on_play
                 return result
 
-            # --- BEGIN COMBAT: defender pre-combat priority window ---
+            # --- BEGIN COMBAT ---
+            # R2 gate (design 1.4): when ON, the two stepped windows below
+            # SUPERSEDE the legacy shallow one-shot hooks so they cannot
+            # double-fire. When OFF (every non-tempo deck), gate_on is False and
+            # all the legacy hooks run EXACTLY as today (frozen baseline).
+            gate_on = _instant_combat_enabled(gs, opp_gs)
+
+            # --- defender pre-combat priority window (legacy shallow hook) ---
             # Tap defending player's untapped lands for mana (they can tap
             # at instant speed in real MTG), then let them act.
-            if hasattr(opp_apl, 'pre_combat_instant'):
+            if not gate_on and hasattr(opp_apl, 'pre_combat_instant'):
                 _tap_for_response(opp_gs)
                 opp_apl.pre_combat_instant(opp_gs, gs)
                 if mgs.game_over:
@@ -343,8 +494,20 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                             c.counters += bonus
                             prowess_boosted.append((c, bonus))
 
-                # --- AFTER ATTACKERS DECLARED: defender priority window ---
-                if hasattr(opp_apl, 'post_attackers_instant'):
+                # --- WINDOW 1: after attackers declared, before blockers ---
+                if gate_on:
+                    # R2 (design 1.3): APNAP priority pass. Active player may
+                    # remove the sole blocker so an attacker connects; defender
+                    # may remove an attacker before committing blocks. Both
+                    # seats can tap real untapped lands first.
+                    _tap_for_response(gs)
+                    _tap_for_response(opp_gs)
+                    _run_combat_window(gs, apl, opp_gs, opp_apl, window=1)
+                    # Drop any attacker removed during the window.
+                    attackers = [a for a in attackers
+                                 if a in gs.zones.battlefield]
+                elif hasattr(opp_apl, 'post_attackers_instant'):
+                    # Legacy shallow hook (gate OFF, byte-identical baseline).
                     _tap_for_response(opp_gs)
                     opp_apl.post_attackers_instant(opp_gs, gs, attackers)
                     # Remove killed attackers from the list
@@ -355,8 +518,20 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 blocker_assignments = opp_apl.declare_blockers(
                     opp_gs, gs, attackers)
 
-                # Attacker gets priority for combat tricks (after blockers)
-                if hasattr(apl, 'combat_trick'):
+                # --- WINDOW 2: after blockers declared, before combat damage ---
+                if gate_on:
+                    # R2 (design 1.3): canonical combat-trick window. Active
+                    # player gets priority first (pump a blocked attacker via
+                    # the PUMP primitive -> counters, read by resolve_combat at
+                    # damage time); defender may respond; LIFO resolve.
+                    _tap_for_response(gs)
+                    _tap_for_response(opp_gs)
+                    _run_combat_window(gs, apl, opp_gs, opp_apl, window=2)
+                    # A removal response could have killed an attacker mid-window.
+                    attackers = [a for a in attackers
+                                 if a in gs.zones.battlefield]
+                elif hasattr(apl, 'combat_trick'):
+                    # Legacy shallow hook (gate OFF, byte-identical baseline).
                     apl.combat_trick(gs, opp_gs, attackers, blocker_assignments)
 
                 # Resolve combat with keywords

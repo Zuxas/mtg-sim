@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "slug": "jeskai_control",
+      "archetype": "Jeskai Control",
+      "mechanic": "counterspell_on_stack",
+      "blocking_imperfection": "sim-no-stack-priority",
+      "priority": 2.1,
+      "replication_target": {
+        "real_wr": 47.2,
+        "known_line": ""
+      },
+      "created": "2026-06-26T10:53:32.449910+00:00"
+    },
+    {
+      "slug": "jeskai_control",
+      "archetype": "Jeskai Control",
+      "mechanic": "planeswalker_loyalty",
+      "blocking_imperfection": "planeswalker-loyalty-not-tracked",
+      "priority": 2.1,
+      "replication_target": {
+        "real_wr": 47.2,
+        "known_line": ""
+      },
+      "created": "2026-06-26T10:53:32.452720+00:00"
+    },
+    {
+      "slug": "jeskai_control",
+      "archetype": "Jeskai Control",
+      "mechanic": "hidden_information",
+      "blocking_imperfection": "sim-no-hidden-information",
+      "priority": 2.1,
+      "replication_target": {
+        "real_wr": 47.2,
+        "known_line": ""
+      },
+      "created": "2026-06-26T10:53:32.461197+00:00"
+    }
+  ]
+}

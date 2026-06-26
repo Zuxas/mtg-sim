@@ -1,0 +1,7 @@
+{
+  "warp": "engine-fidelity-gaps-warp-mechanic-not-modeled",
+  "counterspell_on_stack": "sim-no-stack-priority",
+  "hidden_information": "sim-no-hidden-information",
+  "instant_speed_combat_trick": "sim-no-instant-speed-combat",
+  "planeswalker_loyalty": "planeswalker-loyalty-not-tracked"
+}

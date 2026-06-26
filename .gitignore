@@ -64,6 +64,19 @@ scripts/scratch/
 apl/*_grind_*.py
 apl/*_2026-*.py
 
+# Knowledge-base stub index (640 article references that couldn't be auto-
+# fetched; local working doc, not canonical repo content)
+harness_knowledge_articles_stubs.md
+
+# ARL runtime state + regenerable session artifacts (not canonical source)
+loop_state.json
+data/auto_pipeline/
+docs/distill/
+docs/archetype_profiles/
+data/*.pkl.bak-*
+data/win_prob_model_v2_calibrated.pkl
+data/win_prob_calibration*.png
+
 # OS
 .DS_Store
 Thumbs.db

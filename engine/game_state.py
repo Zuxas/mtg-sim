@@ -97,6 +97,20 @@ def _effective_cmc(card, gs) -> int:
     return max(1, base - reduction)
 
 
+def _priority_stack_enabled(gs) -> bool:
+    """R1 gate (design 1.3): True iff EITHER the caster's own APL OR the
+    opponent's APL declares WANTS_PRIORITY_STACK = True.
+
+    Pure getattr reads + booleans -- no mutation, no random(). On the goldfish
+    / match_runner paths the _self_apl / _match_opp_apl attributes are absent,
+    so both getattr() calls return None and this returns False -> the legacy
+    synchronous counter window runs unchanged (bit-identical)."""
+    self_apl = getattr(gs, '_self_apl', None)
+    opp_apl = getattr(gs, '_match_opp_apl', None)
+    return bool(getattr(self_apl, 'WANTS_PRIORITY_STACK', False)
+                or getattr(opp_apl, 'WANTS_PRIORITY_STACK', False))
+
+
 # Lord-effect registry: name -> (tribe_lowercased, +power, +toughness).
 # 'tribe' is matched via substring on type_line so 'merfolk' hits
 # 'Creature — Merfolk Wizard', 'Token Creature — Merfolk', etc.
@@ -1345,12 +1359,28 @@ class GameState:
         if self.spells_cast_this_turn == 2:
             from engine.card_effects import on_cosmogrand_second_spell
             on_cosmogrand_second_spell(self)
+        # ── R1 priority-stack path (opt-in; defaults OFF). Parallel to legacy. ──
+        # When an opted-in APL (caster's OR opponent's) declares
+        # WANTS_PRIORITY_STACK, route this cast through the real on-stack LIFO
+        # priority loop instead of the legacy synchronous window below. With the
+        # gate OFF (every non-opted-in deck) this whole block is skipped: no
+        # calls, no imports, no random() -> the legacy path is bit-identical.
+        _skip_legacy_window = False
+        if (_priority_stack_enabled(self)
+                and not getattr(self, '_in_counter_window', False)):
+            from engine.priority_stack import run_priority_stack
+            result = run_priority_stack(self, card)      # 'countered' | 'resolved'
+            if result == 'countered':
+                # graveyard move + SBA already done inside run_priority_stack.
+                return True
+            _skip_legacy_window = True                    # opp already had the window
+
         # ── Counter window: opponent gets one chance to counter ──
         # Skip if we're already inside a counter window (no counter-
         # the-counter chains in this approximation), or if the spell
         # itself is a counterspell (countering counters is allowed but
         # would need stack semantics we don't model).
-        if not getattr(self, '_in_counter_window', False):
+        if not _skip_legacy_window and not getattr(self, '_in_counter_window', False):
             opp_apl = getattr(self, '_match_opp_apl', None)
             opp_gs  = getattr(self, '_match_opp', None)
             if opp_apl is not None and opp_gs is not None:

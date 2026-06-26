@@ -39,6 +39,10 @@ class StackItem:
     countered:  bool = False
     interaction_type: InteractionType = InteractionType.NONE
     damage:     int = 0                      # for burn spells
+    # R1 priority-stack additions (additive; default-valued so every existing
+    # keyword-arg caller of StackItem(...) is unaffected -> bit-identical).
+    uid:        int = -1                     # stable monotonic id (assigned in Stack.cast)
+    target_uid: int = -1                     # for counters: uid of the item this targets
 
 
 @dataclass
@@ -60,10 +64,22 @@ class Stack:
     
     def __init__(self):
         self.items: list[StackItem] = []
-    
+        # R1 additions: stable monotonic uid source + depth high-water probe.
+        # Existing callers never touch these, so behavior is unchanged.
+        self._uid_counter: int = 0
+        self.max_depth: int = 0          # high-water mark of len(items); TEST 2 probe
+
     def is_empty(self) -> bool:
         return len(self.items) == 0
-    
+
+    def depth(self) -> int:
+        """Current number of items on the stack (depth probe)."""
+        return len(self.items)
+
+    def _next_uid(self) -> int:
+        self._uid_counter += 1
+        return self._uid_counter
+
     def cast(self, card: Card, caster: str, targets: list = None,
              interaction_type: InteractionType = None, damage: int = 0):
         """Put a spell on the stack."""
@@ -74,8 +90,11 @@ class Stack:
             targets=targets or [],
             interaction_type=interaction_type,
             damage=damage,
+            uid=self._next_uid(),
         )
         self.items.append(item)
+        if len(self.items) > self.max_depth:
+            self.max_depth = len(self.items)
         return item
     
     def respond(self, card: Card, caster: str, targets: list = None,
@@ -84,10 +103,28 @@ class Stack:
         return self.cast(card, caster, targets, interaction_type, damage)
     
     def counter_top(self):
-        """Mark the item below the top as countered (the counter spell is on top)."""
+        """Mark the item below the top as countered (the counter spell is on top).
+
+        NOTE: positional (items[-2]) — correct only while exactly one spell is
+        ever on the stack. Kept for back-compat; the R1 priority path uses
+        counter(uid) instead, which is correct at depth >= 2.
+        """
         if len(self.items) >= 2:
             self.items[-2].countered = True
-    
+
+    def counter(self, uid: int) -> bool:
+        """Mark the item with the given uid as countered (counter BY ID).
+
+        Returns True if an item with that uid was found and marked. This is the
+        depth-safe replacement for counter_top(): at depth >= 2 the counter on
+        top must target a SPECIFIC item, not whatever happens to sit at -2.
+        """
+        for item in self.items:
+            if item.uid == uid:
+                item.countered = True
+                return True
+        return False
+
     def resolve_one(self) -> Optional[Resolution]:
         """Resolve the top item on the stack."""
         if not self.items:

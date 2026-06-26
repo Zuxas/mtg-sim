@@ -287,7 +287,7 @@ MATCH_APL_REGISTRY = {
     "livingend":       ("apl.living_end_match",      "LivingEndMatchAPL"),
     "yawgmoth":        ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "golariyawgmoth":  ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
-    "uwcontrol":       ("apl.uw_control_match",      "UWControlMatchAPL"),
+    "uwcontrol":       ("apl.uw_control_modern_match","UWControlModernMatchAPL"),  # R1 priority-stack opt-in (real control APL)
     "dimirmidrange":   ("apl.murktide_match",         "MurktideMatchAPL"),   # proxy: both Dimir tempo/control
     "dimir":           ("apl.murktide_match",         "MurktideMatchAPL"),
     # New 2026-04-29: real-meta gap decks

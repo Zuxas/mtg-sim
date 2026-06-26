@@ -1,0 +1,128 @@
+{
+  "artifact": "R1 stack-priority counterspell increment - acceptance proof (NARROWED)",
+  "date": "2026-06-26",
+  "worktree": "E:/vscode ai project/mtg-sim-r1",
+  "branch": "modelability/r1-stack-priority",
+  "reference_tree": "E:/vscode ai project/mtg-sim",
+  "branch_point_commit": "8f8064becb1714d53ebd028c7e4c0ec1e4dbc0e8",
+  "reference_tree_commit": "8f8064becb1714d53ebd028c7e4c0ec1e4dbc0e8",
+  "design_doc": "harness/specs/2026-06-26-R1-stack-priority-design.md",
+  "revision_note": "REVISED after the R1 spike was NARROWED. The spike had put WANTS_PRIORITY_STACK=True on the BASE AwareMatchAPL, flipping all 38 Standard match decks. That opt-in has been MOVED off the base class onto a single real control subclass. This artifact re-proves the narrowed scope: base gate OFF (non-control bit-identical restored) AND control deck exercises R1.",
+  "isolation_note": "Both trees are at the SAME commit (8f8064b). counter_resolver.py is byte-identical between trees and UNCHANGED by R1 (verified: git status clean on engine/counter_resolver.py). The R1 diff is the UNCOMMITTED worktree change: engine/priority_stack.py [new], engine/stack.py, engine/game_state.py, engine/match_engine.py, apl/match_apl.py, apl/aware_match_apl.py, apl/__init__.py [registry], apl/uw_control_modern_match.py [new control APL], tests/test_r1_stack_priority.py, tests/test_r1_control_exercises.py [new].",
+
+  "narrowing": {
+    "summary": "The R1 priority-stack opt-in now lives ONLY on the control subclass, not on the base class.",
+    "base_class": "apl/aware_match_apl.py:163  ->  AwareMatchAPL.WANTS_PRIORITY_STACK = False (was True in the spike). The other 37 Standard match decks inherit False and stay on the bit-identical legacy gate-OFF path.",
+    "control_class": "apl/uw_control_modern_match.py:80  ->  UWControlModernMatchAPL(AwareMatchAPL, UWControlAPL).WANTS_PRIORITY_STACK = True. This is the ONE class in the tree that flips the gate on.",
+    "registry": "apl/__init__.py:290  ->  MATCH_APL_REGISTRY['uwcontrol'] now points at apl.uw_control_modern_match.UWControlModernMatchAPL (was the non-R1 UWControlMatchAPL stub). 'UW Control' normalizes to 'uwcontrol' -> the real R1 control APL.",
+    "deck": "decks/uw_control_modern.txt (2 Counterspell, 2 Spell Snare, 1 Force of Negation, 1 Subtlety + Solitude/Prismatic Ending/March removal + Supreme Verdict/Wrath wipes).",
+    "gate_function": "engine/game_state.py:_priority_stack_enabled -> True iff caster._self_apl OR caster._match_opp_apl declares WANTS_PRIORITY_STACK. With only the control APL opting in, the stack engages only when the control deck is one of the two seats."
+  },
+
+  "headline": "PASS (narrowed). NON-CONTROL bit-identical RESTORED (for matchups not seating the opt-in control deck): with the base gate OFF, Boros Energy (goldfish) and Izzet Prowess-vs-Dimir (real two-player match) are bit-identical between the pre-R1 reference tree and the narrowed R1 worktree. CONTROL EXERCISES R1: the registered UW Control APL fires run_priority_stack in real match play (instrumented COUNTERS_CAST=8 over 60 games, nonzero). WR ANCHOR NOT MET: control FWR 27.3% (n=600) << ~49% target -- R1 mechanism is proven, the control APL needs tuning (separate task).",
+  "headline_statement": "PROVEN and CORRECTLY SCOPED: the counterspell-on-stack mechanism (real LIFO priority, counter-by-id at depth>=2, held-mana spend, check-before-effect) works AND is now narrowed to a single opt-in control APL. SCOPE PRECISION: the gate fires when EITHER seat opts in, so non-control decks are bit-identical ONLY in matchups that do NOT involve the opt-in control deck (Izzet Prowess vs Dimir match WR is byte-identical across trees, 53.8% both); a non-control deck FACING UW Control would correctly route its casts through the priority stack (feature, not regression). In practice this never perturbs normal gauntlets because UW Control is a Modern control deck absent from the top-8 Modern field run here and is not a Standard deck, so the 37 Standard match decks' usual fields never seat it. The control deck genuinely exercises the stack in real games (nonzero fire count). The WR anchor is NOT met (27.3% vs ~49%) -- this is an APL-tuning todo, NOT an R1-mechanism defect.",
+
+  "one_line_verdict": "R1 is a correctly-scoped, exercised, no-regression increment (proof tests green, non-control bit-identical, control fires the stack); the WR anchor is NOT met and is a control-APL tuning-todo, kept honestly separate from the proven R1 mechanism.",
+
+  "pass_fail_table": {
+    "TEST1_differential_counter_with_real_mana_hold": "PASS",
+    "TEST2_depth2_counter_war": "PASS",
+    "TEST3_countered_spell_zero_effect": "PASS",
+    "NR_boros_energy_bit_identical": "PASS (100.0% / avg 4.58 / median 4 both trees)",
+    "NR_izzet_prowess_noncontrol_match_bit_identical": "PASS (53.8% both trees, base gate OFF -> legacy path)",
+    "R1_control_exercises_stack_in_real_play": "PASS (COUNTERS_CAST=8 over 60 real games, nonzero)",
+    "WR_anchor_uw_control": "FAIL / TUNING-TODO (FWR 27.3% at n=600 vs ~49% target; R1 fires correctly, control APL is weak vs aggro)"
+  },
+
+  "proof_tests": {
+    "runner": "PYTHONIOENCODING=utf-8 python tests/test_r1_stack_priority.py",
+    "result": "ALL R1 PROOF TESTS PASS (exit 0) AFTER narrowing.",
+    "narrowing_fix": "The test's helper ControlAPL(AwareMatchAPL) previously inherited the spike's base default WANTS_PRIORITY_STACK=True. Post-narrowing the base ships False, which silently dropped test2b/test3a onto the legacy path (test2b FAILED: original_resolved=false). FIX: ControlAPL now sets WANTS_PRIORITY_STACK=True as a class attribute (it IS a control APL that opts into R1, mirroring production UWControlModernMatchAPL). The explicit per-instance `= False` toggles in test1-pre and test2_pre_red_check still shadow it, so the RED/GREEN differential is intact: test2_pre_red (gate OFF) -> original COUNTERED (RED); test2b (gate ON) -> original RESOLVES (GREEN). This is faithful, not a cover-up: the gate-OFF version does NOT resolve the original, which is the discriminator proving the fix did not paper over a regression.",
+    "gate_toggle": "control APL WANTS_PRIORITY_STACK True(post)/False(pre). With the gate OFF, cast_spell runs the byte-identical legacy synchronous counter window (counter_resolver.py UNCHANGED) -- a faithful pre-R1 proxy.",
+    "test1": {
+      "pre_gate_off": {"gate_on": false, "threat_countered": true, "lands_tapped": 0, "real_spend": false, "reserve_held": true},
+      "post_gate_on": {"gate_on": true, "threat_countered": true, "lands_tapped": 2, "real_spend": true, "reserve_held": true},
+      "differential": "RED pre (real_spend=false) -> GREEN post (real_spend=true; threat countered + reserve >=2 held)"
+    },
+    "test2": {
+      "pre_gate_off": {"original_resolved_pre": false},
+      "post_stack_unit": {"max_depth": 3, "counter_by_id_correct": true},
+      "post_end_to_end": {"original_resolved": true, "opp_counter_in_graveyard": true, "control_counter_in_graveyard": true},
+      "differential": "RED pre (legacy one-shot window forbids counter-the-counter -> original countered) -> GREEN post (depth 3, counter-by-id, original RESOLVES after counter-the-counter)"
+    },
+    "test3": {
+      "countered_creature_no_etb": {"countered_on_battlefield": false, "countered_in_graveyard": true, "uncountered_on_battlefield": true},
+      "countered_burn_zero_damage": {"life_after_countered": 20, "life_after_resolved": 17},
+      "note": "Check-before-effect: countered permanent never enters battlefield; countered burn deals 0; uncountered controls resolve normally."
+    }
+  },
+
+  "control_exercises_r1": {
+    "purpose": "The narrowed pillar: prove the registered UW Control APL (the ONLY opt-in) actually fires the priority stack in REAL match play, not just in the in-vitro proof harness. This is the half that the previous (base-class-wide) spike could not isolate.",
+    "instrumentation": "engine/priority_stack.py adds module-global COUNTERS_CAST (+ reset_fire_count()), incremented ONLY when a counter is placed on the stack inside run_priority_stack. The legacy gate-OFF path never reaches this module, so any nonzero value is direct evidence R1 fired. Pure integer bookkeeping -- no random(), no game-state mutation -> determinism preserved.",
+    "test": "tests/test_r1_control_exercises.py",
+    "command": "PYTHONIOENCODING=utf-8 python tests/test_r1_control_exercises.py",
+    "method": "run_match_set (single process; n=60, seed=42) of UW Control (UWControlModernMatchAPL, gate ON) vs Boros Energy (BorosEnergyMatchAPL, gate OFF). Asserts COUNTERS_CAST > 0.",
+    "result": {
+      "our_apl": "UWControlModernMatchAPL", "our_gate": true,
+      "opp_apl": "BorosEnergyMatchAPL", "opp_gate": false,
+      "priority_stack_counters_cast": 8,
+      "n": 60, "seed": 42,
+      "uw_control_g1_win_pct": 6.7
+    },
+    "verdict": "PASS -- R1 fired 8 times on the stack across 60 real games. The gate is opted-in ONLY on the control side (asserted), confirming the narrowing. (The 6.7% WR vs Boros is the control APL being weak vs aggro -> see anchor verdict.)"
+  },
+
+  "no_regression": {
+    "boros_energy_goldfish": {
+      "method": "Goldfish sim.py in BOTH trees at seed=42, n=50. Goldfish path does not wire _self_apl/_match_opp_apl -> gate OFF -> legacy cast/resolve path.",
+      "command": "python sim.py --deck decks/boros_energy_modern.txt --apl \"Boros Energy\" --n 50 --no-chart --no-claude --seed 42",
+      "worktree": {"win_rate": "100.0%", "avg_kill_turn": 4.58, "median_kill": 4, "win_by_t4": "52.0%", "win_by_t5": "88.0%", "avg_mulligans": 0.56},
+      "reference": {"win_rate": "100.0%", "avg_kill_turn": 4.58, "median_kill": 4, "win_by_t4": "52.0%", "win_by_t5": "88.0%", "avg_mulligans": 0.56},
+      "bit_identical": true
+    },
+    "izzet_prowess_noncontrol_match": {
+      "purpose": "Prove a NON-control Standard MATCH deck (AwareMatchAPL, now WANTS_PRIORITY_STACK=False) is bit-identical between the pre-R1 reference tree and the narrowed R1 worktree -- i.e. the 37 non-control decks are no longer altered by R1. (Under the prior base-class-wide spike this match path was changed-by-design; with the gate narrowed it is restored.)",
+      "method": "run_match_set called DIRECTLY (matrix/DB/SB-plan independent -- avoids the meta-DB short-circuit that made run_matchup.py take different code paths per tree: worktree hit g1_source=bo3, reference hit g1_source=db, a DATA divergence not an engine one). Identical script run in both trees: Izzet Prowess (IzzetProwessMatchAPL) vs Dimir Midrange (MurktideMatchAPL), both gates OFF, n=80, seed=42, n_workers=1, mix_play_draw=True.",
+      "worktree": {"our_apl": "IzzetProwessMatchAPL", "our_gate": false, "opp_apl": "MurktideMatchAPL", "opp_gate": false, "win_pct": 53.8},
+      "reference": {"our_apl": "IzzetProwessMatchAPL", "our_gate": false, "opp_apl": "MurktideMatchAPL", "opp_gate": false, "win_pct": 53.8},
+      "bit_identical": true,
+      "note": "53.8% is non-degenerate (not a 0/100 corner), so it is a real discriminator: the engine diff (game_state/match_engine/stack) does not perturb the gate-OFF match path."
+    },
+    "determinism": {
+      "method": "Re-ran the narrowed gate-ON control gauntlet (parallel_launcher UW Control modern n=600 top-8 seed=42) TWICE this session and diffed.",
+      "result": "BYTE-IDENTICAL across both runs: FWR 27.3% and every per-matchup match% identical (Boros 2.1%, Jeskai Blink 3.1%, Affinity 25.4%, Eldrazi Tron 38.5%). Same-seed determinism holds for the narrowed gate-ON config where R1 actually fires.",
+      "note": "priority_stack performs zero random() and the instrumentation counter (COUNTERS_CAST) is pure integer bookkeeping -> RNG stream unperturbed. counter_resolver.py UNCHANGED (verified via git status)."
+    }
+  },
+
+  "wr_anchor": {
+    "command": "PYTHONIOENCODING=utf-8 python parallel_launcher.py --deck \"UW Control\" --format modern --n 600 --top-n 8 --cores 2 --seed 42",
+    "field_weighted_match_win_pct": 27.3,
+    "n_per_matchup": 600,
+    "total_games": 4800,
+    "matchups": {
+      "Boros Energy":      {"field_pct": 21.2, "g1": 5.3,  "match": 2.1,  "type": "fair"},
+      "Jeskai Blink":      {"field_pct": 10.6, "g1": 7.3,  "match": 3.1,  "type": "fair"},
+      "Affinity":          {"field_pct": 9.0,  "g1": 29.5, "match": 25.4, "type": "fair"},
+      "Amulet Titan":      {"field_pct": 5.2,  "g1": 62.2, "match": 76.0, "type": "combo"},
+      "Ruby Storm":        {"field_pct": 4.1,  "g1": 63.3, "match": 74.3, "type": "combo"},
+      "Eldrazi Tron":      {"field_pct": 3.7,  "g1": 36.5, "match": 38.5, "type": "fair"},
+      "Belcher":           {"field_pct": 3.5,  "g1": 60.8, "match": 70.9, "type": "combo"},
+      "Goryo's Vengeance": {"field_pct": 3.5,  "g1": 63.7, "match": 74.8, "type": "combo"}
+    },
+    "design_target": "~49% +/- 3pp at n>=1000 (TIER 1 gate)",
+    "real_number": "27.3% FWR at n=600 (top-8 modern field).",
+    "verdict": "ANCHOR NOT MET (off by ~22pp). This is an APL-TUNING todo, NOT an R1-mechanism defect. HONEST READING: the 'fair' matchups (Boros 2.1%, Jeskai Blink 3.1%, Affinity 25.4%, Eldrazi Tron 38.5%) are the ones that actually run the two-player engine AND fire R1 -- and they are weak (the control APL loses to aggro). The high combo matchups (70-76%) use the combo kill-sampler, which does NOT run the engine and does NOT fire R1, so they inflate the FWR without testing R1. R1's counterspell-on-stack capability is PROVEN (proof tests + nonzero real-play fire count); the control APL's play quality vs aggro is the gap. Tuning the UW Control APL to hit ~49% is a separate task from the R1 mechanism.",
+    "promoted": false,
+    "n_caveat": "n=600 < 1000; if/when the control APL is tuned, re-confirm at n>=1000 before treating any WR as the formal Tier-1 gate."
+  },
+
+  "risks_and_imperfections": [
+    "WR ANCHOR NOT MET (tuning-todo): control FWR 27.3% vs ~49% target. The R1 mechanism is proven and exercised; the gap is the UW Control APL's play quality (notably vs aggro: 2.1% vs Boros, 3.1% vs Jeskai Blink). Recommend a follow-up APL-tuning task (mulligan/removal/wipe sequencing, sideboarding), then a formal n>=1000 re-confirm. Do NOT chase the anchor by tuning here -- that is out of R1 scope.",
+    "FWR composition caveat: parallel_launcher mixes engine 'fair' matchups (where R1 fires) with combo-sampler matchups (where it does not). The headline FWR therefore over-represents non-R1 combo results; the R1-exercising 'fair' matchups are the weak ones. Read the per-matchup table, not just the 27.3%.",
+    "Proof-test narrowing fix: ControlAPL gained an explicit WANTS_PRIORITY_STACK=True class attr because the base default flipped to False. The RED/GREEN differential was re-verified intact (gate-OFF still fails to resolve the original), so the fix is faithful, but note the tests now self-declare the gate rather than inheriting it."
+  ],
+
+  "stop_status": "STOPPED before merge. No git merge/push/reset performed. Worktree left intact for user review. counter_resolver.py UNCHANGED (verified via git status). py_compile clean on all edited files (tests/test_r1_stack_priority.py, tests/test_r1_control_exercises.py, engine/priority_stack.py)."
+}

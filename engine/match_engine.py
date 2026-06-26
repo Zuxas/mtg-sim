@@ -227,6 +227,12 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             # each player can counter the other's spells.
             gs._match_opp_apl = opp_apl
             opp_gs._match_opp_apl = apl
+            # R1: also wire each gs to its OWN apl so cast_spell's gate can
+            # check both directions (caster's APL OR opponent's APL may want
+            # the priority stack -> enables counter-the-counter). Additive
+            # attribute set; no RNG, no effect on the legacy path order.
+            gs._self_apl = apl
+            opp_gs._self_apl = opp_apl
 
             # Untap
             for card in gs.zones.battlefield:

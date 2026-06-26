@@ -37,6 +37,22 @@ class MatchAPL(BaseAPL):
     # collectively even when individual attacks look bad.
     ATTACK_ALL_IN = False
 
+    # R1 priority-stack opt-in gate (design 1.5). Default OFF so every
+    # existing deck keeps the legacy synchronous counter window and stays
+    # bit-identical. Interaction-capable subclasses (AwareMatchAPL) flip
+    # this True to route casts through the real on-stack LIFO priority loop.
+    WANTS_PRIORITY_STACK = False
+
+    def priority_action(self, my_gs, opp_gs, stack):
+        """R1 priority hook: respond to the current top of `stack`.
+
+        Returns (counter_card, target_uid) to cast a counter, or None to pass.
+        Base implementation always passes, so every non-opted-in deck is inert
+        in run_priority_stack (and the gate is OFF for it anyway). Subclasses
+        that set WANTS_PRIORITY_STACK = True override this.
+        """
+        return None
+
     # Archetype category for sideboard-plan matching. One of:
     #   'aggro', 'midrange', 'control', 'combo', 'ramp', 'tempo'.
     # Used as a key into the opponent's SB_PLANS dict.

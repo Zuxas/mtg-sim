@@ -151,6 +151,17 @@ class AwareMatchAPL(MatchAPL):
     COUNTER_CARDS: set = set()   # names of actual counters in this deck
     BLINK_TARGETS: set = set()   # override per deck if needed
 
+    # R1 priority-stack opt-in (design 1.5). DEFAULT OFF on the base class so the
+    # 37 non-control Standard decks return to the bit-identical legacy gate-OFF
+    # path. R1 is scoped to a real control subclass that OPTS IN by setting
+    # WANTS_PRIORITY_STACK = True (see apl/uw_control_modern_match.py). The
+    # priority_action implementation stays on the base: it is inert when the gate
+    # is off (engine._priority_stack_enabled returns False, so run_priority_stack
+    # is never entered) and is inherited for free by the opted-in subclass.
+    # Payment happens from real untapped/reserved mana in
+    # engine.priority_stack._pay_for_counter (via tap_lands honoring mana_reserve).
+    WANTS_PRIORITY_STACK = False
+
     # ---------------------------------------------------------------------------
     # Mana awareness helpers
     # ---------------------------------------------------------------------------
@@ -568,6 +579,116 @@ class AwareMatchAPL(MatchAPL):
             gs.mana_reserve = self.COUNTER_COST if has_counter else 0
         else:
             gs.mana_reserve = 0
+
+    # ---------------------------------------------------------------------------
+    # R1 priority-stack hook (design 1.5)
+    # ---------------------------------------------------------------------------
+
+    def priority_action(self, my_gs, opp_gs, stack):
+        """Decide whether to counter the top object on `stack`.
+
+        Returns (counter_card, target_uid) to cast a counter, or None to pass.
+
+        The decision logic is LIFTED from engine.counter_resolver
+        (COUNTER_VALIDITY / _spell_value / _PRIORITY_COUNTER_TARGETS) so the
+        on-stack path uses the same threat assessment as the legacy synchronous
+        window. Payment is NOT performed here -- engine.priority_stack pays from
+        the responder's ACTUAL untapped/reserved mana (tap_lands honoring
+        mana_reserve); this method only checks affordability before committing.
+
+        ZERO random(): pure board-state + hand inspection.
+        """
+        items = getattr(stack, "items", None)
+        if not items:
+            return None
+
+        # Per-run ownership reset. Each run_priority_stack builds a NEW Stack
+        # object, so comparing the live reference with `is` detects a fresh run
+        # without the id()-reuse hole (a freed Stack's address can be reused by
+        # the next run; holding the reference keeps the address live).
+        if getattr(self, "_r1_stack_ref", None) is not stack:
+            self._r1_stack_ref = stack
+            self._r1_owned = set()
+
+        top = items[-1]
+        # Never respond to an already-countered object (pointless) or to one of
+        # MY OWN objects on the stack (don't counter my own counter). Ownership
+        # is tracked by the card-object ids I have placed on this stack; within a
+        # correctly-reset run every such card is alive, so the ids are stable.
+        if getattr(top, "countered", False):
+            return None
+        if id(getattr(top, "card", None)) in self._r1_owned:
+            return None
+
+        spell = getattr(top, "card", None)
+        if spell is None:
+            return None
+
+        counter = self._r1_choose_counter(my_gs, spell)
+        if counter is None:
+            return None
+
+        # Record the card I am about to put on the stack so I don't later try to
+        # counter it myself (priority_stack assigns it the next uid; we identify
+        # it by object identity, which is stable for the life of the run).
+        self._r1_owned.add(id(counter))
+        return (counter, getattr(top, "uid", -1))
+
+    def _r1_choose_counter(self, my_gs, spell):
+        """Pick the cheapest legal, value-positive, affordable counter in hand.
+
+        Mirrors engine.counter_resolver.try_counter_spell's selection: cheapest
+        valid counter first (preserve flex), value gate (counter cost <= spell
+        value unless the spell is a priority target), affordability against real
+        untapped lands. Returns a card or None.
+        """
+        from engine.counter_resolver import (
+            COUNTER_VALIDITY, _spell_value, _PRIORITY_COUNTER_TARGETS,
+        )
+
+        spell_val = _spell_value(spell)
+        candidates = []
+        for c in my_gs.zones.hand:
+            entry = COUNTER_VALIDITY.get(c.name)
+            if entry is None:
+                continue
+            validity_fn, base_cmc = entry
+            if not validity_fn(spell):
+                continue
+            candidates.append((c, base_cmc))
+
+        if not candidates:
+            return None
+
+        # Cheapest counter first (preserve flexible counters for bigger targets).
+        candidates.sort(key=lambda x: x[1])
+
+        for counter, counter_cmc in candidates:
+            # Value gate: only over-spend on a flagged priority target.
+            if (spell.name not in _PRIORITY_COUNTER_TARGETS
+                    and counter_cmc > spell_val):
+                continue
+            if self._r1_can_afford(my_gs, counter):
+                return counter
+        return None
+
+    @staticmethod
+    def _r1_can_afford(my_gs, counter):
+        """True if `counter` is plausibly castable from real untapped mana.
+
+        Checks the current pool first; if that is short, estimates the mana that
+        tap_lands would add from physically-untapped lands (reserved lands stay
+        untapped into the opponent's turn -- design Seam D). This is a generic
+        estimate matching the loose affordability used elsewhere in the engine;
+        if it over-estimates, priority_stack._pay_for_counter fails the real pay
+        and the window is simply treated as a pass."""
+        pool = my_gs.mana_pool
+        cmc = int(getattr(counter, "cmc", 0) or 0)
+        if pool.can_cast(getattr(counter, "mana_cost", "") or "", cmc):
+            return True
+        untapped = [l for l in my_gs.zones.lands_on_battlefield()
+                    if not getattr(l, "tapped", False)]
+        return (pool.total() + len(untapped)) >= cmc
 
     def main_phase(self, gs: GameState):
         """

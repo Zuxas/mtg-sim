@@ -1,0 +1,18 @@
+{
+  "id": "golgari_toolbox_engine",
+  "name": "Golgari Cauldron Toolbox",
+  "role": "engine",
+  "cards": {
+    "Agatha's Soul Cauldron": 4,
+    "Chord of Calling": 2,
+    "Grist, the Hunger Tide": 2
+  },
+  "color_identity": ["B", "G"],
+  "conjoins_with": ["sacrifice", "green_ramp", "combo"],
+  "tags": ["toolbox", "golgari", "sac_payoff", "sacrifice"],
+  "synergy_notes": "Agatha's Soul Cauldron grants graveyard creatures' activated abilities (incl. Walking Ballista) and exiles for counters; Chord tutors silver bullets at instant speed; Grist is a recurring sac payoff. Toolbox engine for Golgari sacrifice decks.",
+  "provenance": "seed:human:yawgmoth_modern",
+  "min_slots": 5,
+  "max_slots": 9,
+  "requires_simulatable": true
+}

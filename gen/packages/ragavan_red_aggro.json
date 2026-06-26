@@ -1,0 +1,18 @@
+{
+  "id": "ragavan_red_aggro",
+  "name": "Ragavan Red Tempo",
+  "role": "aggro-core",
+  "cards": {
+    "Ragavan, Nimble Pilferer": 4,
+    "Seasoned Pyromancer": 3,
+    "Fable of the Mirror-Breaker": 1
+  },
+  "color_identity": ["R"],
+  "conjoins_with": ["burn", "boros_interaction", "energy_payoff"],
+  "tags": ["aggro", "red", "tempo"],
+  "synergy_notes": "Ragavan is the premier red one-drop (treasure + card advantage on connect); Seasoned Pyromancer and Fable refuel. Splashable red tempo core that pairs with any aggressive shell and a burn suite.",
+  "provenance": "seed:human:boros_energy_modern",
+  "min_slots": 6,
+  "max_slots": 10,
+  "requires_simulatable": true
+}

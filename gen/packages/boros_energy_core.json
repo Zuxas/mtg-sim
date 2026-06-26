@@ -1,0 +1,19 @@
+{
+  "id": "boros_energy_core",
+  "name": "Boros Energy Core",
+  "role": "aggro-core",
+  "cards": {
+    "Guide of Souls": 4,
+    "Ocelot Pride": 4,
+    "Ajani, Nacatl Pariah": 4,
+    "Phlage, Titan of Fire's Fury": 4
+  },
+  "color_identity": ["R", "W"],
+  "conjoins_with": ["burn", "boros_interaction", "energy_payoff"],
+  "tags": ["energy", "lifegain", "aggro", "boros", "energy_payoff"],
+  "synergy_notes": "Guide of Souls + Ocelot Pride convert creatures and lifegain into energy and tokens; Ajani snowballs the board; Phlage gives reach and lifegain recursion. Aggressive RW core that wants cheap burn/interaction and an energy payoff.",
+  "provenance": "seed:human:boros_energy_modern",
+  "min_slots": 12,
+  "max_slots": 18,
+  "requires_simulatable": true
+}

@@ -1,0 +1,18 @@
+{
+  "id": "boros_burn_interaction",
+  "name": "Boros Burn + Sac Interaction",
+  "role": "interaction",
+  "cards": {
+    "Galvanic Discharge": 4,
+    "Goblin Bombardment": 3,
+    "Thraben Charm": 3
+  },
+  "color_identity": ["R", "W"],
+  "conjoins_with": ["energy_payoff", "aggro", "sacrifice"],
+  "tags": ["burn", "interaction", "energy", "boros", "removal", "sacrifice"],
+  "synergy_notes": "Galvanic Discharge is energy-fueled efficient removal; Goblin Bombardment turns dying tokens into reach and enables sacrifice value; Thraben Charm is flexible white interaction/graveyard hate. Interaction suite for RW aggro/energy shells.",
+  "provenance": "seed:human:boros_energy_modern",
+  "min_slots": 6,
+  "max_slots": 12,
+  "requires_simulatable": true
+}

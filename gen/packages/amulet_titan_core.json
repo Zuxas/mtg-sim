@@ -1,0 +1,20 @@
+{
+  "id": "amulet_titan_core",
+  "name": "Amulet Titan Core",
+  "role": "combo-core",
+  "cards": {
+    "Amulet of Vigor": 4,
+    "Arboreal Grazer": 4,
+    "Primeval Titan": 3,
+    "Summoner's Pact": 2,
+    "Cultivator Colossus": 1
+  },
+  "color_identity": ["G"],
+  "conjoins_with": ["bounce_land", "green_ramp", "big_mana_payoff"],
+  "tags": ["ramp", "combo", "landfall", "green", "big_mana_payoff"],
+  "synergy_notes": "Amulet of Vigor untaps bounce lands and doubles ramp; Grazer drops extra lands; Summoner's Pact tutors Titan. Primeval Titan + bounce lands generates explosive mana and a fast clock. Wants a bounce-land mana base and green ramp tutors.",
+  "provenance": "seed:human:amulet_titan_modern",
+  "min_slots": 10,
+  "max_slots": 16,
+  "requires_simulatable": true
+}

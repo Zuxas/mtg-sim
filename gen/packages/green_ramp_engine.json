@@ -1,0 +1,18 @@
+{
+  "id": "green_ramp_engine",
+  "name": "Green Toolbox Ramp",
+  "role": "engine",
+  "cards": {
+    "Green Sun's Zenith": 3,
+    "Malevolent Rumble": 3,
+    "Dryad Arbor": 1
+  },
+  "color_identity": ["G"],
+  "conjoins_with": ["ramp", "combo", "toolbox"],
+  "tags": ["green_ramp", "toolbox", "ramp", "green"],
+  "synergy_notes": "Green Sun's Zenith tutors any green creature (incl. Dryad Arbor for a free ramp body); Malevolent Rumble digs and fuels the graveyard. Glue engine for green ramp and Golgari toolbox decks.",
+  "provenance": "seed:human:amulet_titan_modern,yawgmoth_modern",
+  "min_slots": 5,
+  "max_slots": 8,
+  "requires_simulatable": true
+}

@@ -1,0 +1,17 @@
+{
+  "id": "green_mana_dorks",
+  "name": "Green Mana Dorks",
+  "role": "mana",
+  "cards": {
+    "Delighted Halfling": 4,
+    "Ignoble Hierarch": 1
+  },
+  "color_identity": ["B", "R", "G"],
+  "conjoins_with": ["green_ramp", "ramp", "combo"],
+  "tags": ["mana_dork", "ramp", "green", "mana"],
+  "synergy_notes": "Delighted Halfling ramps and protects legendary payoffs from counters; Ignoble Hierarch adds a mana and exalted reach. Turn-one acceleration for green ramp / Golgari shells.",
+  "provenance": "seed:human:yawgmoth_modern",
+  "min_slots": 4,
+  "max_slots": 8,
+  "requires_simulatable": false
+}

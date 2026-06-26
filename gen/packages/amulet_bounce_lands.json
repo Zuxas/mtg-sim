@@ -1,0 +1,17 @@
+{
+  "id": "amulet_bounce_lands",
+  "name": "Karoo Bounce Lands",
+  "role": "mana",
+  "cards": {
+    "Gruul Turf": 4,
+    "Simic Growth Chamber": 2
+  },
+  "color_identity": ["G", "U", "R"],
+  "conjoins_with": ["ramp"],
+  "tags": ["bounce_land", "ramp", "mana"],
+  "synergy_notes": "Bounce lands (karoos) return a land and tap for two, doubling mana with Amulet of Vigor and rebuying landfall. Mana fragment, not faithfully simulatable on its own; slotted as fixing for green ramp shells.",
+  "provenance": "seed:human:amulet_titan_modern",
+  "min_slots": 4,
+  "max_slots": 8,
+  "requires_simulatable": false
+}

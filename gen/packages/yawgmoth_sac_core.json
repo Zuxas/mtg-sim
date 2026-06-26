@@ -1,0 +1,20 @@
+{
+  "id": "yawgmoth_sac_core",
+  "name": "Golgari Yawgmoth Core",
+  "role": "combo-core",
+  "cards": {
+    "Yawgmoth, Thran Physician": 4,
+    "Young Wolf": 4,
+    "Badgermole Cub": 4,
+    "Walking Ballista": 3,
+    "Strangleroot Geist": 1
+  },
+  "color_identity": ["B", "G"],
+  "conjoins_with": ["golgari_toolbox", "black_interaction", "green_ramp", "sac_payoff"],
+  "tags": ["sacrifice", "undying", "combo", "golgari", "aristocrats", "sac_payoff"],
+  "synergy_notes": "Yawgmoth eats undying creatures (Young Wolf, Strangleroot Geist) to draw and ping; with two undying bodies + Walking Ballista it loops for unbounded -1/-1 counters. Sacrifice/aristocrats combo core that wants a Golgari toolbox and black interaction.",
+  "provenance": "seed:human:yawgmoth_modern",
+  "min_slots": 12,
+  "max_slots": 18,
+  "requires_simulatable": true
+}

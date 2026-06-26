@@ -1,0 +1,18 @@
+{
+  "id": "black_interaction",
+  "name": "Black Disruption Suite",
+  "role": "interaction",
+  "cards": {
+    "Fatal Push": 4,
+    "Thoughtseize": 2,
+    "Orcish Bowmasters": 1
+  },
+  "color_identity": ["B"],
+  "conjoins_with": ["golgari_toolbox", "sacrifice", "midrange"],
+  "tags": ["interaction", "removal", "discard", "black"],
+  "synergy_notes": "Fatal Push is premium one-mana removal; Thoughtseize strips combo/threats; Orcish Bowmasters punishes card draw and makes a body. Efficient black disruption splash for any black midrange/combo shell.",
+  "provenance": "seed:human:yawgmoth_modern",
+  "min_slots": 5,
+  "max_slots": 10,
+  "requires_simulatable": true
+}

@@ -17,6 +17,8 @@ Usage:
 
 import json
 import urllib.request
+import urllib.error
+import time
 import re
 import importlib.util
 import sys
@@ -242,7 +244,7 @@ def _refresh_oauth_token(refresh_token: str) -> dict:
         return {}
 
 
-def _call_claude(prompt: str, model: str = "claude-sonnet-4-20250514") -> str:
+def _call_claude(prompt: str, model: str = "claude-sonnet-4-6") -> str:
     """Call Claude API using persisted Claude Code credentials."""
     token = _get_api_token()
 
@@ -269,9 +271,25 @@ def _call_claude(prompt: str, model: str = "claude-sonnet-4-20250514") -> str:
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        data = json.loads(resp.read())
-        return data["content"][0]["text"]
+    # Retry with backoff on transient throttling/overload (429/503/529). The gen
+    # pipeline leans on this call once per candidate deck, so a single transient
+    # 429 must not silently collapse fidelity to the GenericAPL fallback.
+    last_err = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                data = json.loads(resp.read())
+                return data["content"][0]["text"]
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code in (429, 503, 529) and attempt < 3:
+                ra = e.headers.get("retry-after") if e.headers else None
+                wait = int(ra) if (ra and str(ra).isdigit()) else min(5 * (2 ** attempt), 60)
+                time.sleep(wait + 1)
+                continue
+            raise
+    if last_err:
+        raise last_err
 
 
 def _clean_code(raw: str) -> str:

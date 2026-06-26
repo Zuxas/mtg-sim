@@ -145,8 +145,21 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
     has_our_sb = bool(our_sb_in or our_sb_out)
     has_opp_sb = bool(opp_sb_in or opp_sb_out)
 
-    # ── Path A: Real Bo3 with actual sideboarding ──
-    if has_our_sb:
+    # FIX 2: route to the real match-APL Bo3 (Path A) whenever our deck has a
+    # canonical MATCH_APL, even when no SB plan is registered. Previously the gate
+    # was `has_our_sb` only, so a deck with a real match APL but no SB plan fell
+    # through to the goldfish/Generic shim (Path B). MATCH_APL_REGISTRY membership
+    # is the exact canonical-vs-shim test get_match_apl() makes internally (a miss
+    # yields a GoldfishAdapter). Wrapped failure-safe: if detection throws we fall
+    # back to the old gate, so this change can never regress existing paths.
+    try:
+        from apl import MATCH_APL_REGISTRY, _normalize_key
+        has_our_match_apl = _normalize_key(our_deck) in MATCH_APL_REGISTRY
+    except Exception:
+        has_our_match_apl = False
+
+    # ── Path A: Real Bo3 with actual sideboarding (empty SB plan if none registered) ──
+    if has_our_sb or has_our_match_apl:
         try:
             from apl import get_match_apl
             from engine.bo3_match import run_bo3_set, print_bo3_report
@@ -163,7 +176,12 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
                 for c in (opp_side or []):
                     opp_sb_dict[c.name] = opp_sb_dict.get(c.name, 0) + 1
 
-                sb_plan_a = (our_sb_in, our_sb_out) if has_our_sb else None
+                # FIX 2: default to an EMPTY plan ([],[]) when we have a real
+                # match APL but no registered SB plan (our_sb_* are [] here), so
+                # G2/G3 run preboard-equivalent (_apply_sb no-ops on empty lists).
+                # Decks WITH an SB plan are UNCHANGED: (our_sb_in, our_sb_out) is
+                # bit-identical to the previous `if has_our_sb` value.
+                sb_plan_a = (our_sb_in, our_sb_out)
                 sb_plan_b = (opp_sb_in, opp_sb_out) if has_opp_sb else None
 
                 bo3 = run_bo3_set(

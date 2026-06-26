@@ -811,17 +811,36 @@ class GameState:
                     self._log(f"  {c.name}: time counter → "
                               f"{c.time_counters}")
 
-    # Registry: name → (activation cost, power, toughness, keyword or None)
+    # Registry: name -> (total activation mana, power, toughness, keywords)
+    # keywords field accepts: None, a single keyword string, or a tuple of
+    # keyword strings. Strings are KWTag values (see engine/keywords.py).
+    # Costs are the TOTAL mana value of the animate cost (color-agnostic;
+    # the pool pays generic). All P/T/keywords grounded in oracle text.
     _RESTLESS_LANDS = {
-        "Restless Reef":       (4, 4, 4, "deathtouch"),
-        "Restless Anchorage":  (3, 2, 3, "flying"),
-        "Restless Ridgeline":  (4, 3, 4, None),
-        "Restless Vents":      (3, 2, 3, "menace"),
-        "Restless Cottage":    (4, 4, 4, None),
-        "Restless Fortress":   (4, 1, 4, None),
-        "Restless Bivouac":    (3, 2, 2, None),
-        "Restless Spire":      (2, 2, 1, None),
-        "Restless Vinestalk":  (5, 5, 5, "trample"),
+        # --- Murders at Karlov Manor / Lost Caverns "Restless" cycle (10) ---
+        "Restless Reef":       (4, 4, 4, "deathtouch"),   # {2}{U}{B} 4/4 deathtouch
+        "Restless Anchorage":  (3, 2, 3, "flying"),       # {1}{W}{U} 2/3 flying
+        "Restless Ridgeline":  (4, 3, 4, None),           # {2}{R}{G} 3/4
+        "Restless Vents":      (3, 2, 3, "menace"),       # {1}{B}{R} 2/3 menace
+        "Restless Cottage":    (4, 4, 4, None),           # {2}{B}{G} 4/4
+        "Restless Fortress":   (4, 1, 4, None),           # {2}{W}{B} 1/4
+        "Restless Bivouac":    (3, 2, 2, None),           # {1}{R}{W} 2/2
+        "Restless Spire":      (2, 2, 1, None),           # {U}{R} 2/1 (cond. FS, unmodeled)
+        "Restless Vinestalk":  (5, 5, 5, "trample"),      # {3}{G}{U} 5/5 trample
+        "Restless Prairie":    (4, 3, 3, None),           # {2}{G}{W} 3/3
+        # --- Modern / Standard named manlands ---
+        "Celestial Colonnade": (5, 4, 4, ("flying", "vigilance")),  # {3}{W}{U} 4/4 flying vigilance
+        "Mutavault":           (1, 2, 2, None),           # {1} 2/2 (all creature types)
+        "Mishra's Factory":    (1, 2, 2, None),           # {1} 2/2 Assembly-Worker
+        "Blinkmoth Nexus":     (1, 1, 1, "flying"),       # {1} 1/1 flying
+        "Cave of the Frost Dragon": (5, 3, 4, "flying"),  # {4}{W} 3/4 flying
+        "Hive of the Eye Tyrant":   (4, 3, 3, "menace"),  # {3}{B} 3/3 menace
+        "Den of the Bugbear":  (4, 3, 2, None),           # {3}{R} 3/2 (atk: Goblin, unmodeled)
+        "Hall of Storm Giants": (6, 7, 7, None),          # {5}{U} 7/7 (ward {3} not combat-modeled)
+        # Skipped (no clean combat shape):
+        #   Lair of the Hydra  -- {X}{G} X/X, variable power (ambiguous)
+        #   Inkmoth Nexus      -- {1} 1/1 flying+infect; infect not in KWTag set,
+        #                         a flying-only model would misrepresent the card
     }
 
     def activate_restless_lands(self) -> list:
@@ -847,17 +866,20 @@ class GameState:
             land.tags.add(Tag.CREATURE)
             land._revert_at_eot = True
             land.summoning_sickness = False
-            if kw == "deathtouch":
-                land.tags.add(KWTag.DEATHTOUCH)
-            elif kw == "flying":
-                land.tags.add(KWTag.FLYING)
-            elif kw == "menace":
-                land.tags.add(KWTag.MENACE)
-            elif kw == "trample":
-                land.tags.add(KWTag.TRAMPLE)
+            # Normalize keyword field: None | str | tuple/list -> tuple of
+            # KWTag values. Registry strings are already KWTag values
+            # (KWTag.FLYING == "flying"), so they can be added directly.
+            if kw is None:
+                kws = ()
+            elif isinstance(kw, str):
+                kws = (kw,)
+            else:
+                kws = tuple(kw)
+            for k in kws:
+                land.tags.add(k)
             activated.append(land)
-            self._log(f"  {land.name}: activated → {p}/{t} "
-                      f"{kw or ''} (reverts at EOT)")
+            self._log(f"  {land.name}: activated -> {p}/{t} "
+                      f"{' '.join(kws)} (reverts at EOT)")
         return activated
 
     def make_treasure_token(self) -> Card:

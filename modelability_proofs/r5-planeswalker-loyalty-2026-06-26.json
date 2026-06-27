@@ -1,0 +1,115 @@
+{
+  "rung": "R5",
+  "title": "Planeswalker loyalty over turns (loyalty / ultimate / attackable) -- LIVE in match mode",
+  "date": "2026-06-26",
+  "worktree": "E:/vscode ai project/mtg-sim-r5",
+  "branch": "modelability/r5-planeswalker-loyalty",
+  "branch_point_commit": "2280dced3c859c1cc001269dcb1485b706089dac",
+  "commit_state": "uncommitted working tree (spike); STOP before merge per task",
+  "seed": 42,
+  "env": "PYTHONIOENCODING=utf-8 PYTHONHASHSEED=0",
+  "n_workers": 1,
+  "n_workers_note": "module-global PW counters are NOT process-shared; all counter runs forced n_workers=1 or counters read 0 in the parent",
+
+  "headline": "PASS -- planeswalkers are now LIVE in match mode (loyalty ticks across turns, ultimates fire, walkers are attackable and die to the 0-loyalty SBA) WITHOUT regressing non-PW decks. All NR anchors bit-identical across trees; all three proof discriminators go RED gate-OFF / GREEN gate-ON.",
+
+  "files_changed": {
+    "engine/planeswalkers.py": "PLANESWALKER_ABILITIES populated (Karn/Ugin + canonical PWs) + START_LOYALTY/ULTIMATES tables + _default_choose_pw_ability + activate_pws_for_turn/activate_pw_for_turn orchestrator + _pw_loyalty_enabled gate + shared _pw_zero_loyalty_sba + PW_ACTIVATIONS/PW_ULTIMATES/PW_COMBAT_DEATHS instrumentation + reset_fire_count/note_pw_combat_death; existing activate_planeswalker_ability dispatch contract preserved",
+    "engine/match_runner.py": "PRIMARY path: _pw_match_gate(gs) reads gs.apl_a/apl_b WANTS_PW_LOYALTY; _run_pw_activations (gated, once per player-turn -> CR 606.3 by construction; ETB-set-loyalty when unset; alias view zones); gated attackable-PW branch in _resolve_combat (planeswalkers excluded from attacker+blocker pools gate-ON; one unblocked attacker per walker, kill highest-loyalty first, only when not lethal to face; subtract power from loyalty; shared SBA; no face damage on a PW-committed attacker). Gate OFF -> byte-identical.",
+    "apl/match_apl.py": "MatchAPL base: WANTS_PW_LOYALTY=False + default choose_pw_ability delegating to planeswalkers._default_choose_pw_ability",
+    "apl/eldrazi_tron_match.py": "EldraziTronMatchAPL: WANTS_PW_LOYALTY=True + Karn/Ugin choose_pw_ability; one-shot Karn/Ugin main_phase_match blocks LEFT INTACT so gate-OFF Tron is byte-identical (NR-3a) and the on-off delta isolates the loyalty layer",
+    "tests/test_r5_planeswalker_loyalty.py": "ADDED -- RED/GREEN gate-toggle proof against match_runner flat TwoPlayerGameState",
+    "scripts/r5_behavior_floor.py": "ADDED -- forced-engine direct run_match_set behavior floor + falsifier",
+    "engine/counter_resolver.py": "UNCHANGED (loyalty is sorcery-speed; not touched)",
+    "engine/card_handlers_verified.py": "UNCHANGED (loyalty initialized at ETB via the gated runner path instead, so coverage 4218/4218 untouched)"
+  },
+
+  "proof_tests": {
+    "runner": "PYTHONIOENCODING=utf-8 python tests/test_r5_planeswalker_loyalty.py -> ALL R5 PROOF TESTS PASS (exit 0)",
+    "test1_loyalty_ultimate_budget": {
+      "verdict": "PASS",
+      "green_gate_on": {"loyalty_by_turn": [10, 14, 0], "ultimates": 1, "activations": 3, "in_graveyard": true, "on_battlefield": false},
+      "red_gate_off": {"loyalty_by_turn": [6, 6, 6], "ultimates": 0, "activations": 0, "in_graveyard": false, "on_battlefield": true},
+      "budget_cr_606_3": {"first_activation": true, "second_same_turn": false},
+      "discriminators_flip": ["loyalty strictly increases across turns", "an ultimate fires"]
+    },
+    "test2_attackable_dies": {
+      "verdict": "PASS",
+      "green_lethal_4_4_vs_loy3": {"face_damage": 0, "loyalty": -1, "on_battlefield": false, "in_graveyard": true, "combat_deaths": 1},
+      "red_lethal_4_4_vs_loy3": {"face_damage": 0, "loyalty": 3, "on_battlefield": true, "in_graveyard": false, "combat_deaths": 0},
+      "green_survive_2_2_vs_loy6": {"face_damage": 0, "loyalty": 4, "on_battlefield": true, "combat_deaths": 0},
+      "defender_life_unchanged_gate_on": true,
+      "honesty_note": "RED face_damage is 0 (not 4) because gate-OFF the engine has no attack-the-walker target and (legacy quirk) admits the planeswalker to the blocker pool, where it absorbs the attacker as a phantom blocker. The R5 discriminators are therefore loyalty-change and combat-death, not face damage. R5 excludes walkers from the blocker pool gate-ON and makes them properly attackable.",
+      "discriminators_flip": ["combat damage reduces the walker's loyalty", "the walker dies to combat via the 0-loyalty SBA"]
+    },
+    "test3_self_minus_shares_sba": {
+      "verdict": "PASS",
+      "green_gate_on": {"loyalty": -1, "on_battlefield": false, "in_graveyard": true},
+      "red_gate_off": {"loyalty": 2, "on_battlefield": true, "in_graveyard": false},
+      "note": "self -3 routes through the SAME shared 0-loyalty SBA as the attack-the-walker path (TEST2) -- no divergent death code",
+      "discriminators_flip": ["self-minus to 0 sends the walker to the graveyard"]
+    },
+    "core_test": "tests/test_r5_planeswalker_loyalty_core.py -> ALL R5 CORE TESTS PASS (planeswalkers.py registry/orchestrator/gate/SBA/instrumentation in isolation)"
+  },
+
+  "no_regression": {
+    "method": "post-R5 (mtg-sim-r5) compared against the clean branch-point tree (mtg-sim); MUST be bit-identical",
+    "NR1_boros_goldfish": {"verdict": "PASS bit-identical", "r5": {"win_rate_pct": 100.0, "avg_kill": 4.58, "median_kill": 4}, "clean": {"win_rate_pct": 100.0, "avg_kill": 4.58, "median_kill": 4}, "note": "Boros loads planeswalkers.py via Ajani -> real additive-safety anchor, not a module-doesnt-load cross-check"},
+    "NR3_amulet_goldfish": {"verdict": "PASS bit-identical", "r5": {"win_rate_pct": 100.0, "avg_kill": 5.98, "median_kill": 6}, "clean": {"win_rate_pct": 100.0, "avg_kill": 5.98, "median_kill": 6}},
+    "NR3a_tron_gate_off_match": {"verdict": "PASS bit-identical", "matchup": "Eldrazi Tron vs Boros Energy, WANTS_PW_LOYALTY forced OFF, run_match_set direct n=100 seed=42", "r5": {"a_wins": 36, "b_wins": 64, "avg_turns": 6.89}, "clean": {"a_wins": 36, "b_wins": 64, "avg_turns": 6.89}, "note": "exercises _resolve_combat directly (goldfish never does); confirms the one-shot Karn/Ugin + Karn ETB behavior is preserved gate-OFF"},
+    "NR2_nonpw_match": {"verdict": "PASS bit-identical", "matchup": "Boros Energy vs Murktide (neither opts in), run_match_set direct n=100 seed=42, non-degenerate 68/32", "r5": {"a_wins": 68, "b_wins": 32, "avg_turns": 6.76}, "clean": {"a_wins": 68, "b_wins": 32, "avg_turns": 6.76}},
+    "coverage": "card_handlers_verified.py untouched -> full_audit 4218/4218 unaffected (loyalty set via gated runner path, not a handler rewrite)",
+    "NR5_determinism_and_smokes": {
+      "verdict": "PASS (determinism + match_engine); APL smokes not runnable in this env (pre-existing, not R5)",
+      "test_determinism.py": "ALL 4 TESTS PASS -- exercises ABORT G; confirms the gate-OFF module-global counter mutation (PW_ACTIVATIONS += 1 on Boros Ajani) does NOT leak into RNG/game state",
+      "test_match_engine.py": "Phase 3A smoke complete, exit 0",
+      "test_modern_apls.py": "pre-existing FAIL sqlite3 'unable to open database file' -- IDENTICAL failure in the clean mtg-sim tree (environmental cwd/DB-path), not an R5 regression",
+      "test_standard_apls.py": "pre-existing FAIL ModuleNotFoundError 'data' -- IDENTICAL failure in the clean mtg-sim tree (environmental path), not an R5 regression"
+    }
+  },
+
+  "behavior_floor": {
+    "method": "forced-engine direct engine.match_runner.run_match_set (db-cache bypassed -> g1_source=sim), n=200 per opponent, seed=42, n_workers=1, Tron WANTS_PW_LOYALTY ON; counters reset_fire_count() before each measured run",
+    "opponents": ["borosenergy (aggro -> kills walkers)", "uwblink (control/grindy -> walkers survive to ultimate)"],
+    "aggregate_gate_on": {"games": 400, "PW_ACTIVATIONS": 1754, "activations_per_game": 4.385, "PW_ULTIMATES": 63, "PW_COMBAT_DEATHS": 33},
+    "floors": {
+      "activations_ge_1_per_game": "PASS (4.385/game)",
+      "ultimates_gt_0": "PASS (63 across sample)",
+      "combat_deaths_gt_0": "PASS (33 across 400 games; 16 vs Boros, 17 vs UW Blink -> walkers ARE attacked and die; immortal-PW ABORT D2 cleared, two-sided number)"
+    },
+    "per_matchup": [
+      {"opp": "borosenergy", "tron_wr_on": 52.0, "tron_wr_off": 42.0, "mwr_delta_pp": 10.0, "activations": 748, "ultimates": 28, "combat_deaths": 16, "g1_source": "sim"},
+      {"opp": "uwblink", "tron_wr_on": 73.5, "tron_wr_off": 60.5, "mwr_delta_pp": 13.0, "activations": 1006, "ultimates": 35, "combat_deaths": 17, "g1_source": "sim"}
+    ],
+    "gate_off_counters": "PW_ACTIVATIONS=PW_ULTIMATES=PW_COMBAT_DEATHS=0 in every gate-OFF run (legacy path never reaches the instrumentation -> any nonzero is direct evidence R5 fired)"
+  },
+
+  "falsifier": {
+    "method": "same forced-engine run_match_set, WANTS_PW_LOYALTY ON vs OFF, g1_source=sim subset only (Tron-under-test has no bo3/SB-plan subset)",
+    "mwr_on_minus_off_pp": {"borosenergy": 10.0, "uwblink": 13.0},
+    "design_floor_+2pp": "exceeded on both matchups; task RELAXES this gate (PWs being LIVE is the point, not a specific WR move) -- reported honestly either way",
+    "direction": "gate-ON improves Tron WR on both matchups; sign matches the section-3 prediction (loyalty value + ultimates raise a grindy ramp deck's MWR vs both aggro and control)"
+  },
+
+  "anchor_wr": null,
+  "anchor_wr_note": "Real Eldrazi/Mono-G Tron Modern WR not pulled from mtg_meta.db in this spike run; the task's part-3 behavior floor does not require it. Not fabricated (ABORT I respected). Pull at full-implementation time for the +/-2pp WR cross-check.",
+
+  "honest_caveats": [
+    "Spike scope: match_runner (PRIMARY) wired; the match_engine/match_state SECONDARY mirror (Tron-as-opponent-of-an-SB-plan-deck) is NOT wired in this spike -- those bo3 paths keep the legacy gate-OFF planeswalker behavior. The two production SB-plan decks (izzet-prowess-tokyo, izzet-looting) are Standard, so Modern Tron is not seated against them in normal gauntlets; impact is nil for the Tron anchor but the mirror remains TODO for a full ship.",
+    "Tron's one-shot main_phase_match Karn/Ugin blocks were left intact (gate-OFF byte-identical, NR-3a). Gate-ON they run ALONGSIDE the loyalty ticks, so Karn-the-Great-Creator's 'wish' is modeled twice (once as the cast-time draw, once as the -2 loyalty tick) -- a mild value double-count inside the gate-ON number. Honest open imperfection; the full ship should replace the one-shots with registry ticks (design 1.5).",
+    "Ultimate handlers are board-defining approximations (Karn -14 = exile opp nonland permanents; Ugin -X = fixed UGIN_X_APPROX=4 sweep), not card-accurate magnitudes (design 5.2 deferred).",
+    "Default attack-the-walker heuristic: one unblocked attacker per walker, highest-loyalty-first, only when the attack is not lethal to the face. Simple and two-sided (combat_deaths>0 confirms), not an optimal pilot model."
+  ],
+
+  "pass_fail_table": {
+    "TEST1_loyalty_ultimate": "PASS",
+    "TEST2_attackable_dies": "PASS",
+    "TEST3_self_sba": "PASS",
+    "NR_boros_bit_identical": "PASS",
+    "NR_amulet_bit_identical": "PASS",
+    "NR3a_tron_gate_off_preserved": "PASS",
+    "behavior_floor_pws_live": "PASS"
+  },
+
+  "stop_before_merge": true
+}

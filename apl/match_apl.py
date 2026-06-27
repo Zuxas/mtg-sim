@@ -53,6 +53,21 @@ class MatchAPL(BaseAPL):
         """
         return None
 
+    # R5 planeswalker-loyalty opt-in gate (design 1.4/1.5). Default OFF so every
+    # existing deck keeps the legacy planeswalker-inert match path and stays
+    # bit-identical. The one production class that flips it True is
+    # EldraziTronMatchAPL; when EITHER seat opts in, the match_runner activates
+    # loyalty ticks/ultimates and admits the attack-the-walker combat branch.
+    WANTS_PW_LOYALTY = False
+
+    def choose_pw_ability(self, pw, gs, opp_gs) -> int:
+        """R5 loyalty-ability chooser. Returns the loyalty change (+N / 0 / -N)
+        to activate on `pw` this turn. Base implementation delegates to the
+        zero-RNG default policy in engine.planeswalkers (fire the ultimate once
+        affordable, else tick up). PW-payoff subclasses override per card."""
+        from engine.planeswalkers import _default_choose_pw_ability
+        return _default_choose_pw_ability(pw)
+
     # Archetype category for sideboard-plan matching. One of:
     #   'aggro', 'midrange', 'control', 'combo', 'ramp', 'tempo'.
     # Used as a key into the opponent's SB_PLANS dict.

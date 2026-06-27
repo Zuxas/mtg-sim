@@ -44,6 +44,33 @@ class EldraziTronMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 12
 
+    # R5: opt into planeswalker loyalty (design 1.5). The existing one-shot
+    # Karn/Ugin blocks in main_phase_match are LEFT INTACT (so gate-OFF Tron is
+    # byte-identical, NR-3a) -- with the gate ON the match_runner additionally
+    # ticks loyalty / fires ultimates / admits the attack-the-walker branch on
+    # top of those one-shots, making the walkers LIVE.
+    WANTS_PW_LOYALTY = True
+
+    def choose_pw_ability(self, pw, gs, opp_gs) -> int:
+        """Karn/Ugin loyalty policy. Tron is a grindy ramp deck: tick UP to
+        protect the walker and bank toward the ultimate, fire the ultimate as
+        soon as it is affordable. Zero-RNG, deterministic."""
+        from engine.planeswalkers import (PLANESWALKER_ABILITIES,
+                                          PLANESWALKER_ULTIMATES)
+        name = getattr(pw, "name", "")
+        abilities = PLANESWALKER_ABILITIES.get(name, {})
+        if not abilities:
+            return 0
+        loyalty = getattr(pw, "loyalty", 0) or 0
+        ult = PLANESWALKER_ULTIMATES.get(name)
+        if ult is not None and loyalty + ult >= 0:
+            return ult
+        plus = [c for c in abilities if c > 0]
+        if plus:
+            return max(plus)
+        affordable = [c for c in abilities if loyalty + c >= 0]
+        return max(affordable) if affordable else 0
+
     def __init__(self):
         self._tron_online = False
         self._karn_wishes_used = 0

@@ -336,6 +336,10 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     # Main phase 1
     _simple_play_turn(gs, player, apl)
 
+    # R5: planeswalker loyalty activation (gated; once per player-turn so the
+    # CR 606.3 budget holds by construction). Gate OFF -> no-op, byte-identical.
+    _run_pw_activations(gs, player, apl)
+
     # Combat (Phase 3: keyword-aware -- first strike, deathtouch,
     # lifelink, trample, flying-vs-blocker, indestructible.
     # Phase 3.5 Stage B: 5-tuple return adds defender_lifelink_gain.)
@@ -610,6 +614,86 @@ def _safe_remove(lst, card, label="list"):
         pass  # already removed
 
 
+# ── R5 planeswalker-loyalty gate + activation (all gated; gate-OFF byte-identical) ──
+
+def _pw_match_gate(gs) -> bool:
+    """R5 capability gate for the match path. Fires iff EITHER seat's APL opts
+    in via WANTS_PW_LOYALTY. Reads the APLs stashed on the TwoPlayerGameState by
+    run_match (gs.apl_a / gs.apl_b). The combo-sampler path never sets these, so
+    getattr defaults keep it OFF there. Gate OFF -> every R5 branch below is
+    skipped and the legacy combat/turn path is byte-identical."""
+    return bool(getattr(getattr(gs, "apl_a", None), "WANTS_PW_LOYALTY", False)
+                or getattr(getattr(gs, "apl_b", None), "WANTS_PW_LOYALTY", False))
+
+
+def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
+    """R5: gated planeswalker loyalty activation for the active player, called
+    EXACTLY ONCE per player-turn (so CR 606.3 one-ability-per-PW-per-turn holds
+    by construction -- no TwoPlayerGameState budget aliasing needed). Gate OFF ->
+    returns 0 immediately, legacy turn path byte-identical.
+
+    Builds a single-player GameState view aliasing the active player's zones
+    (the same aliasing pattern _build_view uses), wires _self_apl so the chooser
+    is reachable, sets each PW's starting loyalty at ETB when unset, and delegates
+    the tick/budget/0-loyalty-SBA to planeswalkers.activate_pws_for_turn. Zero-RNG."""
+    if not _pw_match_gate(gs):
+        return 0
+    from engine import planeswalkers as _pw
+    from engine.game_state import GameState
+
+    if player == "a":
+        on_play = gs.on_play
+        hand, bf, gy, lib, life = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a, gs.life_a
+        opp_hand, opp_bf, opp_gy, opp_lib, opp_life = (
+            gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b, gs.life_b)
+    else:
+        on_play = not gs.on_play
+        hand, bf, gy, lib, life = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b, gs.life_b
+        opp_hand, opp_bf, opp_gy, opp_lib, opp_life = (
+            gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a, gs.life_a)
+
+    pws = [c for c in bf
+           if "planeswalker" in (getattr(c, "type_line", "") or "").lower()]
+    if not pws:
+        return 0
+
+    # ETB-set-loyalty (gated): a freshly-deployed PW Card defaults to loyalty 0
+    # (data.card) so the first +ability would trigger the 0-loyalty SBA on arrival.
+    # Set the printed starting value when unset; never overwrite a live total.
+    for c in pws:
+        if not getattr(c, "loyalty", 0):
+            start = _pw.PLANESWALKER_START_LOYALTY.get(c.name)
+            if start:
+                c.loyalty = start
+
+    view = GameState(mainboard=[], on_play=on_play)
+    view.turn            = gs.turn
+    view.zones.hand      = hand   # aliased lists -> mutations propagate
+    view.zones.battlefield = bf
+    view.zones.graveyard = gy
+    view.zones.library   = lib
+    view.life            = life
+    view._self_apl       = apl
+
+    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.turn            = gs.turn
+    opp_view.zones.hand      = opp_hand
+    opp_view.zones.battlefield = opp_bf
+    opp_view.zones.graveyard = opp_gy
+    opp_view.zones.library   = opp_lib
+    opp_view.life            = opp_life
+
+    fired = _pw.activate_pws_for_turn(view, opp_view, apl)
+
+    # Sync life back: + abilities can gain life (view.life) and ults can ping /
+    # the opponent loses permanents (opp_view zones alias gs.bf, propagate free).
+    if player == "a":
+        gs.life_a, gs.life_b = view.life, opp_view.life
+    else:
+        gs.life_b, gs.life_a = view.life, opp_view.life
+    return fired
+
+
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     """
     Combat with keyword awareness (Phase 3, 2026-04-27).
@@ -629,6 +713,16 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     """
     from engine.keywords import KWTag
 
+    # R5: when the loyalty gate is ON, a planeswalker must NOT be admitted to the
+    # blocker pool (planeswalkers can't block) so the attack-the-walker branch can
+    # target it. Gate OFF -> _pw_blockable is always True -> blocker list is
+    # byte-identical to the legacy filter (which only excluded lands).
+    pw_gate = _pw_match_gate(gs)
+
+    def _pw_blockable(c):
+        return (not pw_gate
+                or "planeswalker" not in (getattr(c, "type_line", "") or "").lower())
+
     # Phase 3.5 Stage B: attacker filter ORs with KWTag.HASTE (so Ragavan
     # cast T1 can attack T1) and excludes KWTag.DEFENDER (defender
     # creatures can't attack). Blockers filter excludes
@@ -637,20 +731,24 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         attackers = [c for c in gs.bf_a
                      if not c.is_land()
                      and KWTag.DEFENDER not in c.tags
+                     and _pw_blockable(c)
                      and (not getattr(c, 'summoning_sickness', False)
                           or KWTag.HASTE in c.tags)]
         blockers  = [c for c in gs.bf_b
                      if not c.is_land()
-                     and not getattr(c, 'tapped_from_attack', False)]
+                     and not getattr(c, 'tapped_from_attack', False)
+                     and _pw_blockable(c)]
     else:
         attackers = [c for c in gs.bf_b
                      if not c.is_land()
                      and KWTag.DEFENDER not in c.tags
+                     and _pw_blockable(c)
                      and (not getattr(c, 'summoning_sickness', False)
                           or KWTag.HASTE in c.tags)]
         blockers  = [c for c in gs.bf_a
                      if not c.is_land()
-                     and not getattr(c, 'tapped_from_attack', False)]
+                     and not getattr(c, 'tapped_from_attack', False)
+                     and _pw_blockable(c)]
 
     if not attackers:
         return 0, [], [], 0, 0, 0
@@ -837,6 +935,34 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         for b in chosen:
             available_blockers.remove(b)
 
+    # R5: gated attackable-planeswalker assignment. An UNBLOCKED attacker may be
+    # routed at an opposing planeswalker instead of the player's face (CR 508.1 /
+    # 306.5b: combat damage to a PW is removed as loyalty). Gate OFF -> the dict
+    # stays empty, the strike-step PW branch is never entered, combat is
+    # byte-identical. Heuristic (two-sided, zero-RNG): if the unblocked attack is
+    # NOT lethal to the face, divert ONE attacker per walker (largest attacker ->
+    # the walker nearest its ultimate, i.e. highest loyalty); the rest still hit
+    # the face. If the attack IS lethal, take the kill and divert nothing.
+    pw_assignment = {}  # id(attacker) -> planeswalker card
+    if pw_gate:
+        defender_bf = gs.bf_b if attacker == "a" else gs.bf_a
+        defender_life = gs.life_b if attacker == "a" else gs.life_a
+        opp_pws = [c for c in defender_bf
+                   if "planeswalker" in (getattr(c, "type_line", "") or "").lower()
+                   and (getattr(c, "loyalty", 0) or 0) > 0]
+        if opp_pws:
+            unblocked = [a for a in atk_sorted if not assignments.get(id(a))]
+            total_unblocked = sum(_safe_power(a) for a in unblocked)
+            if total_unblocked < defender_life:
+                walkers = sorted(opp_pws,
+                                 key=lambda p: -(getattr(p, "loyalty", 0) or 0))
+                pool = sorted(unblocked, key=lambda a: -_safe_power(a))
+                for pw_card in walkers:
+                    if not pool:
+                        break
+                    chosen_atk = pool.pop(0)   # one attacker per walker
+                    pw_assignment[id(chosen_atk)] = pw_card
+
     atk_dead = set()  # id() of dead attackers
     blk_dead = set()  # id() of dead blockers
     blk_lookup = {id(b): b for b in blockers}
@@ -873,6 +999,26 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
             live_blockers = [b for b in blocker_list if id(b) not in blk_dead]
 
             if not live_blockers:
+                # R5: unblocked attacker routed at an opposing planeswalker.
+                # Combat damage removes loyalty (does NOT reduce the player's
+                # life); the attacker is committed to the walker, so it deals no
+                # face damage even if the walker is already dead (no trample-over-
+                # PW in v1). Lifelink still gains. 0-loyalty -> shared SBA.
+                if id(atk) in pw_assignment:
+                    pw_target = pw_assignment[id(atk)]
+                    if (getattr(pw_target, "loyalty", 0) or 0) > 0 and atk_pwr > 0:
+                        pw_target.loyalty -= atk_pwr
+                        if atk_ll:
+                            lifelink_gain += atk_pwr
+                        if pw_target.loyalty <= 0:
+                            from engine import planeswalkers as _pw
+                            dbf = gs.bf_b if attacker == "a" else gs.bf_a
+                            dgy = gs.gy_b if attacker == "a" else gs.gy_a
+                            if pw_target in dbf:
+                                dbf.remove(pw_target)
+                                dgy.append(pw_target)
+                                _pw.note_pw_combat_death()
+                    continue
                 # Unblocked (or all blockers died in first-strike step):
                 # full damage to defending player
                 if atk_pwr > 0:

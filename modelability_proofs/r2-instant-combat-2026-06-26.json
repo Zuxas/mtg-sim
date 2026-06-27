@@ -1,0 +1,120 @@
+{
+  "rung": "R2 instant-speed combat windows (tempo cluster)",
+  "design": "harness/specs/2026-06-26-R2-instant-combat-design.md",
+  "worktree": "E:/vscode ai project/mtg-sim-r2",
+  "branch": "modelability/r2-instant-combat",
+  "branch_point_commit": "0f98db35de722a8281bafc77c37d36097f066f4c",
+  "branch_point_desc": "R1: model counterspells on a real stack (priority pass) behind a capability gate",
+  "r2_state": "working tree (uncommitted) -- 5 files MOD + tests/test_r2_instant_combat.py ADD; STOP before merge",
+  "seed": 42,
+  "env": "PYTHONIOENCODING=utf-8; PYTHONHASHSEED=0 used for all bit-identity comparisons (see finding F1)",
+  "headline": "PROVEN: instant-speed combat windows are modelable by REUSING R1's extracted priority-pass core, gated behind WANTS_INSTANT_COMBAT, WITHOUT regressing R1 (R1 tests + control-exercise byte-identical) and WITHOUT leaking into the gate-OFF engine path (deterministic non-tempo decks bit-identical pre/post R2 on BOTH runners). WR anchor not formally met at bounded n -- that is APL tuning, not an R2-proof failure.",
+
+  "proof_by_replication": {
+    "test_file": "tests/test_r2_instant_combat.py",
+    "command": "PYTHONIOENCODING=utf-8 python tests/test_r2_instant_combat.py",
+    "result": "ALL R2 PROOF TESTS PASS (exit 0)",
+    "method": "Hand-placed cards; tempo seat is the REAL production MurktideMatchAPL (its combat_priority_action is the shipped decision code). Differential gate driven by the production engine gate engine.match_engine._instant_combat_enabled, toggled via WANTS_INSTANT_COMBAT (RED pre / GREEN post). Combat resolved with the real engine.match_state.resolve_combat.",
+    "test1_pump_window2": {
+      "line": "WINDOW 2 combat trick: 2/2 attacker blocked by 3/3; Mutagenic Growth (+2/+2, free Phyrexian pitch) makes it 4/4",
+      "pre_gate_off": {"attacker_alive": false, "attacker_in_gy": true, "blocker_dead": false, "blocker_alive": true, "tricks_cast": 0},
+      "post_gate_on": {"attacker_alive": true, "attacker_power": 4, "attacker_toughness": 4, "blocker_dead": true, "tricks_cast": 1, "pump_in_gy": true, "pump_left_hand": true},
+      "discriminator": "attacker+blocker survival both FLIP; pump cost paid (Mutagenic hand->graveyard)",
+      "status": "PASS (RED pre / GREEN post)"
+    },
+    "test2_removal_window1": {
+      "line": "WINDOW 1 removal makes damage go through: 3/3 attacker, defender sole 2/2 blocker at 20; Unholy Heat kills the 2/2 pre-blocks",
+      "pre_gate_off": {"defender_life_after": 20, "attacker_unblocked": false, "tricks_cast": 0},
+      "post_gate_on": {"defender_life_after": 17, "attacker_unblocked": true, "blocker_dead": true, "tricks_cast": 1},
+      "discriminator": "defender life FLIPS 20 -> 17 (3 to face)",
+      "status": "PASS (RED pre / GREEN post)"
+    },
+    "test3_bilateral_apnap": {
+      "line": "WINDOW 1 APNAP (defender seat): attacker swings lone 4/4 into empty board; DEFENDER (tempo) removes it pre-damage",
+      "pre_gate_off": {"defender_life_after": 16, "attacker_removed": false, "tricks_cast": 0},
+      "post_gate_on": {"defender_life_after": 20, "attacker_removed": true, "removal_in_def_gy": true, "tricks_cast": 1},
+      "discriminator": "defender life FLIPS 16 -> 20; proves window is APNAP (not attacker-only)",
+      "status": "PASS (RED pre / GREEN post)"
+    },
+    "falsifying_check": "All RED-pre assertions hold (gate OFF: synchronous combat, TRICKS_CAST==0). Abort condition A not triggered."
+  },
+
+  "windows_fired_in_real_play": {
+    "method": "In-process (single process) match_engine.run_match_set; TRICKS_CAST is a module global so parallel workers would hide it (the parent stays 0). Mirrors test_r1_control_exercises.",
+    "matchup": "Dimir Murktide (WANTS_INSTANT_COMBAT=True, confirmed loaded) vs Boros Energy",
+    "n": 120, "seed": 42,
+    "tricks_cast": 5,
+    "result": "FIRED -- combat windows engaged 5 times across 120 real games",
+    "note": "Murktide-vs-Boros is a brutal pairing in-sim (1/120 won); the fire-count, not this win rate, is the evidence. The win rate is reported in the gauntlet below."
+  },
+
+  "no_regression": {
+    "nr5_r1_tests_still_green": {
+      "test_r1_stack_priority": "ALL R1 PROOF TESTS PASS (exit 0) -- TEST1 real-spend, TEST2 depth-2 counter war, TEST3 zero-effect all green after the 1.1 extraction",
+      "test_r1_control_exercises": "PASS -- UW Control fired 8 counters / G1 6.7% across 60 real games; DETERMINISTIC x2 and IDENTICAL at branch-point (R2 stashed): 8 / 6.7%",
+      "status": "PASS -- the run_priority_pass extraction left R1 byte-identical"
+    },
+    "goldfish_bit_identical_fixed_hashseed": {
+      "method": "sim.py goldfish n=50 seed=42, PYTHONHASHSEED=0. NOTE: none of the 5 edited modules load on the goldfish path (verified via sys.modules), so R2 source cannot affect goldfish; this is a determinism cross-check.",
+      "boros_energy": {"mtg_sim_base": "100% / 4.58 / 4", "r2_branch_point": "100% / 4.58 / 4", "r2_working_tree": "100% / 4.58 / 4", "identical": true},
+      "amulet_titan": {"mtg_sim_base": "100% / 5.98 / 6", "r2_branch_point": "100% / 5.98 / 6", "r2_working_tree": "100% / 5.98 / 6", "identical": true},
+      "status": "PASS (bit-identical across all three states with fixed hash seed)"
+    },
+    "match_path_bit_identical": {
+      "match_engine_path": {
+        "deck": "Golgari Control mirror (non-tempo, standard, gate OFF)",
+        "command": "in-process engine.match_engine.run_match_set, n=60, seed=42, PYTHONHASHSEED=0",
+        "r2_working_tree": {"a_wins": 32, "b_wins": 28, "avg_turns": 8.466667, "stable_x3": true},
+        "r2_branch_point": {"a_wins": 32, "b_wins": 28, "avg_turns": 8.466667},
+        "identical": true,
+        "status": "PASS -- the restructured _run_combat_phase / WINDOW gating in match_engine.run_match is a true no-op with the gate OFF"
+      },
+      "match_runner_path": {
+        "deck": "UW Control vs Boros Energy (R2 gate OFF; goes through match_runner._resolve_combat restructured WINDOW1/WINDOW2 blocks)",
+        "command": "in-process engine.match_runner.run_match_set via test_r1_control_exercises, n=60, seed=42",
+        "r2_working_tree": {"counters": 8, "g1_win_pct": 6.7},
+        "r2_branch_point": {"counters": 8, "g1_win_pct": 6.7},
+        "identical": true,
+        "status": "PASS -- match_runner restructured combat is byte-identical with the gate OFF"
+      }
+    },
+    "cross_repo_standard": {
+      "deck": "Golgari Control mirror, standard, n=60, seed=42, PYTHONHASHSEED=0",
+      "mtg_sim_base_vs_r2": "both 32/28, avg 8.466667 -- identical (R1+R2 both gated off => byte-identical to base repo)",
+      "status": "PASS"
+    }
+  },
+
+  "wr_sanity_bounded": {
+    "command": "PYTHONIOENCODING=utf-8 python parallel_launcher.py --deck \"Dimir Murktide\" --format modern --n 400 --top-n 6 --cores 2 --seed 42",
+    "field_weighted_match_win_pct": 48.7,
+    "n_per_matchup": 400,
+    "total_games": 2400,
+    "results_file": "data/parallel_results_20260626_103625.json",
+    "g1_source_table": [
+      {"opp": "Boros Energy", "field_pct": 21.2, "g1": 43.0, "match": 44.7, "type": "fair"},
+      {"opp": "Jeskai Blink", "field_pct": 10.6, "g1": 36.0, "match": 34.4, "type": "fair"},
+      {"opp": "Affinity", "field_pct": 9.0, "g1": 34.0, "match": 31.6, "type": "fair"},
+      {"opp": "Amulet Titan", "field_pct": 5.2, "g1": 59.0, "match": 68.4, "type": "combo"},
+      {"opp": "Ruby Storm", "field_pct": 4.1, "g1": 62.3, "match": 72.9, "type": "combo"},
+      {"opp": "Eldrazi Tron", "field_pct": 3.7, "g1": 92.5, "match": 99.5, "type": "fair"}
+    ],
+    "anchor_reference": "Izzet Prowess 50.3% +/-2pp (48.3-52.3) / Dimir Frog 52.6% +/-3pp (49.6-55.6)",
+    "honest_assessment": "48.7% is a BOUNDED top-6 n=400 sanity, NOT the formal n>=1000 full-field anchor. It sits at the low edge of the Izzet Prowess band and below the Dimir Frog band. Per task scope, a WR anchor miss at bounded n is APL tuning, NOT an R2-proof failure. NOT claiming the anchor is met.",
+    "falsifier": "Not run as a full gauntlet on/off delta (out of bounded scope). Window engagement is proven directly by the in-process TRICKS_CAST=5 fire-count above."
+  },
+
+  "findings": {
+    "F1_pre_existing_hashseed_nondeterminism": "The Amulet Titan goldfish APL and the Boros Energy match APL exhibit cross-process nondeterminism NOT controlled by the RNG seed (default PYTHONHASHSEED, and for Boros even with PYTHONHASHSEED=0 -- id()-based ordering). SAME unchanged source produced Amulet 5.76 vs 5.98 and Boros 39-55 a_wins across repeated runs. This is PRE-EXISTING (reproduces at the R2 branch-point with R2 absent), NOT introduced by R2. Consequence: 'bit-identical' goldfish/match NR is only well-defined with a pinned hash seed (Amulet) and is undefined run-to-run for Boros (id-ordering). Bit-identity for R2 was therefore proven on DETERMINISTIC decks (Golgari Control, UW Control exercise) plus fixed-hashseed goldfish. RECOMMEND: open an IMPERFECTIONS entry for the Amulet/Boros APL ordering nondeterminism; the design's NR-1 named Boros mirror, which is not a valid bit-identity discriminator at the process level.",
+    "F2_design_baseline_note": "Amulet goldfish here is n=50 (5.98 / median 6); the design's locked NR-3 baseline is n>=large (T7.11 / median 7). These are NOT compared -- what is proven is cross-revision IDENTITY at n=50, seed=42, which is what the task requested."
+  },
+
+  "abort_conditions_checked": {
+    "A_proof_not_falsifying": "clear (all RED-pre discriminators fail with gate OFF)",
+    "E_r1_regression": "clear (NR-5 green; control exercise identical pre/post)",
+    "F_coverage": "not re-run in this spike (R2 is control-flow only; full_audit unchanged)",
+    "G_determinism_leak": "clear (combat window path is zero-random; TRICKS_CAST is pure integer bookkeeping)"
+  },
+
+  "merge_status": "HELD -- STOP before merge. This is a spike; user decides merge after reviewing the proof."
+}

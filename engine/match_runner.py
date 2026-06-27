@@ -694,6 +694,80 @@ def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
     return fired
 
 
+# ---------------------------------------------------------------------------
+# R2 instant-speed combat windows -- SECONDARY mirror (design 1.3).
+#
+# This is the sim-fallback path (Path B in design section 0); Murktide runs the
+# bo3/match_engine path, NOT this one. The mirror exists for PATH PARITY so the
+# gate behaves identically regardless of which runner a matchup takes. The whole
+# block is reached ONLY when _instant_combat_enabled_runner is True, so the
+# gate-OFF path is byte-identical to today's _resolve_combat.
+# ---------------------------------------------------------------------------
+
+def _instant_combat_enabled_runner(gs: "TwoPlayerGameState") -> bool:
+    """R2 gate for the sim-fallback runner: True iff either seat opts in.
+
+    Reads the APLs stashed on TwoPlayerGameState (gs.apl_a / gs.apl_b). Both
+    lookups default to None/False, so the goldfish path -- which constructs
+    TwoPlayerGameState WITHOUT apl_a/apl_b (run_goldfish at L1009) -- returns
+    False and the gate-OFF combat path is untouched on every caller.
+    """
+    apl_a = getattr(gs, 'apl_a', None)
+    apl_b = getattr(gs, 'apl_b', None)
+    return bool(getattr(apl_a, 'WANTS_INSTANT_COMBAT', False)
+                or getattr(apl_b, 'WANTS_INSTANT_COMBAT', False))
+
+
+def _build_combat_view(gs: "TwoPlayerGameState", player: str):
+    """Build a single-player GameState view aliasing this seat's zone lists.
+
+    Mirrors _simple_play_turn._build_view so mutations (removal moving a card
+    bf -> gy, PUMP adding counters) propagate to the shared TwoPlayerGameState
+    lists. Mana is filled color-aware from lands in play (same approximation the
+    main-phase view uses)."""
+    if player == "a":
+        on_play = gs.on_play
+        hand, bf, gy, lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
+        life = gs.life_a
+    else:
+        on_play = not gs.on_play
+        hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
+        life = gs.life_b
+    v = GameState(mainboard=[], on_play=on_play)
+    v.turn = gs.turn
+    v.zones.hand        = hand
+    v.zones.battlefield = bf
+    v.zones.graveyard   = gy
+    v.zones.library     = lib
+    v.life = life
+    for c in v.zones.battlefield:
+        if c.is_land():
+            try:
+                v.mana_pool.add_land(c.type_line or "", c.name or "")
+            except Exception:
+                v.mana_pool.add("C", 1)
+    return v
+
+
+def _run_combat_window_runner(gs: "TwoPlayerGameState", attacker: str, window: int):
+    """Run one gated combat window on the sim-fallback runner via the SHARED
+    helper (engine.match_engine._run_combat_window). Returns nothing; mutations
+    land on the aliased zone lists. ZERO random()."""
+    from engine.match_engine import _run_combat_window
+    defender = "b" if attacker == "a" else "a"
+    active_view = _build_combat_view(gs, attacker)
+    opp_view    = _build_combat_view(gs, defender)
+    active_apl  = gs.apl_a if attacker == "a" else gs.apl_b
+    opp_apl     = gs.apl_b if attacker == "a" else gs.apl_a
+    active_view._self_apl = active_apl
+    active_view._match_opp_apl = opp_apl
+    active_view._match_opp = opp_view
+    opp_view._self_apl = opp_apl
+    opp_view._match_opp_apl = active_apl
+    opp_view._match_opp = active_view
+    _run_combat_window(active_view, active_apl, opp_view, opp_apl, window=window)
+
+
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
     """
     Combat with keyword awareness (Phase 3, 2026-04-27).
@@ -752,6 +826,22 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
 
     if not attackers:
         return 0, [], [], 0, 0, 0
+
+    # --- R2 gate: WINDOW 1 (post-attackers, pre-blockers) ---
+    # gate_on is False for every non-tempo deck and for the goldfish path
+    # (no apl_a/apl_b), so the block below is unreached and combat stays
+    # byte-identical (design 1.3).
+    gate_on = _instant_combat_enabled_runner(gs)
+    if gate_on:
+        _run_combat_window_runner(gs, attacker, window=1)
+        # A removal response may have moved a creature bf -> gy on the shared
+        # lists; drop it from the local attacker/blocker working lists.
+        atk_bf = gs.bf_a if attacker == "a" else gs.bf_b
+        def_bf = gs.bf_b if attacker == "a" else gs.bf_a
+        attackers = [a for a in attackers if a in atk_bf]
+        blockers  = [b for b in blockers  if b in def_bf]
+        if not attackers:
+            return 0, [], [], 0, 0, 0
 
     # Phase 3.5 Stage B: mark non-vigilance attackers as tapped from attack.
     # Vigilance creatures don't tap to attack, so they remain available
@@ -934,6 +1024,27 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         assignments[id(atk)] = chosen
         for b in chosen:
             available_blockers.remove(b)
+
+    # --- R2 gate: WINDOW 2 (post-blockers, pre-combat-damage) ---
+    # Canonical combat-trick window. Pump mutates a creature's counters on the
+    # shared lists; effective_power/_toughness (read by _safe_power/_safe_toughness
+    # at the strike step below) reflect it for free -- no damage-routine change.
+    # gate_on was computed at WINDOW 1; the whole block is unreached when OFF.
+    #
+    # Trilogy-integration ordering: WINDOW 2 runs BEFORE R5's pw-assignment so a
+    # window-2 removal/pump that kills an attacker prunes atk_sorted FIRST; R5's
+    # pw-assignment below then reads the post-window-2 atk_sorted/assignments.
+    # The two gates stay independent -- R2-only leaves pw_assignment empty, R5-only
+    # skips this block, both-off reaches neither (pw_assignment defaults to {}).
+    if gate_on:
+        _run_combat_window_runner(gs, attacker, window=2)
+        # A removal response could have killed a creature mid-window: drop dead
+        # attackers from assignments and dead blockers from each assignment list.
+        atk_bf = gs.bf_a if attacker == "a" else gs.bf_b
+        def_bf = gs.bf_b if attacker == "a" else gs.bf_a
+        atk_sorted = [a for a in atk_sorted if a in atk_bf]
+        for k in list(assignments.keys()):
+            assignments[k] = [b for b in assignments[k] if b in def_bf]
 
     # R5: gated attackable-planeswalker assignment. An UNBLOCKED attacker may be
     # routed at an opposing planeswalker instead of the player's face (CR 508.1 /

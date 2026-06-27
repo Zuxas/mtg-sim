@@ -13,6 +13,7 @@ from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
 from engine.match_state import safe_power, safe_toughness
+from engine.stack import classify_card, InteractionType
 
 RAGAVAN    = "Ragavan, Nimble Pilferer"
 DRC        = "Dragon's Rage Channeler"
@@ -38,6 +39,62 @@ class MurktideMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 12
     _treasures = 0
+
+    # R2 OPT-IN (design 1.5): the ONE tempo class that flips the instant-speed
+    # combat gate on. Every other deck inherits WANTS_INSTANT_COMBAT = False and
+    # stays on the byte-identical gate-OFF combat path. With this True the engine
+    # runs the two stepped combat windows (post-attackers, post-blockers) through
+    # the shared R1 priority-pass core and calls combat_priority_action below.
+    WANTS_INSTANT_COMBAT = True
+
+    def combat_priority_action(self, my_gs, their_gs, stack, window):
+        """R2 combat window action (design 1.5 / 2).
+
+        WINDOW 1 (pre-blocks): if we hold castable removal, kill the biggest
+        opposing creature. As the attacker this clears the sole blocker so a
+        threat connects; as the defender it removes the biggest attacker before
+        damage. Returns (removal_card, target).
+
+        WINDOW 2 (pre-damage): if we hold a castable pump instant (e.g.
+        Mutagenic Growth -> the engine PUMP primitive, +2/+2), pump our biggest
+        creature so the strike-step math flips. Returns (pump_card, target).
+
+        Returns None to pass. Affordability is checked here (mana already in the
+        pool from the window's land-tap); the engine pays + moves the card.
+        """
+        if their_gs is None or my_gs is None:
+            return None
+
+        if window == 1:
+            opp_creatures = [c for c in their_gs.zones.battlefield
+                             if not c.is_land() and c.has(Tag.CREATURE)]
+            if not opp_creatures:
+                return None
+            target = max(opp_creatures, key=lambda c: safe_power(c))
+            if safe_power(target) < 1:
+                return None
+            for c in my_gs.zones.hand:
+                if c.name in REMOVAL and my_gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    # Bolt only handles toughness <= 3; Unholy Heat is broader.
+                    if c.name == BOLT and safe_toughness(target) > 3:
+                        continue
+                    return (c, target)
+            return None
+
+        if window == 2:
+            my_creatures = [c for c in my_gs.zones.battlefield
+                            if not c.is_land() and c.has(Tag.CREATURE)
+                            and not getattr(c, 'summoning_sickness', False)]
+            if not my_creatures:
+                return None
+            target = max(my_creatures, key=lambda c: safe_power(c))
+            for c in my_gs.zones.hand:
+                if (classify_card(c) == InteractionType.PUMP
+                        and my_gs.mana_pool.can_cast(c.mana_cost, c.cmc)):
+                    return (c, target)
+            return None
+
+        return None
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True

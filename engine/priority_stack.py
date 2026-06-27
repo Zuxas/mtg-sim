@@ -1,4 +1,4 @@
-"""engine/priority_stack.py -- R1 real-stack priority pass loop.
+"""engine/priority_stack.py -- R1 real-stack priority pass loop + shared core.
 
 The whole R1 counterspell-interaction mechanism lives here, isolated from the
 legacy synchronous counter window in game_state.cast_spell. This module is
@@ -9,6 +9,18 @@ and the legacy path stays bit-identical.
 Public API
 ----------
     run_priority_stack(caster_gs, card) -> 'countered' | 'resolved'
+        R1 counterspell window. THIN caller of run_priority_pass with the
+        counter-specific ask/apply/resolve_top callables.
+
+    run_priority_pass(sides, stack, *, base, owner_gs, first, depth_cap,
+                      ask, apply_action, resolve_top) -> terminal | None
+        The shared, callable-parameterized APNAP pass/pass -> LIFO resolve loop
+        (R2 EXTRACTION). This is exactly R1's pass loop with three behaviors
+        injected so a SECOND caller (the R2 combat window) can reuse the same
+        machinery instead of mirroring it. Termination is generalized so an
+        EMPTY stack still offers priority and breaks on mutual-pass; R1's
+        empty-break path is a strict (unreachable) subset, so R1 behavior is
+        byte-identical. R2's combat windows are NOT added by this module.
 
 A bounded, 2-player priority pass loop (XMage playPriority reduced to two
 players; see design 1.1) that lets each side respond to the top stack object and
@@ -28,7 +40,8 @@ R1 SCOPE
 Handles ONLY counterspell responses + original-spell resolution. Removal / burn
 / bounce / pump as on-stack responses are deferred to R2 (they would route
 through stack.resolve_interaction). The stack here only ever holds the original
-spell plus counters stacked on top of it.
+spell plus counters stacked on top of it. The run_priority_pass core is the
+generalization that lets R2 wire those windows WITHOUT re-mirroring this loop.
 """
 from __future__ import annotations
 
@@ -113,86 +126,31 @@ def _log(gs, msg: str):
         log_fn(msg)
 
 
-def run_priority_stack(caster_gs, card) -> str:
-    """Run the R1 priority pass loop for `card` cast by `caster_gs`.
+def _apply_counter(action, gs, priority, stack) -> bool:
+    """R1 action-applier: cast a counter onto the stack (counter-specific).
 
-    Returns:
-        'countered' -- the original spell was countered; this function has
-                       already moved it to caster_gs.zones.graveyard and run
-                       state-based actions. The caller returns immediately.
-        'resolved'  -- the original spell survived. This function does NOT move
-                       the card or apply effects; the caller falls through to the
-                       UNCHANGED legacy resolve block to do the real zone move +
-                       effects (the card is still in caster_gs.zones.hand).
-
-    The card stays in caster_gs.zones.hand throughout; the StackItem only
-    references it (design 1.1 / 1.3) so the legacy resolve block can be reused
-    verbatim for the surviving spell.
+    This is the casting/payment half of R1's original loop body (extracted so a
+    SECOND caller can inject its own action-applier -- R2 pump/removal). Returns:
+        True  -- a counter was paid for and placed on the stack (the loop resets
+                 the pass count and hands priority to the other seat).
+        False -- nothing was placed (no card, or the APL mis-judged
+                 affordability and could not pay) -> the loop treats it as a pass.
+    Byte-identical to R1's inline cast block.
     """
-    # Resolve the two seats from the match wiring set up by match_engine.
-    caster_apl = getattr(caster_gs, "_self_apl", None)
-    opp_gs = getattr(caster_gs, "_match_opp", None)
-    opp_apl = getattr(caster_gs, "_match_opp_apl", None)
-
-    sides = {
-        "caster": (caster_gs, caster_apl),
-        "opp": (opp_gs, opp_apl),
-    }
-
-    stack = Stack()
-    original = stack.cast(card, "caster")     # original spell, tagged to caster
-
-    # Opponent of the active player gets the first chance to respond.
-    priority = "opp"
-    passed_in_succession = 0
-
-    while not stack.is_empty():
-        gs, apl = sides[priority]
-        other_gs = sides[_other(priority)][0]
-
-        action = None
-        # Only solicit a response if the stack has room (depth cap) AND this seat
-        # actually exists. At/above the cap, all seats are forced to pass so the
-        # stack must resolve -- this is the hard stop on the counter war.
-        if gs is not None and stack.depth() < DEPTH_CAP:
-            action = _ask_priority(apl, gs, other_gs, stack)
-
-        if action is not None:
-            counter_card, target_uid = action
-            if counter_card is not None and _pay_for_counter(gs, counter_card):
-                # Counter moves hand -> stack (it goes to graveyard on resolve).
-                if counter_card in gs.zones.hand:
-                    gs.zones.hand.remove(counter_card)
-                new_item = stack.cast(counter_card, priority)
-                new_item.target_uid = target_uid
-                global COUNTERS_CAST
-                COUNTERS_CAST += 1
-                _log(gs, f"  [priority] {priority} casts {counter_card.name} "
-                         f"-> counter uid {target_uid}")
-                # A new object on the stack resets the pass count, and priority
-                # passes to the other player (the counter-the-counter window).
-                passed_in_succession = 0
-                priority = _other(priority)
-                continue
-            # Could not pay (APL mis-judged affordability) -> treat as a pass.
-
-        # This seat passed.
-        passed_in_succession += 1
-        priority = _other(priority)
-
-        if passed_in_succession >= 2:
-            # Both players passed in succession -> resolve the top item (LIFO).
-            terminal = _resolve_top(stack, sides, original, caster_gs)
-            if terminal is not None:
-                return terminal
-            # A non-terminal resolution (a counter resolving) happened; start a
-            # fresh round of priority on the new top, opponent first.
-            passed_in_succession = 0
-            priority = "opp"
-
-    # Stack drained without an explicit terminal (defensive). The original is
-    # gone from the stack; if it was never countered it resolves normally.
-    return "countered" if original.countered else "resolved"
+    counter_card, target_uid = action
+    if counter_card is not None and _pay_for_counter(gs, counter_card):
+        # Counter moves hand -> stack (it goes to graveyard on resolve).
+        if counter_card in gs.zones.hand:
+            gs.zones.hand.remove(counter_card)
+        new_item = stack.cast(counter_card, priority)
+        new_item.target_uid = target_uid
+        global COUNTERS_CAST
+        COUNTERS_CAST += 1
+        _log(gs, f"  [priority] {priority} casts {counter_card.name} "
+                 f"-> counter uid {target_uid}")
+        return True
+    # Could not pay (APL mis-judged affordability) -> treat as a pass.
+    return False
 
 
 def _resolve_top(stack, sides, original, caster_gs):
@@ -238,3 +196,146 @@ def _resolve_top(stack, sides, original, caster_gs):
     if owner_gs is not None:
         owner_gs.zones.graveyard.append(item.card)
     return None
+
+
+def run_priority_pass(sides, stack, *, base=None, owner_gs=None, first="opp",
+                      depth_cap=DEPTH_CAP, ask=_ask_priority,
+                      apply_action=_apply_counter, resolve_top=_resolve_top):
+    """Bounded APNAP pass/pass -> LIFO resolve loop -- the shared R1/R2 core.
+
+    This is EXACTLY R1's run_priority_stack while-loop (the body extracted
+    verbatim), parameterized on:
+      - sides:        {'caster': (gs, apl), 'opp': (gs, apl)}
+      - stack:        an engine.stack.Stack already seeded with the base
+                      object(s). May be EMPTY (a combat window seeds nothing).
+      - base:         the base stack object whose departure is terminal (R1: the
+                      original spell). Passed through to resolve_top; may be None.
+      - owner_gs:     game state that owns the base object (R1: caster_gs).
+      - first:        the seat that receives priority first AND that the loop
+                      returns to after a non-terminal resolution (R1: 'opp', the
+                      non-active player responding to the active player's spell).
+      - depth_cap:    hard stop on stack growth (default DEPTH_CAP=3).
+      - ask:          callable(apl, my_gs, their_gs, stack) -> action | None.
+      - apply_action: callable(action, gs, priority, stack) -> bool. True iff an
+                      object was placed on the stack (reset pass count, flip
+                      priority); False iff the action collapsed to a pass.
+      - resolve_top:  callable(stack, sides, base, owner_gs) -> terminal | None.
+
+    Returns the terminal string from resolve_top, or None if the stack drained
+    to empty with no terminal (the generalized empty-stack exit).
+
+    TERMINATION (generalized, load-bearing). R1's original guard was
+    `while not stack.is_empty()`, which ends because resolve_top returns a
+    terminal once the base spell leaves the stack. A combat window seeds an
+    EMPTY stack and has no base spell, so that exact guard is False on entry ->
+    the body would never run -> no player would ever be offered priority -> the
+    window would be a silent no-op. So this core instead drives on a
+    "rounds since last action" counter (passed_in_succession): the body always
+    runs (offering priority even on an empty stack), and ONLY when both players
+    pass in succession does it decide -- if the stack is empty it BREAKS, else it
+    resolves the top. On R1's path the empty-break is UNREACHABLE: the base spell
+    sits on the stack until resolve_top pops it and returns a terminal in the
+    same step, so the stack is never empty at the mutual-pass check. R1 is thus a
+    strict subset and stays byte-identical (NR-5).
+
+    ZERO random() (unchanged).
+    """
+    # Opponent of the active player gets the first chance to respond.
+    priority = first
+    passed_in_succession = 0
+
+    while True:
+        gs, apl = sides[priority]
+        other_gs = sides[_other(priority)][0]
+
+        action = None
+        # Only solicit a response if the stack has room (depth cap) AND this seat
+        # actually exists. At/above the cap, all seats are forced to pass so the
+        # stack must resolve -- this is the hard stop on the counter war.
+        if gs is not None and stack.depth() < depth_cap:
+            action = ask(apl, gs, other_gs, stack)
+
+        if action is not None:
+            if apply_action(action, gs, priority, stack):
+                # A new object on the stack resets the pass count, and priority
+                # passes to the other player (the counter-the-counter window).
+                passed_in_succession = 0
+                priority = _other(priority)
+                continue
+            # apply_action collapsed to a pass (e.g. could not pay) -> fall
+            # through to the pass handling below.
+
+        # This seat passed.
+        passed_in_succession += 1
+        priority = _other(priority)
+
+        if passed_in_succession >= 2:
+            # Both players passed in succession. With an empty stack there is
+            # nothing left to resolve -> the window closes (combat path). With a
+            # non-empty stack, resolve the top item (LIFO) -- R1 always lands
+            # here with the base spell still present.
+            if stack.is_empty():
+                break
+            terminal = resolve_top(stack, sides, base, owner_gs)
+            if terminal is not None:
+                return terminal
+            # A non-terminal resolution (a counter resolving) happened; start a
+            # fresh round of priority on the new top, `first` seat responding.
+            passed_in_succession = 0
+            priority = first
+
+    # Stack drained without an explicit terminal (the generalized empty-stack
+    # exit). UNREACHABLE on the R1 path (the base spell always yields a terminal
+    # before the stack empties); the thin R1 caller supplies the defensive
+    # countered/resolved fallback for that subset.
+    return None
+
+
+def run_priority_stack(caster_gs, card) -> str:
+    """Run the R1 priority pass loop for `card` cast by `caster_gs`.
+
+    THIN caller of run_priority_pass with the counter-specific
+    ask/apply_action/resolve_top, so R1 behavior is byte-identical.
+
+    Returns:
+        'countered' -- the original spell was countered; this function has
+                       already moved it to caster_gs.zones.graveyard and run
+                       state-based actions. The caller returns immediately.
+        'resolved'  -- the original spell survived. This function does NOT move
+                       the card or apply effects; the caller falls through to the
+                       UNCHANGED legacy resolve block to do the real zone move +
+                       effects (the card is still in caster_gs.zones.hand).
+
+    The card stays in caster_gs.zones.hand throughout; the StackItem only
+    references it (design 1.1 / 1.3) so the legacy resolve block can be reused
+    verbatim for the surviving spell.
+    """
+    # Resolve the two seats from the match wiring set up by match_engine.
+    caster_apl = getattr(caster_gs, "_self_apl", None)
+    opp_gs = getattr(caster_gs, "_match_opp", None)
+    opp_apl = getattr(caster_gs, "_match_opp_apl", None)
+
+    sides = {
+        "caster": (caster_gs, caster_apl),
+        "opp": (opp_gs, opp_apl),
+    }
+
+    stack = Stack()
+    original = stack.cast(card, "caster")     # original spell, tagged to caster
+
+    terminal = run_priority_pass(
+        sides, stack,
+        base=original,
+        owner_gs=caster_gs,
+        first="opp",                # opponent of the active player responds first
+        depth_cap=DEPTH_CAP,
+        ask=_ask_priority,
+        apply_action=_apply_counter,
+        resolve_top=_resolve_top,
+    )
+    if terminal is not None:
+        return terminal
+
+    # Stack drained without an explicit terminal (defensive). The original is
+    # gone from the stack; if it was never countered it resolves normally.
+    return "countered" if original.countered else "resolved"

@@ -724,6 +724,12 @@ class GameState:
         "Gravitic Herald":      ("1U", 2),
         "Warped Tusker":        ("1G", 2),
         "Knight Luminary":      ("1W", 2),
+        # Pinnacle Emissary (EOE, Izzet Affinity): full {1}{U}{R} CMC 3; warp {U/R}.
+        # BRACED so parse_cost actually reads the pip and the warp cost VALIDATES +
+        # is PAID (legacy entries above use the unbraced "1U" form, which parse_cost
+        # silently reads as zero-cost -> warp is free for them; see IMPERFECTIONS
+        # warp-cost-unbraced-no-op). Hybrid {U/R} resolves to U (mana.py first-color rule).
+        "Pinnacle Emissary":    ("{U/R}", 1),
     }
 
     def cast_spell_warp(self, card: Card) -> bool:

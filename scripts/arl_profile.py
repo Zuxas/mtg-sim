@@ -295,16 +295,23 @@ def _detect_mechanics(db, mainboard):
     return counts, evidence, unresolved
 
 
-def _severity_for_counts(counts):
+def _severity_for_counts(counts, modeled=frozenset()):
     """Map raw mechanic counts to per-mechanic severities (the MVP rules).
 
     Returns dict mechanic -> severity in {high, medium, low, unmodelable}.
     'high' means the mechanic did not trip anything.
+
+    `modeled` is the set of mechanics the deck's match-APL opts into AND that have
+    an engine proof (see _apl_modeled_capabilities). A modeled mechanic is credited
+    as 'high' (the engine handles it) instead of tripping. Default empty set ->
+    byte-identical to the prior static behavior for every existing caller.
     """
     sev = {}
 
     c = counts["counterspell_on_stack"]
-    if c >= 4:
+    if "counterspell_on_stack" in modeled:
+        sev["counterspell_on_stack"] = "high"
+    elif c >= 4:
         sev["counterspell_on_stack"] = "unmodelable"
     elif c >= 2:
         sev["counterspell_on_stack"] = "low"
@@ -313,7 +320,10 @@ def _severity_for_counts(counts):
     else:
         sev["counterspell_on_stack"] = "high"
 
-    sev["warp"] = "unmodelable" if counts["warp"] >= 1 else "high"
+    if "warp" in modeled:
+        sev["warp"] = "high"
+    else:
+        sev["warp"] = "unmodelable" if counts["warp"] >= 1 else "high"
 
     sev["planeswalker_loyalty"] = (
         "low" if counts["planeswalker_loyalty"] >= 3 else "high")
@@ -331,16 +341,63 @@ def _severity_for_counts(counts):
     return sev
 
 
-def assess_engine_fidelity(db, mainboard):
+def _apl_modeled_capabilities(deck_name):
+    """Set of engine mechanics the deck's registered MATCH APL opts into AND for
+    which a modelability proof exists.
+
+    Ties the modelability gate to the actual pilot-code capability flags: a deck is
+    credited a mechanic only when (a) its match-APL declares the WANTS_* flag and
+    (b) the engine work is proven in modelability_proofs/. Best-effort + fully
+    guarded -- any failure returns an empty set, so the gate falls back to the
+    static (pessimistic) rules. This is what lets a deck whose pilot actually models
+    warp/stack avoid being shelved by the static decklist scan.
+    """
+    modeled = set()
+    try:
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        proofs = os.path.join(root, "modelability_proofs")
+        have = os.listdir(proofs) if os.path.isdir(proofs) else []
+
+        def _proof(prefix):
+            return any(f.startswith(prefix) for f in have)
+
+        from apl import MATCH_APL_REGISTRY
+        import importlib
+        key = deck_name.lower().replace(" ", "").replace("'", "").replace("-", "")
+        entry = MATCH_APL_REGISTRY.get(key)
+        if entry is None:
+            return modeled
+        # Registry is lazy: values are (module_path, class_name) string tuples
+        # imported on demand. Resolve to the class (also accept a direct class).
+        if isinstance(entry, tuple):
+            mod = importlib.import_module(entry[0])
+            cls = getattr(mod, entry[1], None)
+        else:
+            cls = entry
+        if cls is None:
+            return modeled
+        if getattr(cls, "WANTS_WARP", False) and _proof("r4-warp"):
+            modeled.add("warp")
+        if getattr(cls, "WANTS_PRIORITY_STACK", False) and _proof("r1-"):
+            modeled.add("counterspell_on_stack")
+    except Exception:
+        return set()
+    return modeled
+
+
+def assess_engine_fidelity(db, mainboard, modeled_caps=None):
     """Compute the deterministic engine_fidelity block for a mainboard.
 
     Returns the dict that goes under profile["engine_fidelity"], with two extra
     debug-friendly keys (mechanic_counts, evidence) the caller may keep or drop.
     NO LLM is involved anywhere in this function.
+
+    modeled_caps: optional set of mechanics the deck's match-APL models (credited
+    as handled). None/empty -> static pessimistic behavior (byte-identical).
     """
     fmap = _load_fidelity_map()
     counts, evidence, unresolved = _detect_mechanics(db, mainboard)
-    sev = _severity_for_counts(counts)
+    sev = _severity_for_counts(counts, modeled=modeled_caps or frozenset())
 
     # Overall confidence = worst severity among all mechanics.
     confidence = "high"
@@ -668,7 +725,12 @@ def build_profile(deck_file, format_name="modern"):
     db = _open_card_db()
 
     # --- DETERMINISTIC GATE (finalized before any LLM call) ---
-    ef = assess_engine_fidelity(db, mainboard)
+    # Capability-aware: credit mechanics the deck's match-APL actually opts into
+    # (and that are proven in modelability_proofs/) so a deck whose pilot models
+    # warp/stack is not shelved by the static decklist scan. Falls back to the
+    # pessimistic static rules when no APL/proof is found.
+    modeled_caps = _apl_modeled_capabilities(deck_name)
+    ef = assess_engine_fidelity(db, mainboard, modeled_caps=modeled_caps)
     counts = ef["mechanic_counts"]
     confidence = ef["confidence"]
 

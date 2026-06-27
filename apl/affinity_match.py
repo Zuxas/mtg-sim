@@ -38,6 +38,16 @@ class IzzetAffinityMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 10
 
+    # R4 opt-in: Pinnacle Emissary has Warp {U/R}. Setting this activates the
+    # match_runner end-step warp tick + cast-from-exile aliasing (gate fires if
+    # either seat opts in; non-warp matchups stay byte-identical). The cast loop
+    # warp-casts Pinnacle cheaply for an early Drone-engine turn, the tick exiles
+    # it, and the recast block below replays it for full value on a later turn.
+    # NOTE: counters (Metallic Rebuke) are NOT yet routed through R1 -- this class
+    # extends MatchAPL (no AwareMatchAPL priority_action), so WANTS_PRIORITY_STACK
+    # stays off; that is Stage B (see IMPERFECTIONS izzet-affinity-counters-stage-b).
+    WANTS_WARP = True
+
     def __init__(self):
         self._artifact_count = 0
         self._kappa_counters = 0
@@ -76,6 +86,19 @@ class IzzetAffinityMatchAPL(MatchAPL):
         self._artifact_count = self._count_artifacts(gs)
         self._artifacts_cast_this_turn = 0
         avail = gs.mana_pool.total()
+
+        # R4: recast a warp-exiled Pinnacle from exile for FULL value on a LATER
+        # turn (permanent Drone engine). WANTS_WARP gates this; match_runner aliases
+        # gs.zones.exile to this player's persistent exile list. cast_spell_from_warp_exile
+        # pays the full {1}{U}{R} through cast_spell and clears the markers so it can't loop.
+        if getattr(self, "WANTS_WARP", False):
+            for c in list(getattr(gs.zones, "exile", [])):
+                if (getattr(c, "_warp_recastable", False)
+                        and gs.turn > getattr(c, "_warp_exiled_turn", gs.turn)
+                        and gs.mana_pool.can_cast(c.mana_cost, c.cmc)):
+                    if gs.cast_spell_from_warp_exile(c):
+                        gs._log(f"  R4 recast {c.name} from warp exile (full value)")
+            avail = gs.mana_pool.total()
 
         pinnacle_on_board = any(c.name == PINNACLE for c in gs.zones.battlefield)
         weapons_on_board = any(c.name == WEAPONS for c in gs.zones.battlefield)
@@ -156,10 +179,19 @@ class IzzetAffinityMatchAPL(MatchAPL):
         # Oracle: "Whenever you cast an artifact spell, create a 1/1 colorless Drone artifact
         # creature token with flying." Drone tokens ALSO trigger Kappa + Weapons Manufacturing.
         for c in list(gs.zones.hand):
-            if c.name == PINNACLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                avail = gs.mana_pool.total()
-                break
+            if c.name == PINNACLE:
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    avail = gs.mana_pool.total()
+                    break
+                # R4 warp fallback: can't afford full {1}{U}{R} but can afford {U/R}.
+                # Deploy Pinnacle for one turn of the Drone engine; the end-step tick
+                # exiles it; the recast block above replays it full-value next turn.
+                if getattr(self, "WANTS_WARP", False) and gs.mana_pool.can_cast("{U/R}", 1):
+                    if gs.cast_spell_warp(c):
+                        gs._log(f"  R4 warp-cast Pinnacle Emissary ({{U/R}}, exiles next end step)")
+                        avail = gs.mana_pool.total()
+                        break
         # Create Drones for all artifact casts so far this turn (if Pinnacle now on board
         # or was already on board). Post-cast is conservative; ideally fires per-cast.
         pinnacle_on_board = any(c.name == PINNACLE for c in gs.zones.battlefield)

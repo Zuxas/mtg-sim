@@ -37,8 +37,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from generate_matchup_data import load_deck_and_apl
 from apl import get_match_apl
 from apl.aware_match_apl import AwareMatchAPL
+from apl.match_apl import MatchAPL
 from apl.murktide_match import MurktideMatchAPL
-from engine.match_runner import run_match_set
+from engine.match_runner import run_match_set, TwoPlayerGameState, _resolve_combat
+from engine.match_state import safe_power
+from engine.keywords import tag_keywords
+from engine.stack import classify_card
+from data.card import Card, Tag
 import engine.priority_stack as ps
 import engine.match_engine as ME
 import engine.planeswalkers as pw
@@ -184,10 +189,174 @@ def subtest_c_r2_plus_r5():
     print("  PASS SUBTEST C (R2 + R5 compose in real match play)\n")
 
 
+# ---------------------------------------------------------------------------
+# SUBTEST D -- the NOVEL SURFACE this merge authored: the R2-WINDOW-2-before-R5-
+# pw_assignment ordering inside match_runner._resolve_combat (merge conflict B).
+# Subtests A-C prove the gates COMPOSE broadly but NEVER trigger this exact
+# surface: a defender-side window-2 removal that prunes an attacker BEFORE R5
+# decides which unblocked attackers to divert at a planeswalker. The failure
+# mode of a reversed ordering is SILENT (no crash), so it must be asserted
+# directly. Driven in-vitro through the real _resolve_combat (same harness as
+# tests/test_r5_planeswalker_loyalty.py) -- combat-only, no R1 view-wiring, so
+# no fragility.
+#
+# Scenario (lethality-flip, the only shape that discriminates the ordering):
+#   attacker A: BigOgre 18/1 + SmallBear 2/2, both unblocked.
+#   defender B: Karn (loyalty 3), life 20, holds Unholy Heat (window-2 removal).
+#   B's combat_priority_action kills the 18-power BigOgre in WINDOW 2.
+#
+# R5's divert gate is "divert only if the unblocked attack is NOT lethal to the
+# face" (total_unblocked < defender_life). 18 + 2 == 20 == life -> looks LETHAL;
+# 2 alone < 20 -> NOT lethal. So the diversion decision hinges entirely on
+# whether total_unblocked is measured BEFORE or AFTER the window-2 kill.
+#   correct order (W2 then pw_assignment): big pruned -> total 2 < 20 -> SmallBear
+#       diverted to Karn -> Karn 3-2=1, face damage 0.
+#   reversed order (pw_assignment then W2): total 20 not < 20 -> divert nothing ->
+#       SmallBear hits the face for 2 -> Karn unchanged at 3, face damage 2.
+# The SUPPRESSED-removal control pins the lethal branch: with both attackers
+# alive total IS 20 -> nothing diverted -> 20 to the face, Karn 3. Observing
+# Karn==1 / face==0 in the WITH-removal run is therefore only explicable if the
+# window-2 prune happened FIRST -- a direct proof of the merged ordering.
+# ---------------------------------------------------------------------------
+
+class _PlainAttacker(MatchAPL):
+    name = "Plain attacker (passes)"
+    def keep(self, hand, mulligans, on_play): return True
+    def bottom(self, hand, n): return []
+    def main_phase(self, gs): return None
+
+
+class _DefenderWindow2Removal(MatchAPL):
+    """Defender that opts into BOTH R2 and R5 and, in WINDOW 2, removes the
+    biggest opposing attacker (real engine removal path)."""
+    name = "Defender (window-2 removal)"
+    WANTS_INSTANT_COMBAT = True
+    WANTS_PW_LOYALTY = True
+
+    def __init__(self, suppress=False):
+        self.suppress = suppress
+
+    def keep(self, hand, mulligans, on_play): return True
+    def bottom(self, hand, n): return []
+    def main_phase(self, gs): return None
+
+    def combat_priority_action(self, my_gs, their_gs, stack, window):
+        if self.suppress or window != 2 or their_gs is None or my_gs is None:
+            return None
+        removal = next((c for c in my_gs.zones.hand if c.name == "Unholy Heat"), None)
+        if removal is None:
+            return None
+        attackers = [c for c in their_gs.zones.battlefield
+                     if not c.is_land() and c.has(Tag.CREATURE)]
+        if not attackers:
+            return None
+        return (removal, max(attackers, key=safe_power))
+
+
+def _cg_pw(name, loyalty):
+    c = Card(name=name, mana_cost="{7}", cmc=7,
+             type_line="Legendary Planeswalker - " + name,
+             power=None, toughness=None, colors=[])
+    tag_keywords(c)
+    c.loyalty = loyalty
+    return c
+
+
+def _cg_creature(name, p, t):
+    c = Card(name=name, mana_cost="{2}", cmc=3, type_line="Creature - Test",
+             power=str(p), toughness=str(t), colors=["G"])
+    tag_keywords(c)
+    c.summoning_sickness = False
+    return c
+
+
+def _cg_mountain():
+    c = Card(name="Mountain", mana_cost="", cmc=0,
+             type_line="Basic Land - Mountain", power=None, toughness=None, colors=[])
+    tag_keywords(c)
+    return c
+
+
+def _cg_unholy_heat():
+    c = Card(name="Unholy Heat", mana_cost="{R}", cmc=1, type_line="Instant",
+             oracle_text="Unholy Heat deals damage to target creature.")
+    tag_keywords(c)
+    return c
+
+
+def _run_ordering_scenario(suppress):
+    pw.reset_fire_count()
+    gs = TwoPlayerGameState([], [], on_play=True, seed=SEED)
+    gs.apl_a = _PlainAttacker()
+    gs.apl_b = _DefenderWindow2Removal(suppress=suppress)
+    gs.life_a, gs.life_b = 20, 20
+    big = _cg_creature("BigOgre", 18, 1)
+    small = _cg_creature("SmallBear", 2, 2)
+    gs.bf_a.append(big)
+    gs.bf_a.append(small)
+    karn = _cg_pw("Karn Liberated", 3)
+    gs.bf_b.append(karn)
+    gs.bf_b.append(_cg_mountain())
+    gs.hand_b.append(_cg_unholy_heat())
+    face_dmg, _alost, _dlost, _llg, _dllg, _hit = _resolve_combat(gs, "a")
+    return {
+        "face_dmg": face_dmg,
+        "karn_loyalty": karn.loyalty,
+        "karn_alive": karn in gs.bf_b,
+        "big_in_gy": big in gs.gy_a,
+        "small_alive": small in gs.bf_a,
+    }
+
+
+def subtest_d_window2_before_pw_assignment():
+    print("SUBTEST D: R2 window-2 removal prunes an attacker BEFORE R5 "
+          "pw_assignment (the ordering this merge authored)")
+    # Assert the real classification so the test fails loudly if Unholy Heat ever
+    # stops being engine REMOVAL (the whole scenario depends on it killing big).
+    _assert(classify_card(_cg_unholy_heat()).name == "REMOVAL",
+            "Unholy Heat classifies as engine REMOVAL (precondition)")
+
+    with_removal = _run_ordering_scenario(suppress=False)
+    with_removal_2 = _run_ordering_scenario(suppress=False)
+    control = _run_ordering_scenario(suppress=True)
+    RESULTS["subtest_d"] = {"with_removal": with_removal,
+                            "suppressed_control": control}
+    print("  WITH window-2 removal:", json.dumps(with_removal))
+    print("  SUPPRESSED control   :", json.dumps(control))
+
+    # Window-2 removal actually fired and killed the big attacker.
+    _assert(with_removal["big_in_gy"], "window-2 removal killed BigOgre (R2 fired)")
+    _assert(with_removal["small_alive"], "SmallBear survived (not removed)")
+    # GREEN (correct ordering): post-prune total 2 < 20 -> SmallBear diverted to
+    # Karn -> loyalty 3 - 2 = 1, walker survives, ZERO face damage.
+    _assert(with_removal["karn_loyalty"] == 1,
+            "Karn loyalty 3 -> 1 (SmallBear diverted using POST-window-2 state)")
+    _assert(with_removal["karn_alive"], "Karn survived (loyalty > 0)")
+    _assert(with_removal["face_dmg"] == 0,
+            "zero face damage (the only unblocked attacker went at the walker)")
+    # Control pins the lethal branch the reversed ordering would have taken.
+    _assert(not control["big_in_gy"], "control: BigOgre alive (removal suppressed)")
+    _assert(control["face_dmg"] == 20 and control["karn_loyalty"] == 3,
+            "control: total 20 == life -> lethal -> nothing diverted, 20 to face, "
+            "Karn untouched")
+    # Discriminator: WITH-removal diverges from the control's lethal branch ONLY
+    # because total_unblocked was recomputed after the window-2 prune. A reversed
+    # ordering would reproduce the control's divert decision (Karn 3, face 2).
+    _assert(with_removal["karn_loyalty"] != control["karn_loyalty"]
+            and with_removal["face_dmg"] != control["face_dmg"],
+            "ordering discriminator: post-prune divert differs from pre-prune lethal")
+    # Determinism on the novel surface.
+    _assert(with_removal == with_removal_2,
+            "deterministic: same scenario twice -> identical")
+    print("  PASS SUBTEST D (window-2 prune precedes pw_assignment; "
+          "divert reads post-window-2 state)\n")
+
+
 if __name__ == "__main__":
     subtest_a_all_three()
     subtest_b_r1_plus_r5()
     subtest_c_r2_plus_r5()
+    subtest_d_window2_before_pw_assignment()
     print("ALL TRILOGY CROSS-GATE TESTS PASS")
     print("RESULTS_JSON " + json.dumps(RESULTS))
     sys.exit(0)

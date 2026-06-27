@@ -1,0 +1,91 @@
+{
+  "artifact": "R4 Warp cast-from-exile increment - acceptance proof",
+  "date": "2026-06-26",
+  "worktree": "E:/vscode ai project/mtg-sim-r4",
+  "branch": "modelability/r4-warp",
+  "branch_point_commit": "e8829370b3a787313d0ae6034a28b68c4fbbcb0c",
+  "reference_tree": "E:/vscode ai project/mtg-sim",
+  "reference_tree_commit": "2280dced3c859c1cc001269dcb1485b706089dac",
+  "design_doc": "harness/specs/2026-06-26-R4-warp-design.md",
+  "base_commit_note": "The R4 worktree is branched at the FULL trilogy HEAD e882937 (R1+R2+R5 live behind their gates). The reference mtg-sim tree is at main 2280dce, which is the PRE-trilogy commit. This drift does NOT contaminate the Class-A bit-identical check: the goldfish kill-turn path is gate-independent (R1/R2/R5/R4 are all match-path gates, all default OFF), so Boros/Amulet goldfish numbers are identical across 2280dce, e882937, and e882937+R4 alike. The byte-identical Class-A result therefore holds against both the literal task reference (mtg-sim main) and the design's trilogy reference (e882937).",
+  "isolation_note": "engine/counter_resolver.py UNCHANGED by R4 (the optional Consign bonus 5.3 was NOT in scope). The R4 diff is the uncommitted worktree change: engine/game_state.py (WARP_CAST/RECAST_FROM_EXILE module counters + reset_fire_count + per-card recast markers in _tick_warp + NEW cast_spell_from_warp_exile reusing cast_spell), engine/match_runner.py (_warp_match_gate + per-player exile lists exile_a/exile_b + _tick_warp_player + gated tick at the _run_end_step seam + gated exile aliasing in _build_view), apl/match_apl.py (base WANTS_WARP=False), apl/jeskai_blink_match.py (WANTS_WARP=True + warp-cast and recast-from-exile cast-loop logic), tests/test_r4_warp_lifecycle.py [new], tests/test_r4_warp_recast_unit.py [new]. The goldfish tick (game_state next_turn) and the cast_spell HAND path are UNCHANGED.",
+
+  "narrowing": {
+    "summary": "The R4 warp cast-from-exile opt-in lives ONLY on JeskaiBlinkMatchAPL, not on the base class.",
+    "base_class": "apl/match_apl.py -> MatchAPL.WANTS_WARP = False. Every other deck (including the 3 buggy match warp-casters izzet_looting / azorius_high_noon / dimir_midrange_jermey) inherits False and stays on the bit-identical legacy persist-forever match path.",
+    "opt_in_class": "apl/jeskai_blink_match.py -> JeskaiBlinkMatchAPL.WANTS_WARP = True. This is the ONE class that flips the gate on.",
+    "gate_function": "engine/match_runner.py:_warp_match_gate(gs) -> True iff gs.apl_a OR gs.apl_b declares WANTS_WARP. Gate OFF -> _tick_warp_player is never called at the end-step seam and _build_view does NOT alias the persistent exile, so the match path is byte-identical to the trilogy baseline."
+  },
+
+  "headline": "PASS. Warp is now MODELED as cast-cheap-now / exile-at-end-step / recast-full-later, narrowed to one opt-in APL (Jeskai Blink), WITHOUT regressing the R1+R2+R5 trilogy (all 6 suites green) or non-warp / non-opted-in decks (Boros + Amulet goldfish byte-identical across trees; Class-B non-opted warp decks unchanged, gate OFF). The mechanism is genuinely exercised: over a 120-game gate-ON sample the warp card is cast cheaply 103 times and recast from exile for full value 73 times.",
+  "headline_statement": "PROVEN and CORRECTLY SCOPED. The Warp lifecycle (warp-cost hand cast -> delayed end-step exile with cast-from-exile markers -> later full-cost recast through cast_spell, illegal on the exile turn itself, two ETBs) works on the match path and is gated behind a single per-APL WANTS_WARP flag. Bit-identical holds for non-warp decks (Class A) and non-opted-in warp decks (Class B). The trilogy composes (R4 is a 4th independent gate; all trilogy suites stay green). Determinism holds (gate-ON re-run byte-identical).",
+
+  "one_line_verdict": "R4 is a correctly-scoped, exercised, no-regression increment: lifecycle RED/GREEN differential proven, trilogy green, Class-A/Class-B bit-identical, warp card genuinely used twice (RECAST_FROM_EXILE=73 over 120 games).",
+
+  "honest_caveats": [
+    "PRE-EXISTING (not R4) cost quirk: the _WARP_CARDS cost strings are UNBRACED (e.g. 'Quantum Riddler': '1U'), and engine.mana.parse_cost only parses the BRACED format, so 'Quantum Riddler' warp cost parses to {'generic': 0} and cast_spell_warp currently drains ~0 mana. R4 reuses cast_spell_warp unchanged per the design ('cast_spell_warp EXISTS -- reuse'), so this is OUT OF R4 SCOPE. The lifecycle test asserts the load-bearing discriminator (warp cast CHEAPER than the full recast: first_cast_cost=0 < second_cast_cost=5), not a literal '2'. The full-cost recast pays the correct braced {3}{U}{U}=5.",
+    "WR delta is SECONDARY, not the gate, and is likely inflated by the free-warp-cost quirk above plus a small sample (n=60 per opponent, 2 opponents). Gate-OFF overall 48.3% -> gate-ON 54.2% (+5.9pp). The +5.9pp is partly a free 4/6-flyer tempo play (warp Quantum Riddler costs ~0) rather than purely correct modeling; it is reported honestly and NOT used as the success criterion. The PRIMARY gate (RECAST_FROM_EXILE>0, the card used twice) passes decisively.",
+    "WR anchor band (49% +/- 2pp at n>=1000) was NOT separately run at n>=1000; the behavior-floor sample is n=120 (count gate, not WR gate). The WR anchor remains data_quality:medium / APL-tuning-todo per the design."
+  ],
+
+  "pass_fail_table": {
+    "LIFECYCLE_red_gate_off_green_gate_on": "PASS (RED: warp creature persists, not exiled, 1 ETB; GREEN: warp-cast cheap -> end-step exile + markers -> full-cost recast 5 on later turn, 2 ETBs, recast illegal on exile turn)",
+    "R1_stack_priority": "PASS (exit 0, ALL R1 PROOF TESTS PASS)",
+    "R1_control_exercises": "PASS (exit 0, R1 CONTROL EXERCISE TEST PASS)",
+    "R2_instant_combat": "PASS (exit 0, ALL R2 PROOF TESTS PASS)",
+    "R5_planeswalker_loyalty": "PASS (exit 0, ALL R5 PROOF TESTS PASS)",
+    "trilogy_cross_gate": "PASS (exit 0, ALL TRILOGY CROSS-GATE TESTS PASS)",
+    "determinism_suite": "PASS (exit 0, ALL 4 TESTS PASS)",
+    "NR_boros_energy_bit_identical": "PASS (100.0% / avg 4.58 / median 4 / avg-vs-field 52.8% byte-identical both trees, n=50 seed=42 PYTHONHASHSEED=0)",
+    "NR_amulet_titan_bit_identical": "PASS (100.0% / avg 5.98 / median 6 / avg-vs-field 28.2% byte-identical both trees, n=50 seed=42 PYTHONHASHSEED=0)",
+    "CLASS_B_non_opted_warp_unchanged": "PASS (izzet_looting / azorius_high_noon / dimir_midrange_jermey all inherit WANTS_WARP=False; _warp_match_gate False; end-step tick never fires; warp creature persists; WARP_CAST=RECAST_FROM_EXILE=0)",
+    "BEHAVIOR_FLOOR_recast_gt_0": "PASS (gate ON: WARP_CAST=103, RECAST_FROM_EXILE=73 over 120 games; WARP_CAST > RECAST_FROM_EXILE >= 1; gate OFF: 0/0)",
+    "BEHAVIOR_FLOOR_determinism": "PASS (gate-ON re-run byte-identical: same WARP_CAST/RECAST_FROM_EXILE and same per-opponent WR)"
+  },
+
+  "lifecycle": {
+    "runner": "PYTHONIOENCODING=utf-8 python tests/test_r4_warp_lifecycle.py",
+    "result": "ALL R4 PROOF TESTS PASS (exit 0)",
+    "red_gate_off": {"persisted": true, "exiled": false, "etbs": 1},
+    "green_gate_on": {"first_cast_cost": 0, "second_cast_cost": 5, "etbs": 2, "warp_cast": 1, "recast_from_exile": 1},
+    "discriminators": "exile happened (battlefield-absent + exile-present after end step); first_cast_cost (0, cheap) < second_cast_cost (5, full braced); ETB fired TWICE (library drained by 2); recast NOT legal on the exile turn (turn==exiled_turn) but legal on the next turn; markers cleared so it cannot loop."
+  },
+
+  "no_regression_class_a": {
+    "method": "PYTHONIOENCODING=utf-8 PYTHONHASHSEED=0 python sim.py --deck <deck> --n 50 --seed 42 --no-chart --no-claude, diffed between E:/vscode ai project/mtg-sim-r4 and E:/vscode ai project/mtg-sim",
+    "boros_energy_modern": {"win_rate": "100.0%", "avg_kill_turn": 4.58, "median_kill": 4, "win_by_T4": "52.0%", "win_by_T5": "88.0%", "avg_mulligans": 0.56, "avg_vs_field": "52.8%", "diff": "IDENTICAL"},
+    "amulet_titan_modern": {"win_rate": "100.0%", "avg_kill_turn": 5.98, "median_kill": 6, "win_by_T4": "16.0%", "win_by_T5": "34.0%", "avg_mulligans": 0.36, "avg_vs_field": "28.2%", "diff": "IDENTICAL"}
+  },
+
+  "no_regression_class_b": {
+    "decks": ["izzet_looting_standard_match (IzzetLootingStandardMatchAPL)", "azorius_high_noon_standard_match (AzoriusHighNoonMatchAPL)", "dimir_midrange_jermey_match (JermeyDimirMatchAPL)"],
+    "wants_warp_inherited_false": true,
+    "gate_off_for_non_opted_match": true,
+    "tick_never_fires_creature_persists": true,
+    "warp_counters_zero": true,
+    "note": "No-regression for these = unchanged persist-forever path, NOT '_tick_warp runs for them' (design section 0). The clean fix (opt each in + cast-from-exile-aware APL logic + reprove) is a tracked IMPERFECTION, not part of R4's proof."
+  },
+
+  "behavior_floor": {
+    "method": "engine.match_runner.run_match_set DIRECT (n_workers=1, no db cache), JeskaiBlinkMatchAPL vs Boros Energy + Izzet Prowess, n=60 each, seed=42, PYTHONHASHSEED=0",
+    "gate_off": {"WARP_CAST": 0, "RECAST_FROM_EXILE": 0, "overall_wr": 48.3, "per_opp_wr": {"borosenergy": 35.0, "izzetprowess": 61.7}},
+    "gate_on": {"WARP_CAST": 103, "RECAST_FROM_EXILE": 73, "overall_wr": 54.2, "per_opp_wr": {"borosenergy": 36.7, "izzetprowess": 71.7}},
+    "wr_delta_pp": 5.9,
+    "determinism": "gate-ON re-run byte-identical (same counts, same per-opponent WR)"
+  },
+
+  "wr_anchor": {
+    "source": "mtg_meta.db.matchup_matrix, format=modern, archetype='Jeskai Blink' -> ~49% match-weighted aggregate, data_quality:medium",
+    "status": "NOT separately run at n>=1000; behavior-floor sample is a count gate (n=120), not a WR gate. WR anchor remains an APL-tuning-todo per design 4.2/4.4.",
+    "do_not_promote_on_wr_alone": true
+  },
+
+  "risks_and_imperfections": [
+    "PRE-EXISTING unbraced _WARP_CARDS cost format -> warp-cost cast drains ~0 mana (parse_cost only handles braced costs). Out of R4 scope (cast_spell_warp reused unchanged). Fix path: rewrite _WARP_CARDS entries to braced strings (e.g. '{1}{U}') and re-prove the 3 existing warp-caster decks' goldfish/match deltas. Tracked IMPERFECTION.",
+    "The 3 current match warp-casters keep the persist-forever bug until each is opted in + given cast-from-exile-aware APL logic and re-proven (design 5.4). Tracked IMPERFECTION.",
+    "_WARP_CARDS registry has only 7 entries; ~20+ documented warp cards remain (design 5.4). R4 proves the mechanism, not full coverage.",
+    "Behavior-floor WR uplift (+5.9pp) is small-n and partly attributable to the free-warp-cost quirk; treated as secondary, not a success criterion."
+  ],
+
+  "stop_status": "STOPPED before merge. Merge held for user decision (spike). ExitWorktree/discard available if not adopted."
+}

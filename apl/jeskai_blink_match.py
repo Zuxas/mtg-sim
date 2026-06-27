@@ -55,6 +55,14 @@ class JeskaiBlinkMatchAPL(MatchAPL):
     win_condition_damage = 20
     max_turns = 12
 
+    # R4 opt-in: this is the single APL that turns on the warp cast-from-exile
+    # gate (design 0/2). When EITHER seat is Jeskai Blink, match_runner activates
+    # the per-player end-step warp tick + persistent-exile aliasing. The cast
+    # loop below warp-casts Quantum Riddler cheaply for early tempo, lets the
+    # gated tick exile it at end step, and recasts it from exile for full value
+    # on a later turn. Every other deck inherits WANTS_WARP=False -> unchanged.
+    WANTS_WARP = True
+
     def __init__(self):
         self._phelia_counters = 0
         self._ephemerate_rebound = False
@@ -192,6 +200,21 @@ class JeskaiBlinkMatchAPL(MatchAPL):
             gs.zones.battlefield.append(reflection)
             gs._log(f"  Fable III: transform -> Reflection of Kiki-Jiki on battlefield")
 
+        # R4: recast a warp-exiled creature from exile for FULL value on a
+        # LATER turn. WANTS_WARP gates this; match_runner._build_view aliases
+        # gs.zones.exile to this player's persistent exile list, so a creature
+        # the gated end-step tick exiled on a prior turn is visible here.
+        # cast_spell_from_warp_exile pays the full card.mana_cost through
+        # cast_spell (full payment + counter + R1 stack), re-fires the ETB, and
+        # clears the warp markers so it cannot loop.
+        if getattr(self, "WANTS_WARP", False):
+            for c in list(getattr(gs.zones, "exile", [])):
+                if (getattr(c, "_warp_recastable", False)
+                        and gs.turn > getattr(c, "_warp_exiled_turn", gs.turn)
+                        and gs.mana_pool.can_cast(c.mana_cost, c.cmc)):
+                    if gs.cast_spell_from_warp_exile(c):
+                        gs._log(f"  R4 recast {c.name} from warp exile (full value)")
+
         avail = gs.mana_pool.total()
 
         # 1. SOLITUDE EVOKE — free creature exile (pitch white card)
@@ -311,6 +334,23 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     break
+
+        # R4: warp-cast Quantum Riddler for cheap tempo ({1}{U}) when we cannot
+        # yet afford the full {3}{U}{U}. It enters now (ETB draw fires via the
+        # engine handler), the gated end-step tick exiles it, and the recast
+        # block above replays it from exile for full value on a later turn.
+        # cast_spell_warp fires the ETB itself, so we do NOT manually _draw here
+        # (the full-cost step below does a manual _draw, a pre-existing quirk we
+        # deliberately do not replicate on the warp path to avoid double-draw).
+        if getattr(self, "WANTS_WARP", False):
+            for c in list(gs.zones.hand):
+                if (c.name == QUANTUM
+                        and not gs.mana_pool.can_cast(c.mana_cost, c.cmc)
+                        and gs.mana_pool.can_cast("1U", 2)):
+                    if gs.cast_spell_warp(c):
+                        gs._log(f"  R4 warp-cast Quantum Riddler ({{1}}{{U}}, "
+                                f"exiles next end step)")
+                        break
 
         # 4. Quantum Riddler ({3}{U}{U}) — 4/6 flying, ETB draw 1
         for c in list(gs.zones.hand):

@@ -27,6 +27,24 @@ from engine.zones import Zones
 from engine.keywords import KWTag
 
 
+# R4 test-only instrumentation, mirrors R1's priority_stack.COUNTERS_CAST and
+# R5's planeswalkers fire-count. Pure integer bookkeeping -- no random(), no
+# game-state mutation -> determinism preserved. WARP_CAST counts warp-cost
+# casts from hand; RECAST_FROM_EXILE counts cast-from-exile recasts (only ever
+# reached behind the match warp gate). Non-warp decks never touch these.
+# tests/test_r4_warp_lifecycle.py and the behavior-floor exercise read them to
+# prove a warp card is genuinely used twice.
+WARP_CAST = 0
+RECAST_FROM_EXILE = 0
+
+
+def reset_fire_count() -> None:
+    """Reset the R4 warp instrumentation counters (test harness use)."""
+    global WARP_CAST, RECAST_FROM_EXILE
+    WARP_CAST = 0
+    RECAST_FROM_EXILE = 0
+
+
 # Per-card cost-reduction rules. Each entry: (card_name, reducer_fn(card, gs))
 # returns the number of generic mana to subtract from card.cmc.
 def _gy_instant_sorcery_count(gs) -> int:
@@ -744,6 +762,8 @@ class GameState:
             card.summoning_sickness = True
         # Mark for end-step exile
         card._warp_cast = True
+        global WARP_CAST
+        WARP_CAST += 1
         # Fire ETB normally (Quantum Riddler's draw, Starbreach's surveil, etc.)
         self._fire_etb_triggers(card)
         self._log(f"  Cast {card.name} via Warp ({warp_cost_str}, exiles next end step)")
@@ -764,7 +784,75 @@ class GameState:
                 self.zones.battlefield.remove(c)
                 self.zones.exile.append(c)
                 c._warp_cast = False  # clear so it doesn't re-fire
+                # R4: mark the exiled card for cast-from-exile on a LATER
+                # turn ('then you may cast it from exile on a later turn').
+                # These two markers are INERT for the goldfish path (which
+                # never recasts from exile); they are read only by
+                # cast_spell_from_warp_exile under the match warp gate, so
+                # goldfish observable behavior is byte-identical.
+                c._warp_recastable = True
+                c._warp_exiled_turn = self.turn
                 self._log(f"  EOT: {c.name} (warp) exiled")
+
+    def cast_spell_from_warp_exile(self, card: Card) -> bool:
+        """Recast a warp-exiled card from exile for its FULL normal mana
+        cost (card.mana_cost -- NOT the cheaper warp cost).
+
+        Per the Warp reminder: 'then you may cast it from exile on a later
+        turn.' This reuses cast_spell so the full payment + counter window
+        + (R1) priority-stack routing all apply unchanged -- we do NOT
+        duplicate them, and we do NOT use put_into_play (which would cheat
+        past cost and the counter/stack window).
+
+        Legal ONLY when:
+          - the card was warp-exiled (card._warp_recastable), AND
+          - the card is in the flat exile list, AND
+          - we are on a LATER turn than the one it was exiled on
+            (self.turn > card._warp_exiled_turn). Illegal on the exile
+            turn itself.
+
+        Mechanism: temporarily move the card from the flat exile list into
+        hand so cast_spell's normal hand path runs, then clear the warp
+        markers so the card cannot loop / be recast a second time. Returns
+        True if the recast was cast (resolved OR countered -- both consume
+        the one-shot recast); False if it was not legal or could not be
+        paid (in which case the card is restored to exile, still
+        recastable)."""
+        if not getattr(card, "_warp_recastable", False):
+            return False
+        if card not in self.zones.exile:
+            return False
+        if self.turn <= getattr(card, "_warp_exiled_turn", self.turn):
+            return False
+        # Move from the flat exile list into hand so cast_spell's normal
+        # payment + counter + stack path can run without modification.
+        self.zones.exile.remove(card)
+        self.zones.hand.append(card)
+        cast = self.cast_spell(card)
+        if not cast:
+            # Illegal / unpayable -- restore to exile, stay recastable.
+            if card in self.zones.hand:
+                self.zones.hand.remove(card)
+            self.zones.exile.append(card)
+            return False
+        # Cast was cast (resolved -> battlefield, or countered ->
+        # graveyard). cast_spell's countered branch appends to graveyard
+        # WITHOUT removing from hand, so defensively clear any hand copy to
+        # avoid double-presence (robust across resolve/counter/stack
+        # return shapes).
+        if card in self.zones.hand:
+            self.zones.hand.remove(card)
+        # Clear the warp markers so the card cannot loop or be recast
+        # again, and make sure _warp_cast is not armed (a resolved body
+        # must not re-exile next end step).
+        card._warp_recastable = False
+        card._warp_exiled_turn = None
+        card._warp_cast = False
+        global RECAST_FROM_EXILE
+        RECAST_FROM_EXILE += 1
+        self._log(f"  Recast {card.name} from warp exile "
+                  f"(full cost {card.mana_cost})")
+        return True
 
     def cast_spell_impending(self, card: Card) -> bool:
         """Cast a card for its Impending cost. The card enters the

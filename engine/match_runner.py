@@ -81,6 +81,17 @@ class TwoPlayerGameState:
         self.noncreature_spells_b = 0  # noncreature spells cast this turn by B
         self.spells_cast_b = 0  # total spells cast this turn by B (High Noon lock)
 
+        # R4: persistent per-player exile lists. The match path otherwise has
+        # NO durable exile (each _build_view creates a fresh GameState whose
+        # zones.exile is a throwaway list), so a warp creature exiled at end
+        # step would vanish and could never be recast. These lists hold the
+        # warp-exiled (and, when the gate is on, any view-exiled) cards across
+        # turns so cast_spell_from_warp_exile can find them. They are ONLY
+        # touched behind _warp_match_gate -> when the gate is OFF they stay
+        # empty and unused, and the match path is byte-identical.
+        self.exile_a = []
+        self.exile_b = []
+
         # Deep-copy decks to isolate per-game Card state.
         # Pre-fix: shallow `list(deck)` shared Card refs across games,
         # so mutations (summoning_sickness, lore_counters, is_transformed,
@@ -126,6 +137,33 @@ class TwoPlayerGameState:
         return sum(_safe_power(c) for c in self.bf_b
                    if not c.is_land() and not getattr(c,'summoning_sickness',True))
 
+    def _tick_warp_player(self, player: str) -> None:
+        """R4 match-path end-step warp tick for ONE player (the active player
+        whose end step it is). Mirrors GameState._tick_warp (game_state.py
+        L757) but operates on this player's flat battlefield (bf_a/bf_b) and
+        persistent exile list (exile_a/exile_b) instead of a single-player
+        view's zones, because the match has two states.
+
+        Scans the active player's battlefield for creatures cast via Warp
+        (card._warp_cast), moves each to that player's exile, clears
+        _warp_cast so it does not re-fire, and sets the cast-from-exile
+        markers (_warp_recastable + _warp_exiled_turn = current turn) read by
+        cast_spell_from_warp_exile on a LATER turn.
+
+        Called ONLY behind _warp_match_gate -> never runs when the gate is OFF,
+        so the match end-step path is byte-identical for non-opted-in decks."""
+        if player == "a":
+            bf, ex = self.bf_a, self.exile_a
+        else:
+            bf, ex = self.bf_b, self.exile_b
+        for c in list(bf):
+            if getattr(c, "_warp_cast", False):
+                bf.remove(c)
+                ex.append(c)
+                c._warp_cast = False
+                c._warp_recastable = True
+                c._warp_exiled_turn = self.turn
+
 
 def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
     """
@@ -169,6 +207,13 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             v.zones.library     = lib
             v.life              = life
             v.land_played       = land_played
+            # R4 (gated): alias this player's PERSISTENT exile so warp-exiled
+            # cards survive across turns/views and cast_spell_from_warp_exile
+            # can find them (it requires `card in self.zones.exile`). Gate OFF
+            # -> exile stays the fresh throwaway list and this view is
+            # byte-identical to the trilogy baseline.
+            if _warp_match_gate(gs):
+                v.zones.exile = gs.exile_a if for_player == "a" else gs.exile_b
             # Sync spell counters from TwoPlayerGameState (High Noon needs this
             # to persist across main_phase / main_phase2 / end_step view recreations)
             if for_player == "a":
@@ -624,6 +669,18 @@ def _pw_match_gate(gs) -> bool:
     skipped and the legacy combat/turn path is byte-identical."""
     return bool(getattr(getattr(gs, "apl_a", None), "WANTS_PW_LOYALTY", False)
                 or getattr(getattr(gs, "apl_b", None), "WANTS_PW_LOYALTY", False))
+
+
+def _warp_match_gate(gs) -> bool:
+    """R4 capability gate for the match path. Fires iff EITHER seat's APL opts
+    in via WANTS_WARP. Reads the APLs stashed on the TwoPlayerGameState by
+    run_match (gs.apl_a / gs.apl_b), mirroring _pw_match_gate. The combo-sampler
+    path never sets these, so getattr defaults keep it OFF there. Gate OFF ->
+    the end-step warp tick is skipped and _build_view does NOT alias the
+    persistent exile, so the match path is byte-identical to the trilogy
+    baseline (the buggy-but-stable persist-forever path)."""
+    return bool(getattr(getattr(gs, "apl_a", None), "WANTS_WARP", False)
+                or getattr(getattr(gs, "apl_b", None), "WANTS_WARP", False))
 
 
 def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
@@ -1322,6 +1379,12 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     Builds a GameState view for the reactive player and calls end_step_actions.
     """
     import os, sys
+    # R4 (gated): the active player's beginning-of-end-step warp trigger. This
+    # is the active player's own trigger and must fire regardless of whether
+    # the reactive player has flash actions, so it runs BEFORE the reactive
+    # early-returns below. Gate OFF -> pure no-op, end-step path byte-identical.
+    if _warp_match_gate(gs):
+        gs._tick_warp_player(active_player)
     if reactive_apl is None:
         return
     from engine.game_state import GameState

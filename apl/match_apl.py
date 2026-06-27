@@ -69,6 +69,16 @@ class MatchAPL(BaseAPL):
     # loyalty ticks/ultimates and admits the attack-the-walker combat branch.
     WANTS_PW_LOYALTY = False
 
+    # R4 warp cast-from-exile opt-in gate (design 0/2). Default OFF so every
+    # existing deck (including the 3 buggy match warp-casters) keeps the legacy
+    # persist-forever match path and stays bit-identical: no match end-step warp
+    # tick, no exile aliasing, no recast. The one opt-in class that flips this
+    # True (JeskaiBlinkMatchAPL) warp-casts a creature cheaply, lets the gated
+    # match tick exile it at the next end step, and recasts it from exile for
+    # full value on a later turn via gs.cast_spell_from_warp_exile. When OFF,
+    # _warp_match_gate returns False on the runner and none of the R4 code runs.
+    WANTS_WARP = False
+
     def choose_pw_ability(self, pw, gs, opp_gs) -> int:
         """R5 loyalty-ability chooser. Returns the loyalty change (+N / 0 / -N)
         to activate on `pw` this turn. Base implementation delegates to the

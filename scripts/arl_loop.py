@@ -79,6 +79,17 @@ import arl_generate_deck  # noqa: E402
 import arl_generate_apl  # noqa: E402
 import arl_profile  # noqa: E402  (heavy deps are lazy; safe at import time)
 
+# ARL hardening trio: FP-validator (promote veto + cross-session memory) + approval
+# gate. Sibling imports (scripts/ is sys.path[0] at launch). Guarded so the loop still
+# runs if the modules are absent. Loop-state/backlog write-discipline is already enforced
+# at the arl_state._persist_json chokepoint, so arl_write_verify isn't imported here.
+try:
+    import arl_fp_validator as fp  # noqa: E402
+    import arl_approval as ap  # noqa: E402
+except Exception:
+    fp = None
+    ap = None
+
 # Optional hardening helpers -- import what truly exists, degrade gracefully.
 # agent_hardening provides LoopController + check_ollama_health (NOT
 # atomic_write_json -- that lives in engine.atomic_json). Guard the import so
@@ -743,6 +754,17 @@ def _apply_steer(state):
                     it["status"] = "pending"
                     hit = True
             applied = "requeued %s" % tid if hit else "requeue %s (not found)" % tid
+        elif re.search(r"discard\s+(\S+)", norm):
+            # Record a cross-session false positive so the fp-validator vetoes any
+            # FUTURE promote of this deck. Completes the documented "discard <slug>"
+            # steer (CLAUDE.md example) + populates data/arl_false_positives.json.
+            slug = re.search(r"discard\s+(\S+)", directive, re.IGNORECASE).group(1).rstrip(",")
+            if fp is not None:
+                fp.record_false_positive({"slug": slug, "verdict": "promote"},
+                                         reason=directive)
+                applied = "recorded false positive: %s" % slug
+            else:
+                applied = "discard %s (fp-validator unavailable)" % slug
 
         log("steer applied: %r -> %s" % (directive, applied or "stored/none"))
 
@@ -1039,12 +1061,24 @@ def run_iteration(args):
         verdict = "discard"
         log("FWR variance %.1fpp > 8pp; NOT promoting %s." % (variance, deck_name))
     elif avg_fwr > threshold:
-        verdict = "promote"
-        if item_id not in [p if isinstance(p, str) else p.get("id")
-                           for p in state.get("promoted", [])]:
-            state.setdefault("promoted", []).append(item_id)
-        log("verdict=promote (%.1f%% > %.1f, confidence=%s)"
-            % (avg_fwr, threshold, conf))
+        # FP-validator veto: reject a promote whose signature is a known false
+        # positive (recorded via a prior "discard <slug>" steer) or implausible.
+        # Cross-session memory in data/arl_false_positives.json.
+        _ok, _fp_reason = (True, "")
+        if fp is not None:
+            _ok, _fp_reason = fp.validate_promote(
+                {"slug": item_id, "verdict": "promote", "fwr": avg_fwr, "confidence": conf})
+        if not _ok:
+            verdict = "discard"
+            log("verdict=discard: promote vetoed by fp-validator (%s) for %s"
+                % (_fp_reason, deck_name))
+        else:
+            verdict = "promote"
+            if item_id not in [p if isinstance(p, str) else p.get("id")
+                               for p in state.get("promoted", [])]:
+                state.setdefault("promoted", []).append(item_id)
+            log("verdict=promote (%.1f%% > %.1f, confidence=%s)"
+                % (avg_fwr, threshold, conf))
     elif avg_fwr >= MUTATE_LOW:
         verdict = "mutate"
         if is_variant:

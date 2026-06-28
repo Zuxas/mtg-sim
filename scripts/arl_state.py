@@ -158,11 +158,30 @@ def load_state():
 
 
 def _persist_json(path, data):
-    """Atomically write `data` to `path`, preferring the shared harness helper."""
+    """Atomically write `data` to `path`, then verify it round-trips (write-discipline).
+
+    The atomic write (temp + os.replace) remains the durability mechanism; on top we
+    read the file back and confirm it deserializes to the same data, so a silent /
+    partial / failed write to the loop_state spine OR the modelability backlog can
+    never pass unnoticed. Semantic compare (re-serialize both sides with sort_keys +
+    default=str) is robust to whichever serializer wrote the file and to datetime
+    coercion. Raises IOError on mismatch so callers (write_state / append_backlog)
+    surface a corrupt-spine write instead of continuing on it.
+    """
     if _atomic_write_json is not None:
         _atomic_write_json(path, data)
     else:
         _inline_atomic_write_json(path, data)
+    # Write-verify: read back + semantic compare (arl_write_verify discipline, adapted
+    # for dict payloads where a byte-hash would be brittle to serializer formatting).
+    try:
+        with open(path, "r", encoding="utf-8") as _f:
+            _roundtrip = json.load(_f)
+    except (OSError, ValueError) as _exc:
+        raise IOError("WRITE-VERIFY FAILED: %s unreadable after write (%s)" % (path, _exc))
+    if json.dumps(_roundtrip, sort_keys=True, default=str) != \
+       json.dumps(data, sort_keys=True, default=str):
+        raise IOError("WRITE-VERIFY FAILED: %s content mismatch after write" % path)
 
 
 def write_state(state):

@@ -584,8 +584,17 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                     gs.zones.hand.remove(d)
                     gs.zones.graveyard.append(d)
 
-    # --- TIMEOUT ---
-    mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
+    # --- TIMEOUT --- (R6 gated: inevitability tiebreaker when a seat opts in; legacy on tie/off)
+    if getattr(apl_a, "WANTS_HIDDEN_INFO", False) or getattr(apl_b, "WANTS_HIDDEN_INFO", False):
+        from engine.match_runner import _inevitability_score as _inev
+        _sa = _inev(mgs.gs_a.life, mgs.gs_a.zones.hand, mgs.gs_a.zones.battlefield, mgs.gs_b.zones.battlefield)
+        _sb = _inev(mgs.gs_b.life, mgs.gs_b.zones.hand, mgs.gs_b.zones.battlefield, mgs.gs_a.zones.battlefield)
+        if _sa != _sb:
+            mgs.winner = 'a' if _sa > _sb else 'b'
+        else:
+            mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
+    else:
+        mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
     mgs.win_method = 'timeout'
     result = mgs.to_match_result()
     result.mulligans_a = mull_a

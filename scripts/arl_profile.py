@@ -347,9 +347,12 @@ def _severity_for_counts(counts, modeled=frozenset()):
     sev["planeswalker_loyalty"] = (
         "low" if counts["planeswalker_loyalty"] >= 3 else "high")
 
-    # hidden_information rides along with counters ONLY when counters are a
+    # hidden_information: credited high when a deck's match-APL opts into WANTS_HIDDEN_INFO
+    # + an r6- proof exists (R6); else rides along with counters ONLY when counters are a
     # real plan (>= 2). Never auto-flagged universally.
-    if c >= 2:
+    if "hidden_information" in modeled:
+        sev["hidden_information"] = "high"
+    elif c >= 2:
         sev["hidden_information"] = sev["counterspell_on_stack"]
     else:
         sev["hidden_information"] = "high"
@@ -401,6 +404,8 @@ def _apl_modeled_capabilities(deck_name):
             modeled.add("counterspell_on_stack")
         if getattr(cls, "WANTS_STORM", False) and _proof("r3-"):
             modeled.add("storm")
+        if getattr(cls, "WANTS_HIDDEN_INFO", False) and _proof("r6-"):
+            modeled.add("hidden_information")
     except Exception:
         return set()
     return modeled

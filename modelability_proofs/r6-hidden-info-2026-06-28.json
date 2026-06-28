@@ -1,0 +1,44 @@
+{
+  "artifact": "R6 hidden-information (card-advantage / inevitability) - Increment 1 acceptance proof",
+  "date": "2026-06-28",
+  "branch": "modelability/r6-hidden-info",
+  "branch_point_commit": "0f3f458f3d06c1a42dabc1d75b603d1a5fb1082e",
+  "reference_tree": "E:/vscode ai project/mtg-sim (main @ 0f3f458, = trilogy+R4+storm+StageB)",
+  "design_doc": "harness/specs/2026-06-27-r6-hidden-info-design.md",
+
+  "scope": "INCREMENT 1 ONLY = scaffolding + Phase 1 (gated timeout inevitability tiebreaker, BOTH runners) + arl_profile crediting. Phase 2 (mid-game inevitability concession) and the Izzet-Lessons-vs-Selesnya WR DE-INVERSION are DEFERRED (the risky lever). Per the design diagnostic, the Lessons inversion is ~85% a pre-timeout combat-death problem, so Phase 1 alone touches only ~8-15% of games and CANNOT de-invert; its value is the safe foundation + a real timeout-game fidelity gain + the crediting wiring.",
+
+  "key_honesty": "R6 models CARD-ADVANTAGE / INEVITABILITY, NOT literal hidden information / belief states (out of scope permanently for this rung). The hidden_information mechanic id is retained only because it is the existing key.",
+
+  "narrowing": {
+    "summary": "WANTS_HIDDEN_INFO opt-in lives ONLY on IzzetLessonStandardMatchAPL (registry keys izzetlessons/izzetlesson); base MatchAPL.WANTS_HIDDEN_INFO=False.",
+    "gate": "match_runner._hidden_info_match_gate (either-seat); both timeout sites gated -- match_runner.py:1589 (result.won) and match_engine.py:588 (mgs.winner). Gate OFF -> the legacy life-only line runs verbatim. _inevitability_score is zero-RNG (count-only).",
+    "score": "_inevitability_score(life, hand, battlefield, opp_battlefield) = 1*life + 2*len(hand) + 5*recurring_engine_count - 1*opp_board_power. recurring-engine count (curated set, Increment-1) is load-bearing, NOT raw hand size."
+  },
+
+  "pass_fail_table": {
+    "R6_TEST1_timeout_tiebreaker": "PASS - a card-advantage seat BEHIND on life (life 8, 7 cards, 1 engine -> score 27.0) beats a board/life-ahead seat (life 12, 2 cards -> 16.0). The gated verdict (A wins) DIFFERS from the legacy life-only verdict (A loses), proving the tiebreaker is the discriminator.",
+    "R6_TEST2_gate_off_legacy": "PASS - _hidden_info_match_gate False for non-opted-in seats -> legacy timeout path; score is pure-count (empty board/hand -> score == life), zero RNG.",
+    "R6_TEST3_engine_load_bearing": "PASS - a recurring engine (score 19.0) outweighs 2 extra dead cards (18.0); raw hand size does not dominate.",
+    "byte_identical_off": "PASS (by construction + composition) - gate OFF runs the original life-only line verbatim on both runners; no new random(). Verified empirically via the gate suites staying green.",
+    "composition_all_gates_green": "PASS - test_trilogy_cross_gate (deterministic run1==run2), test_determinism (4/4), test_r3_storm_lifecycle, test_r4_warp_lifecycle all green on the R6 branch. R6 is a 6th independent gate; it did not perturb R1/R2/R3/R4/R5."
+  },
+
+  "crediting": "arl_profile credits hidden_information when a deck's match-APL sets WANTS_HIDDEN_INFO AND this r6- proof exists (mirrors warp/stack/storm). IMPORTANT (design 6.3): this does NOT make Izzet Lessons 'high' overall -- the deck independently trips counterspell_on_stack (7 counters), so its confidence stays counter-gated until R1 ALSO credits it (needs both WANTS_PRIORITY_STACK + WANTS_HIDDEN_INFO + both proofs). R6 credits the hidden_information mechanic specifically; it does not clear the counter-driven gate.",
+
+  "deferred_phase_2_and_imperfections": [
+    "Phase 2 mid-game inevitability concession (the actual Lessons de-inversion lever) -- high-risk, may be structurally capped by guard(3) (concession suppressed when the card-rich deck faces lethal next turn, common for Lessons-vs-Selesnya). Under its own WR gate.",
+    "Inevitability-score WEIGHTS are Increment-1 defaults (1/2/5/1); calibration is a Phase-2 WR-gate task, NOT done here.",
+    "recurring-engine detection is a curated 4-name set (Monument to Endurance, Artist's Talent, Stormchaser's Talent, Gran-Gran); the generic oracle 'draw a card' fallback is deferred.",
+    "Optional arl_profile detection for <2-counter pure-card-advantage decks (deliberate non-byte-identical change) deferred.",
+    "Residual Lessons inversion (if Phase 2 guard(3) suppresses) is an attrition-fidelity gap OUTSIDE R6 (cross-link R1 counters + combat resolution)."
+  ],
+
+  "honest_caveats": [
+    "Increment-1 / Phase-1 only: it fixes the timeout verdict for card-advantage decks that grind to time, NOT the headline Lessons combat-loss inversion (that needs Phase 2).",
+    "R6 = card-advantage/inevitability proxy, not literal hidden information.",
+    "Weights uncalibrated until Phase 2; the tiebreaker direction (cards matter, not just life) is proven, the magnitude is not tuned."
+  ],
+
+  "stop_status": "STOPPED before merge. Branch modelability/r6-hidden-info. MERGE HELD FOR USER. _proof('r6-') keys off this file (the crediting and the proof land together)."
+}

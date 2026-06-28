@@ -65,6 +65,12 @@ def _combustion_max_tgh(gs: GameState) -> int:
 class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
     ARCHETYPE = "control"
 
+    # R6 opt-in (Increment 1): grindy card-advantage control. Activates the gated
+    # inevitability timeout tiebreaker (a card-advantage lead behind on life wins the
+    # time-out instead of losing it). NOTE: Increment-1 / Phase-1 only -- this does NOT
+    # de-invert the Lessons-vs-Selesnya combat-loss problem (that is Phase 2, deferred).
+    WANTS_HIDDEN_INFO = True
+
     # Hold {1}{U} for Mana Leak (It'll Quench Ya!) or Spell Pierce
     COUNTER_COST  = 2
     COUNTER_CARDS = {QUENCH, THREE_STEPS, SPELL_PIERCE, NEGATE, FLASHFREEZE, SPELL_SNARE}

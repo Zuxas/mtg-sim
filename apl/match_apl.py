@@ -84,6 +84,12 @@ class MatchAPL(BaseAPL):
     # The single opt-in is the rewritten RubyStormMatchAPL.
     WANTS_STORM = False
 
+    # R6 hidden-information (card-advantage / inevitability) opt-in. OFF -> legacy
+    # life-total timeout + no mid-game concession -> match path byte-identical. Models
+    # card-advantage / inevitability, NOT literal hidden info / belief states. Initial
+    # opt-in: IzzetLessonStandardMatchAPL. (Increment 1 = scaffold + Phase 1 timeout only.)
+    WANTS_HIDDEN_INFO = False
+
     def choose_pw_ability(self, pw, gs, opp_gs) -> int:
         """R5 loyalty-ability chooser. Returns the loyalty change (+N / 0 / -N)
         to activate on `pw` this turn. Base implementation delegates to the

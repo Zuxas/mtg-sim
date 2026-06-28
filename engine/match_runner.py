@@ -709,6 +709,33 @@ def _storm_match_gate(gs) -> bool:
                 or getattr(getattr(gs, "apl_b", None), "WANTS_STORM", False))
 
 
+# R6 hidden-information (card-advantage / inevitability) -- Increment 1 (scaffold + Phase 1
+# timeout tiebreaker). Models card-advantage, NOT literal hidden info. Gate OFF -> legacy.
+# Curated recurring-engine set (Increment-1; oracle "draw a card" fallback deferred to Phase 2).
+_RECURRING_ENGINES = frozenset({
+    "Monument to Endurance", "Artist's Talent", "Stormchaser's Talent",
+    "Gran-Gran, Pacifist Pugilist",
+})
+
+
+def _hidden_info_match_gate(gs) -> bool:
+    """R6 capability gate (either-seat), mirrors _warp/_storm_match_gate. getattr-based,
+    defaults False -> OFF for goldfish / combo-sampler paths."""
+    return bool(getattr(getattr(gs, "apl_a", None), "WANTS_HIDDEN_INFO", False)
+                or getattr(getattr(gs, "apl_b", None), "WANTS_HIDDEN_INFO", False))
+
+
+def _inevitability_score(life, hand, battlefield, opp_battlefield) -> float:
+    """Zero-RNG card-advantage / inevitability score from counts only (R6). Higher = more
+    likely to win the long game. recurring-engine count is load-bearing (a big hand can be
+    dead cards -- raw hand size must NOT dominate). Weights are Increment-1 defaults; Phase 2
+    calibrates them against a WR gate. Performs ZERO random() (keeps the gate-OFF NR clean)."""
+    recurring = sum(1 for c in battlefield if getattr(c, "name", None) in _RECURRING_ENGINES)
+    opp_power = sum(_safe_power(c) for c in opp_battlefield
+                    if c.has(Tag.CREATURE) and not c.is_land())
+    return 1.0 * life + 2.0 * len(hand) + 5.0 * recurring - 1.0 * opp_power
+
+
 def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
     """R5: gated planeswalker loyalty activation for the active player, called
     EXACTLY ONCE per player-turn (so CR 606.3 one-ability-per-PW-per-turn holds
@@ -1585,8 +1612,13 @@ def run_match(
         # End-step: first player's APL may flash instants at end of second's turn
         _run_end_step(gs, second, first, first_apl)
 
-    # Time out — call it based on life totals
-    result.won       = gs.life_b < gs.life_a
+    # Time out — call it based on life totals (R6 gated: inevitability tiebreaker when opted in)
+    if _hidden_info_match_gate(gs):
+        _sa = _inevitability_score(gs.life_a, gs.hand_a, gs.bf_a, gs.bf_b)
+        _sb = _inevitability_score(gs.life_b, gs.hand_b, gs.bf_b, gs.bf_a)
+        result.won = (_sa > _sb) if _sa != _sb else (gs.life_b < gs.life_a)
+    else:
+        result.won       = gs.life_b < gs.life_a
     result.kill_turn = max_turns
     result.turn_count = max_turns
     return result

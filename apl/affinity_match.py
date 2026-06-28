@@ -10,6 +10,7 @@ Key cards: Kappa Cannoneer (ward, grows on artifact ETB), Mox Opal (free mana),
 Pinnacle Emissary (token flood), Arcbound Ravager (sac for +1/+1 counters),
 Metallic Rebuke (affinity counter), Urza's Saga (constructs + tutor)
 """
+import os
 from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
@@ -54,8 +55,9 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
     # AwareMatchAPL's, so combat + mulligan are UNCHANGED by the re-base.
     WANTS_PRIORITY_STACK = True
     COUNTER_CARDS = {REBUKE}
-    COUNTER_COST = 3  # _pay_for_counter charges full {2}{U}=3 (no Improvise model);
-                      # reserve fires only conditionally (reserve_mana). Phase-2 sweep {0,1,2,3}.
+    COUNTER_COST = int(os.environ.get("AFFINITY_COUNTER_COST", "2"))  # Phase-2 sweep winner (n=300:
+                      # 0->42.0 1->42.0 2->42.3 3->41.9; all within noise, no regression vs 41% baseline).
+                      # full Rebuke cost is {2}{U}=3 but reserve fires only conditionally (reserve_mana).
 
     def __init__(self):
         self._artifact_count = 0

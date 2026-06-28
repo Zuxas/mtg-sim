@@ -1,0 +1,56 @@
+{
+  "artifact": "R3 Storm match-path increment - acceptance proof",
+  "date": "2026-06-28",
+  "branch": "modelability/r3-storm",
+  "branch_point_commit": "51448a5d5a256db8d9a17cf06c5f53f6dcb0b82b",
+  "reference_tree": "E:/vscode ai project/mtg-sim (main @ 51448a5, = trilogy+R4+StageB)",
+  "design_doc": "harness/specs/2026-06-27-r3-storm-design.md",
+
+  "key_discovery": "Storm is HALF-BUILT, unlike R1/R2/R4/R5. Storm count (gs.spells_cast_this_turn) + copy-on-resolve already exist at the handler layer (_grapeshot_spell reads spells_cast_this_turn; copies = 1 + storm) and work in GOLDFISH. R3 does NOT add a copy primitive (that would double-count the existing handler). R3 makes the existing storm count REACHABLE + CORRECT + CREDITED on the MATCH path.",
+
+  "narrowing": {
+    "summary": "WANTS_STORM opt-in lives ONLY on the rewritten RubyStormMatchAPL, not the base class.",
+    "base_class": "apl/match_apl.py -> MatchAPL.WANTS_STORM = False. Every other deck inherits False -> the new main-phase-1 damage sync never runs -> bit-identical match path.",
+    "opt_in_class": "apl/ruby_storm_match.py -> RubyStormMatchAPL.WANTS_STORM = True (rewritten from the AUTO_GENERATED stub to cast every spell via gs.cast_spell, payoff last).",
+    "gate_function": "engine/match_runner.py:_storm_match_gate(gs) [either-seat, retained for symmetry]; the ACTUAL main1 damage sync in _simple_play_turn gates on the ACTIVE apl's WANTS_STORM (deliberate active-only, so an opponent's main1 burn is NOT newly propagated inside a storm matchup)."
+  },
+
+  "engine_change": "ONE new gated surface: a main-phase-1 spell-damage sync in match_runner._simple_play_turn, mirroring _run_post_combat_phase's damage sync. The active view is a fresh GameState (view.damage_dealt starts at 0), so `gs.life_b -= view.damage_dealt` / `gs.damage_to_b += view.damage_dealt` cannot double-count. Gate OFF -> the whole block is a pure no-op. NO new copy primitive, NO change to cast_spell, the goldfish path, _resolve_combat, counter_resolver, or the storm handlers.",
+
+  "pass_fail_table": {
+    "LIFECYCLE_red_pre": "PASS - gate OFF (WANTS_STORM=False): gs.life_b=20, gs.damage_to_b=0 (main1 storm damage computed on the throwaway view and DROPPED)",
+    "LIFECYCLE_green_post": "PASS - gate ON (WANTS_STORM=True): K=4 cheap spells then Grapeshot last -> copies=5 -> gs.life_b=15=20-(K+1), gs.damage_to_b=5=K+1 (storm SCALED with spells cast AND propagated to the match life total)",
+    "LIFECYCLE_gate_the_test": "PASS - GREEN assertions raise on the RED-state numbers, proving the WANTS_STORM param-gate is the discriminator (test gates itself)",
+    "all_gate_suites_green": "PASS - R1 stack-priority, R2 instant-combat, R5 planeswalker-loyalty, R4 warp-lifecycle, trilogy cross-gate, determinism all exit 0 (R3's gated no-op-when-OFF did NOT perturb the verified R1/R2/R4/R5 composition)",
+    "NR_class_a_goldfish_sane": "PASS - Boros Energy 100% / avg T4.42, Amulet Titan ~100% / T5.8 goldfish, no crash, sane (gate OFF for goldfish by construction)",
+    "NR_class_a_prime_goldfish_storm": "PASS - Ruby Storm goldfish 84-86% / avg T8.7-8.8 / median 9 (R3 left the goldfish path + storm handlers untouched -> unchanged)",
+    "NR_fidelity_non_storm_byte_identical": "PASS - amulet_titan / boros_energy / izzet_affinity: confidence + blocking_imperfections BYTE-IDENTICAL between HEAD and R3; only new mechanic_counts key is storm:0 (order-0 severity -> cannot raise confidence or enter blocking)",
+    "storm_detected_clean": "PASS - ruby_storm_modern storm count=1, evidence=['Grapeshot'] ONLY (NOT Ral / Wrenn's Resolve / Reckless Impulse / rituals); storm is the sole tripping mechanic",
+    "fidelity_credit_wiring": "PASS - pre-proof confidence=unmodelable (storm trips, uncredited); with an r3- proof present _apl_modeled_capabilities('Ruby Storm')={'storm'} and confidence flips to 'high' (requires BOTH WANTS_STORM=True AND _proof('r3-'))"
+  },
+
+  "storm_exercises": "Lifecycle K=4 -> copies=5 -> 5 face damage propagated. 6-match no-crash smoke (gate ON) clean. (Module-global STORM_COPIES_DEALT counters deferred -- the lifecycle damage==K+1 assertion is the load-bearing scaling proof.)",
+
+  "wr_anchor": {
+    "status": "NOT separately run at n>=1000 this spike; R3 is fidelity-first (the count/propagation gate is primary, NOT a WR delta). data_quality: medium / APL-tuning-todo.",
+    "note": "A LARGE WR jump would be an ABORT signal (likely the free-ritual-mana quirk, see risks), not a win."
+  },
+
+  "risks_and_imperfections_deferred": [
+    "Ritual net-mana: Desperate/Pyretic Ritual + Manamorphose must produce NET-POSITIVE mana for the chain to reach lethal storm count; if the mana model does not, real-match storm count caps low (tracked, WR under-reads). Do NOT fake it.",
+    "Ruby Medallion cost reduction not in _COST_REDUCTIONS (red spells should cost {1} less) -> shorter chain than reality.",
+    "Past in Flames recursion (second storm chain) deferred; Pyromancer Ascension spell-doubling deferred.",
+    "Generic Storm-keyword coverage: copy is hand-coded per card (Grapeshot/Empty the Warrens/Galvanic Relay); a handler-less storm card copies nothing. A generic primitive is a future gated rung (would double-count the existing handlers if added naively).",
+    "General main1-damage-sync gap: 1.2 opens the fix ONLY for storm-opted decks; every other deck's main-phase-1 face burn is still dropped on the match path. The clean ungated fix is a separate broader change needing its own Class-A re-proof.",
+    "Optional gated early win-check after the main1 sync (inert for creatureless storm) deferred."
+  ],
+
+  "honest_caveats": [
+    "Storm was already half-built: the storm COUNT + copy-on-resolve were engine-resident for goldfish before R3. R3 does NOT 'add storm to the engine' -- it makes the existing primitive reachable + correct + credited on the MATCH path. The engine change is the gated match-path main1 damage SYNC, not a copy primitive.",
+    "The arl_profile change is GATE-VERDICT-identical, NOT literal-JSON-byte-identical: every non-storm deck's confidence + blocking_imperfections are unchanged, but mechanic_counts/evidence gain a new storm:0 key (a value of 0 trips nothing).",
+    "Residual detection false-positive surface: a non-storm card whose ORACLE TEXT contains the word 'Storm' could trip the regex fallback (detection uses the keyword list as the primary signal + scans oracle/keywords only, never the card name, so 'Storm Slayer'-type names do not trip). No false positive observed on the tested decks.",
+    "Ruby Storm WR under-reads until the ritual net-mana + Ruby Medallion items above are modeled (deferred)."
+  ],
+
+  "stop_status": "STOPPED before merge. MERGE HELD FOR USER. The _proof('r3-') credit and this proof land together (this file's existence is what flips Ruby Storm to 'high')."
+}

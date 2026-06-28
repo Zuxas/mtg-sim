@@ -266,6 +266,21 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             gs.land_played_b = view.land_played
             gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', 0)
             gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', 0)
+        # R3 storm (gated): propagate the ACTIVE player's main-phase-1 spell damage
+        # back to the match state. Mirrors _run_post_combat_phase's damage sync. The
+        # view is fresh (_build_view makes a new GameState, never seeds damage_dealt),
+        # so view.damage_dealt holds ONLY this main1's damage and += onto the cumulative
+        # total is correct (no double-count). Gated on the ACTIVE apl's WANTS_STORM (not
+        # _storm_match_gate) so the opponent's own main1 burn stays dropped, exactly as
+        # pre-R3. Gate OFF -> pure no-op -> byte-identical to the trilogy+R4 baseline.
+        if getattr(apl, "WANTS_STORM", False):
+            _dmg = getattr(view, "damage_dealt", 0)
+            if player == "a":
+                gs.damage_to_b += _dmg
+                gs.life_b -= _dmg
+            else:
+                gs.damage_to_a += _dmg
+                gs.life_a -= _dmg
         return
 
     # -------- Legacy heuristic fallback (apl is None) --------
@@ -681,6 +696,17 @@ def _warp_match_gate(gs) -> bool:
     baseline (the buggy-but-stable persist-forever path)."""
     return bool(getattr(getattr(gs, "apl_a", None), "WANTS_WARP", False)
                 or getattr(getattr(gs, "apl_b", None), "WANTS_WARP", False))
+
+
+def _storm_match_gate(gs) -> bool:
+    """R3 capability gate (either-seat), for fidelity-wiring symmetry with
+    _warp_match_gate. The actual main-phase-1 spell-damage sync in
+    _simple_play_turn gates on the ACTIVE player's own WANTS_STORM (deliberate
+    active-only choice -- so an opponent's main1 burn is NOT newly propagated
+    inside a storm matchup; see spec 1.2). getattr-based, defaults False -> OFF
+    for goldfish / combo-sampler paths that never set apl_a/apl_b."""
+    return bool(getattr(getattr(gs, "apl_a", None), "WANTS_STORM", False)
+                or getattr(getattr(gs, "apl_b", None), "WANTS_STORM", False))
 
 
 def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:

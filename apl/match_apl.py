@@ -79,6 +79,11 @@ class MatchAPL(BaseAPL):
     # _warp_match_gate returns False on the runner and none of the R4 code runs.
     WANTS_WARP = False
 
+    # R3: opt-in to the gated match-path main-phase-1 storm-damage propagation
+    # (match_runner._simple_play_turn). OFF -> no main1 damage sync, byte-identical.
+    # The single opt-in is the rewritten RubyStormMatchAPL.
+    WANTS_STORM = False
+
     def choose_pw_ability(self, pw, gs, opp_gs) -> int:
         """R5 loyalty-ability chooser. Returns the loyalty change (+N / 0 / -N)
         to activate on `pw` this turn. Base implementation delegates to the

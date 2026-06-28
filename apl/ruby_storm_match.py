@@ -20,7 +20,10 @@ WISH = "Wish"
 GRAPESHOT = "Grapeshot"
 
 class RubyStormMatchAPL(MatchAPL):
-    AUTO_GENERATED = True  # flagged for rewrite
+    # R3 (2026-06-28): rewritten from the AUTO_GENERATED stub. Casts every spell via
+    # gs.cast_spell so spells_cast_this_turn accrues + the storm handlers fire (storm
+    # count). WANTS_STORM opts into the gated match-path main1 spell-damage sync.
+    WANTS_STORM = True
     name = "Ruby Storm"
     win_condition_damage = 20
     max_turns = 12
@@ -45,52 +48,32 @@ class RubyStormMatchAPL(MatchAPL):
     def main_phase(self, gs): self.main_phase_match(gs, None)
 
     def main_phase_match(self, gs, opponent):
+        # R3 rewrite: route EVERY spell through gs.cast_spell so spells_cast_this_turn
+        # accrues and the storm handlers (_grapeshot_spell etc.) fire. Cast accelerants /
+        # cantrips first; hold the storm PAYOFF for last so its storm count is maximal.
+        # (Goldfish RubyStormAPL already does this; the AUTO_GENERATED match stub bypassed
+        # cast_spell with manual pay+graveyard+flat-2 damage, defeating storm entirely.)
         self._play_land_if_able(gs)
         gs.tap_lands()
-        avail = gs.mana_pool.total()
+        PAYOFFS = {GRAPESHOT, "Empty the Warrens", "Galvanic Relay"}
 
-        # Removal on opponent creatures
-        if opponent:
-            opp_cr = [c for c in opponent.zones.battlefield
-                     if not c.is_land() and c.has(Tag.CREATURE) and safe_power(c) >= 2]
-            if opp_cr:
-                target = max(opp_cr, key=lambda x: safe_power(x))
-                for c in list(gs.zones.hand):
-                    if not c.is_land() and not c.has(Tag.CREATURE):
-                        if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                            dmg = 3  # approximate
-                            if safe_toughness(target) <= dmg:
-                                gs.mana_pool.pay(c.mana_cost, c.cmc)
-                                gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                                if target in opponent.zones.battlefield:
-                                    opponent.zones.battlefield.remove(target)
-                                    opponent.zones.graveyard.append(target)
-                                gs._log(f"  Remove: {target.name}")
-                                break
+        # 1. Cast all non-payoff noncreature spells (rituals/cantrips), looping while a
+        #    newly-affordable spell remains (a ritual may unlock the next cast).
+        cast_any = True
+        while cast_any:
+            cast_any = False
+            for c in list(gs.zones.hand):
+                if c.is_land() or c.has(Tag.CREATURE) or c.name in PAYOFFS:
+                    continue
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc) and gs.cast_spell(c):
+                    cast_any = True
 
-        # Deploy creatures by CMC (cheapest first for tempo)
-        deployed = False
-        for _ in range(5):
-            castable = [c for c in gs.zones.hand
-                       if c.has(Tag.CREATURE) and gs.mana_pool.can_cast(c.mana_cost, c.cmc)]
-            if not castable: break
-            spell = min(castable, key=lambda c: getattr(c, 'cmc', 0))
-            if gs.cast_spell(spell):
-                deployed = True
-            else:
-                break
-
-        # Cast noncreature spells
+        # 2. Payoff LAST (maximal storm count). cast_spell -> _grapeshot_spell reads
+        #    spells_cast_this_turn and deals `count` instances of 1 damage; the R3 gated
+        #    main1 sync then propagates that to the opponent's match life total.
         for c in list(gs.zones.hand):
-            if not c.is_land() and not c.has(Tag.CREATURE):
-                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    # Burn face if no creatures to target
-                    if not opponent or not any(not x.is_land() and x.has(Tag.CREATURE) 
-                                               for x in opponent.zones.battlefield):
-                        gs.mana_pool.pay(c.mana_cost, c.cmc)
-                        gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
-                        gs.damage_dealt += 2  # approximate spell damage
-                        gs._log(f"  Cast {c.name} (2 face)")
+            if c.name in PAYOFFS and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                gs.cast_spell(c)
 
     def declare_attackers(self, gs, opponent):
         return [c for c in gs.zones.battlefield

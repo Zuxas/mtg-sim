@@ -225,6 +225,11 @@ _PLUS_X_RE = re.compile(r"\+\d+/\+\d+")
 _PROTECTION_RE = re.compile(r"\bprotection\b", re.IGNORECASE)
 # Keyword "Warp" as printed on cards (capital W, word boundary).
 _WARP_RE = re.compile(r"\bWarp\b")
+# Keyword "Storm" as printed. Detection uses the keyword LIST as the primary signal;
+# this oracle regex is the fallback. Scans oracle/keywords ONLY (never the card name)
+# so "Storm Slayer"-type names don't trip; residual risk is an oracle quoting "Storm"
+# (validated: Grapeshot trips; Ral / Wrenn's Resolve / rituals do not).
+_STORM_RE = re.compile(r"\bStorm\b")
 
 
 def _load_fidelity_map():
@@ -249,6 +254,7 @@ def _detect_mechanics(db, mainboard):
         "counterspell_on_stack": 0,
         "planeswalker_loyalty": 0,
         "warp": 0,
+        "storm": 0,
         "instant_speed_combat_trick": 0,
     }
     evidence = {k: [] for k in counts}
@@ -285,6 +291,11 @@ def _detect_mechanics(db, mainboard):
         if "warp" in keywords or _WARP_RE.search(oracle):
             counts["warp"] += qty
             evidence["warp"].append(name)
+
+        # storm: keyword list (primary) or printed "Storm" keyword in oracle (fallback).
+        if "storm" in keywords or _STORM_RE.search(oracle):
+            counts["storm"] += qty
+            evidence["storm"].append(name)
 
         # instant_speed_combat_trick: instant granting +X/+X or protection.
         if "instant" in front_type.lower() and (
@@ -324,6 +335,14 @@ def _severity_for_counts(counts, modeled=frozenset()):
         sev["warp"] = "high"
     else:
         sev["warp"] = "unmodelable" if counts["warp"] >= 1 else "high"
+
+    # storm: binary-central like warp (any storm-keyword payoff => the combo turn IS the
+    # plan), NOT density-tiered like counterspells. Credited high only when the deck's
+    # match-APL opts into WANTS_STORM AND an r3- proof exists (_apl_modeled_capabilities).
+    if "storm" in modeled:
+        sev["storm"] = "high"
+    else:
+        sev["storm"] = "unmodelable" if counts["storm"] >= 1 else "high"
 
     sev["planeswalker_loyalty"] = (
         "low" if counts["planeswalker_loyalty"] >= 3 else "high")
@@ -380,6 +399,8 @@ def _apl_modeled_capabilities(deck_name):
             modeled.add("warp")
         if getattr(cls, "WANTS_PRIORITY_STACK", False) and _proof("r1-"):
             modeled.add("counterspell_on_stack")
+        if getattr(cls, "WANTS_STORM", False) and _proof("r3-"):
+            modeled.add("storm")
     except Exception:
         return set()
     return modeled

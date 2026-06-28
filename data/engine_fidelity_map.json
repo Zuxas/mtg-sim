@@ -1,5 +1,6 @@
 {
   "warp": "engine-fidelity-gaps-warp-mechanic-not-modeled",
+  "storm": "engine-fidelity-gaps-storm-mechanic-match-path",
   "counterspell_on_stack": "sim-no-stack-priority",
   "hidden_information": "sim-no-hidden-information",
   "instant_speed_combat_trick": "sim-no-instant-speed-combat",

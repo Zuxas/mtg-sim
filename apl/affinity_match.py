@@ -14,6 +14,7 @@ from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
+from apl.aware_match_apl import AwareMatchAPL
 from engine.match_state import safe_power, safe_toughness
 
 KAPPA      = "Kappa Cannoneer"
@@ -33,7 +34,7 @@ ARTIFACTS = {MOX_OPAL, BAUBLE, EE, SHADOWSPEAR, SKATEBOARD, WEAPONS,
              "Tormod's Crypt", "Claws of Gix", "Welding Jar", "Aether Spellbomb", "Pithing Needle"}
 
 
-class IzzetAffinityMatchAPL(MatchAPL):
+class IzzetAffinityMatchAPL(AwareMatchAPL):
     name = "Izzet Affinity"
     win_condition_damage = 20
     max_turns = 10
@@ -43,10 +44,18 @@ class IzzetAffinityMatchAPL(MatchAPL):
     # either seat opts in; non-warp matchups stay byte-identical). The cast loop
     # warp-casts Pinnacle cheaply for an early Drone-engine turn, the tick exiles
     # it, and the recast block below replays it for full value on a later turn.
-    # NOTE: counters (Metallic Rebuke) are NOT yet routed through R1 -- this class
-    # extends MatchAPL (no AwareMatchAPL priority_action), so WANTS_PRIORITY_STACK
-    # stays off; that is Stage B (see IMPERFECTIONS izzet-affinity-counters-stage-b).
     WANTS_WARP = True
+
+    # R1 opt-in (Stage B 2026-06-27): now extends AwareMatchAPL, so the inherited
+    # priority_action / _r1_choose_counter route the 3 Metallic Rebukes through the
+    # shipped stack-priority machinery (+ COUNTER_VALIDITY["Metallic Rebuke"]). Flips
+    # the fidelity gate counterspell_on_stack low -> high (PROMOTABLE). MRO note: this
+    # class's own keep/bottom/main_phase*/declare_attackers/declare_blockers shadow
+    # AwareMatchAPL's, so combat + mulligan are UNCHANGED by the re-base.
+    WANTS_PRIORITY_STACK = True
+    COUNTER_CARDS = {REBUKE}
+    COUNTER_COST = 3  # _pay_for_counter charges full {2}{U}=3 (no Improvise model);
+                      # reserve fires only conditionally (reserve_mana). Phase-2 sweep {0,1,2,3}.
 
     def __init__(self):
         self._artifact_count = 0
@@ -263,6 +272,33 @@ class IzzetAffinityMatchAPL(MatchAPL):
         for atk, blk in zip(attackers_sorted, blockers_sorted):
             assignments[id(atk)] = [blk]
         return assignments
+
+    # ---- Stage B: keep the AwareMatchAPL re-base blast radius minimal ----------
+    # The inherited combat-instant hooks would newly fire on defense (tapping our
+    # lands for a scan that finds nothing castable -- affinity has no MATCH_REMOVAL).
+    # No-op them so only the intended R1 counters + reserve_mana change behavior.
+    def pre_combat_instant(self, gs, opponent):
+        pass
+
+    def post_attackers_instant(self, gs, opponent, attackers):
+        pass
+
+    def _affinity_is_beatdown(self, gs):
+        """Local beatdown check. Do NOT reuse AwareMatchAPL._i_am_beatdown -- it reads
+        match-dmg attrs this APL's overridden main path may not populate."""
+        attackers = sum(1 for c in gs.zones.battlefield
+                        if c.has(Tag.CREATURE) and not c.is_land()
+                        and not getattr(c, "summoning_sickness", False))
+        return attackers >= 2 or getattr(gs, "damage_dealt", 0) >= 10
+
+    def reserve_mana(self, gs, opponent):
+        """Hold up Metallic Rebuke ONLY when we have one AND aren't the beatdown, so the
+        tempo tax doesn't tank the aggro clock. COUNTER_COST swept in Phase 2."""
+        has_rebuke = any(c.name == REBUKE for c in gs.zones.hand)
+        if has_rebuke and self.COUNTER_COST > 0 and not self._affinity_is_beatdown(gs):
+            gs.mana_reserve = self.COUNTER_COST
+        else:
+            gs.mana_reserve = 0
 
     def respond_to_spell(self, gs, opponent, spell):
         """Metallic Rebuke — affinity counter ({2}{U} - artifacts)."""

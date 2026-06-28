@@ -62,6 +62,10 @@ COUNTER_VALIDITY = {
     # to fire only on priority targets (Sapling Nursery, Earthbender Ascension, etc.)
     # or CMC>=3 spells.
     "Get Out":              (lambda s: s.has(Tag.CREATURE) or s.has(Tag.ENCHANTMENT), 3),
+    # Metallic Rebuke (Stage B): soft counter ({2}{U}, affinity-reduced IRL). base_cmc=1
+    # value-gate lets it answer cheap spells; _pay_for_counter still charges the full
+    # printed cmc (3), so it fires LESS than reality (honest under-model, never a cheat).
+    "Metallic Rebuke":      (lambda s: True,                               1),
 }
 
 # Spells worth countering (high-impact engines / removal / finishers).

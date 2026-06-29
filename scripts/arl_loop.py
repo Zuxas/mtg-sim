@@ -137,6 +137,100 @@ def _real_apl_class(resolved):
 
 
 # ---------------------------------------------------------------------------
+# Advisory third signal: LLM-as-judge decision-quality score
+# ---------------------------------------------------------------------------
+# Wires harness/agents/scripts/apl_judge.py into the EVALUATE step as a THIRD,
+# NON-BLOCKING signal alongside the deterministic engine-fidelity gate
+# (arl_profile, stamped as confidence/data_quality) and gauntlet FWR. It is
+# GUARDED + LAZY + FAIL-SOFT: importing apl_judge is deferred to call time and
+# every failure mode (harness path absent, apl_judge unimportable, Ollama/LLM
+# unavailable, no applicable questions) returns None so the ARL keeps running
+# untouched. The score is ADVISORY ONLY -- it NEVER promotes, mutates, or
+# discards (see impl-plan 2026-06-28, "ARL integration" seam).
+_JUDGE_SKIP_LOGGED = False  # log the unavailable/no-question skip once, not per-iter
+
+
+def _judge_skip(msg):
+    """Log a judge-skip reason at most once per process (avoids per-iteration
+    spam when Ollama is down for a long-running loop)."""
+    global _JUDGE_SKIP_LOGGED
+    if not _JUDGE_SKIP_LOGGED:
+        log(msg)
+        _JUDGE_SKIP_LOGGED = True
+
+
+def _resolved_apl_basename(resolved, item):
+    """Source-file basename of the APL that actually played the gauntlet.
+
+    Keyed on `resolved` (not item.apl_file): apl_judge matches a question's
+    target_apls (canonical APL basenames like 'boros_energy_match.py') against
+    this name. When a candidate resolves to a known archetype, resolved's
+    source file IS the canonical APL the questions target; a novel candidate
+    resolves to its stub and correctly finds no applicable questions. Falls
+    back to item.apl_file basename, then None. Never raises."""
+    try:
+        import inspect
+        target = resolved
+        inner = getattr(resolved, "inner", None)
+        if inner is not None and "Humans" not in type(inner).__name__:
+            target = inner
+        src = inspect.getfile(type(target))
+        return os.path.basename(src)
+    except Exception:
+        pass
+    apl_file = item.get("apl_file") if isinstance(item, dict) else None
+    return os.path.basename(apl_file) if apl_file else None
+
+
+def _judge_decision_quality(apl_basename):
+    """Advisory LLM-as-judge decision-quality score in [0,1], or None.
+
+    GUARDED + LAZY + FAIL-SOFT. Returns None (and the ARL proceeds unchanged)
+    if the harness path/apl_judge is unimportable, the LLM is unavailable, the
+    question set is missing, or no question applies to this APL."""
+    if not apl_basename:
+        return None
+    try:
+        if HARNESS_SCRIPTS not in sys.path:
+            sys.path.insert(0, HARNESS_SCRIPTS)
+        import apl_judge  # noqa: E402
+    except Exception as e:
+        _judge_skip("apl_judge import failed; decision-quality scoring "
+                    "skipped (%s)." % e)
+        return None
+    try:
+        if not apl_judge.check_llm_available():
+            _judge_skip("apl_judge: LLM unavailable; decision-quality "
+                        "scoring skipped.")
+            return None
+        if not os.path.exists(apl_judge.DEFAULT_QUESTIONS):
+            _judge_skip("apl_judge: question set missing; scoring skipped.")
+            return None
+        questions = apl_judge.load_json(apl_judge.DEFAULT_QUESTIONS)
+        if not apl_judge.applicable_questions(apl_basename, questions):
+            return None  # common for novel candidates; not an error, no log
+        res = apl_judge.score_apl(apl_basename, questions)
+        return res.get("score")
+    except Exception as e:  # fail-soft: any judge error must not break the loop
+        log("apl_judge scoring failed (fail-soft, skipped): %s" % e)
+        return None
+
+
+def _stamp_decision_quality(result, apl_basename):
+    """Stamp result['decision_quality_score'] from the LLM-as-judge (advisory).
+
+    Mutates `result` in place by reference. Fail-soft: leaves `result`
+    unchanged when the judge is unavailable. Returns the score (or None).
+    ADVISORY ONLY -- never gates promote/mutate/discard."""
+    dq = _judge_decision_quality(apl_basename)
+    if dq is not None:
+        result["decision_quality_score"] = round(dq, 3)
+        log("decision_quality_score=%.3f (advisory; does not gate promotion)"
+            % dq)
+    return dq
+
+
+# ---------------------------------------------------------------------------
 # Tiny logger (ASCII-only)
 # ---------------------------------------------------------------------------
 def _now_iso():
@@ -1102,6 +1196,10 @@ def run_iteration(args):
     result["fwr_runs"] = [fwr1, fwr2]
     if item.get("profile_file"):
         result["profile_file"] = item.get("profile_file")
+    # Advisory THIRD signal: LLM-as-judge decision-quality score, keyed on the
+    # APL that actually played (resolved). Guarded/lazy/fail-soft; stamped
+    # alongside data_quality/confidence. NEVER auto-promotes/discards.
+    _stamp_decision_quality(result, _resolved_apl_basename(resolved, item))
     state.setdefault("results", []).append(result)
     item["fwr"] = avg_fwr
     item["status"] = "done"

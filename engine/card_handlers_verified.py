@@ -26480,10 +26480,19 @@ def _phlage_titan_etb(gs, card):
 
     Model the enter/attack trigger on ETB: 3 damage via the standard
     any-target helper (kills a killable opp creature else faces) plus
-    3 life to us. The sacrifice-unless-escaped clause and the recurring
-    attack trigger are not modeled here — they need cast-source
-    tracking and a combat hook respectively. Escape is an alternate
-    cast cost handled by the cost path, not an ETB effect."""
+    3 life to us. Phlage's body is left on the battlefield as a 6/6
+    after this ETB resolves: the "sacrifice it unless it escaped"
+    clause is NOT applied in this generic handler, so a hardcast Phlage
+    (which should be sacrificed immediately) instead stays as a 6/6.
+    This is the known "Phlage 6/6 stays" model gap (see TODO.md "Known
+    model gaps"); resolving it needs cast-source tracking to tell a
+    hardcast from an escape. The recurring attack trigger is likewise
+    not wired here (needs a combat hook). Both the hardcast-sacrifice
+    vs escape-stays split and the attack trigger are handled instead by
+    the dedicated Boros/Jeskai match APLs (apl/boros_energy_match.py,
+    apl/jeskai_blink_match.py), which own Phlage sequencing. Escape is
+    an alternate cast cost handled by the cost path, not an ETB
+    effect."""
     _damage_any_helper(gs, 3)
     gs.life += 3
     gs._log("  Phlage ETB: 3 dmg + 3 life (attack trigger not wired)")

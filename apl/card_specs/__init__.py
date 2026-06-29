@@ -13,7 +13,7 @@ branches when there's no opponent state.
 Spec: harness/specs/2026-04-29-card-specs-framework.md
 Findings: harness/knowledge/tech/jeskai-blink-card-specs-2026-04-28.md
 """
-from . import phlage, ragavan, phelia, ephemerate
+from . import phlage, ragavan, phelia, ephemerate, solitude, galvanic_discharge
 from . import quantum_riddler, teferi_time_raveler, consign_to_memory, wrath_of_the_skies
 # Secrets of Strixhaven Standard — wave 1
 from . import (prismari, silverquill, emeritus_of_conflict, rootha,
@@ -34,6 +34,7 @@ from . import (duskmourn_overlords, duskmourn_spells, duskmourn_creatures,
 __all__ = [
     # Tier 1 — Modern core
     "phlage", "ragavan", "phelia", "ephemerate",
+    "solitude", "galvanic_discharge",
     # Tier 2 — Modern shared
     "quantum_riddler", "teferi_time_raveler", "consign_to_memory",
     "wrath_of_the_skies",

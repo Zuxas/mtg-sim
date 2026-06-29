@@ -7,6 +7,13 @@ from apl.izzet_maestro_standard import IzzetMaestroAPL
 
 
 class IzzetMaestroStandardMatchAPL(MatchAPL, IzzetMaestroAPL):
+    # Molten-Core Maestro Opus trigger: wired in IzzetMaestroAPL._fire_opus_triggers
+    # and called from main_phase/main_phase2. This class inherits those methods
+    # (MatchAPL.main_phase_match -> self.main_phase/self.main_phase2 via MRO), so
+    # the Opus +1/+1 counter (and 5+ mana {R} ramp) fires in match play with no
+    # second call site here -- adding one would double-fire. Known gap: removal
+    # instants/sorceries cast through MatchAPL._match_cast_removal bypass
+    # gs.cast_spell, so Opus does not trigger for those (engine path, not ours).
     ARCHETYPE = "tempo"
     SB_PLANS = {
         "aggro": (

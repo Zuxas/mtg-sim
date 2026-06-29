@@ -62,6 +62,11 @@ FOREST_        = "Forest"
 ICETILL        = "Icetill Explorer"
 
 BOUNCE_LANDS   = {GRUUL_TURF, SIMIC_CHAMBER, SELESNYA_SANC}
+# Stable iteration order for the bounce lands. Iterating the *set* BOUNCE_LANDS
+# yields a PYTHONHASHSEED-dependent (cross-process nondeterministic) order; any
+# loop that builds a priority/fetch list from it must iterate this tuple instead.
+# (Set membership tests `name in BOUNCE_LANDS` stay on the set — order-independent.)
+BOUNCE_LANDS_ORDER = (GRUUL_TURF, SIMIC_CHAMBER, SELESNYA_SANC)
 ALWAYS_UNTAPPED = {FOREST_, "Snow-Covered Forest", BOSEIJU, OTAWARA, HANWEIR,
                    URZA_CAVE, SHIFTING, GARDENS, DRYAD_ARBOR, "Ghost Quarter"}
 FOREST_TYPES    = {FOREST_, "Snow-Covered Forest", DRYAD_ARBOR}
@@ -998,7 +1003,9 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                         priority.extend([TITAN, ZENITH, PACT, SCAPESHIFT])
                     if not has_bounce:
                         # Bounce lands are permanents — Rumble can find them!
-                        for bl in BOUNCE_LANDS:
+                        # Iterate the stable-ordered tuple, not the set (set order is
+                        # PYTHONHASHSEED-dependent -> cross-process nondeterminism).
+                        for bl in BOUNCE_LANDS_ORDER:
                             priority.append(bl)
                     # Always want these as fallbacks
                     if has_engine and has_threat:
@@ -1680,8 +1687,9 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
                             for lib_c in gs.zones.library:
                                 if lib_c.name == ECHOING and lib_c not in fetch_order:
                                     fetch_order.append(lib_c); break
-                        # Get bounce
-                        for bl in BOUNCE_LANDS:
+                        # Get bounce (stable order: set iteration is PYTHONHASHSEED-
+                        # dependent and this loop picks which lands hit the battlefield)
+                        for bl in BOUNCE_LANDS_ORDER:
                             for lib_c in gs.zones.library:
                                 if lib_c.name == bl and lib_c not in fetch_order:
                                     fetch_order.append(lib_c); break

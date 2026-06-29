@@ -133,15 +133,16 @@ class JeskaiBlinkAPL(BaseAPL):
         # 5. Teferi (3 mana) — -3 for draw (bounce dead in goldfish)
         teferi_time_raveler.cast(gs)
 
-        # 6. Fable (3 mana saga) — Ch1 loot
+        # 6. Fable (3 mana saga) — cast only. The engine owns all saga
+        #    chapters: Ch I (Goblin token) fires on ETB and Ch II (loot,
+        #    discard up to 2 / draw that many) fires on the next upkeep via
+        #    engine/sagas.py:_fable_chapter_ii. The prior inline "Ch1 loot"
+        #    here was mislabeled (Ch I is the token, not a loot) and produced
+        #    a redundant double-loot alongside the engine's authoritative
+        #    Ch II. Removed 2026-06-29 so Fable loots exactly once.
         for c in list(gs.zones.hand):
             if c.name == FABLE and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
-                if gs.zones.hand:
-                    worst = min(gs.zones.hand, key=self._card_value)
-                    gs.zones.hand.remove(worst)
-                    gs.zones.graveyard.append(worst)
-                    gs.zones.draw(1)
                 break
 
         # 7. Ephemerate — blink best ETB on board (re-trigger value)
@@ -163,7 +164,7 @@ class JeskaiBlinkAPL(BaseAPL):
     # Helpers
     # -------------------------------------------------------------------
     def _card_value(self, c: Card) -> int:
-        """Rate card value for discard decisions (Casey upkeep, Fable loot)."""
+        """Rate card value for discard decisions (Casey Jones discard 3)."""
         if c.is_land():       return 1
         if c.name == phelia.NAME:           return 9
         if c.name == phlage.NAME:           return 7

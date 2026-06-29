@@ -717,13 +717,22 @@ class GameState:
     # ─────────────────────────────────────────────────────────────────────
     _WARP_CARDS = {
         # name: (warp_cost_str, warp_cmc)
-        "Quantum Riddler":      ("1U", 2),  # full {3U U} CMC 5; warp 2-mana
-        "Starbreach Whale":     ("1U", 2),  # full {4U} CMC 5
-        "Starfield Shepherd":   ("1W", 2),  # full {3W W}
-        "Close Encounter":      ("1G", 2),  # has Warp via additional cost
-        "Gravitic Herald":      ("1U", 2),
-        "Warped Tusker":        ("1G", 2),
-        "Knight Luminary":      ("1W", 2),
+        "Quantum Riddler":      ("{1}{U}", 2),  # full {3}{U}{U} CMC 5; warp {1}{U}
+        "Starbreach Whale":     ("{1}{U}", 2),  # full {4}{U} CMC 5; warp {1}{U}
+        "Starfield Shepherd":   ("{1}{W}", 2),  # full {3}{W}{W}; warp {1}{W}
+        # FLAG (warp-cost-unbraced-no-op): the three entries below are NOT
+        # Warp-keyword cards -- verified against scryfall_oracle_cards.json,
+        # none has a "Warp {cost}" line. They appear to be erroneous
+        # auto-generated entries (all CMC 2 / "1X" template; Gravitic Herald's
+        # data is doubly wrong -- listed {1}{U} but the card is {3}{B} CMC 4).
+        # Left UNBRACED on purpose: bracing would invent a warp cost that does
+        # not exist. No APL/driver warp-casts them (grep-verified), so the
+        # free-cast no-op is latent, not live. RECOMMEND removal from this map
+        # as a follow-up (structural change, out of scope for this fix).
+        "Close Encounter":      ("1G", 2),  # NOT a warp card ({1}{G} EOE instant)
+        "Gravitic Herald":      ("1U", 2),  # NOT a warp card ({3}{B}; grants warp to others)
+        "Warped Tusker":        ("1G", 2),  # NOT a warp card ({7} MH3 Eldrazi)
+        "Knight Luminary":      ("{1}{W}", 2),  # full {3}{W}; warp {1}{W}
         # Pinnacle Emissary (EOE, Izzet Affinity): full {1}{U}{R} CMC 3; warp {U/R}.
         # BRACED so parse_cost actually reads the pip and the warp cost VALIDATES +
         # is PAID (legacy entries above use the unbraced "1U" form, which parse_cost

@@ -519,6 +519,18 @@ class GameState:
         restless = self.activate_restless_lands()
         attackers.extend(restless)
 
+        # ── Fable of the Mirror-Breaker Goblin Shaman token: "Whenever
+        #    this token attacks, create a Treasure token." The trigger is
+        #    flagged (_treasure_on_attack) on the token when Fable's
+        #    chapter I resolves (engine/sagas.py:_fable_chapter_i). This
+        #    is the goldfish-side wiring; match mode models the same
+        #    trigger in apl/jeskai_blink_match.py. The Treasure is
+        #    auto-sacrificed for mana at the next upkeep (real ramp).
+        for c in attackers:
+            if getattr(c, "_treasure_on_attack", False):
+                self.make_treasure_token()
+                self._log(f"  {c.name} attacks: create Treasure")
+
         # ── Prowess: +1/+1 per noncreature spell cast this turn ─────
         # Standard Prowess: +1/+1 per spell (via counters, reversed post-combat).
         # Slickshot Show-Off: +2/+0 per spell (power only, not toughness).

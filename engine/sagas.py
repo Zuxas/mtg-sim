@@ -124,6 +124,76 @@ def _kuruk_chapter_iii(card, gs):
     gs.transform(card)
 
 
+def _fable_chapter_i(card, gs):
+    """Fable of the Mirror-Breaker I — Create a 2/2 red Goblin Shaman
+    creature token with "Whenever this token attacks, create a Treasure
+    token."
+
+    Oracle (Fable of the Mirror-Breaker // Reflection of Kiki-Jiki):
+      I  — Create a 2/2 red Goblin Shaman creature token with
+           "Whenever this token attacks, create a Treasure token."
+      II — You may discard up to two cards. If you do, draw that many.
+      III— Exile this Saga, then return it transformed.
+
+    The token is flagged with _treasure_on_attack; the goldfish combat
+    step (game_state._do_combat) reads the flag and creates a Treasure
+    each time the token attacks. (Match mode models Fable entirely in
+    apl/jeskai_blink_match.py and never ticks sagas through this module,
+    so this chapter fires goldfish-side only.)
+
+    Token identity (name / P/T / type_line) is preserved byte-for-byte
+    from the prior ETB-handler implementation so the goblin is unchanged;
+    only the chapter dispatch location and the attack-trigger flag are
+    new."""
+    tok = gs._make_token("Goblin Shaman", "2", "2",
+                         "Token Creature — Goblin Shaman")
+    tok._treasure_on_attack = True
+    gs._log("  Fable of the Mirror-Breaker (I): +1 Goblin Shaman token "
+            "(Treasure on attack)")
+
+
+def _fable_chapter_ii(card, gs):
+    """Fable of the Mirror-Breaker II — "You may discard up to two cards.
+    If you do, draw that many cards."
+
+    Goldfish loot heuristic: pitch up to two EXCESS lands (lands beyond
+    the first two in hand) and draw that many fresh cards. Spells are
+    never discarded here — excess lands are the safe pitch that digs
+    toward action without throwing away gas. Modeling the "up to two"
+    optionality as "pitch excess lands only" keeps it strictly value-
+    positive (never discards a needed land or any spell)."""
+    hand = gs.zones.hand
+    lands = [c for c in hand if c.is_land()]
+    excess = lands[2:][:2]          # keep two lands, pitch up to two more
+    n = 0
+    for c in excess:
+        hand.remove(c)
+        gs.zones.graveyard.append(c)
+        n += 1
+    if n:
+        gs.zones.draw(n)
+    gs._log(f"  Fable of the Mirror-Breaker (II): discard {n}, draw {n}")
+
+
+def _fable_chapter_iii(card, gs):
+    """Fable of the Mirror-Breaker III — "Exile this Saga, then return it
+    to the battlefield transformed under your control" as Reflection of
+    Kiki-Jiki. Uses the shared gs.transform() pattern (same as Kumano /
+    Roku / Kuruk chapter III). Fable's back_face (Reflection of
+    Kiki-Jiki) is populated at deck-load from card_faces[1], so the flip
+    succeeds; if absent it is a safe no-op (the saga simply stays).
+
+    Note: Reflection of Kiki-Jiki's activated ability ("{1}, {T}: Create
+    a token that's a copy of another nonlegendary creature you control,
+    except it has haste. Sacrifice it at the next end step.") is an
+    activated ability that is NOT modeled here — consistent with the
+    other transform back-faces (e.g. Avatar Roku's activated ability).
+    The transform itself (the saga correctly leaving play as a creature
+    permanent rather than sitting inert forever) is the bounded
+    correctness fix; the tap-to-copy line is documented residual."""
+    gs.transform(card)
+
+
 SAGA_EFFECTS: dict[str, dict[int, Callable]] = {
     "Kumano Faces Kakkazan": {
         1: _kumano_chapter_i,
@@ -140,6 +210,11 @@ SAGA_EFFECTS: dict[str, dict[int, Callable]] = {
         2: _kuruk_chapter_i_ii,
         3: _kuruk_chapter_iii,
     },
+    "Fable of the Mirror-Breaker": {
+        1: _fable_chapter_i,
+        2: _fable_chapter_ii,
+        3: _fable_chapter_iii,
+    },
 }
 
 # Optional: per-card explicit final chapter. Defaults to max(chapters).
@@ -147,6 +222,7 @@ SAGA_FINAL_CHAPTER: dict[str, int] = {
     "Kumano Faces Kakkazan": 3,
     "The Legend of Roku":    3,
     "The Legend of Kuruk":   3,
+    "Fable of the Mirror-Breaker": 3,
 }
 
 

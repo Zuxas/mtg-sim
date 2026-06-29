@@ -8714,9 +8714,19 @@ def _extraction_specialist_etb(gs, card):
 
 def _fable_mirror_breaker_etb(gs, card):
     """Fable of the Mirror-Breaker — {2}{R} Saga.
-    'I — Goblin Shaman 2/2 (treasure on attack).
-     II — Discard any number, draw that many.
-     III — Transform into Reflection of Kiki-Jiki.'"""
+
+    SUPERSEDED 2026-06-28: Fable is now wired as a real Saga in
+    engine/sagas.py SAGA_EFFECTS with all three chapters —
+      I  — 2/2 Goblin Shaman token WITH "Treasure on attack" (the
+           attack trigger is now actually modeled; see
+           _fable_chapter_i + game_state._do_combat),
+      II — discard up to two, draw that many (loot), and
+      III— transform into Reflection of Kiki-Jiki.
+    This ETB handler is NO LONGER registered in _ETB_HANDLERS (the
+    registry line was removed) — leaving it registered would have
+    created the chapter-I goblin TWICE on Fable's ETB (once via the
+    saga tick in game_state._apply_entering_etb, once here). Retained
+    only for reference / git-history continuity; do not re-register."""
     gs._make_token("Goblin Shaman", "2", "2",
                     "Token Creature — Goblin Shaman")
     gs._log("  Fable of the Mirror-Breaker (I): +1 Goblin Shaman token")
@@ -8980,7 +8990,10 @@ _SPELL_HANDLERS.update({
 
 _ETB_HANDLERS.update({
     "Extraction Specialist":       _extraction_specialist_etb,
-    "Fable of the Mirror-Breaker": _fable_mirror_breaker_etb,
+    # "Fable of the Mirror-Breaker" intentionally NOT registered here —
+    # superseded by the Saga chapter dispatch in engine/sagas.py
+    # SAGA_EFFECTS (registering it would double-create the chapter-I
+    # Goblin token on ETB). See _fable_mirror_breaker_etb docstring.
     "Faerie Dreamthief":           _faerie_dreamthief_etb,
     "Faerie Macabre":              _faerie_macabre_etb,
     "Fallaji Archaeologist":       _fallaji_archaeologist_etb,
@@ -17693,9 +17706,27 @@ def _celestial_colonnade_etb(gs, card):
 
 
 def _arena_of_glory_etb(gs, card):
-    """Arena of Glory — {T}: Add C. {R},T,sac: Creatures you cast
-    this turn gain haste."""
-    gs._log("  Arena of Glory: mass haste")
+    """Arena of Glory — land. Enters tapped unless you control a Mountain.
+      {T}: Add {R}.
+      {R}, {T}, Exert this land: Add {R}{R}. If that mana is spent on a
+      creature spell, it gains haste until end of turn.
+
+    SKIPPED (haste-grant not wired engine-side; documented 2026-06-28).
+    The haste rider is NOT an ETB effect — it is an *activated mana
+    ability* whose haste grant is conditional on (a) paying {R}, (b)
+    tapping + exerting the land (it won't untap next turn), and (c) the
+    produced {R}{R} actually being SPENT on a creature spell. The
+    goldfish engine has no mana-source tracking (it cannot tell which
+    mana paid for which spell), no exert-aware activation timing, and no
+    APL hook that decides when to use Arena. A bounded "ETB grants mass
+    haste" or "free haste to one creature each turn" shim would OVER-
+    model it (haste with no {R} cost, no exert downside, every turn),
+    which would shift the LOCKED Boros Energy baseline (Boros runs Arena)
+    in the wrong direction — i.e. it would be an over-correction, not a
+    fidelity fix. Faithful modeling needs mana-source tracking + exert +
+    APL cooperation, which is out of bounded scope. Left as a logging
+    no-op. (Match mode handles Arena timing inside the match APLs.)"""
+    gs._log("  Arena of Glory: haste land (haste-grant not modeled — see handler doc)")
 
 
 def _cori_mountain_monastery_etb(gs, card):
@@ -26486,13 +26517,27 @@ def _phlage_titan_etb(gs, card):
     (which should be sacrificed immediately) instead stays as a 6/6.
     This is the known "Phlage 6/6 stays" model gap (see TODO.md "Known
     model gaps"); resolving it needs cast-source tracking to tell a
-    hardcast from an escape. The recurring attack trigger is likewise
-    not wired here (needs a combat hook). Both the hardcast-sacrifice
-    vs escape-stays split and the attack trigger are handled instead by
-    the dedicated Boros/Jeskai match APLs (apl/boros_energy_match.py,
-    apl/jeskai_blink_match.py), which own Phlage sequencing. Escape is
-    an alternate cast cost handled by the cost path, not an ETB
-    effect."""
+    hardcast from an escape.
+
+    ATTACK TRIGGER — deliberately NOT wired in the shared engine combat
+    step (SKIPPED, documented 2026-06-28). "Whenever Phlage ... attacks,
+    it deals 3 damage to any target and you gain 3 life." The natural
+    place would be game_state._do_combat, but the goldfish Boros APL
+    ALREADY fires this trigger itself (apl/boros_energy.py:_handle_phlage
+    with phase='combat', reached via _simulate_combat_triggers ->
+    _dispatch_special_mechanics). Boros runs _do_combat AND its own
+    combat-trigger pass in the same game, so an engine hook would
+    DOUBLE-FIRE Phlage there (6 damage + 6 life per attack instead of
+    3+3), corrupting the Boros goldfish baseline. The shared engine
+    combat step cannot distinguish APLs that self-handle Phlage (Boros)
+    from those that do not (the Jeskai Blink goldfish SHIM). The attack
+    trigger IS already modeled where it matters: the dedicated
+    Boros/Jeskai *match* APLs (apl/boros_energy_match.py,
+    apl/jeskai_blink_match.py) and the Boros *goldfish* APL. Wiring it
+    once in the engine would require also removing the redundant Boros
+    APL handler plus a coordinated re-baseline — out of bounded scope and
+    out of this task's file ownership (apl/). Escape is an alternate cast
+    cost handled by the cost path, not an ETB effect."""
     _damage_any_helper(gs, 3)
     gs.life += 3
     gs._log("  Phlage ETB: 3 dmg + 3 life (attack trigger not wired)")

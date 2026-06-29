@@ -1,0 +1,48 @@
+// Sultai Midrange (Modern) - kawasaki hirotaka, 2nd place
+// Event: Champions Cup Store Qualifier in Hiroshima @ Hareruya (Japan), 2026-04-24
+// Source: mtg_meta.db deck_id=127635 (archetype "Sultai Midrange", format modern)
+// Plan: Psychic Frog / Abhorrent Oculus value-tempo with Fatal Push + Flares for
+//       removal, Birthing Ritual as a value engine, free counters (Flare of Denial,
+//       Force of Negation, Subtlety) to protect the board and answer key spells.
+// Main: 60 | Sideboard: 15
+
+4 Psychic Frog
+4 Abhorrent Oculus
+4 Quantum Riddler
+3 Bloodghast
+2 Aven Heartstabber
+2 Satoru, the Infiltrator
+2 Subtlety
+1 Boggart Trawler
+4 Birthing Ritual
+3 Fatal Push
+3 Flare of Malice
+2 Flare of Denial
+1 Force of Negation
+2 Culling Ritual
+2 Pick Your Poison
+2 Unearth
+4 Misty Rainforest
+4 Verdant Catacombs
+2 Polluted Delta
+1 Overgrown Tomb
+1 Watery Grave
+1 Breeding Pool
+1 Undercity Sewers
+1 Underground Mortuary
+1 Hedge Maze
+1 Forest
+1 Island
+1 Swamp
+
+Sideboard
+3 Consign to Memory
+2 Endurance
+2 Force of Vigor
+1 Culling Ritual
+1 Force of Despair
+2 Graveyard Trespasser
+1 Harbinger of the Seas
+1 Professor Dellian Fel
+1 Surgical Extraction
+1 Witherbloom Charm

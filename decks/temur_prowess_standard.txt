@@ -1,0 +1,38 @@
+// Temur Prowess - Standard (Break Out tempo-prowess)
+// Source: mtg_meta.db deck_id=14216 (1st, MTGO League 2026-07-27)
+// Archetype: Temur Prowess (154/158 DB samples are Standard)
+// Plan: cheap RG/G creatures + cantrip/pump spells (Violent Urge, Overprotect,
+//   Dreadmaw's Ire, Bushwhack) feed prowess-style growth; Break Out cheats
+//   Balustrade Wurm / Summon: Brynhildr onto the battlefield early.
+// Main: 60 | Sideboard: 15
+
+4 Keen-Eyed Curator
+4 Fear of Missing Out
+4 Patchwork Beastie
+4 Wildfire Wickerfolk
+4 Break Out
+4 Violent Urge
+3 Tersa Lightshatter
+3 Bushwhack
+2 Cenote Scout
+2 Overprotect
+2 Dreadmaw's Ire
+2 Balustrade Wurm
+1 Summon: Brynhildr
+7 Forest
+4 Copperline Gorge
+4 Thornspire Verge
+4 Karplusan Forest
+2 Mountain
+
+// Sideboard
+2 Sunspine Lynx
+2 Abrade
+2 Pick Your Poison
+2 Twinmaw Stormbrood
+2 Lithomantic Barrage
+1 Pyroclasm
+1 Scrapshooter
+1 Ghost Vacuum
+1 Fire Magic
+1 Sword of Once and Future

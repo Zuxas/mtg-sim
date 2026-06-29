@@ -22,6 +22,10 @@ from apl.mulligan import take_opening_hand, generic_keep, generic_bottom
 #             None = load from playbook
 
 APL_REGISTRY = {
+    # ── Blitz 2026-06-28: field-gap archetypes (deck resolution for the gauntlet) ──
+    "temurprowess":    ("apl.temur_prowess_match",   "TemurProwessMatchAPL",   "decks/temur_prowess_standard.txt"),
+    "sultaimidrange":  ("apl.sultai_midrange_match",  "SultaiMidrangeMatchAPL",  "decks/sultai_midrange_modern.txt"),
+    "grixismidrange":  ("apl.grixis_midrange_match",  "GrixisMidrangeMatchAPL",  "decks/dimir_murktide_modern.txt"),
     # ── Legacy ──
     "legacyhumans":    ("apl.humans",          "HumansAPL",         "decks/humans_legacy.txt"),
     "humans":          ("apl.humans",           "HumansAPL",         "decks/humans_legacy.txt"),
@@ -243,6 +247,10 @@ APL_REGISTRY = {
 # ── Match APL Registry ─────────────────────────────────────────────────
 # Maps deck keys to MatchAPL subclasses (opponent-aware, two-player games)
 MATCH_APL_REGISTRY = {
+    # Blitz 2026-06-28: 3 field-gap match APLs (WF-1, smoke-passed, confidence medium).
+    "temurprowess":    ("apl.temur_prowess_match",   "TemurProwessMatchAPL"),
+    "sultaimidrange":  ("apl.sultai_midrange_match",  "SultaiMidrangeMatchAPL"),
+    "grixismidrange":  ("apl.grixis_midrange_match",  "GrixisMidrangeMatchAPL"),
     "borosenergy":     ("apl.boros_energy_match",   "BorosEnergyMatchAPL"),
     "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern
     "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern alias

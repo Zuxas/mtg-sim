@@ -51,21 +51,21 @@
   "Boros Energy (modern)": {
     "Amulet Titan": 54.0,
     "Ruby Storm": 50.0,
+    "Neobrand": 59.2,
+    "Belcher": 59.4,
     "Goryo's Vengeance": 54.0,
     "Living End": 51.0,
     "Grixis Reanimator": 49.0,
-    "Jeskai Control": 61.0,
-    "Esper Blink": 55.0,
-    "Eldrazi Ramp": 46.0,
-    "Belcher": 61.9,
-    "Neobrand": 61.8,
-    "Dimir Midrange": 65.0,
-    "5C Humans": 47.7,
-    "Eldrazi Tron": 85.0,
-    "Affinity": 76.0,
-    "Izzet Prowess": 41.4,
-    "Domain Zoo": 72.9,
-    "Jeskai Blink": 62.9
+    "Dimir Midrange": 100.0,
+    "Esper Blink": 91.3,
+    "Jeskai Control": 96.1,
+    "Eldrazi Ramp": 32.3,
+    "5C Humans": 66.9,
+    "Eldrazi Tron": 85.3,
+    "Izzet Prowess": 39.1,
+    "Affinity": 58.5,
+    "Domain Zoo": 73.0,
+    "Jeskai Blink": 53.2
   },
   "Boros Energy Variant Jermey (modern)": {
     "Amulet Titan": 62.3,
@@ -101,5 +101,62 @@
     "Azorius Tempo": 69.9,
     "Izzet Maestro": 52.3,
     "Simic Ouroboroid": 47.1
+  },
+  "UW Control (modern)": {
+    "Boros Energy": 7.0,
+    "Jeskai Blink": 6.5,
+    "Amulet Titan": 59.0,
+    "Affinity": 30.0,
+    "Ruby Storm": 68.0,
+    "Eldrazi Tron": 37.0
+  },
+  "Jeskai Control (modern)": {
+    "Boros Energy": 39.0,
+    "Jeskai Blink": 40.0,
+    "Amulet Titan": 64.0,
+    "Affinity": 50.0,
+    "Ruby Storm": 68.0,
+    "Eldrazi Tron": 79.5
+  },
+  "Domain Zoo (modern)": {
+    "Boros Energy": 50.0,
+    "Jeskai Blink": 10.0,
+    "Affinity": 50.0
+  },
+  "Amulet Titan (modern)": {
+    "Boros Energy": 12.0,
+    "Jeskai Blink": 5.0,
+    "Ruby Storm": 43.0,
+    "Affinity": 34.0
+  },
+  "Eldrazi Ramp (modern)": {
+    "Boros Energy": 62.0,
+    "Jeskai Blink": 71.0,
+    "Amulet Titan": 31.0,
+    "Affinity": 76.0,
+    "Ruby Storm": 24.0
+  },
+  "Izzet Prowess (modern)": {
+    "Boros Energy": 62.0,
+    "Jeskai Blink": 70.0,
+    "Amulet Titan": 42.0,
+    "Affinity": 75.0,
+    "Ruby Storm": 50.0
+  },
+  "Izzet Affinity (modern)": {
+    "Boros Energy": 35.0,
+    "Jeskai Blink": 50.0,
+    "Affinity": 52.5,
+    "Amulet Titan": 43.0,
+    "Ruby Storm": 47.0
+  },
+  "Affinity (modern)": {
+    "Boros Energy": 35.2,
+    "Jeskai Blink": 37.0,
+    "Amulet Titan": 43.0,
+    "Ruby Storm": 47.0,
+    "Belcher": 59.4,
+    "Goryo's Vengeance": 64.0,
+    "Eldrazi Tron": 50.6
   }
 }

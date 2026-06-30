@@ -1,0 +1,361 @@
+Building matchups: Jermey Dimir Midrange vs 29 opponents
+  Deck file: decks/dimir_midrange_jermey_standard.txt
+  APL:       dimirmidrangejermey
+  Matches:   60 per pairing (120 total jobs)
+
+  9%  (5/58)
+  17%  (10/58)
+  26%  (15/58)
+  34%  (20/58)
+  43%  (25/58)
+  52%  (30/58)
+  60%  (35/58)
+  69%  (40/58)
+  78%  (45/58)
+  86%  (50/58)
+  95%  (55/58)
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [37 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [23 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [30 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [37 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+
+=================================================================
+  Jermey Dimir Midrange -- Bo3 Match WRs vs field
+=================================================================
+  Izzet Spellementals           100.0%  ####################
+  Four-Color Control            100.0%  ####################
+  Four-Color Elemental          100.0%  ####################
+  Temur Lute                     95.0%  ###################
+  Simic Omniscience              90.0%  ##################
+  Boros Discard                  86.7%  #################
+  Mono Green Landfall            85.0%  #################
+  Izzet Maestro                  83.3%  ################
+  Golgari Midrange               81.7%  ################
+  Golgari Control                78.3%  ###############
+  Azorius Momo                   75.0%  ###############
+  Rakdos Discard                 73.3%  ##############
+  Golgari Kona                   73.3%  ##############
+  Jeskai Control                 71.7%  ##############
+  Bant Airbending                65.0%  #############
+  Mardu Discard                  63.3%  ############
+  Dimir Excruciator              61.7%  ############
+  Sultai Control                 61.7%  ############
+  Selesnya Rhythm                61.7%  ############
+  Bant Rhythm                    61.7%  ############
+  Izzet Prowess                  60.0%  ############
+  Boros Dragons                  58.3%  ###########
+  Selesnya Landfall              56.7%  ###########
+  Selesnya Ouroboroid            56.7%  ###########
+  Simic Rhythm                   45.0%  #########
+  Izzet Lessons                  38.3%  #######
+  Azorius Control                35.0%  #######
+  Gruul Aggro                    16.7%  ###
+  Esper Pixie                    11.7%  ##
+
+  Avg unweighted WR:  67.1%
+=================================================================
+
+===============================================================================================
+  FULL STANDARD RC SWISS -- 25 players per deck, 30 archetypes
+  5,000 events | 8 rounds | 750 players | Random top8: 1.1%
+===============================================================================================
+  Deck                         Players  Field%      Avg   Top8%    X-1%    X-2%       EV  Notes
+  ---------------------------- -------  ------  -------  ------  ------  ------  -------
+  Simic Rhythm                      25    3.3%  5.8-2.2   24.2%   24.2%   62.1%  + 23.1%  << DOMINANT
+  Selesnya Landfall                 25    3.3%  5.5-2.5   16.0%   16.0%   51.0%  + 14.9%  << STRONG
+  Gruul Aggro                       25    3.3%  5.3-2.7   11.0%   11.0%   42.4%  +  9.9%  << STRONG
+  Izzet Lessons                     25    3.3%  5.4-2.6   10.9%   10.9%   43.3%  +  9.8%  << STRONG
+  Selesnya Ouroboroid               25    3.3%  5.3-2.7   10.3%   10.3%   39.7%  +  9.2%  << STRONG
+  Selesnya Rhythm                   25    3.3%  5.1-2.9    6.9%    6.9%   31.3%  +  5.8%  << GOOD
+  Jermey Dimir Midrange             25    3.3%  5.0-3.0    6.8%    6.8%   29.5%  +  5.7%    <<< YOUR DECK
+  Bant Rhythm                       25    3.3%  5.0-3.0    6.0%    6.0%   29.7%  +  4.9%  << GOOD
+  Esper Pixie                       25    3.3%  4.9-3.1    5.8%    5.8%   26.8%  +  4.7%  << GOOD
+  Azorius Control                   25    3.3%  4.8-3.2    3.1%    3.1%   21.7%  +  2.0%  
+  Bant Airbending                   25    3.3%  4.7-3.3    2.2%    2.2%   17.4%  +  1.1%  
+  Mono Green Landfall               25    3.3%  4.3-3.7    0.8%    0.8%    8.2%   -0.3%  
+  Izzet Maestro                     25    3.3%  4.1-3.9    0.7%    0.7%    6.7%   -0.4%  
+  Izzet Prowess                     25    3.3%  4.1-3.9    0.3%    0.3%    4.2%   -0.8%  BELOW AVG
+  Mardu Discard                     25    3.3%  4.0-4.0    0.3%    0.3%    3.9%   -0.8%  BELOW AVG
+  Sultai Control                    25    3.3%  4.0-4.0    0.2%    0.2%    4.1%   -0.9%  BELOW AVG
+  Boros Dragons                     25    3.3%  4.1-3.9    0.2%    0.2%    3.6%   -0.9%  BELOW AVG
+  Boros Discard                     25    3.3%  4.0-4.0    0.2%    0.2%    3.3%   -0.9%  BELOW AVG
+  Dimir Excruciator                 25    3.3%  3.9-4.1    0.1%    0.1%    2.6%   -1.0%  BELOW AVG
+  Rakdos Discard                    25    3.3%  3.7-4.3    0.1%    0.1%    1.4%   -1.0%  BELOW AVG
+  Izzet Spellementals               25    3.3%  3.0-5.0    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Azorius Momo                      25    3.3%  3.5-4.5    0.0%    0.0%    0.5%   -1.1%  BELOW AVG
+  Jeskai Control                    25    3.3%  2.6-5.4    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Golgari Midrange                  25    3.3%  3.4-4.6    0.0%    0.0%    0.5%   -1.1%  BELOW AVG
+  Four-Color Control                25    3.3%  1.7-6.3    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Golgari Kona                      25    3.3%  2.8-5.2    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Golgari Control                   25    3.3%  2.7-5.3    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Four-Color Elemental              25    3.3%  1.2-6.8    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Temur Lute                        25    3.3%  2.7-5.3    0.0%    0.0%    0.0%   -1.1%  BELOW AVG
+  Simic Omniscience                 25    3.3%  3.4-4.6    0.0%    0.0%    0.3%   -1.1%  BELOW AVG
+===============================================================================================
+
+  Random expected top8: 1.1% | Field avg record: 4.00 wins
+

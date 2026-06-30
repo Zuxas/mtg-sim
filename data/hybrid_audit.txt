@@ -1,0 +1,442 @@
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [32 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+Unique non-land cards: 24
+
+
+================================================================================
+  Annul    {U}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Counter target artifact or enchantment spell.
+HANDLER (body length: 498 chars):
+      gs._log(f"  {card.name}: counterspell (no target on own turn)")
+
+================================================================================
+  Bitter Triumph    {1}{B}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  As an additional cost to cast this spell, discard a card or pay 3 life.
+  Destroy target creature or planeswalker.
+HANDLER (body length: 306 chars):
+      gs.life -= 3
+      _destroy_biggest_creature(gs, card)
+
+================================================================================
+  Boomerang Basics    {U}    (Sorcery — Lesson)    [verified]
+================================================================================
+ORACLE:
+  Return target nonland permanent to its owner's hand. If you controlled that permanent, draw a card.
+HANDLER (body length: 1438 chars):
+      from data.card import Tag
+      from engine.match_state import safe_power
+      opp = getattr(gs, "_match_opp", None)
+      opp_targets = []
+      if opp is not None:
+          opp_targets = [c for c in opp.zones.battlefield if not c.is_land()]
+      if opp_targets:
+          t = max(opp_targets, key=lambda c: safe_power(c))
+          opp.zones.battlefield.remove(t)
+          opp.zones.hand.append(t)
+          gs._log(f"  Boomerang Basics: bounce {t.name}")
+          return
+      my_targets = [c for c in gs.zones.battlefield
+                    if not c.is_land() and c.has(Tag.CREATURE)]
+      if my_targets:
+          t = min(my_targets, key=lambda c: safe_power(c))
+          gs.zones.battlefield.remove(t)
+          gs.zones.hand.append(t)
+          gs.zones.draw(1)
+          gs._log(f"  Boomerang Basics: self-bounce {t.name}, draw 1")
+          return
+      gs._log("  Boomerang Basics: no legal target (goldfish no-op)")
+  _SPELL_HANDLERS.update({
+      "Boomerang Basics": _boomerang_basics_spell,
+  })
+  ... (truncated)
+
+================================================================================
+  Cecil, Dark Knight    ?    (?)    [verified]
+================================================================================
+ORACLE:
+  
+HANDLER (body length: 617 chars):
+      from engine.keywords import KWTag
+      card.tags.add(KWTag.DEATHTOUCH)
+      gs._log("  Cecil, Dark Knight: 2/3 deathtouch")
+      _tinybones_legendary_trigger(gs)
+
+================================================================================
+  Day of Black Sun    {X}{B}{B}    (Sorcery)    [verified]
+================================================================================
+ORACLE:
+  Each creature with mana value X or less loses all abilities until end of turn. Destroy those creatures.
+HANDLER (body length: 682 chars):
+      from data.card import Tag
+      x = 3
+      def _wipe(g):
+          n = 0
+          for c in list(g.zones.battlefield):
+              if c.has(Tag.CREATURE) and not c.is_land() \
+                      and getattr(c, 'cmc', 99) <= x:
+                  g.zones.battlefield.remove(c)
+                  g.zones.graveyard.append(c)
+                  n += 1
+          return n
+      my = _wipe(gs)
+      opp = getattr(gs, "_match_opp", None)
+      op = _wipe(opp) if opp else 0
+      gs._log(f"  Day of Black Sun: wipe cmc<={x} ({my}/{op})")
+
+================================================================================
+  Deep-Cavern Bat    {1}{B}    (Creature — Bat)    [verified]
+================================================================================
+ORACLE:
+  Flying, lifelink
+  When this creature enters, look at target opponent's hand. You may exile a nonland card from it until this creature leaves the battlefield.
+HANDLER (body length: 2879 chars):
+      from engine.keywords import KWTag
+      card.tags.add(KWTag.FLYING)
+      card.tags.add(KWTag.LIFELINK)
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          gs._log("  Deep-Cavern Bat: 1/1 flying lifelink (no opp)")
+          return
+      nonlands = [c for c in opp.zones.hand if not c.is_land()]
+      if not nonlands:
+          gs._log("  Deep-Cavern Bat: 1/1 flying lifelink (opp hand empty of nonlands)")
+          return
+      victim = None
+      reason = ""
+      removals = [c for c in nonlands if c.name in _BAT_REMOVAL_NARROWNESS]
+      if removals:
+          victim = max(removals,
+                       key=lambda c: _BAT_REMOVAL_NARROWNESS.get(c.name, 0))
+          reason = f"narrow removal (force flex onto Bat)"
+      if victim is None and gs.turn <= 4:
+          opp_lands = sum(1 for c in opp.zones.battlefield if c.is_land())
+          next_turn_mana = opp_lands + 1   # likely land drop
+          castable_next = [c for c in nonlands
+                           if getattr(c, 'cmc', 0) <= next_turn_mana]
+          if len(castable_next) == 1 and len(nonlands) <= 3:
+              victim = castable_next[0]
+  ... (truncated)
+
+================================================================================
+  Disdainful Stroke    {1}{U}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Counter target spell with mana value 4 or greater.
+HANDLER (body length: 498 chars):
+      gs._log(f"  {card.name}: counterspell (no target on own turn)")
+
+================================================================================
+  Duress    {B}    (Sorcery)    [verified]
+================================================================================
+ORACLE:
+  Target opponent reveals their hand. You choose a noncreature, nonland card from it. That player discards that card.
+HANDLER (body length: 916 chars):
+      from data.card import Tag
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          gs._log("  Duress: no opp (goldfish)")
+          return
+      eligible = [c for c in opp.zones.hand
+                  if not c.has(Tag.CREATURE) and not c.is_land()]
+      if not eligible:
+          gs._log("  Duress: opp hand has no noncreature nonland")
+          return
+      victim = max(eligible, key=lambda c: getattr(c, 'cmc', 0))
+      opp.zones.hand.remove(victim)
+      opp.zones.graveyard.append(victim)
+      gs._log(f"  Duress: discard {victim.name}")
+
+================================================================================
+  Floodpits Drowner    {1}{U}    (Creature — Merfolk)    [verified]
+================================================================================
+ORACLE:
+  Flash
+  Vigilance
+  When this creature enters, tap target creature an opponent controls and put a stun counter on it.
+  {1}{U}, {T}: Shuffle this creature and target creature with a stun counter on it into their owners' libraries.
+HANDLER (body length: 1812 chars):
+      from engine.keywords import KWTag
+      card.tags.add(KWTag.FLASH)
+      card.tags.add(KWTag.VIGILANCE)
+      from data.card import Tag
+      from engine.match_state import safe_power
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          gs._log("  Floodpits Drowner: 2/3 flash vigilance")
+          return
+      _MANA_DORK_NAMES = {
+          "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
+          "Leyline Weaver", "Spider Manifestation", "Elvish Mystic",
+          "Birds of Paradise", "Utopia Sprawl",
+      }
+      cr = [c for c in opp.zones.battlefield
+            if c.has(Tag.CREATURE) and not c.is_land()
+            and not getattr(c, 'tapped', False)]
+      if cr:
+          if getattr(gs, '_target_mana_dork', False):
+              dorks = [c for c in cr if c.name in _MANA_DORK_NAMES]
+              t = dorks[0] if dorks else max(cr, key=lambda c: safe_power(c))
+          else:
+              t = max(cr, key=lambda c: safe_power(c))
+          t.tapped = True
+          t._stun_counter = True
+  ... (truncated)
+
+================================================================================
+  Kaito, Bane of Nightmares    {2}{U}{B}    (Legendary Planeswalker — Kaito)    [verified]
+================================================================================
+ORACLE:
+  Ninjutsu {1}{U}{B} ({1}{U}{B}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)
+  During your turn, as long as Kaito has one or more loyalty counters on him, he's a 3/4 Ninja creature and has hexproof.
+  +1: You get an emblem with "Ninjas you control get +1/+1."
+  0: Surveil 2. Then draw a card for each opponent who lost life this turn.
+  −2: Tap target creature. Put two stun counters on it.
+HANDLER (body length: 2527 chars):
+      from data.card import Tag
+      from engine.keywords import KWTag
+      card.tags.add(Tag.CREATURE)
+      card.power = 3
+      card.toughness = 4
+      card.tags.add(KWTag.HEXPROOF)
+      if getattr(card, 'loyalty', None) in (None, 0):
+          card.loyalty = 3
+      gs._log("  Kaito, Bane of Nightmares: 3/4 Ninja hexproof (loyalty 3)")
+      _tinybones_legendary_trigger(gs)
+  _SPELL_HANDLERS.update({
+      "Glacial Dragonhunt":     _glacial_dragonhunt_spell,
+      "Herd Migration":         _herd_migration_spell,
+      "Heritage Reclamation":   _heritage_reclamation_spell,
+      "Honor":                  _honor_spell,
+      "Into the Flood Maw":     _into_the_flood_maw_spell,
+  })
+  _ETB_HANDLERS.update({
+      "Deepchannel Duelist":       _deepchannel_duelist_etb,
+      "Earthbender Ascension":     _earthbender_ascension_etb,
+      "Glarb, Calamity's Augur":   _glarb_etb,
+      "Glissa Sunslayer":          _glissa_sunslayer_etb,
+      "Great Divide Guide":        _great_divide_guide_etb,
+      "Hearth Elemental":          _hearth_elemental_etb,
+      "Hopeless Nightmare":        _hopeless_nightmare_etb,
+  ... (truncated)
+
+================================================================================
+  Long Goodbye    {1}{B}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  This spell can't be countered. (This includes by the ward ability.)
+  Destroy target creature or planeswalker with mana value 3 or less.
+HANDLER (body length: 216 chars):
+      _destroy_biggest_creature(gs, card, cmc_max=3)
+
+================================================================================
+  Negate    {1}{U}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Counter target noncreature spell.
+HANDLER (body length: 498 chars):
+      gs._log(f"  {card.name}: counterspell (no target on own turn)")
+
+================================================================================
+  Nowhere to Run    {1}{B}    (Enchantment)    [verified]
+================================================================================
+ORACLE:
+  Flash
+  When this enchantment enters, target creature an opponent controls gets -3/-3 until end of turn.
+  Creatures your opponents control can be the targets of spells and abilities as though they didn't have hexproof. Ward abilities of those creatures don't trigger.
+HANDLER (body length: 882 chars):
+      from data.card import Tag
+      from engine.match_state import safe_power, safe_toughness
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          return
+      targets = [c for c in opp.zones.battlefield
+                 if c.has(Tag.CREATURE) and not c.is_land()
+                 and safe_toughness(c) <= 3]
+      if not targets:
+          return
+      t = max(targets, key=lambda c: safe_power(c))
+      opp.zones.battlefield.remove(t)
+      opp.zones.graveyard.append(t)
+      gs._log(f"  Nowhere to Run: -3/-3 kills {t.name}")
+
+================================================================================
+  Quantum Riddler    {3}{U}{U}    (Creature — Sphinx)    [verified]
+================================================================================
+ORACLE:
+  Flying
+  When this creature enters, draw a card.
+  As long as you have one or fewer cards in hand, if you would draw one or more cards, you draw that many cards plus one instead.
+  Warp {1}{U}
+HANDLER (body length: 373 chars):
+      from engine.keywords import KWTag
+      card.tags.add(KWTag.FLYING)
+      gs.zones.draw(1)
+      gs._log("  Quantum Riddler ETB: 4/6 flying, draw 1")
+
+================================================================================
+  Shoot the Sheriff    {1}{B}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Destroy target non-outlaw creature. (Assassins, Mercenaries, Pirates, Rogues, and Warlocks are outlaws. Everyone else is fair game.)
+HANDLER (body length: 0 chars):
+  <no handler body found>
+
+================================================================================
+  Soul-Guide Lantern    {1}    (Artifact)    [verified]
+================================================================================
+ORACLE:
+  When this artifact enters, exile target card from a graveyard.
+  {T}, Sacrifice this artifact: Exile each opponent's graveyard.
+  {1}, {T}, Sacrifice this artifact: Draw a card.
+HANDLER (body length: 633 chars):
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None or not opp.zones.graveyard:
+          gs._log("  Soul-Guide Lantern: on board (no opp GY to exile)")
+          return
+      target = max(opp.zones.graveyard,
+                    key=lambda c: getattr(c, 'cmc', 0))
+      opp.zones.graveyard.remove(target)
+      opp.zones.exile.append(target)
+      gs._log(f"  Soul-Guide Lantern ETB: exile {target.name}")
+
+================================================================================
+  Spell Snare    {U}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Counter target spell with mana value 2.
+HANDLER (body length: 177 chars):
+      gs._log("  Spell Snare: counterspell (reactive only)")
+
+================================================================================
+  Spider-Sense    {1}{U}    (Instant)    [verified]
+================================================================================
+ORACLE:
+  Web-slinging {U} (You may cast this spell for {U} if you also return a tapped creature you control to its owner's hand.)
+  Counter target instant spell, sorcery spell, or triggered ability.
+HANDLER (body length: 261 chars):
+      gs._log("  Spider-Sense: counterspell (reactive)")
+
+================================================================================
+  Spyglass Siren    {U}    (Creature — Siren Pirate)    [verified]
+================================================================================
+ORACLE:
+  Flying
+  When this creature enters, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.")
+HANDLER (body length: 351 chars):
+      from engine.keywords import KWTag
+      card.tags.add(KWTag.FLYING)
+      gs.zones.draw(1)
+      gs._log("  Spyglass Siren: 1/1 flying + Map (+1 card)")
+
+================================================================================
+  Stormchaser's Talent    {U}    (Enchantment — Class)    [verified]
+================================================================================
+ORACLE:
+  (Gain the next level as a sorcery to add its ability.)
+  When this Class enters, create a 1/1 blue and red Otter creature token with prowess.
+  {3}{U}: Level 2
+  When this Class becomes level 2, return target instant or sorcery card from your graveyard to your hand.
+  {5}{U}: Level 3
+  Whenever you cast an instant or sorcery spell, create a 1/1 blue and red Otter creature token with prowess.
+HANDLER (body length: 822 chars):
+      from data.card import Card, Tag
+      from engine.keywords import KWTag
+      otter = Card(name="Otter Token", mana_cost="", cmc=0,
+                   type_line="Token Creature — Otter", oracle_text="Prowess",
+                   power="1", toughness="1", colors=["U", "R"])
+      otter.tags.add(Tag.CREATURE)
+      otter.tags.add(KWTag.PROWESS)
+      otter.turn_entered = gs.turn
+      otter.summoning_sickness = True
+      gs.zones.battlefield.append(otter)
+      gs._log("  Stormchaser's Talent: 1/1 Otter with prowess")
+
+================================================================================
+  Strategic Betrayal    {1}{B}    (Sorcery)    [verified]
+================================================================================
+ORACLE:
+  Target opponent exiles a creature they control and their graveyard.
+HANDLER (body length: 910 chars):
+      from data.card import Tag
+      from engine.match_state import safe_power
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          return
+      cr = [c for c in opp.zones.battlefield
+            if c.has(Tag.CREATURE) and not c.is_land()]
+      if cr:
+          victim = min(cr, key=lambda c: safe_power(c))
+          opp.zones.battlefield.remove(victim)
+          opp.zones.exile.append(victim)
+      n = len(opp.zones.graveyard)
+      for c in list(opp.zones.graveyard):
+          opp.zones.graveyard.remove(c)
+          opp.zones.exile.append(c)
+      gs._log(f"  Strategic Betrayal: exile opp creature + {n} GY cards")
+
+================================================================================
+  The Unagi of Kyoshi Island    {3}{U}{U}    (Legendary Creature — Serpent)    [verified]
+================================================================================
+ORACLE:
+  Flash
+  Ward—Waterbend {4}. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {4}. They can tap their artifacts and creatures to help. Each one pays for {1}.)
+  Whenever an opponent draws their second card each turn, you draw two cards.
+HANDLER (body length: 156 chars):
+
+================================================================================
+  Tinybones Joins Up    {B}    (Legendary Enchantment)    [verified]
+================================================================================
+ORACLE:
+  When Tinybones Joins Up enters, any number of target players each discard a card.
+  Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life.
+HANDLER (body length: 928 chars):
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          return
+      if opp.zones.hand:
+          victim = max(opp.zones.hand, key=lambda c: getattr(c, 'cmc', 0))
+          opp.zones.hand.remove(victim)
+          opp.zones.graveyard.append(victim)
+          gs._log(f"  Tinybones Joins Up ETB: opp discards {victim.name}")
+      gs._tinybones_active = True
+
+================================================================================
+  Tishana's Tidebinder    {2}{U}    (Creature — Merfolk Wizard)    [verified]
+================================================================================
+ORACLE:
+  Flash
+  When this creature enters, counter up to one target activated or triggered ability. If an ability of an artifact, creature, or planeswalker is countered this way, that permanent loses all abilities for as long as this creature remains on the battlefield. (Mana abilities can't be targeted.)
+HANDLER (body length: 1916 chars):
+      from data.card import Tag
+      from engine.keywords import KWTag
+      from engine.match_state import safe_power
+      opp = getattr(gs, "_match_opp", None)
+      if opp is None:
+          return
+      _MANA_DORK_NAMES = {
+          "Llanowar Elves", "Gene Pollinator", "Badgermole Cub",
+          "Leyline Weaver", "Spider Manifestation", "Elvish Mystic",
+          "Birds of Paradise",
+      }
+      candidates = [c for c in opp.zones.battlefield if not c.is_land()]
+      if not candidates:
+          return
+      if getattr(gs, '_target_mana_dork', False):
+          dorks = [c for c in candidates if c.name in _MANA_DORK_NAMES]
+          t = dorks[0] if dorks else max(
+              candidates, key=lambda c: safe_power(c) if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
+      else:
+          t = max(candidates, key=lambda c: safe_power(c)
+                  if c.has(Tag.CREATURE) else getattr(c, 'cmc', 0))
+      for kw in (KWTag.FLYING, KWTag.TRAMPLE, KWTag.HASTE, KWTag.LIFELINK,
+                  KWTag.FIRST_STRIKE, KWTag.DOUBLE_STRIKE, KWTag.DEATHTOUCH,
+                  KWTag.MENACE, KWTag.VIGILANCE, KWTag.PROWESS, KWTag.REACH):
+          t.tags.discard(kw)
+  ... (truncated)

@@ -1,0 +1,50 @@
+// Azorius High Noon (UW Flash) -- Top-20 Standard Ladder build (2026-05-08)
+// Source: Untapped.gg screenshot, 29-7 (81% WR) Standard Bo3 Ladder
+//
+// Innovation vs Zevin v2: Erode replaces Get Lost as the 1-mana removal slot
+// (1 mana vs 2 mana, opp ramps 1 land vs gets 2 Maps). Adds Wan Shi Tong as
+// X-cost flash finisher and second Beza as conditional value engine.
+
+// CREATURES (24)
+4 Aang, Swift Savior
+4 Aven Interrupter
+4 Voice of Victory
+4 Skycoach Conductor
+3 Floodpits Drowner
+3 Quantum Riddler
+1 Wan Shi Tong, Librarian
+1 Beza, the Bounding Spring
+
+// SORCERIES (2)
+2 Avatar's Wrath
+
+// INSTANTS (3)
+2 Erode
+1 Spell Snare
+
+// ENCHANTMENTS (6)
+4 High Noon
+1 Seam Rip
+1 Airbender Ascension
+
+// LANDS (25)
+4 Floodfarm Verge
+4 Hallowed Fountain
+4 Starting Town
+1 Abandoned Air Temple
+2 Multiversal Passage
+4 Island
+2 Restless Anchorage
+4 Plains
+
+Sideboard
+2 Annul
+2 Requisition Raid
+1 Seam Rip
+2 Disdainful Stroke
+2 Flashfreeze
+2 Rest in Peace
+1 Avatar's Wrath
+1 Beza, the Bounding Spring
+1 Quantum Riddler
+1 The Unagi of Kyoshi Island

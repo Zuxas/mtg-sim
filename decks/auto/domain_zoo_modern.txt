@@ -1,0 +1,34 @@
+4 Scion of Draco
+4 Territorial Kavu
+3 Doorkeeper Thrull
+3 Phlage, Titan of Fire's Fury
+3 Psychic Frog
+3 Ragavan, Nimble Pilferer
+3 Tribal Flames
+4 Lightning Bolt
+3 Stubborn Denial
+1 Thraben Charm
+4 Leyline Binding
+4 Leyline of the Guildpact
+4 Arid Mesa
+4 Wooded Foothills
+3 Flooded Strand
+1 Sacred Foundry
+1 Spara's Headquarters
+1 Steam Vents
+1 Temple Garden
+1 Thundering Falls
+1 Arena of Glory
+1 Blood Crypt
+1 Indatha Triome
+1 Mountain
+1 Plains
+
+Sideboard
+4 Consign to Memory
+1 Stubborn Denial
+2 Pyroclasm
+2 Pest Control
+2 Magebane Lizard
+2 Clarion Conqueror
+2 Thraben Charm

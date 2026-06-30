@@ -110,5 +110,19 @@
     "generated_date": "2026-05-01",
     "source": "auto_pipeline:gemma",
     "smoke_avg_turns": null
+  },
+  "temurbreach": {
+    "module": "apl.auto_apls.temur_breach",
+    "class": "TemurBreachAPL",
+    "deck_file": "decks/temur_breach_modern.txt",
+    "generated_date": "2026-06-26",
+    "source": "arl_loop"
+  },
+  "borosenergy": {
+    "module": "apl.auto_apls.boros_energy",
+    "class": "BorosEnergyAPL",
+    "deck_file": "decks/boros_energy_modern.txt",
+    "generated_date": "2026-06-26",
+    "source": "arl_loop"
   }
 }

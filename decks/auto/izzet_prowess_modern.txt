@@ -1,0 +1,34 @@
+// Izzet Prowess - James Cavary (2026-05-09)
+// Event: RCQ 2-Slot, Place: 4
+// Source: mtg_meta.db deck_id=150255 (audit:auto-generated)
+
+2 Arid Mesa
+3 Bloodstained Mire
+4 Cori-Steel Cutter
+4 Dragon's Rage Channeler
+3 Expressive Iteration
+2 Fiery Islet
+4 Lava Dart
+4 Lightning Bolt
+4 Mishra's Bauble
+4 Monastery Swiftspear
+3 Mountain
+4 Mutagenic Growth
+4 Preordain
+3 Scalding Tarn
+1 Serum Visions
+4 Slickshot Show-Off
+3 Steam Vents
+1 Thundering Falls
+2 Violent Urge
+1 Wooded Foothills
+
+Sideboard
+2 Aether Gust
+3 Consign to Memory
+1 Expressive Iteration
+2 Murktide Regent
+1 Spell Pierce
+1 Spell Snare
+1 Surgical Extraction
+4 Unholy Heat

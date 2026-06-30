@@ -1,0 +1,36 @@
+// Boros Energy - Kev_1414 (2026-05-11)
+// Event: MTGO Challenge 64, Place: 13
+// Source: mtg_meta.db deck_id=150156 (audit:auto-generated)
+
+4 Ajani, Nacatl Pariah
+3 Arena of Glory
+4 Arid Mesa
+2 Elegant Parlor
+4 Flooded Strand
+4 Galvanic Discharge
+3 Goblin Bombardment
+4 Guide of Souls
+4 Marsh Flats
+1 Mountain
+4 Ocelot Pride
+4 Phlage, Titan of Fire's Fury
+2 Plains
+4 Ragavan, Nimble Pilferer
+3 Sacred Foundry
+4 Seasoned Pyromancer
+1 Static Prison
+1 The Legend of Roku
+2 Thraben Charm
+2 Voice of Victory
+
+Sideboard
+2 Blood Moon
+1 Celestial Purge
+1 Damping Sphere
+1 High Noon
+2 Obsidian Charmaw
+2 Orim's Chant
+2 Surgical Extraction
+1 The Legend of Roku
+1 Wear / Tear
+2 Wrath of the Skies

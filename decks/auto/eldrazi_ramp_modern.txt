@@ -1,0 +1,38 @@
+// Eldrazi Ramp - Fux Arturo (2026-05-10)
+// Event: RCQ, Place: 3
+// Source: mtg_meta.db deck_id=150214 (audit:auto-generated)
+
+1 Bojuka Bog
+1 Cavern of Souls
+1 Commercial District
+3 Devourer of Destiny
+4 Eldrazi Temple
+3 Emrakul, the Promised End
+3 Forest
+1 Gemstone Caverns
+1 Ghost Quarter
+3 Icetill Explorer
+4 Kozilek's Command
+2 Kozilek's Return
+4 Malevolent Rumble
+1 Sanctum of Ugin
+1 Shifting Woodland
+2 Sire of Seven Deaths
+4 Sowing Mycospawn
+2 Stomping Ground
+4 Talisman of Impulse
+4 Ugin's Labyrinth
+2 Ugin, Eye of the Storms
+4 Utopia Sprawl
+3 Windswept Heath
+2 World Breaker
+
+Sideboard
+2 Disruptor Flute
+2 Fade from History
+1 Grafdigger's Cage
+1 Kozilek's Return
+1 Soulless Jailer
+3 Trinisphere
+3 Unholy Heat
+2 Vexing Bauble

@@ -1,0 +1,36 @@
+// Izzet Affinity - makaaaa (2026-05-11)
+// Event: MTGO Challenge 64, Place: 2
+// Source: mtg_meta.db deck_id=150145 (audit:auto-generated)
+
+2 Arcbound Ravager
+3 Claws of Gix
+3 Emry, Lurker of the Loch
+4 Engineered Explosives
+4 Fiery Islet
+1 Island
+4 Kappa Cannoneer
+3 Metallic Rebuke
+4 Mishra's Bauble
+4 Mox Opal
+4 Pinnacle Emissary
+1 Pithing Needle
+1 Shadowspear
+3 Sink into Stupor
+1 Skateboard
+4 Spirebluff Canal
+1 Steam Vents
+4 Tormod's Crypt
+4 Urza's Saga
+4 Weapons Manufacturing
+1 Welding Jar
+
+Sideboard
+1 Blood Moon
+2 Consign to Memory
+2 Damping Sphere
+1 Force of Negation
+3 Galvanic Blast
+2 Harbinger of the Seas
+1 Mystical Dispute
+1 Spell Snare
+2 Whipflare

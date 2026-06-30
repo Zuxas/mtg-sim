@@ -1,0 +1,25 @@
+  Esper Pixie v2                        84.0%  (10.5s)
+  HN v2 (post-Warp)                     74.5%  (10.9s)
+  Marcelo AC11 (12-0-1)                 59.9%  (12.8s)
+  Jermey SLEEVED (4 Kaito)              56.1%  (11.0s)
+  Jermey v5 (current file)              61.7%  (11.2s)
+  Azorius Blink (itstime)               46.8%  (11.1s)
+  Linden Dimir Bounce                   63.1%  (11.0s)
+
+=== Per-matchup (MTGO actual meta) ===
+  Matchup                   share   Hybrid (UB Bounce    Esper Pixie v2       HN v2 (post-Warp)    Marcelo AC11 (12-0   Jermey SLEEVED (4    Jermey v5 (current   Azorius Blink (its   Linden Dimir Bounc 
+  Izzet Prowess           16.9%                 74%                  86%                  66%                  52%                  50%                  55%                  44%                  58% 
+  Mono-Green Landfall     14.4%                 78%                  91%                  83%                  66%                  63%                  68%                  44%                  70% 
+  Izzet Spellementals      9.1%                 96%                  98%                  90%                  92%                  88%                  96%                  86%                  90% 
+  Izzet Lessons            8.2%                 60%                  67%                  70%                  44%                  31%                  42%                  26%                  46% 
+  Azorius Aggro            2.9%                 76%                  83%                  77%                  59%                  62%                  56%                  49%                  62% 
+  Selesnya Landfall        2.5%                 68%                  78%                  57%                  49%                  49%                  50%                  28%                  56% 
+  Azorius Blink            2.5%                 74%                  80%                  80%                  64%                  62%                  66%                  52%                  60% 
+  Temur Prowess            2.1%                 74%                  86%                  66%                  52%                  50%                  55%                  44%                  60% 
+  Azorius Control          2.1%                 46%                  63%                  70%                  44%                  39%                  46%                  31%                  34% 
+  Mardu Aggro              1.6%                 78%                  83%                  79%                  59%                  56%                  57%                  52%                  67% 
+  Selesnya Ouroboroid      1.2%                 70%                  70%                  72%                  51%                  44%                  51%                  33%                  52% 
+  Jeskai Control           1.2%                 78%                  87%                  74%                  64%                  58%                  64%                  60%                  69% 
+  Dimir Excruciator        1.2%                 78%                  82%                  64%                  52%                  46%                  63%                  44%                  62% 
+  Azorius Flash            1.2%                 51%                  57%                  49%                  44%                  40%                  42%                  23%                  42% 
+  Bant Rhythm              0.8%                 68%                  80%                  73%                  59%                  54%                  60%                  43%                  60% 

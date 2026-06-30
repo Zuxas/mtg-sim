@@ -1,0 +1,35 @@
+
+=== ARM: WITHOUT counterspell resolver ===
+Deck: decks/dimir_midrange_jermey_standard.txt (100g/matchup, total 800 games)
+
+[CardDB] Loading 164MB oracle database...
+[CardDB] 37,400 cards indexed
+[CardDB] 75,835 rulings loaded
+  [31 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [24 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [26 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 14 sideboard
+  [28 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [35 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [20 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  [17 cards loaded from local DB — no network calls]
+  Loaded: 58 main | 0 sideboard
+  [25 cards loaded from local DB — no network calls]
+  Loaded: 60 main | 15 sideboard
+  Izzet Prowess           60/100 =  60.0%  (  0.6s)
+  Izzet Lessons           42/100 =  42.0%  (  0.7s)
+  Izzet Spellementals     95/100 =  95.0%  (  0.5s)
+  Jeskai Control          63/100 =  63.0%  (  0.7s)
+  Selesnya Landfall       51/100 =  51.0%  (  0.5s)
+  Mono Green Landfall     66/100 =  66.0%  (  0.6s)
+  Sultai Reanimator       68/100 =  68.0%  (  0.6s)
+  Gruul Aggro             40/100 =  40.0%  (  0.6s)
+
+  Avg WR: 60.6%  (4.7s total)

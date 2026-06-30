@@ -11,6 +11,7 @@ import argparse, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from sim_bridge import ARCHETYPE_CLOCKS, avg_kill_turn, _infer_archetype_key
+from mismodeled_matchups import mismodel_flag, legend
 
 
 def main():
@@ -171,7 +172,9 @@ def main():
         diff = r.match_win_pct - r.g1_win_pct
         arrow = "^" if diff > 1 else ("v" if diff < -1 else "~")
         print(f"  {r.opponent:<28} {r.g1_win_pct:>5.1f}%  {r.match_win_pct:>6.1f}%  "
-              f"{diff:>+6.1f}% {arrow}")
+              f"{diff:>+6.1f}% {arrow}{mismodel_flag(r.opponent)}")
+
+    print(legend())
 
 
 if __name__ == "__main__":

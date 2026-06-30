@@ -205,6 +205,9 @@ def main():
         print(row)
 
     print()
+    # Flag cells the sim is known to model wrong (combo opponents / Affinity clock).
+    from mismodeled_matchups import legend
+    print(legend())
 
 
 if __name__ == "__main__":

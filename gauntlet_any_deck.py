@@ -9,6 +9,7 @@ from sim_any_deck import load_deck_from_playbook
 from sim_bridge import ARCHETYPE_CLOCKS, _infer_archetype_key, race_win_pct, avg_kill_turn
 from engine.runner import run_simulation
 from engine.bo3 import compute_match_win_pct
+from mismodeled_matchups import mismodel_flag, legend
 
 def main():
     ap = argparse.ArgumentParser()
@@ -96,7 +97,7 @@ def main():
         total_weight += share
 
         src = "(real)" if real_g1 is not None else "(sim) "
-        print(f"  {opp_arch:<30} {g1:>5.1f}%  {match:>6.1f}%  {diff:>+5.1f}%  {src}")
+        print(f"  {opp_arch:<30} {g1:>5.1f}%  {match:>6.1f}%  {diff:>+5.1f}%  {src}{mismodel_flag(opp_arch)}")
 
     field_avg = sum(matchup_table[o] * field.get(o, 0)
                     for o in matchup_table) / max(total_weight, 0.001)
@@ -123,6 +124,8 @@ def main():
         )
         print(f"  {event_name:<20} {n_rounds:>2}r  Day2: {r['day2_rate']:>5.1f}%  "
               f"Top8: {r['top8_rate']:>5.1f}%  Exp: {r['expected_record']}")
+
+    print(legend())
 
 
 if __name__ == "__main__":

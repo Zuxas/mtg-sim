@@ -52,8 +52,12 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
 - Calibration coupled in same commit: `AwareMatchAPL.declare_attackers` rewrite moved Selesnya-vs-Prowess
   from a wrong ~77% to 65.3% (in band [60,71.5], PT 62.9). See
   `harness/knowledge/tech/boros-energy-postban-validation-2026-06-29.md`.
-- KNOWN gauntlet caveat: opponent-side undermodeling inflates several matchups (Grixis Reanimator APL
-  CRASHES every turn -> inverts that known-DOG matchup; tracked in IMPERFECTIONS.md).
+- KNOWN gauntlet caveat: opponent-side undermodeling makes several cells unreliable. These are now
+  registered in `mismodeled_matchups.py` (Grixis INVERTED, Goryo's/Living End/Affinity/Broodscale
+  INFLATED) and the gauntlet drivers (full_field_gauntlet, bo3_gauntlet, gauntlet_any_deck) print an
+  inline `[!MISMODEL ...]` flag + legend. **When analyzing matchups or deck choice, DOWN-WEIGHT any
+  flagged cell** -- trust its direction, not its number. Combo-sampler routing was prototyped to fix
+  this and REJECTED (see IMPERFECTIONS combo-decks-not-sampled-in-gauntlet-run_match).
 
 ### Amulet Titan (Modern) — RULES-CORRECT, validated April 2026
 

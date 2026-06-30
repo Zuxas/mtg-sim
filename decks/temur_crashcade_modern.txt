@@ -7,9 +7,19 @@
 //   (Force of Negation / Fury / Subtlety / Endurance) and Temur card value.
 // Representative best-estimate list.
 // Main: 60 | Sideboard: 15
-// audit:custom_variant -- post-ban estimate list, no single-tournament source.
 
-// --- Lands (19) ---
+4 Crashing Footfalls
+4 Violent Outburst
+4 Shardless Agent
+4 Force of Negation
+4 Fury
+3 Subtlety
+3 Endurance
+4 Tireless Tracker
+3 Dragon's Rage Channeler
+3 Bonecrusher Giant
+3 Brazen Borrower
+2 Wrenn and Six
 4 Wooded Foothills
 3 Scalding Tarn
 2 Steam Vents
@@ -21,25 +31,7 @@
 1 Otawara, Soaring City
 1 Boseiju, Who Endures
 
-// --- Cascade core (12) ---
-4 Crashing Footfalls
-4 Violent Outburst
-4 Shardless Agent
-
-// --- Free interaction / evoke (14) ---
-4 Force of Negation
-4 Fury
-3 Subtlety
-3 Endurance
-
-// --- Threats / value (15) ---
-4 Tireless Tracker
-3 Dragon's Rage Channeler
-3 Bonecrusher Giant
-3 Brazen Borrower
-2 Wrenn and Six
-
-SIDEBOARD:
+// Sideboard
 3 Mystical Dispute
 2 Force of Vigor
 2 Blood Moon

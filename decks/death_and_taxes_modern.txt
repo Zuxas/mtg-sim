@@ -5,16 +5,7 @@
 //   real DB archetype (2.9% of the pre-ban field as "Death And Taxes").
 // Representative best-estimate list (Jitte-forward Vial hatebears).
 // Main: 60 | Sideboard: 15
-// audit:custom_variant -- post-ban estimate list, no single-tournament source.
 
-// --- Lands (23) ---
-13 Plains
-4 Ghost Quarter
-2 Eiganjo, Seat of the Empire
-2 Mutavault
-2 Horizon Canopy
-
-// --- Creatures (24) ---
 4 Thalia, Guardian of Thraben
 4 Mother of Runes
 4 Solitude
@@ -23,14 +14,17 @@
 2 Phelia, Exuberant Shepherd
 2 Recruiter of the Guard
 1 Palace Jailer
-
-// --- Other (13) ---
 4 Aether Vial
 4 Leonin Arbiter
 3 Swords to Plowshares
 2 Umezawa's Jitte
+13 Plains
+4 Ghost Quarter
+2 Eiganjo, Seat of the Empire
+2 Mutavault
+2 Horizon Canopy
 
-SIDEBOARD:
+// Sideboard
 2 Path to Exile
 2 Rest in Peace
 2 Stony Silence

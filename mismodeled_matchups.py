@@ -40,12 +40,15 @@ MISMODELED_MATCHUPS = {
                "comes online grixis wins ~82% (the named mechanisms work). Our interaction is honest "
                "but NON-LOAD-BEARING (answer_combo fires ~1-3/500 G1: Boros's cheap burn can't kill a "
                "6-toughness body, energy isn't visible in the window, and there's no maindeck GY-hate). "
-               "STILL FLAGGED per Stop condition 2: match P_assemble is only ~32% vs the deck's faithful "
-               "GOLDFISH assembly of ~56% -- the gap is run_match's crude inline mulligan (mull-if-<2-"
-               "lands, NOT the APL's combo-aware keep()) plus the 66-card stub deck file. At the goldfish "
-               "56% the cell would land boros ~42% (IN band [25,45]); the residual is a structural "
-               "engine/deck-file limit, not the threat model. NOT tuned into band (forbidden). Trust the "
-               "DIRECTION (improving toward dog), not the 55%.",
+               "STILL FLAGGED per Stop condition 2: ASSEMBLY FREQUENCY is the binding constraint -- "
+               "match P_assemble is only ~32% vs the deck's faithful GOLDFISH assembly of ~56% (measured "
+               "with the APL's combo-aware keep()). The goldfish shows real headroom; the match shortfall "
+               "is part run_match's crude inline mulligan (mull-if-<2-lands, NOT keep()) + the 66-card stub "
+               "deck file, and part LEGITIMATE boros pressure (racing/removing grixis before it assembles, "
+               "which belongs in the matchup). A back-of-envelope boros = 0.73 - 0.55*P_assemble (coeffs "
+               "measured AT P~0.32) would put boros in the low 40s at the goldfish rate, but that "
+               "extrapolation is UNVERIFIED (the coeffs likely shift under a different mulligan). NOT tuned "
+               "into band (forbidden). Trust the DIRECTION (improving toward dog), not the 55%.",
     },
     "goryos vengeance": {
         "direction": "INFLATED",

@@ -74,6 +74,10 @@ APL_REGISTRY = {
     "goblincharbelcher":("apl.belcher_match",    "BelcherMatchAPL",   "decks/belcher_modern.txt"),
     "neobrand":        ("apl.neobrand_match",    "NeobrandMatchAPL",  "decks/neobrand_modern.txt"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL","decks/grixis_reanimator_modern.txt"),
+    # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29).
+    # SYNTHETIC: APL plays it as an aggressive creature deck; not primer-validated.
+    "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
     "burn":            ("apl.burn",             "BurnAPL",           None),
     "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL", "decks/izzet_cauldron_standard.txt"),
     "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
@@ -307,6 +311,9 @@ MATCH_APL_REGISTRY = {
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
+    # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29). SYNTHETIC stub number.
+    "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
     "jeskaicontrol":   ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
     "jeskailute":      ("apl.jeskai_lute_standard_match", "JeskaiLuteMatchAPL"),
     "jeskaienergycontrol": ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),

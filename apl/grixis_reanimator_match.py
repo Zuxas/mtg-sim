@@ -98,25 +98,31 @@ class GrixisReanimatorMatchAPL(MatchAPL):
         # Oracle: "Return target nonlegendary creature card from your graveyard to the
         #          battlefield with a -1/-1 counter on it."
         # Key: bypasses Abhorrent Oculus's additional cast cost (exile 6 from GY).
+        # NOTE: the ENGINE owns the reanimation. SPELL_EFFECTS['Persist'] ->
+        # _persist_spell (engine/card_handlers_verified.py) fires inside
+        # gs.cast_spell(): it picks the SAME max-cmc nonlegendary creature, moves
+        # it GY -> battlefield, marks it summoning-sick, and applies the -1/-1.
+        # The pre-fix code re-did that move (gs.zones.graveyard.remove(tgt)) AFTER
+        # the engine had already pulled the card -> 'list.remove(x): x not in list'
+        # on nearly every Persist, which aborted Grixis's whole turn via
+        # _simple_play_turn's except-and-fallback. We must NOT move the card again
+        # (a value/identity re-remove crashes-or-no-ops, and re-appending would put
+        # a DUPLICATE creature on the battlefield). We only mirror the engine's
+        # target choice so we can fire the reanimated creature's ETB (the engine
+        # handler moves the card but does not trigger its ETB).
         gy_targets = [c for c in gs.zones.graveyard
                       if c.has(Tag.CREATURE) and not _is_legendary(c)]
         if gy_targets:
             for c in list(gs.zones.hand):
                 if c.name == PERSIST and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
                     tgt = max(gy_targets, key=lambda x: getattr(x, 'cmc', 0))
-                    gs.zones.graveyard.remove(tgt)
-                    gs.zones.battlefield.append(tgt)
-                    tgt.turn_entered = gs.turn
-                    tgt.summoning_sickness = True
-                    # -1/-1 counter reduces P/T by 1 each
-                    try:
-                        tgt.power = str(max(0, int(tgt.power) - 1))
-                        tgt.toughness = str(max(0, int(tgt.toughness) - 1))
-                    except (ValueError, TypeError):
-                        pass
-                    self._trigger_etb(gs, opponent, tgt)
-                    gs._log(f"  Persist: reanimate {tgt.name} (with -1/-1 counter)")
+                    gs.cast_spell(c)  # engine _persist_spell reanimates `tgt`
+                    # Fire ETB only if the engine actually landed `tgt` on the
+                    # battlefield (identity check). If Persist was countered, `tgt`
+                    # never left the GY -> skip the ETB. No value-based .remove().
+                    if any(x is tgt for x in gs.zones.battlefield):
+                        self._trigger_etb(gs, opponent, tgt)
+                        gs._log(f"  Persist: reanimate {tgt.name} (with -1/-1 counter)")
                     break
 
         # 4. Hard-cast Archon of Cruelty ({6}{B}{B}) — 8 mana, late game threat

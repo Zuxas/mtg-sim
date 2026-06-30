@@ -11,9 +11,16 @@ the spine increment:
      (guards the capability gate; spec Component 6.4).
   2. Even an opted-IN APL that PASSES (answer_combo -> None) leaves every zone
      untouched.
-  3. The production BorosEnergyMatchAPL inherits answer_combo (the mixin) but
-     keeps WANTS_COMBO_INTERACTION = False -> the layer is unreachable for it
-     this increment, so adding the mixin is behaviorally inert.
+  3. The layer no-op guarantees (1+2) are proven against SYNTHETIC APLs, so they
+     hold regardless of which production decks opt in.
+
+NOTE (grixis cell, Component 3): BorosEnergyMatchAPL now sets
+WANTS_COMBO_INTERACTION = True and overrides answer_combo (it answers the grixis
+reanimation checkpoint). That capability is INERT for every NON-grixis matchup
+because the layer is double-gated: offer_interaction is only ever CALLED by a
+combo APL at its decisive step, and only grixis wires that call this handoff. The
+byte-identical proof for the non-combo field is the run_match_set baseline check
+(data/combo_spine_baseline_2026-06-30.txt), not this unit test.
 
 Run: python tests/test_combo_interaction_inert.py   (also pytest-collectable)
 """
@@ -103,21 +110,25 @@ def test_gate_on_but_passing_mutates_nothing():
         assert _snapshot(combo_gs) == before_combo, f"combo zones mutated ({ev.kind})"
 
 
-def test_boros_inherits_mixin_but_gate_stays_off():
+def test_boros_opts_in_with_answer_combo():
+    """grixis cell (Component 3): Boros now opts in and answers the reanimation
+    checkpoint. The layer stays inert for non-grixis matchups by the double gate
+    (only grixis CALLS offer_interaction) -- proven byte-identical in the
+    run_match_set baseline, not here."""
     from apl.boros_energy_match import BorosEnergyMatchAPL
     apl = BorosEnergyMatchAPL()
     assert isinstance(apl, AnswerComboMixin), "Boros must inherit AnswerComboMixin"
     assert hasattr(apl, "answer_combo"), "Boros must expose answer_combo"
-    assert apl.WANTS_COMBO_INTERACTION is False, \
-        "Boros must NOT opt in during the spine increment"
+    assert apl.WANTS_COMBO_INTERACTION is True, \
+        "Boros must opt in (grixis cell turns the interaction layer on)"
 
 
 def main():
     test_gate_off_is_noop_and_mutates_nothing()
     test_gate_on_but_passing_mutates_nothing()
-    test_boros_inherits_mixin_but_gate_stays_off()
+    test_boros_opts_in_with_answer_combo()
     print("PASS: combo-interaction layer is inert "
-          "(gate-off no-op, opted-in-pass no-op, Boros mixin gate OFF).")
+          "(gate-off no-op, opted-in-pass no-op); Boros opts in for the grixis cell.")
 
 
 if __name__ == "__main__":

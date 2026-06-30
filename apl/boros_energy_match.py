@@ -19,7 +19,8 @@ from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
-from engine.combo_interaction import AnswerComboMixin
+from engine.combo_interaction import (AnswerComboMixin, RESOLVE_THREAT,
+                                      REANIMATE, GY_SETUP)
 from engine.match_state import safe_power, safe_toughness, has_keyword
 from engine.stack import classify_card, InteractionType, get_burn_damage
 
@@ -54,6 +55,70 @@ class BorosEnergyMatchAPL(AnswerComboMixin, MatchAPL):
     name = "Boros Energy"
     win_condition_damage = 20
     max_turns = 12
+
+    # combo-spine Component 3 (grixis cell): opt IN to the interaction layer so a
+    # combo APL's offer_interaction(...) at its decisive step reaches answer_combo.
+    # Double-gated: this flag only matters when a combo APL actually CALLS
+    # offer_interaction (only grixis does, this handoff). All other matchups stay
+    # byte-identical because no other opponent raises a checkpoint -- verified
+    # empirically against the spine baseline.
+    WANTS_COMBO_INTERACTION = True
+
+    def answer_combo(self, my_gs, combo_gs, event):
+        """Boros maindeck Game-1 answers to a combo checkpoint. INTENTIONALLY WEAK
+        and NON-LOAD-BEARING (spec Component 1 critical constraint + grixis cell):
+        Boros's cheap burn cannot kill a 5-6 toughness reanimated body (Lightning
+        Bolt only reaches toughness <=3), accumulated energy is not visible in this
+        reactive window (the per-turn view resets it), and there is NO maindeck
+        graveyard hate (Rest in Peace / Surgical Extraction are SIDEBOARD-only). So
+        this RARELY fires G1 -- the grixis band must be reached by the threat's
+        intrinsic fragility, NOT by our interaction. Built honest for generality
+        (Bo3 sideboard games, future interaction decks). Even when it removes the
+        Archon, the body recurs (our removal destroys, it does not exile), so a fire
+        only buys a turn."""
+        kind = getattr(event, "kind", None)
+        hand = list(getattr(my_gs.zones, "hand", []))
+        pool = getattr(my_gs, "mana_pool", None)
+
+        def aff(c):
+            try:
+                return pool is not None and pool.can_cast(
+                    getattr(c, "mana_cost", None), getattr(c, "cmc", 0))
+            except Exception:
+                return False
+
+        if kind in (RESOLVE_THREAT, REANIMATE):
+            target = event.targets[0] if event.targets else None
+            if target is None:
+                return None
+            tgh = safe_toughness(target)
+            my_creatures = sum(1 for c in my_gs.zones.battlefield
+                               if not c.is_land() and c.has(Tag.CREATURE))
+            energy = getattr(my_gs, "energy", 0)
+            # Thraben Charm: 2x our creature count to a creature -- the only maindeck
+            # answer that can reach a 6-toughness Archon (needs >=3 of our creatures).
+            for c in hand:
+                if c.name == THRABEN_CHARM and aff(c) and my_creatures * 2 >= tgh:
+                    return ("remove", c, target)
+            # Galvanic Discharge: energy burn (energy rarely visible in this window).
+            for c in hand:
+                if c.name == GALVANIC and aff(c) and energy >= tgh:
+                    return ("remove", c, target)
+            # Lightning Bolt: only reaches small bodies (toughness <= 3).
+            for c in hand:
+                if c.name == LIGHTNING_BOLT and aff(c) and tgh <= 3:
+                    return ("remove", c, target)
+            return None
+
+        if kind == GY_SETUP:
+            # Thraben Charm mode 3 exiles a target player's graveyard -- the lone
+            # maindeck G1 graveyard answer (situational; one of three charm modes).
+            for c in hand:
+                if c.name == THRABEN_CHARM and aff(c):
+                    return ("gy_hate", c)
+            return None
+
+        return None
 
     def __init__(self):
         self._treasures = 0

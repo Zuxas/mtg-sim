@@ -25,11 +25,27 @@ the sim divergence is structural).
 # direction: how the SIM errs relative to real-world truth.
 MISMODELED_MATCHUPS = {
     "grixis reanimator": {
-        "direction": "INVERTED",
-        "sim": "~75% favored",
+        "direction": "INVERTED (improved, still flagged)",
+        "sim": "~55% favored (was ~69-75%)",
         "truth": "~38% (we are the DOG)",
-        "why": "combo under-assembles via the played-out APL; sim cannot model our (limited) "
-               "graveyard interaction. Sampler alternative lands ~24.5% (too pessimistic). Truth is between.",
+        "why": "handoff #2 grixis cell (2026-06-30) built the intrinsic-fragility threat model + "
+               "turned the interaction layer ON. The reanimated Archon's RECURRING attack trigger "
+               "(sacrifice + discard + 3 life drain) now fires in main_phase_match -- it was dropped "
+               "entirely because declare_attackers is never called on the run_match path, so the body "
+               "acted as a vanilla beater; the 3-drain is routed through gs.damage_dealt + WANTS_BURN "
+               "(scalar life writes don't propagate). The Archon is now the reliable reanimation target "
+               "(Unmarked Grave fetches it, Faithless Looting pitches it, Persist/Reanimate recur it "
+               "through our DESTROY-only removal -- only exile, which maindeck Boros lacks, permanently "
+               "answers it), and Thoughtseize/Inquisition strip our removal. RESULT: when the Archon "
+               "comes online grixis wins ~82% (the named mechanisms work). Our interaction is honest "
+               "but NON-LOAD-BEARING (answer_combo fires ~1-3/500 G1: Boros's cheap burn can't kill a "
+               "6-toughness body, energy isn't visible in the window, and there's no maindeck GY-hate). "
+               "STILL FLAGGED per Stop condition 2: match P_assemble is only ~32% vs the deck's faithful "
+               "GOLDFISH assembly of ~56% -- the gap is run_match's crude inline mulligan (mull-if-<2-"
+               "lands, NOT the APL's combo-aware keep()) plus the 66-card stub deck file. At the goldfish "
+               "56% the cell would land boros ~42% (IN band [25,45]); the residual is a structural "
+               "engine/deck-file limit, not the threat model. NOT tuned into band (forbidden). Trust the "
+               "DIRECTION (improving toward dog), not the 55%.",
     },
     "goryos vengeance": {
         "direction": "INFLATED",

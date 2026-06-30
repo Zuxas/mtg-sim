@@ -1,0 +1,57 @@
+# Combo-spine PRE-CHANGE no-regression baseline
+# Spec: harness/specs/2026-06-30-modern-combo-interaction.md (No-regression strategy)
+# PRIMARY driver: engine.match_runner.run_match_set (single-hero; seat A = our deck, seat B = opponent)
+# Loaders: scripts.full_field_gauntlet._get_deck_file + apl.get_match_apl (same as the gauntlet)
+# Captured: 2026-06-30
+# Branch: modern-postban-arc
+# HEAD: 9c4e6a264fac939ebf9828e45f703b8b83d32b6c
+# Params: n=500 seed=42 n_workers=1 mix_play_draw=True (determinism contract: identical for all n_workers>=1)
+# Determinism re-run check (boros_vs_eldrazi_tron): a_wins reproduced = True
+# Oracle DB warmed before capture.
+# FLAG STATE VERIFIED AT CAPTURE: WANTS_BURN does not exist anywhere pre-fix; WANTS_STORM=True only on
+#   ruby_storm. Boros (seat A in 9/10 cells) + all 8 anchor opponents set NEITHER flag -> the 'noncombo'
+#   anchors are byte-identical by construction under the Component-2 cell-granular invariant. mono_red is
+#   unflagged today (gains WANTS_BURN in the fix -> expected to move). DO NOT flag boros WANTS_BURN
+#   (single point of failure: would break all 7 boros anchors + both burn cells at once).
+# PHASING (validate stage): after Component 1 (inert interaction layer) ALL 10 cells incl. the two
+#   burn_storm cells must stay byte-identical (Stop condition 1). The burn_storm cells move ONLY after
+#   Component 2 (WANTS_BURN). The 8 noncombo anchors must stay byte-identical through BOTH phases.
+# DRIVER NOTE: these are PRIMARY-driver (run_match_set) locks. They legitimately DIFFER from the
+#   validation doc's figures (selesnya_vs_prowess 53.4% here vs cited 60.7%/65.3%; boros_vs_eldrazi_tron
+#   38.4% here vs the doc's 53.5% gauntlet number) because the doc used engine.match_engine / a
+#   run_match instance-reusing loop and seat-symmetric measurement. Per spec Component 4.1 the freshly
+#   measured run_match_set value IS the lock. Do NOT compare against the doc's gauntlet/match_engine figures.
+#
+# our_WR = seat-A win rate = a_wins/n. Seat A is ALWAYS our deck (combo/burn never pilots seat A here).
+# 'noncombo' cells are BYTE-IDENTICAL ANCHORS: they MUST reproduce a_wins exactly post-fix (both decks unflagged).
+# 'burn_storm' cells are EXPECTED TO MOVE after the Component-2 WANTS_BURN fix.
+====================================================================================================
+cell                        cat            n  seed  a_wins  b_wins  our_WR   avgT
+----------------------------------------------------------------------------------------------------
+boros_vs_eldrazi_tron       noncombo     500    42     192     308  38.40%   7.70
+boros_vs_uw_control         noncombo     500    42     447      53  89.40%   8.63
+boros_vs_dimir_murktide     noncombo     500    42     344     156  68.80%   6.39
+boros_vs_amulet_titan       noncombo     500    42     384     116  76.80%   5.94
+boros_vs_humans             noncombo     500    42     125     375  25.00%   6.83
+boros_vs_sultai_midrange    noncombo     500    42     287     213  57.40%   6.85
+boros_vs_izzet_prowess      noncombo     500    42     318     182  63.60%   7.13
+selesnya_vs_prowess         noncombo     500    42     267     233  53.40%   5.89
+boros_vs_mono_red           burn_storm   500    42     481      19  96.20%   7.17
+boros_vs_ruby_storm         burn_storm   500    42     496       4  99.20%   6.18
+====================================================================================================
+
+# Per-cell manifest (exact seat keys + deck files + APL classes for bit-for-bit replay):
+# boros_vs_eldrazi_tron: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=eldrazitron(EldraziTronMatchAPL,decks/eldrazi_tron_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=192 our_WR=38.40%
+# boros_vs_uw_control: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=uwcontrol(UWControlModernMatchAPL,decks/uw_control_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=447 our_WR=89.40%
+# boros_vs_dimir_murktide: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=dimirmurktide(MurktideMatchAPL,decks/dimir_oculus_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=344 our_WR=68.80%
+# boros_vs_amulet_titan: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=amulettitan(AmuletTitanMatchAPL,decks/amulet_titan_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=384 our_WR=76.80%
+# boros_vs_humans: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=modernhumans(HumansMatchAPL,decks/humans_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=125 our_WR=25.00%
+# boros_vs_sultai_midrange: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=sultaimidrange(SultaiMidrangeMatchAPL,decks/sultai_midrange_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=287 our_WR=57.40%
+# boros_vs_izzet_prowess: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=izzetprowessstandard(IzzetProwessStandardMatchAPL,decks/izzet_prowess_standard.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=318 our_WR=63.60%
+# selesnya_vs_prowess: A=selesnyalandfall(SelesnyaLandfallStandardMatchAPL,decks/selesnya_landfall_standard.txt) vs B=izzetprowessstandard(IzzetProwessStandardMatchAPL,decks/izzet_prowess_standard.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=267 our_WR=53.40%
+# boros_vs_mono_red: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=monored(MonoRedMatchAPL,decks/mono_red_aggro_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=481 our_WR=96.20%
+# boros_vs_ruby_storm: A=borosenergylowcurve(BorosEnergyMatchAPL,decks/boros_energy_lowcurve_modern.txt) vs B=rubystorm(RubyStormMatchAPL,decks/ruby_storm_modern.txt) | n=500 seed=42 n_workers=1 mix_play_draw=True | a_wins=496 our_WR=99.20%
+
+# REPLAY (validate stage): for each cell, load A/B via _get_deck_file+get_match_apl on the listed keys,
+#   run_match_set(apl_A, deck_A, apl_B, deck_B, n=N, seed=SEED, mix_play_draw=True, n_workers=1),
+#   assert a_wins == the recorded value for every 'noncombo' cell (Stop condition 1 if any deviates).

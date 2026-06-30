@@ -266,14 +266,16 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             gs.land_played_b = view.land_played
             gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', 0)
             gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', 0)
-        # R3 storm (gated): propagate the ACTIVE player's main-phase-1 spell damage
-        # back to the match state. Mirrors _run_post_combat_phase's damage sync. The
-        # view is fresh (_build_view makes a new GameState, never seeds damage_dealt),
-        # so view.damage_dealt holds ONLY this main1's damage and += onto the cumulative
-        # total is correct (no double-count). Gated on the ACTIVE apl's WANTS_STORM (not
-        # _storm_match_gate) so the opponent's own main1 burn stays dropped, exactly as
-        # pre-R3. Gate OFF -> pure no-op -> byte-identical to the trilogy+R4 baseline.
-        if getattr(apl, "WANTS_STORM", False):
+        # R3 storm / combo-spine #2 burn (gated): propagate the ACTIVE player's
+        # main-phase-1 spell damage back to the match state. Mirrors
+        # _run_post_combat_phase's damage sync. The view is fresh (_build_view makes a
+        # new GameState, never seeds damage_dealt), so view.damage_dealt holds ONLY this
+        # main1's damage and += onto the cumulative total is correct (no double-count).
+        # Gated on the ACTIVE apl's WANTS_STORM OR WANTS_BURN (combo-spine #2 Site 1
+        # generalization) so the opponent's own main1 burn stays dropped unless the deck
+        # opts in, exactly as pre-fix for unflagged decks. Gate OFF on BOTH flags ->
+        # pure no-op -> byte-identical to the trilogy+R4 baseline.
+        if getattr(apl, "WANTS_STORM", False) or getattr(apl, "WANTS_BURN", False):
             _dmg = getattr(view, "damage_dealt", 0)
             if player == "a":
                 gs.damage_to_b += _dmg

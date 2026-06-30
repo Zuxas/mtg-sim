@@ -34,6 +34,13 @@ LIFEGAIN_THREATS = {"Guide of Souls", "Ocelot Pride", "Phlage, Titan of Fire's F
 
 
 class MonoRedMatchAPL(MatchAPL):
+    # combo-spine #2 (Site 1): Mono Red deals its face burn (Searing Blaze, Bolt,
+    # Chain, Rift Bolt, Lava Spike, Price, Fireblast, Skullcrack) in main_phase_match
+    # via gs.damage_dealt, but lacked WANTS_STORM, so _simple_play_turn dropped that
+    # ~6 dmg/game from the match life total. WANTS_BURN opts mono_red's mp1 damage
+    # into the gated sync. Gauntlet effect: boros-vs-mono_red moves off its 96.2%
+    # ceiling toward a realistic burn race (~35-45% for boros).
+    WANTS_BURN = True
     name = "Mono Red Aggro"
     win_condition_damage = 20
     max_turns = 8

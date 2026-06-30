@@ -84,11 +84,27 @@ class MatchAPL(BaseAPL):
     # The single opt-in is the rewritten RubyStormMatchAPL.
     WANTS_STORM = False
 
+    # combo-spine #2 (Site 1): opt-in to the SAME gated main-phase-1 damage_dealt
+    # propagation as WANTS_STORM, for non-storm direct-damage / burn decks whose
+    # mp1 face damage (gs.damage_dealt) was otherwise silently dropped. The
+    # _simple_play_turn sync at L276 fires on (WANTS_STORM or WANTS_BURN), so a
+    # deck setting NEITHER flag stays byte-identical (cell-granular invariant: a
+    # cell moves iff one of its two decks is flagged). First opt-in: MonoRedMatchAPL.
+    # Drain/direct combo opponents (yawgmoth, belcher, ...) opt in during Component 3.
+    WANTS_BURN = False
+
     # R6 hidden-information (card-advantage / inevitability) opt-in. OFF -> legacy
     # life-total timeout + no mid-game concession -> match path byte-identical. Models
     # card-advantage / inevitability, NOT literal hidden info / belief states. Initial
     # opt-in: IzzetLessonStandardMatchAPL. (Increment 1 = scaffold + Phase 1 timeout only.)
     WANTS_HIDDEN_INFO = False
+
+    # combo-spine #1 (Component 1): capability gate for the shared combo-interaction
+    # layer (engine/combo_interaction.offer_interaction). OFF -> the layer early-returns
+    # a no-op InteractionResult, so an assembled combo proceeds exactly as its
+    # un-answered baseline -> byte-identical. An interaction deck opts in by inheriting
+    # AnswerComboMixin and setting this True. NO APL sets it True in the spine increment.
+    WANTS_COMBO_INTERACTION = False
 
     def choose_pw_ability(self, pw, gs, opp_gs) -> int:
         """R5 loyalty-ability chooser. Returns the loyalty change (+N / 0 / -N)

@@ -1,9 +1,15 @@
-// Living End - meninooney (2026-04-29)
+// Living End - meninooney (2026-04-29), post-ban update 2026-06-30
 // Event: MTGO Modern Challenge 64 #12840702
 // Source: mtg_meta.db deck_id=133094 pulled 2026-04-30
+// POST-BAN (May 2026): added 3 Violent Outburst (UNBANNED) -- the premier
+//   instant-speed cascade enabler, a strict upgrade for the Living End
+//   plan. Trimmed 1 Waker of Waves, 1 Sink into Stupor, 1 Striped
+//   Riverwinder to fit. This is the headline winner of the Violent
+//   Outburst unban (reflected in its field-share jump, format_config modern).
 // Main: 60 | Sideboard: 15
 
 4 Ardent Plea
+3 Violent Outburst
 4 Curator of Mysteries
 4 Endurance
 4 Force of Negation
@@ -13,9 +19,9 @@
 4 Street Wraith
 4 Subtlety
 3 Living End
-3 Waker of Waves
-2 Sink into Stupor
-2 Striped Riverwinder
+2 Waker of Waves
+1 Sink into Stupor
+1 Striped Riverwinder
 1 Breeding Pool
 1 Colossal Skyturtle
 1 Commandeer

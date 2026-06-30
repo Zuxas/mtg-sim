@@ -40,6 +40,39 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
 
 ## Current APL status
 
+### Post-ban Modern field refresh (data/coverage) — 2026-06-30
+
+The modeled Modern field in `format_config.py` was refreshed for the May-2026
+B&R (BANNED Phlage + Lotus Field; UNBANNED Umezawa's Jitte + Violent Outburst).
+
+- **No live source data.** `mtg_meta.db` has NO post-ban Modern data — its most
+  recent Modern event is 2026-04-24 (pre-ban) and the `untapped_*` tables are
+  Arena-only. The new `field` is therefore a **documented best-estimate**, not a
+  pulled snapshot: pre-ban DB 30-day baseline (1591 decks) + transparent
+  per-ban deltas. The derivation is written into the `format_config.py` modern
+  comment block. Re-pull once post-ban tournament data lands.
+- **Ban hygiene:** removed Phlage from `boros_energy_modern` (4), `domain_zoo_modern`
+  (3), `jeskai_blink_modern` (4), `jeskai_control_modern` (1); removed Lotus
+  Field from `amulet_titan_modern` (2). Replacements keep each list legal at its
+  prior count (Amulet stays at its audit:intentional 61).
+- **Unban representation:** `living_end_modern` + new `temur_crashcade_modern`
+  run Violent Outburst; `boros_energy_modern` + new `death_and_taxes_modern` run
+  Umezawa's Jitte.
+- **New archetypes (deck FILE + BOTH registries + STUB synthetic MatchAPL):**
+  - `deathandtaxes` / `dnt` -> `DeathAndTaxesMatchAPL` (`decks/death_and_taxes_modern.txt`) — Jitte payoff.
+  - `temurcrashcade` / `crashcade` -> `TemurCrashcadeMatchAPL` (`decks/temur_crashcade_modern.txt`) — Violent Outburst cascade.
+  - Both stubs follow the `apl/gruul_broodscale_match.py` synthetic-matchup
+    pattern: they play as generic creature/tempo decks so gauntlets RUN; their
+    numbers are NOT primer-validated. Promote before trusting any cell.
+- **Retired from field** (deck files + registry kept): Esper Blink (folded into
+  the shrunken Jeskai Blink shell), Jeskai Control (Phlage-dependent, fell out
+  of top-18). Boros Energy share 21.2->14.5; Jeskai Blink 10.6->3.0; Living End
+  2.7->6.5.
+- **Validation:** all 18 modeled decks load (60/15 or audit-marked) and resolve
+  in BOTH `APL_REGISTRY` + `MATCH_APL_REGISTRY`; both new decks are clean 60/15
+  with zero unresolved cards; no banned card lines remain in any modern deck.
+  Scope was data/coverage only — no engine/APL-fidelity changes.
+
 ### Low Curve Boros Energy (Modern) — added 2026-06-29 (post-ban)
 
 - Deck: `decks/boros_energy_lowcurve_modern.txt` (60+15, Team Resolve primer, post-Phlage)

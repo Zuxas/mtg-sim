@@ -1,12 +1,14 @@
+// Domain Zoo -- post-ban update 2026-06-30: cut 3 Phlage, Titan of Fire's
+//   Fury (BANNED May 2026); kept the Zoo core and replaced with deck-native
+//   filler (Psychic Frog 3->4, Tribal Flames 3->4, Stubborn Denial 3->4).
 4 Scion of Draco
 4 Territorial Kavu
 3 Doorkeeper Thrull
-3 Phlage, Titan of Fire's Fury
-3 Psychic Frog
+4 Psychic Frog
 3 Ragavan, Nimble Pilferer
-3 Tribal Flames
+4 Tribal Flames
 4 Lightning Bolt
-3 Stubborn Denial
+4 Stubborn Denial
 1 Thraben Charm
 4 Leyline Binding
 4 Leyline of the Guildpact

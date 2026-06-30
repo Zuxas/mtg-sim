@@ -1,7 +1,9 @@
 // Amulet Titan - reidq7 (2026-04-29)
 // Event: MTGO Modern Challenge 64 #12840702
 // Source: mtg_meta.db deck_id=133107 pulled 2026-04-30
-// Main: 61 | Sideboard: 15  (audit:intentional -- faithful 61-card copy of a real MTGO Challenge list; do not trim)
+// Main: 61 | Sideboard: 15  (audit:intentional -- 61-card MTGO Challenge list;
+//   2 Lotus Field (BANNED May 2026) swapped for 1 Forest + 1 Simic Growth
+//   Chamber to stay legal at the same 61; do not otherwise trim)
 
 4 Amulet of Vigor
 4 Arboreal Grazer
@@ -10,13 +12,12 @@
 4 Scapeshift
 4 Spelunking
 4 Urza's Saga
+4 Forest
 3 Boseiju, Who Endures
-3 Forest
 3 Green Sun's Zenith
 3 Malevolent Rumble
 3 Primeval Titan
-2 Lotus Field
-2 Simic Growth Chamber
+3 Simic Growth Chamber
 2 Summoner's Pact
 1 Aftermath Analyst
 1 Cultivator Colossus

@@ -1,6 +1,9 @@
-// Boros Energy - renatoaraujo (2026-04-29)
+// Boros Energy - renatoaraujo (2026-04-29), post-ban update 2026-06-30
 // Event: MTGO Modern Challenge 64 #12840702
 // Source: mtg_meta.db deck_id=133103 pulled 2026-04-30
+// POST-BAN (May 2026): cut 4 Phlage, Titan of Fire's Fury (BANNED); added
+//   2 Umezawa's Jitte (UNBANNED -- the premier creature-mirror payoff) and
+//   bumped Voice of Victory 1->3 for a flatter post-Phlage curve.
 // Main: 60 | Sideboard: 15
 
 4 Ajani, Nacatl Pariah
@@ -10,20 +13,20 @@
 4 Guide of Souls
 4 Marsh Flats
 4 Ocelot Pride
-4 Phlage, Titan of Fire's Fury
 4 Ragavan, Nimble Pilferer
+3 Voice of Victory
 3 Arena of Glory
 3 Goblin Bombardment
 3 Sacred Foundry
 3 Seasoned Pyromancer
 3 Thraben Charm
+2 Umezawa's Jitte
 2 Elegant Parlor
 2 Plains
 1 Blood Moon
 1 Fable of the Mirror-Breaker
 1 Mountain
 1 The Legend of Roku
-1 Voice of Victory
 
 // Sideboard
 2 Obsidian Charmaw

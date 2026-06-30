@@ -1,0 +1,41 @@
+// Death and Taxes (Modern) -- post-ban archetype, added 2026-06-30
+// Context: the May-2026 unban of Umezawa's Jitte gave fair white creature
+//   decks a premier mirror-breaking / aggro payoff. Mono-White Death and
+//   Taxes (Aether Vial hatebears + Jitte) is the textbook beneficiary and a
+//   real DB archetype (2.9% of the pre-ban field as "Death And Taxes").
+// Representative best-estimate list (Jitte-forward Vial hatebears).
+// Main: 60 | Sideboard: 15
+// audit:custom_variant -- post-ban estimate list, no single-tournament source.
+
+// --- Lands (23) ---
+13 Plains
+4 Ghost Quarter
+2 Eiganjo, Seat of the Empire
+2 Mutavault
+2 Horizon Canopy
+
+// --- Creatures (24) ---
+4 Thalia, Guardian of Thraben
+4 Mother of Runes
+4 Solitude
+4 Skyclave Apparition
+3 Flickerwisp
+2 Phelia, Exuberant Shepherd
+2 Recruiter of the Guard
+1 Palace Jailer
+
+// --- Other (13) ---
+4 Aether Vial
+4 Leonin Arbiter
+3 Swords to Plowshares
+2 Umezawa's Jitte
+
+SIDEBOARD:
+2 Path to Exile
+2 Rest in Peace
+2 Stony Silence
+2 Containment Priest
+2 Kataki, War's Wage
+2 Sanctifier en-Vec
+2 Cathar Commando
+1 Settle the Wreckage

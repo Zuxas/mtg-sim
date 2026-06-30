@@ -78,6 +78,14 @@ APL_REGISTRY = {
     # SYNTHETIC: APL plays it as an aggressive creature deck; not primer-validated.
     "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
     "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    # Post-ban Modern field refresh (2026-06-30). STUB match APLs (synthetic
+    # numbers) -- deck FILE + registry exist so gauntlets RUN; not primer-validated.
+    # Death and Taxes: Umezawa's Jitte unban payoff (fair white hatebears).
+    "deathandtaxes":   ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL", "decks/death_and_taxes_modern.txt"),
+    "dnt":             ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL", "decks/death_and_taxes_modern.txt"),
+    # Temur Crashcade: Violent Outburst unban shell (Crashing Footfalls cascade).
+    "temurcrashcade":  ("apl.temur_crashcade_match", "TemurCrashcadeMatchAPL", "decks/temur_crashcade_modern.txt"),
+    "crashcade":       ("apl.temur_crashcade_match", "TemurCrashcadeMatchAPL", "decks/temur_crashcade_modern.txt"),
     "burn":            ("apl.burn",             "BurnAPL",           None),
     "izzetcauldron":   ("apl.izzet_cauldron_standard_match", "IzzetCauldronMatchAPL", "decks/izzet_cauldron_standard.txt"),
     "monored":         ("apl.mono_red_aggro",   "MonoRedAggroAPL",   "decks/mono_red_aggro_modern.txt"),
@@ -314,6 +322,11 @@ MATCH_APL_REGISTRY = {
     # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29). SYNTHETIC stub number.
     "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
     "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    # Post-ban Modern field refresh (2026-06-30). STUB match APLs (synthetic).
+    "deathandtaxes":   ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL"),
+    "dnt":             ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL"),
+    "temurcrashcade":  ("apl.temur_crashcade_match", "TemurCrashcadeMatchAPL"),
+    "crashcade":       ("apl.temur_crashcade_match", "TemurCrashcadeMatchAPL"),
     "jeskaicontrol":   ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),
     "jeskailute":      ("apl.jeskai_lute_standard_match", "JeskaiLuteMatchAPL"),
     "jeskaienergycontrol": ("apl.jeskai_control_standard_match", "JeskaiControlStandardMatchAPL"),

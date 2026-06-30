@@ -29,17 +29,47 @@ FORMATS = {
 },
 
 "modern": {
-    # Field shares from MTGGoldfish 30-day snapshot 2026-04-29 (501-4 decks).
-    # Only decks with working APLs included; launcher self-normalizes.
-    # Covers ~72% of real meta. Dropped: Belcher/Neobrand/Grixis Rean/Temur Prowess
-    # (no APLs), Dimir Murktide (0.2% real), Mono Red Aggro (absorbed into Izzet Prowess).
+    # ── POST-BAN field (May-2026 B&R: BANNED Phlage + Lotus Field;
+    #    UNBANNED Umezawa's Jitte + Violent Outburst). Refreshed 2026-06-30. ──
+    #
+    # SOURCE / METHOD — DOCUMENTED ESTIMATE, *not* a live snapshot:
+    #   The meta-analyzer DB (mtg_meta.db) has NO post-ban Modern tournament
+    #   data: its most recent Modern event is 2026-04-24 (pre-ban), and the
+    #   untapped_* tables are MTG-Arena-only (no paper Modern). So a live
+    #   post-ban share table cannot be pulled. Per the field-refresh method,
+    #   these numbers are a best-estimate built from a transparent derivation
+    #   (NOT recalled, NOT a fabricated snapshot):
+    #     base   = pre-ban DB 30-day baseline (1591 decks, 2026-03-25..04-24),
+    #              with DB labels mapped to modeled names (Boros Aggro+Energy+
+    #              Ocelot -> Boros Energy; Izzet+Pinnacle Affinity -> Affinity;
+    #              Urzatron -> Eldrazi Tron; Instant Reanimator -> Goryo's;
+    #              Landless Belcher -> Belcher; Allosaurus Combo -> Neobrand).
+    #     deltas = per-card B&R impact applied only to affected decks; decks
+    #              untouched by the bans keep their baseline share:
+    #       - Phlage BAN  -> Boros Energy pivots to the post-Phlage Low-Curve
+    #         list (down from ~21% but still #1, partly offset by Jitte);
+    #         Jeskai Blink/Control leaned on 4x Phlage -> consolidated + cut
+    #         hard (Jeskai Blink 10.6 -> 3.0); Domain Zoo loses 3x top-end
+    #         Phlage but keeps its Zoo core (~flat).
+    #       - Lotus Field BAN -> minor hit to Amulet Titan (ran 2x) -> 5.2->4.8.
+    #       - Jitte UNBAN  -> fair white creature decks rise: Death and Taxes
+    #         (DB 2.9% pre-ban, textbook Jitte home) ADDED at 5.5; 5C Humans up.
+    #       - Violent Outburst UNBAN -> cascade rises: Living End gets a 2nd
+    #         instant-speed enabler (2.7 -> 6.5); NEW Temur Crashcade
+    #         (Crashing Footfalls) ADDED at 3.4.
+    #   Covers ~78% of the field; launcher self-normalizes. Shares are
+    #   estimates, not measured — re-pull from the DB once post-ban Modern
+    #   tournament data lands (see meta_bridge.py).
+    #   RETIRED from field (deck files + registry kept, just no longer a row):
+    #     Esper Blink (folded into the shrunken Jeskai Blink shell),
+    #     Jeskai Control (Phlage-dependent control fell out of the top-18).
     "field": {
-        "Boros Energy": 21.2, "Jeskai Blink": 10.6, "Affinity": 9.0,
-        "Amulet Titan": 5.2,  "Ruby Storm": 4.1,    "Eldrazi Tron": 3.7,
-        "Belcher": 3.5,       "Goryo's Vengeance": 3.5, "Domain Zoo": 3.4,
-        "Neobrand": 3.2,      "Living End": 2.7,    "Grixis Reanimator": 2.3,
-        "Dimir Midrange": 2.0, "Esper Blink": 1.8,  "Jeskai Control": 2.2,
-        "Izzet Prowess": 1.7,  "Eldrazi Ramp": 1.6, "5C Humans": 1.5,
+        "Boros Energy": 14.5, "Affinity": 9.0,      "Living End": 6.5,
+        "Death and Taxes": 5.5, "Amulet Titan": 4.8, "Ruby Storm": 4.1,
+        "Eldrazi Tron": 3.7,  "Belcher": 3.5,       "Goryo's Vengeance": 3.5,
+        "Temur Crashcade": 3.4, "Domain Zoo": 3.2,  "Jeskai Blink": 3.0,
+        "Dimir Midrange": 2.6, "5C Humans": 2.5,    "Grixis Reanimator": 2.4,
+        "Neobrand": 2.0,      "Eldrazi Ramp": 1.8,  "Izzet Prowess": 1.7,
     },
     "combo": {
         "amulet titan", "goryo's vengeance", "ruby storm", "living end",

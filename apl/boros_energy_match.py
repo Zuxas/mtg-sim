@@ -19,6 +19,7 @@ from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
+from engine.combo_interaction import AnswerComboMixin
 from engine.match_state import safe_power, safe_toughness, has_keyword
 from engine.stack import classify_card, InteractionType, get_burn_damage
 
@@ -44,7 +45,12 @@ BLOOD_MOON       = "Blood Moon"
 REMOVAL_SPELLS = {LIGHTNING_BOLT, GALVANIC, STATIC_PRISON, THRABEN_CHARM}
 
 
-class BorosEnergyMatchAPL(MatchAPL):
+class BorosEnergyMatchAPL(AnswerComboMixin, MatchAPL):
+    # combo-spine #1: inherits AnswerComboMixin so it can answer combo checkpoints
+    # via answer_combo(). INERT this increment -- WANTS_COMBO_INTERACTION stays False
+    # (the mixin default), so offer_interaction never calls answer_combo and no combo
+    # APL raises a checkpoint yet. Adding the mixin is byte-identical (the boros seat-A
+    # anchors must reproduce a_wins exactly); the opt-in flips in Component 3.
     name = "Boros Energy"
     win_condition_damage = 20
     max_turns = 12

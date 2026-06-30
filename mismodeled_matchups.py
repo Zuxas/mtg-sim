@@ -59,6 +59,22 @@ MISMODELED_MATCHUPS = {
                "undermodeled, so we beat it far more often in sim than in reality. (Same gap behind the "
                "stale 63.5% 'Modern lock'.)",
     },
+    "yawgmoth": {
+        "direction": "DEFLATED (combat over-credited)",
+        "sim": "~49% (combo NOW assembles 9.8%/game and kills)",
+        "truth": "spec band [55,80] -- we should be favored",
+        "why": "The Agatha's-Cauldron/Walking-Ballista combo was REPAIRED 2026-06-30 (handoff #2): the "
+               "old DRAINS/UNDYING constants named Blood Artist/Zulaport/Geralf's Messenger -- none in "
+               "decks/yawgmoth_modern.txt -- so the combo fired 0/50. It now assembles (Yawgmoth + 2 "
+               "undying + Cauldron + Ballista) at ~9.8%/game and its damage is rerouted through "
+               "gs.damage_dealt + WANTS_BURN so it reaches the match life total. BUT the cell FAILS LOW: "
+               "our no-combo race_baseline is only ~53.8% because the APL plays as an over-strong generic "
+               "creature deck (yawgmoth wins ~46%/game on combat with NO combo), so the now-correct combo "
+               "only DROPS our WR (53.8% -> 49.0%), it cannot raise it into [55,80]. The binding "
+               "constraint is the combat model, not assembly -- re-modeling yawgmoth's beatdown is OUT OF "
+               "SCOPE here, and tuning assembly frequency to hit the band is forbidden (Stop condition 2). "
+               "Trust the DIRECTION (we are favored), not the 49%.",
+    },
 }
 
 

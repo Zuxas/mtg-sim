@@ -28,10 +28,12 @@ MELIRA = "Melira, Sylvok Outcast"
 BLOOD_ARTIST = "Blood Artist"
 ZULAPORT = "Zulaport Cutthroat"
 YOUNG_WOLF = "Young Wolf"
+STRANGLEROOT = "Strangleroot Geist"
 GERALFS_MESSENGER = "Geralf's Messenger"
 RENATA = "Renata, Called to the Hunt"
 CoCo = "Collected Company"
 CHORD = "Chord of Calling"
+GSZ = "Green Sun's Zenith"
 ELDRITCH = "Eldritch Evolution"
 # Cauldron-variant additions (2026 canonical build)
 CAULDRON = "Agatha's Soul Cauldron"
@@ -43,15 +45,43 @@ GRIST = "Grist, the Hunger Tide"
 FORMIDABLE = "Formidable Speaker"
 ENDURANCE = "Endurance"
 
-UNDYING = {YOUNG_WOLF, GERALFS_MESSENGER}
-DRAINS = {BLOOD_ARTIST, ZULAPORT}
-TUTORS = {CoCo, CHORD, ELDRITCH}
+# ---------------------------------------------------------------------------
+# DECK-VARIANT ALIGNMENT (2026-06-30, combo-interaction handoff #2).
+# decks/yawgmoth_modern.txt is the Golgari "Agatha's Soul Cauldron / Walking
+# Ballista" build (xerk, MTGO Modern Challenge 2026-04-29). It runs ZERO
+# Blood Artist / Zulaport Cutthroat / Geralf's Messenger -- the old DRAINS /
+# UNDYING constants pointed at cards the list does not contain, so the combo
+# checker's `drain_on_board` was ALWAYS False and the combo fired 0/50.
+#   * UNDYING bodies in THIS list: Young Wolf (4) + Strangleroot Geist (1).
+#   * DRAIN payoff in THIS list: NONE. The kill is Agatha's Soul Cauldron
+#     exiling Walking Ballista from the graveyard, granting the "remove a
+#     +1/+1 counter: deal 1 damage" ability to the undying creatures (which
+#     carry +1/+1 counters from undying returns). The Yawgmoth sac-loop feeds
+#     unbounded +1/+1 counters -> unbounded face pings = lethal.
+# ---------------------------------------------------------------------------
+UNDYING = {YOUNG_WOLF, STRANGLEROOT}
+DRAINS = set()  # this build runs no Blood Artist / Zulaport (drain payoff absent)
+TUTORS = {CoCo, CHORD, GSZ, ELDRITCH}
 
 
 class YawgmothMatchAPL(MatchAPL):
+    # combo-interaction handoff #2 (Component 2 + Component 3 yawgmoth cell):
+    # the Cauldron/Ballista kill is DIRECT DAMAGE (the granted Ballista pings hit
+    # the face). A scalar `opponent.life -= X` write is a no-op on the match life
+    # total (spec spine #3 -- opp_view.life is a throwaway that is never synced back
+    # for the non-active seat). So the combo damage is routed through the ACTIVE
+    # player's `gs.damage_dealt`, which `_simple_play_turn` propagates to the match
+    # life total ONLY when the active APL sets WANTS_STORM or WANTS_BURN. We opt in
+    # via WANTS_BURN, mirroring MonoRedMatchAPL.
+    WANTS_BURN = True
     name = "Yawgmoth"
     win_condition_damage = 20
     max_turns = 12
+
+    # Class-level instrumentation: counts combo assemblies across a run_match_set
+    # (run_match_set builds a FRESH instance per game, so an instance counter would
+    # not aggregate). Reset by the measurement harness before a sweep.
+    _combo_fires = 0
 
     def __init__(self):
         self._combo_fired = False
@@ -153,9 +183,12 @@ class YawgmothMatchAPL(MatchAPL):
                 gs._log(f"  Malevolent Rumble: tutor from top 4")
                 break
 
-        # 3. Deploy threats (priority: drain effects first, then undying, then Yawgmoth)
-        deploy_order = [BLOOD_ARTIST, ZULAPORT, HALFLING, YOUNG_WOLF, GERALFS_MESSENGER,
-                        BADGERMOLE, MELIRA, RENATA, FORMIDABLE, YAWGMOTH, CAULDRON]
+        # 3. Deploy threats. Order = mana dork -> undying bodies -> engine pieces
+        # -> payoff. Only cards ACTUALLY in decks/yawgmoth_modern.txt (the
+        # Cauldron/Ballista build); the old list named Blood Artist / Zulaport /
+        # Geralf's Messenger / Melira / Renata, none of which this variant runs.
+        deploy_order = [HALFLING, YOUNG_WOLF, STRANGLEROOT, BADGERMOLE,
+                        FORMIDABLE, ENDURANCE, YAWGMOTH, CAULDRON, BALLISTA]
         for name in deploy_order:
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
@@ -193,7 +226,10 @@ class YawgmothMatchAPL(MatchAPL):
                         counters = 0
                     if counters >= 2:
                         dmg = min(counters, max(0, opponent.life))
-                        opponent.life -= dmg
+                        # Direct damage -> route via gs.damage_dealt so WANTS_BURN
+                        # propagates it to the match life total (a scalar
+                        # opponent.life write is dropped; spec spine #3).
+                        gs.damage_dealt += dmg
                         c.power = str(counters - dmg)
                         c.toughness = str(counters - dmg)
                         gs._log(f"  Walking Ballista: {dmg} direct damage")
@@ -226,52 +262,51 @@ class YawgmothMatchAPL(MatchAPL):
                 gs._log(f"  Geralf's Messenger ETB: opponent -2 life")
 
     def _check_combo_kill(self, gs, opponent):
-        """Detect and fire the infinite Yawgmoth combo.
-        Classic kill: Yawgmoth + 2 undying + Blood Artist/Zulaport = infinite drain.
-        Cauldron build: Yawgmoth + Young Wolf value loops draw into Walking Ballista.
+        """Detect and fire the Agatha's Soul Cauldron / Walking Ballista infinite.
+
+        ASSEMBLY (the actual decks/yawgmoth_modern.txt kill -- NO Blood Artist):
+          Yawgmoth on board
+          + >= 2 undying bodies on board (Young Wolf / Strangleroot Geist; their
+            undying returns carry +1/+1 counters)
+          + Agatha's Soul Cauldron on board
+          + Walking Ballista reachable (on the battlefield OR in the graveyard for
+            Cauldron to exile).
+        Mechanism: Cauldron exiling Ballista grants every +1/+1-countered creature
+        Ballista's "remove a +1/+1 counter: deal 1 damage". The Yawgmoth sac-loop
+        (sac undying A -> returns with +1/+1; -1/-1 on B to reset) produces UNBOUNDED
+        +1/+1 counters, hence unbounded face pings -> lethal.
+
+        DAMAGE CHANNEL: the pings are direct damage. They are routed through
+        gs.damage_dealt (NOT a scalar opponent.life write, which is dropped --
+        spec spine #3); WANTS_BURN propagates gs.damage_dealt to the match life
+        total. Dealing >= 20 (or opp's current life) models the unbounded loop and
+        is lethal via the `gs.damage_to_a >= 20` / `gs.life_a <= 0` match check.
         """
         yawg = any(c.name == YAWGMOTH for c in gs.zones.battlefield)
-        if not yawg: return
+        if not yawg:
+            return
         undying_on_board = [c for c in gs.zones.battlefield if c.name in UNDYING]
-        drain_on_board = any(c.name in DRAINS for c in gs.zones.battlefield)
-
-        if not drain_on_board:
-            # Cauldron build: check if Ballista is on board with enough counters for lethal
-            for c in gs.zones.battlefield:
-                if c.name == BALLISTA:
-                    try:
-                        if int(c.power) >= (opponent.life if opponent else 999):
-                            opponent.life = -999
-                            self._combo_fired = True
-                            gs._log(f"  Ballista lethal: {c.power} counters vs {opponent.life} life")
-                            return
-                    except (ValueError, TypeError):
-                        pass
+        if len(undying_on_board) < 2:
+            return
+        cauldron = any(c.name == CAULDRON for c in gs.zones.battlefield)
+        if not cauldron:
+            return
+        # Ballista must be exilable by Cauldron: in a graveyard, or on the
+        # battlefield (sacrificable into the yard via the Yawgmoth engine).
+        ballista_reachable = any(
+            c.name == BALLISTA
+            for c in list(gs.zones.battlefield) + list(gs.zones.graveyard))
+        if not ballista_reachable:
             return
 
-        if len(undying_on_board) >= 2:
-            # Full infinite combo: 2 undying + drain = kill
-            # Loop: sac A → A dies → drain → A returns (undying) → Yawgmoth puts
-            # -1/-1 on B (cancels B's +1/+1) → sac B → B dies → drain → B returns → repeat
-            opponent.life = -999
-            self._combo_fired = True
-            gs._log(f"  YAWGMOTH INFINITE COMBO: {undying_on_board[0].name} + "
-                    f"{undying_on_board[1].name} + drain = win!")
-        elif len(undying_on_board) >= 1:
-            # Partial combo: 1 undying + other sac targets + drain
-            # Finite drain = number of other creatures we can sacrifice
-            fodder = [c for c in gs.zones.battlefield
-                      if c.has(Tag.CREATURE) and not c.is_land()
-                      and c.name not in {YAWGMOTH, BLOOD_ARTIST, ZULAPORT, MELIRA}
-                      and c not in undying_on_board]
-            total_drains = len(fodder) + len(undying_on_board)  # undying gives 1 sac
-            drain_amount = total_drains
-            if drain_amount > 0 and opponent.life > 0:
-                actual = min(drain_amount, opponent.life)
-                opponent.life -= actual
-                gs.life -= actual  # Yawgmoth life cost
-                gs.life += actual  # drain gain
-                gs._log(f"  Yawgmoth value loop: {actual} drains")
+        opp_life = opponent.life if opponent else 20
+        dmg = max(20, opp_life)          # unbounded loop -> lethal
+        gs.damage_dealt += dmg
+        self._combo_fired = True
+        type(self)._combo_fires += 1
+        gs._log(f"  YAWGMOTH CAULDRON/BALLISTA COMBO: "
+                f"{undying_on_board[0].name} + {undying_on_board[1].name} + Cauldron "
+                f"+ Ballista = {dmg} face (routed via damage_dealt)")
 
     def _activate_yawgmoth(self, gs, opponent):
         """Yawgmoth non-combo: pay 1 life, sac creature → draw + remove counter.

@@ -40,6 +40,21 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
 
 ## Current APL status
 
+### Low Curve Boros Energy (Modern) — added 2026-06-29 (post-ban)
+
+- Deck: `decks/boros_energy_lowcurve_modern.txt` (60+15, Team Resolve primer, post-Phlage)
+- Registry: `borosenergylowcurve` in BOTH APL_REGISTRY and MATCH_APL_REGISTRY -> `BorosEnergyMatchAPL`
+- Engine fidelity (this commit): Reckless Pyrosurfer battle cry (rule 702.92) now fires in BOTH the
+  goldfish path (`GameState._do_combat`) AND the match path (`match_runner._resolve_combat`); the
+  Voice-of-Victory mobilize -> Pyrosurfer "11-damage line" is modeled. `_battle_cry_instances` set by
+  `card_effects.on_landfall` (per landfall), reset per-turn. Fetch lands now fire landfall twice
+  (ETB + fetched land) — a prior latent bug fired ZERO. Tests: `tests/test_pyrosurfer_battlecry_*.py`.
+- Calibration coupled in same commit: `AwareMatchAPL.declare_attackers` rewrite moved Selesnya-vs-Prowess
+  from a wrong ~77% to 65.3% (in band [60,71.5], PT 62.9). See
+  `harness/knowledge/tech/boros-energy-postban-validation-2026-06-29.md`.
+- KNOWN gauntlet caveat: opponent-side undermodeling inflates several matchups (Grixis Reanimator APL
+  CRASHES every turn -> inverts that known-DOG matchup; tracked in IMPERFECTIONS.md).
+
 ### Amulet Titan (Modern) — RULES-CORRECT, validated April 2026
 
 - APL: `apl/amulet_titan.py` (2388 lines, Bible-based combo engine)

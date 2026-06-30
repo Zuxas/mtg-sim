@@ -1,0 +1,47 @@
+// Low Curve Boros Energy (Modern) -- authored by Zuxas, Team Resolve
+// Source: Team Resolve "Low Curve Boros Energy" primer (post-ban tuning)
+// Context: post-ban May-2026 Modern metagame. The list trims the top end
+//          (no Phlage / Fable / Legend of Roku) for a flatter, faster curve
+//          built around 1-drop energy enablers and cheap interaction.
+// Real-world result per primer: ~70% match win rate.
+// Main: 60 | Sideboard: 15
+// audit:custom_variant -- Team Resolve low-curve build; documented diff from
+//   decks/boros_energy_modern.txt (renatoaraujo MTGO list).
+
+// --- Lands (22) ---
+2 Arena of Glory
+2 Dalkovan Encampment
+4 Arid Mesa
+3 Flooded Strand
+4 Marsh Flats
+2 Elegant Parlor
+2 Sacred Foundry
+2 Plains
+1 Mountain
+
+// --- Creatures (27) ---
+4 Guide of Souls
+4 Ocelot Pride
+4 Ragavan, Nimble Pilferer
+4 Voice of Victory
+2 Ranger-Captain of Eos
+3 Seasoned Pyromancer
+2 Reckless Pyrosurfer
+4 Ajani, Nacatl Pariah
+
+// --- Other (11) ---
+4 Galvanic Discharge
+2 Lightning Bolt
+3 Goblin Bombardment
+2 Thraben Charm
+
+SIDEBOARD:
+2 Celestial Purge
+2 Wrath of the Skies
+2 Blood Moon
+2 Vexing Bauble
+2 Wear // Tear
+2 Clarion Conqueror
+1 High Noon
+1 Rest in Peace
+1 Surgical Extraction

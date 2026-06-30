@@ -565,6 +565,16 @@ def on_landfall(gs):
                                   "Token Creature — Treefolk")
             tok.tags.add(KWTag.REACH)
             gs._log(f"  Sapling Nursery: landfall +1 3/4 Treefolk reach")
+        elif c.name == "Reckless Pyrosurfer":
+            # "Landfall — Whenever a land you control enters, this creature
+            #  gains battle cry until end of turn. (...) Each instance of
+            #  battle cry triggers separately." We accumulate one battle-cry
+            #  instance per landfall this turn; combat (game_state._attack)
+            #  reads c._battle_cry_instances to pump each OTHER attacker
+            #  +1/+0 per instance. Reset at start of each turn (run_turn).
+            c._battle_cry_instances = getattr(c, "_battle_cry_instances", 0) + 1
+            gs._log(f"  Landfall: Reckless Pyrosurfer gains battle cry "
+                    f"(instance {c._battle_cry_instances} this turn)")
 
 
 # Back-compat alias — old code may import LANDFALL_TOKEN / ASCENSION.

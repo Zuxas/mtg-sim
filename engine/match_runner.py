@@ -358,6 +358,13 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     own_bf = gs.bf_a if player == "a" else gs.bf_b
     for c in own_bf:
         c.tapped_from_attack = False
+        # Reset until-end-of-turn battle-cry grants (Reckless Pyrosurfer
+        # landfall instances) accumulated last turn -- mirrors
+        # GameState.run_turn (game_state.py ~289). on_landfall re-accumulates
+        # this turn's instances during main phase 1 (_simple_play_turn) below,
+        # and _resolve_combat consumes them.
+        if getattr(c, "_battle_cry_instances", 0):
+            c._battle_cry_instances = 0
 
     # Azure Beastbinder strip wears off "until your next turn".
     # On the attacker's next untap, restore stashed tags + P/T on
@@ -1110,6 +1117,38 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
                 except (ValueError, TypeError):
                     pass
 
+    # Battle cry (rule 702.92): "Whenever this creature attacks, each OTHER
+    # attacking creature gets +1/+0 until end of turn." Static battle cry
+    # (Signal Pest, Sanguine Evangelist) = 1 instance; Reckless Pyrosurfer
+    # accumulates 1 instance per landfall this turn (c._battle_cry_instances,
+    # set by card_effects.on_landfall during the main phase via the per-turn
+    # GameState view -- whose battlefield aliases bf_a/bf_b). Each instance
+    # triggers separately. +1/+0 is power-only, so we edit the power string
+    # and restore it post-combat next to Slickshot -- mirrors
+    # GameState._do_combat (game_state.py ~539). The per-turn reset of
+    # _battle_cry_instances lives in _run_player_turn.
+    _STATIC_BATTLE_CRY = {"Signal Pest", "Sanguine Evangelist"}
+
+    def _bc_instances(c):
+        return (1 if c.name in _STATIC_BATTLE_CRY else 0) \
+            + getattr(c, "_battle_cry_instances", 0)
+
+    battlecry_boosted = []   # (card, orig_power_str)
+    total_bc = sum(_bc_instances(c) for c in attackers)
+    if total_bc:
+        for atk in attackers:
+            # each OTHER attacker: total instances minus this creature's own
+            # (a creature's battle cry never pumps itself)
+            bonus = total_bc - _bc_instances(atk)
+            if bonus <= 0:
+                continue
+            try:
+                orig_pwr = atk.power
+                atk.power = str(int(atk.power) + bonus)
+                battlecry_boosted.append((atk, orig_pwr))
+            except (ValueError, TypeError):
+                pass
+
     atk_sorted = sorted(attackers, key=lambda c: -_safe_power(c))
     blk_sorted = sorted(blockers,  key=lambda c: -_safe_power(c))
 
@@ -1313,6 +1352,10 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
 
     # Restore Slickshot power after damage is resolved
     for card, orig_pwr in slickshot_boosted:
+        card.power = orig_pwr
+    # Restore battle-cry power bonus (+1/+0 lasts until EOT but is only
+    # consumed in the damage calc above; restore to keep state clean).
+    for card, orig_pwr in battlecry_boosted:
         card.power = orig_pwr
 
     return total_dmg, atk_losses, blk_losses, lifelink_gain, defender_lifelink_gain, creatures_hit_player

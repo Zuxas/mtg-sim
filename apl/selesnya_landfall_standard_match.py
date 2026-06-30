@@ -273,64 +273,22 @@ class SelesnyaLandfallStandardMatchAPL(AwareMatchAPL):
     # Declare attackers — protect Badgermole Cub from bad trades
     # ------------------------------------------------------------------
 
+    # Selesnya protects its snowball engine pieces from even trades. The base
+    # AwareMatchAPL.declare_attackers honours PROTECT_FROM_TRADE.
+    PROTECT_FROM_TRADE = PROTECT_ALWAYS
+
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list:
-        self._fire_landfall_triggers(gs)   # Mightform Harmonizer doubling on attack
-
-        eligible = [c for c in gs.zones.battlefield
-                    if not c.is_land()
-                    and c.has(Tag.CREATURE)
-                    and not getattr(c, 'summoning_sickness', False)
-                    and not getattr(c, 'tapped', False)]
-
-        opp_creatures = [c for c in opponent.zones.battlefield
-                         if not c.is_land()
-                         and c.has(Tag.CREATURE)
-                         and not getattr(c, 'tapped', False)]
-
-        # No blockers → attack with everything
-        if not opp_creatures:
-            return eligible
-
-        attackers = []
-        for atk in eligible:
-            atk_p = safe_power(atk)
-            atk_t = safe_toughness(atk)
-
-            # Find their best blocker for this attacker
-            best_blk = None
-            for blk in opp_creatures:
-                if best_blk is None or safe_power(blk) > safe_power(best_blk):
-                    best_blk = blk
-
-            if best_blk is None:
-                attackers.append(atk)
-                continue
-
-            blk_p = safe_power(best_blk)
-            blk_t = safe_toughness(best_blk)
-
-            if blk_p < atk_t:
-                # We survive the block → always attack
-                attackers.append(atk)
-            elif atk_p >= blk_t:
-                # Trade: both die
-                if atk.name in PROTECT_ALWAYS:
-                    # Never trade Badgermole Cub or Mightform Harmonizer —
-                    # their cumulative value (counters / doubling engine) is
-                    # worth more than removing one blocker
-                    pass
-                else:
-                    # Trade is fine if their creature costs more
-                    if self._trade_value(atk, best_blk) >= 0:
-                        attackers.append(atk)
-            else:
-                # Dies alone — only push through if we're way behind
-                opp_dmg = self._opp_damage_dealt()
-                my_dmg  = getattr(gs, "damage_dealt", 0)
-                if opp_dmg > my_dmg + 8:
-                    attackers.append(atk)
-
-        return attackers
+        # Mightform Harmonizer doubling fires on attack BEFORE we evaluate combat.
+        self._fire_landfall_triggers(gs)
+        # Delegate to the calibrated base heuristic (2026-06-29). The previous
+        # body here was a DUPLICATE of the same universal-best-blocker bug fixed
+        # in aware_match_apl.py: it applied the opp's single biggest creature as a
+        # blocker for EVERY attacker, holding Selesnya's whole board back against
+        # one large Prowess creature. Fixing both seats moved Selesnya-vs-Prowess
+        # from 52.7% (Prowess seat only) to ~60% (PT truth 62.9%). PROTECT_ALWAYS
+        # (Badgermole Cub / Mightform Harmonizer) is preserved via
+        # PROTECT_FROM_TRADE so those engine pieces still never trade.
+        return super().declare_attackers(gs, opponent)
 
     # ------------------------------------------------------------------
     # Combat trick: Bushwhack (+2/+2 + trample) to save an attacker

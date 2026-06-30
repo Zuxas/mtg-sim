@@ -289,6 +289,11 @@ class GameState:
         self.noncreature_spells_this_turn = 0
         self.spells_cast_this_turn = 0
         self.innocence_drew_this_turn = False
+        # Reset until-end-of-turn battle-cry grants (Reckless Pyrosurfer
+        # landfall instances) accumulated last turn.
+        for c in self.zones.battlefield:
+            if getattr(c, "_battle_cry_instances", 0):
+                c._battle_cry_instances = 0
         self._untap()
         self._upkeep()
         self._draw()
@@ -531,6 +536,40 @@ class GameState:
                 self.make_treasure_token()
                 self._log(f"  {c.name} attacks: create Treasure")
 
+        # ── Battle cry (rule 702.92): "Whenever this creature attacks,
+        #    each OTHER attacking creature gets +1/+0 until end of turn."
+        #    Fires here, AFTER mobilize / Mutavault / restless attackers are
+        #    all assembled, so mobilize tokens correctly receive the bonus.
+        #    Static battle cry (Signal Pest, Sanguine Evangelist) = 1
+        #    instance. Reckless Pyrosurfer gains 1 instance per landfall this
+        #    turn (c._battle_cry_instances, set in card_effects.on_landfall);
+        #    each instance triggers separately. +1/+0 is power-only, so we
+        #    edit the power string (NOT counters, which would add toughness)
+        #    and restore it post-combat -- mirrors the Slickshot pattern.
+        _STATIC_BATTLE_CRY = {"Signal Pest", "Sanguine Evangelist"}
+
+        def _bc_instances(c):
+            return (1 if c.name in _STATIC_BATTLE_CRY else 0) \
+                + getattr(c, "_battle_cry_instances", 0)
+
+        battlecry_boosted = []   # (card, orig_power_str)
+        total_bc = sum(_bc_instances(c) for c in attackers)
+        if total_bc:
+            for c in attackers:
+                # each OTHER attacker: total instances minus this creature's
+                # own (a creature's battle cry never pumps itself)
+                bonus = total_bc - _bc_instances(c)
+                if bonus <= 0:
+                    continue
+                try:
+                    orig = c.power
+                    c.power = str(int(c.power) + bonus)
+                    battlecry_boosted.append((c, orig))
+                except (ValueError, TypeError):
+                    pass
+            self._log(f"  Battle cry: {total_bc} instance(s) total -> "
+                      f"each other attacker +1/+0 per instance")
+
         # ── Prowess: +1/+1 per noncreature spell cast this turn ─────
         # Standard Prowess: +1/+1 per spell (via counters, reversed post-combat).
         # Slickshot Show-Off: +2/+0 per spell (power only, not toughness).
@@ -605,6 +644,10 @@ class GameState:
             card.counters -= bonus
         # Restore Slickshot Show-Off power to pre-combat value
         for card, orig_power in slickshot_boosted:
+            card.power = orig_power
+        # Restore battle-cry power bonus (+1/+0 lasts until EOT, but power is
+        # only consumed in the damage calc above; restore to keep state clean)
+        for card, orig_power in battlecry_boosted:
             card.power = orig_power
 
         # ── Post-damage cleanup ────────────────────────────────────────────
@@ -1386,6 +1429,11 @@ class GameState:
         self.zones.battlefield.append(best)
         best.turn_entered = self.turn
 
+        # The fetched land entering is its own landfall event (second of the
+        # two a fetch generates; the fetchland ETB fired in play_land).
+        from engine.card_effects import on_landfall
+        on_landfall(self)
+
         # Shock land: pay 2 life for untapped
         if best.name.lower() in self.SHOCK_LANDS:
             if need_mana_now:
@@ -1420,6 +1468,14 @@ class GameState:
 
         # Fetch lands: sacrifice and search
         if self._is_fetch_land(card):
+            # The fetchland's own ETB is a landfall event (603.6c), and the
+            # land it fetches is a second landfall event (fired inside
+            # _resolve_fetch). Real fetches therefore trigger landfall TWICE
+            # in one turn -- the line Reckless Pyrosurfer's battle cry relies
+            # on. Previously the fetch path returned before on_landfall, so
+            # fetches produced ZERO landfall triggers (latent bug).
+            from engine.card_effects import on_landfall
+            on_landfall(self)
             # Do we need mana from this fetch? Check if we have castable spells
             castable_after = any(
                 not c.is_land() and c.cmc <= self.mana_pool.total() + 1

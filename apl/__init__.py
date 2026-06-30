@@ -46,6 +46,9 @@ APL_REGISTRY = {
     "borosenergy":     ("apl.boros_energy",     "BorosEnergyAPL",    "decks/boros_energy_modern.txt"),
     "borosenergyvariantjermey": ("apl.boros_energy", "BorosEnergyAPL",
         "decks/boros_energy_variant_jermey_2026-04-26.txt"),
+    # Team Resolve post-ban "Low Curve Boros Energy" (Zuxas, ~70% real WR). Reuses
+    # the existing match APL for goldfishing; deck file is the low-curve list.
+    "borosenergylowcurve": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_lowcurve_modern.txt"),
     "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
@@ -252,6 +255,7 @@ MATCH_APL_REGISTRY = {
     "sultaimidrange":  ("apl.sultai_midrange_match",  "SultaiMidrangeMatchAPL"),
     "grixismidrange":  ("apl.grixis_midrange_match",  "GrixisMidrangeMatchAPL"),
     "borosenergy":     ("apl.boros_energy_match",   "BorosEnergyMatchAPL"),
+    "borosenergylowcurve": ("apl.boros_energy_match", "BorosEnergyMatchAPL"),      # Low Curve post-ban variant
     "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern
     "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern alias
     "izzetprowessstandard": ("apl.izzet_prowess_standard_match", "IzzetProwessStandardMatchAPL"),

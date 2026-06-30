@@ -451,7 +451,35 @@ class AwareMatchAPL(MatchAPL):
 
         return total_damage >= opp_life
 
+    # ── Calibration knob (STEP 3, 2026-06-29) ────────────────────────────────
+    # How readily a BLOCKED attacker that would die WITHOUT killing its blocker
+    # (a "dead trade" / chump) is still sent in for race pressure. It is sent
+    # when we are behind OR when (opp_dmg + DEAD_TRADE_HOLD_MARGIN >= my_dmg),
+    # i.e. we are not comfortably ahead by more than the margin.
+    #   higher margin  -> push MORE chumps -> more aggressive -> LOWER win-rate
+    #                     for a board-dominant deck (toward pure-base = 44.7%)
+    #   lower / negative-> hold MORE chumps -> more conservative -> HIGHER win-rate
+    #                     (toward the old universal-blocker re-filter = 77.0%)
+    # Proven endpoints on selesnyalandfall-vs-izzetprowessstandard (n=300,
+    # seed=42, fair): pure-base = 44.7%, old re-filter = 77.0%, PT truth = 62.9%.
+    DEAD_TRADE_HOLD_MARGIN: int = 0
+
+    # Creatures this deck must NEVER send into an even trade (their cumulative
+    # engine value outweighs removing one blocker). Survives-the-block and
+    # unblocked/evasive attacks are still allowed. Subclasses override (e.g.
+    # Selesnya Landfall protects Badgermole Cub / Mightform Harmonizer). Empty
+    # default = no protected creatures (bit-identical for all other APLs).
+    PROTECT_FROM_TRADE: set = set()
+
     def declare_attackers(self, gs: GameState, opponent: GameState) -> list[Card]:
+        # Start from MatchAPL's evasion/race-aware selection. We ONLY ever
+        # SUBTRACT genuinely-bad trades from this list -- we never add to it and
+        # never drop an attacker the base kept for evasion or racing reasons.
+        # (Calibration 2026-06-29: the previous re-filter treated the opponent's
+        # single biggest creature as a universal blocker for EVERY attacker, with
+        # no flying check and ignoring that one blocker blocks one attacker, so it
+        # discarded unblocked flyers and whole racing boards -- over-correcting
+        # Selesnya-vs-Prowess to 77.0% vs PT-truth 62.9%.)
         attackers = super().declare_attackers(gs, opponent)
         if not attackers:
             return attackers
@@ -471,42 +499,75 @@ class AwareMatchAPL(MatchAPL):
         opp_blockers = [c for c in opponent.zones.battlefield
                         if not c.is_land() and not getattr(c, 'tapped', False)]
 
-        filtered = []
-        for atk in attackers:
-            # Find the best blocker for this attacker
-            best_blk = None
-            for blk in opp_blockers:
-                if safe_power(blk) > 0:
-                    if best_blk is None or safe_power(blk) > safe_power(best_blk):
-                        best_blk = blk
+        # If nothing can block, the whole base list is free damage -- send it.
+        if not opp_blockers:
+            return attackers
 
-            if best_blk is None:
-                # No blocker — free damage, always go
-                filtered.append(atk)
+        # An unblockable flyer (opp has no flyer/reach) is never dropped.
+        opp_has_air = any(KWTag.FLYING in b.tags or KWTag.REACH in b.tags
+                          for b in opp_blockers)
+
+        # Race state.
+        my_dmg  = getattr(gs, "damage_dealt", 0)
+        opp_dmg = self._opp_damage_dealt()
+        behind  = opp_dmg > my_dmg
+
+        # BUG FIX: each blocker can block only ONE attacker. Spend the opp's
+        # blockers (largest first) against our largest attackers first; an
+        # attacker with no remaining blocker that can kill it is effectively
+        # unblocked and always attacks. This replaces the universal-best-blocker
+        # loop that nuked the whole board against a single big creature.
+        available = sorted([b for b in opp_blockers if safe_power(b) > 0],
+                           key=lambda b: -safe_power(b))
+
+        keep_ids = set()
+        for atk in sorted(attackers, key=lambda a: -safe_power(a)):
+            # Evasion early-accept: unblockable flyer always swings.
+            if KWTag.FLYING in atk.tags and not opp_has_air:
+                keep_ids.add(id(atk))
                 continue
 
             atk_tough = safe_toughness(atk)
-            blk_power = safe_power(best_blk)
+            atk_power = safe_power(atk)
 
-            if blk_power >= atk_tough:
-                # Our attacker dies (trade or dies alone)
-                blk_tough  = safe_toughness(best_blk)
-                atk_power  = safe_power(atk)
-                if atk_power >= blk_tough:
-                    # True trade — evaluate value
-                    value = self._trade_value(atk, best_blk)
-                    if value >= 0:
-                        filtered.append(atk)   # trade is neutral-or-favorable
-                    # else: skip the trade (their creature is cheaper / blink-bait)
-                else:
-                    # Dies alone — skip unless we're desperate
-                    my_dmg  = getattr(gs, "damage_dealt", 0)
-                    opp_dmg = self._opp_damage_dealt()
-                    if opp_dmg > my_dmg + 8:   # we're way behind, push anyway
-                        filtered.append(atk)
+            # First remaining blocker that can kill this attacker. `available` is
+            # sorted by descending power, so this is the LARGEST sufficient
+            # blocker (a realistic block: the opp soaks a 4/3 with their 5/5, not
+            # their 3/3). NOTE: this bias toward a big blocker means more attackers
+            # read as "dead trade -> hold"; switching to the smallest sufficient
+            # blocker would make attacks more aggressive and drop the calibrated
+            # Selesnya-vs-Prowess number several points. Do not "simplify".
+            blocker = None
+            for b in available:
+                if safe_power(b) >= atk_tough:
+                    blocker = b
+                    break
+
+            if blocker is None:
+                # No remaining blocker can kill it -> unblocked/survives -> go.
+                keep_ids.add(id(atk))
+                continue
+
+            # This blocker is committed to neutralising this attacker.
+            available.remove(blocker)
+
+            if atk_power >= safe_toughness(blocker):
+                # We kill the blocker too -> real trade. Keep iff value-neutral+
+                # AND this creature is not a protected engine piece.
+                if (atk.name not in self.PROTECT_FROM_TRADE
+                        and self._trade_value(atk, blocker) >= 0):
+                    keep_ids.add(id(atk))
+                # else: skip an actively-bad trade (cheaper creature / blink-bait)
+                # or hold a protected engine creature back from the trade.
             else:
-                # Attacker survives or is unblockable-ish — go
-                filtered.append(atk)
+                # Dead trade: our attacker dies, their blocker survives. Only send
+                # it as race pressure when we are not comfortably ahead (knob).
+                if behind or (opp_dmg + self.DEAD_TRADE_HOLD_MARGIN >= my_dmg):
+                    keep_ids.add(id(atk))
+                # else: hold the chump back.
+
+        # Preserve the base list's order.
+        filtered = [a for a in attackers if id(a) in keep_ids]
 
         # Don't walk a high-value threat into open counter mana
         if self._opp_likely_has_counter() and len(filtered) > 1:

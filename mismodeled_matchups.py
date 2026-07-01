@@ -70,11 +70,16 @@ MISMODELED_MATCHUPS = {
     },
     "izzet affinity": {
         "direction": "INFLATED",
-        "sim": "~85-88%",
-        "truth": "~44%",
-        "why": "Affinity's artifact clock / Galvanic Blast reach / Thoughtcast card-advantage are "
-               "undermodeled, so we beat it far more often in sim than in reality. (Same gap behind the "
-               "stale 63.5% 'Modern lock'.)",
+        "sim": "~81% (boros_energy_lowcurve seat A vs izzet_affinity seat B; run_match n=100, "
+               "PYTHONHASHSEED=0, seed=42+i, seat-alternating on_play)",
+        "truth": "~44% (direction only -- no empirical anchor; no post-ban Modern DB data)",
+        "why": "Affinity's APL never DEVELOPS A BOARD: the Urza's Saga chapter/Construct engine is "
+               "entirely unimplemented (0 Constructs / 100 games; peak attacking power median ~1.0, "
+               "~46% of games have zero attacking power ever), so we beat it far more often in sim "
+               "than in reality. Trust the INFLATED direction, not the number. Arc #3 "
+               "(harness/specs/2026-07-01-affinity-offense-rebaseline.md) was attempted 2026-07-01 but "
+               "landed NO fix (implementer null; apl/affinity_match.py byte-identical to pre-spec HEAD), "
+               "so the mechanism did not move and this cell stays flagged at its pre-fix ~81% baseline.",
     },
     "yawgmoth": {
         "direction": "DEFLATED (combat over-credited; mulligan does NOT unstarve assembly)",

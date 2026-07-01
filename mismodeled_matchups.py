@@ -123,7 +123,9 @@ MISMODELED_MATCHUPS = {
 
 
 def _norm(name: str) -> str:
-    return (name or "").lower().replace("-", " ").strip()
+    # strip apostrophes (straight + curly) so "Goryo's Vengeance" matches the
+    # apostrophe-less stored key "goryos vengeance" (else the flag is silently missed)
+    return (name or "").lower().replace("-", " ").replace("'", "").replace("’", "").strip()
 
 
 def lookup(name: str):

@@ -1,0 +1,38 @@
+# Match mulligan keep-routing -- PINNED pre-change baseline (boros+amulet lanes)
+# Spec: harness/specs/2026-06-30-match-mulligan-keep-routing.md (Step 0 / Step 1)
+# PRIMARY driver: engine.match_runner.run_match_set (single-hero; seat A = hero, seat B = opponent)
+# Loaders: generate_matchup_data.load_deck_and_apl + apl.get_match_apl (via scripts/mull_routing_capture.py)
+# Captured: 2026-06-30
+# Branch: modern-postban-arc
+# Pre-change HEAD: 162cd79 (inline crude mulligan; engine change stashed during capture)
+# Params: n=500 seed=42 n_workers=1 mix_play_draw=True
+# Determinism: PYTHONHASHSEED=0 pinned; Gate 0 = FOUR separate process launches, per-cell a_wins compared.
+# Supersedes (for these lanes): data/combo_spine_baseline_2026-06-30.txt was NOT hash-pinned
+#   (its "determinism re-run check" was a single boros_vs_eldrazi_tron re-run, not a cross-launch multi-cell test).
+#
+# GATE 0 RESULT: 12 of 13 cells byte-identical across all 4 pinned launches -> PASS on the stable set.
+#   EXCLUDED: boros_vs_uw_control is NOT cross-launch stable (a_wins = 446,447,447,447 across launches 1-4).
+#   This is OPPONENT-SIDE (UW Control) id()-ordering nondeterminism -- amulet_vs_uw_control WAS stable (283 x4),
+#   so it is the specific boros/UW pairing, not UW Control unconditionally. Deferred to the named predecessor
+#   spec (full-field id()-ordering stabilization). It is NOT a boros/amulet-hero regression: every hero-side
+#   lane is stable. This cell is reported but NOT gated (Gate 0 / Gate 1).
+#
+# GATE column: GATED = in the byte-identity gate set; EXCLUDED = opponent-side nondeterminism, tracked.
+# =====================================================================================================
+# cell                          a_wins  b_wins    avgT     n  hero_cls              opp_cls                   GATE
+boros_vs_eldrazi_tron              192     308  7.6980   500  BorosEnergyMatchAPL   EldraziTronMatchAPL       GATED
+boros_vs_uw_control                447      53  8.6300   500  BorosEnergyMatchAPL   UWControlModernMatchAPL   EXCLUDED
+boros_vs_dimir_murktide            344     156  6.3860   500  BorosEnergyMatchAPL   MurktideMatchAPL          GATED
+boros_vs_humans                    131     369  6.6260   500  BorosEnergyMatchAPL   HumansMatchAPL            GATED
+boros_vs_sultai_midrange           287     213  6.8500   500  BorosEnergyMatchAPL   SultaiMidrangeMatchAPL    GATED
+boros_vs_izzet_prowess             368     132  6.7180   500  BorosEnergyMatchAPL   IzzetProwessMatchAPL      GATED
+boros_vs_amulet_titan              384     116  5.9380   500  BorosEnergyMatchAPL   AmuletTitanMatchAPL       GATED
+boros_vs_grixis_reanim             275     225  6.3820   500  BorosEnergyMatchAPL   GrixisReanimatorMatchAPL  GATED
+amulet_vs_eldrazi_tron             107     393  7.9740   500  AmuletTitanMatchAPL   EldraziTronMatchAPL       GATED
+amulet_vs_uw_control               283     217 11.2220   500  AmuletTitanMatchAPL   UWControlModernMatchAPL   GATED
+amulet_vs_humans                    83     417  5.0800   500  AmuletTitanMatchAPL   HumansMatchAPL            GATED
+amulet_vs_izzet_prowess            210     290  6.2440   500  AmuletTitanMatchAPL   IzzetProwessMatchAPL      GATED
+amulet_vs_boros                    127     373  5.9800   500  AmuletTitanMatchAPL   BorosEnergyMatchAPL       GATED
+# =====================================================================================================
+# Gate-1 target: post-refactor mode=crude (MULL_MODE=crude both seats) must reproduce every GATED cell's
+# a_wins byte-identically. boros_vs_uw_control (EXCLUDED) is reported but not asserted.

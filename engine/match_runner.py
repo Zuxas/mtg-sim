@@ -23,6 +23,7 @@ Usage:
 """
 
 from __future__ import annotations
+import os
 import random
 import concurrent.futures
 from dataclasses import dataclass, field
@@ -1571,6 +1572,150 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_b)
 
 
+# ---------------------------------------------------------------------------
+# Match mulligan keep-routing (spec 2026-06-30-match-mulligan-keep-routing.md)
+#
+# The opening-hand decision in run_match was historically an inline crude
+# "mull if <2 lands" heuristic that never consulted a deck's real keep().
+# _do_mulligan_runner extracts that block behind three modes so run_match can
+# route each seat through the deck's actual keep()/bottom() (a London mulligan,
+# seeded via gs.rng, both seats), while staying byte-identical in crude mode.
+#
+# Modes:
+#   "crude"        - VERBATIM extract of the old inline block (mull-if-<2-lands,
+#                    Vancouver-style redraw, cap 3). Proven byte-identical.
+#   "london_crude" - London draw-7-bottom-N mechanic with the crude lands<2 keep
+#                    predicate + generic_bottom (isolates the mechanic from keep
+#                    quality; used for attribution in Step 5).
+#   "keep"         - London mulligan routed through apl.keep()/apl.bottom(),
+#                    seeded via gs.rng ONLY (never global random), both seats.
+#
+# FIRST SLICE: production default flips to "keep" ONLY for the validated
+# boros+amulet lanes (_KEEP_ROUTED_APLS); the rest of the field stays "crude"
+# pending the full-field id()-ordering stabilization predecessor spec.
+# ---------------------------------------------------------------------------
+
+# Match-APL class names whose keep()/bottom() are validated for keep-routing
+# (first slice). String-set gating (not isinstance) avoids a circular import
+# between match_runner and the APL modules.
+_KEEP_ROUTED_APLS = {"BorosEnergyMatchAPL", "AmuletTitanMatchAPL"}
+
+# goldfish-parity London cap for keep/london_crude (spec 2.4). Crude keeps its
+# historical cap of 3 (mull to 4) for byte-identity; keep/london_crude use 4 to
+# match the goldfish take_opening_hand cap the ~56% assembly target was measured under.
+_LONDON_MAX_MULL = 4
+
+
+def _mull_mode(side: str, apl) -> str:
+    """Resolve the mulligan mode for a seat.
+
+    Precedence: per-seat env override (MULL_MODE_A / MULL_MODE_B) -> global env
+    override (MULL_MODE) -> production default. The env overrides drive the
+    validation harness (Gate 1 crude-both, the Step 5 five-mode matrix). The
+    production default is "keep" only for the validated boros+amulet lanes and
+    "crude" for every other deck.
+    """
+    env = os.environ.get("MULL_MODE_" + side.upper()) or os.environ.get("MULL_MODE")
+    if env:
+        return env
+    return "keep" if type(apl).__name__ in _KEEP_ROUTED_APLS else "crude"
+
+
+def _crude_keep(hand: list) -> bool:
+    """The historical inline predicate: keep iff the hand has >= 2 lands."""
+    return sum(1 for c in hand if c.is_land()) >= 2
+
+
+def _safe_keep(apl):
+    """apl.keep if callable, else the crude predicate. keep is abstract in
+    BaseAPL so the fallback is effectively dead for modeled decks; the live
+    safety is the per-call try/except in _do_mulligan_runner (a RAISING keep)."""
+    fn = getattr(apl, "keep", None)
+    if callable(fn):
+        return fn
+    return lambda hand, mulligans, on_play: _crude_keep(hand)
+
+
+def _safe_bottom(apl):
+    """apl.bottom if callable, else generic_bottom."""
+    from apl.mulligan import generic_bottom
+    fn = getattr(apl, "bottom", None)
+    if callable(fn):
+        return fn
+    return generic_bottom
+
+
+def _do_mulligan_runner(gs, side: str, apl, result, mode: str = "crude") -> None:
+    """Resolve one seat's opening hand under the given mulligan mode.
+
+    Mutates gs.hand_<side> / gs.lib_<side> and result.mulligans_<side> in place.
+    Draws are rng-free (lib.pop(0)); all randomness comes from gs.rng.shuffle,
+    so the whole routine is deterministic under a seeded gs.rng.
+    """
+    from apl.mulligan import generic_bottom
+
+    lib_attr  = "lib_a"       if side == "a" else "lib_b"
+    hand_attr = "hand_a"      if side == "a" else "hand_b"
+    mull_attr = "mulligans_a" if side == "a" else "mulligans_b"
+    draw      = gs.draw_a     if side == "a" else gs.draw_b
+
+    if mode == "crude":
+        # VERBATIM extract of the old inline block. Preserve the hand+lib concat
+        # order (cards go to the FRONT of the library before the shuffle) and the
+        # range(3) cap -- reordering EITHER breaks Gate 1 byte-identity (spec 2.3).
+        draw(7)
+        for _ in range(3):
+            lands = sum(1 for c in getattr(gs, hand_attr) if c.is_land())
+            if lands < 2:
+                setattr(gs, lib_attr, getattr(gs, hand_attr) + getattr(gs, lib_attr))
+                setattr(gs, hand_attr, [])
+                gs.rng.shuffle(getattr(gs, lib_attr))
+                draw(max(4, 7 - getattr(result, mull_attr) - 1))
+                setattr(result, mull_attr, getattr(result, mull_attr) + 1)
+            else:
+                break
+        return
+
+    # --- London mulligan (mode in {"keep", "london_crude"}), seeded via gs.rng ---
+    on_play = gs.on_play if side == "a" else (not gs.on_play)
+    if mode == "london_crude":
+        keep_fn   = lambda hand, mulligans, op: _crude_keep(hand)
+        bottom_fn = generic_bottom
+    else:  # mode == "keep"
+        keep_fn   = _safe_keep(apl)
+        bottom_fn = _safe_bottom(apl)
+
+    mulligans = 0
+    while True:
+        # Reshuffle the current hand back into the library, then draw a fresh 7
+        # (London: always draw 7, bottom N on keep). At entry the hand is empty.
+        setattr(gs, lib_attr, getattr(gs, lib_attr) + getattr(gs, hand_attr))
+        setattr(gs, hand_attr, [])
+        gs.rng.shuffle(getattr(gs, lib_attr))
+        draw(7)
+        hand = getattr(gs, hand_attr)
+        forced = mulligans >= _LONDON_MAX_MULL
+        try:
+            do_keep = forced or bool(keep_fn(hand, mulligans, on_play))
+        except Exception:
+            # A resolved keep() that RAISES mid-hand degrades to the crude
+            # predicate -- never crash the match (spec Step 4).
+            do_keep = _crude_keep(hand)
+        if do_keep:
+            if mulligans > 0:
+                try:
+                    to_bottom = bottom_fn(hand, mulligans)
+                except Exception:
+                    to_bottom = generic_bottom(hand, mulligans)
+                for c in list(to_bottom):
+                    if c in hand:
+                        hand.remove(c)
+                        getattr(gs, lib_attr).append(c)
+            break
+        mulligans += 1
+    setattr(result, mull_attr, mulligans)
+
+
 def run_match(
     apl_a,
     deck_a:   list,
@@ -1592,32 +1737,15 @@ def run_match(
     gs.apl_a = apl_a
     gs.apl_b = apl_b
 
-    # Opening hands
-    gs.draw_a(7)
-    gs.draw_b(7)
-
-    # Simple mulligan: mull if 0 or 1 land
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_a if c.is_land())
-        if lands < 2:
-            gs.lib_a = gs.hand_a + gs.lib_a
-            gs.hand_a = []
-            gs.rng.shuffle(gs.lib_a)
-            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
-            result.mulligans_a += 1
-        else:
-            break
-
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_b if c.is_land())
-        if lands < 2:
-            gs.lib_b = gs.hand_b + gs.lib_b
-            gs.hand_b = []
-            gs.rng.shuffle(gs.lib_b)
-            gs.draw_b(max(4, 7 - result.mulligans_b - 1))
-            result.mulligans_b += 1
-        else:
-            break
+    # Opening hands + mulligan. Routed through _do_mulligan_runner so each seat
+    # can consult its deck's real keep()/bottom() (spec 2026-06-30-match-mulligan-
+    # keep-routing). Seat order preserved: resolve seat A fully, then seat B (the
+    # initial draws are rng-free, so folding them into the helpers does not
+    # perturb the gs.rng stream vs the old interleaved draw_a(7)/draw_b(7)).
+    # Production default is "keep" only for the boros+amulet lanes; "crude"
+    # (byte-identical to the old inline block) elsewhere. See _mull_mode.
+    _do_mulligan_runner(gs, "a", apl_a, result, mode=_mull_mode("a", apl_a))
+    _do_mulligan_runner(gs, "b", apl_b, result, mode=_mull_mode("b", apl_b))
 
     for turn_num in range(1, max_turns + 1):
         gs.turn = turn_num

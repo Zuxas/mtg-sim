@@ -1,0 +1,57 @@
+// Boros Energy -- FABLE-CONSENSUS build (Modern, post-ban May-2026)
+// Context: the "other pilots" consensus post-Phlage build that the Team Resolve
+//   Low Curve primer (TeamResolve_BorosEnergy_Primer_4.pdf, p.3) explicitly
+//   contrasts against: "the plethora of three-drops and one or two maindeck
+//   Legend of Roku that most other pilots chose to move to post-ban... three
+//   Arenas of Glory... Fable of the Mirror Breaker." The primer notes these
+//   versions "are actually probably stronger in the long run and in open
+//   decklist tournaments" than the Low Curve list -- i.e. this is the grindy
+//   Fable/Roku midrange axis of the build-off (arc #6).
+// Derivation (transparent): decks/boros_energy_modern.txt (renatoaraujo MTGO
+//   consensus shell) with the 2 Umezawa's Jitte REMOVED (Jitte is the separate
+//   axis -> decks/boros_energy_jitte_modern.txt) and reinvested into the Fable
+//   top-end the primer names: +1 Fable of the Mirror-Breaker (1->2), +1 The
+//   Legend of Roku (1->2). Everything else identical to the consensus shell.
+// Main: 60 | Sideboard: 15
+// audit:custom_variant -- Fable-consensus build for the arc #6 build-off;
+//   documented diff from decks/boros_energy_modern.txt (-2 Jitte, +1 Fable,
+//   +1 Roku). No banned cards (Phlage / Lotus Field absent).
+
+// --- Lands (23) ---
+4 Arid Mesa
+4 Flooded Strand
+4 Marsh Flats
+3 Arena of Glory
+3 Sacred Foundry
+2 Elegant Parlor
+2 Plains
+1 Mountain
+
+// --- Creatures (22) ---
+4 Ajani, Nacatl Pariah
+4 Guide of Souls
+4 Ocelot Pride
+4 Ragavan, Nimble Pilferer
+3 Voice of Victory
+3 Seasoned Pyromancer
+
+// --- Other (15) ---
+4 Galvanic Discharge
+3 Goblin Bombardment
+3 Thraben Charm
+2 Fable of the Mirror-Breaker
+2 The Legend of Roku
+1 Blood Moon
+
+SIDEBOARD:
+2 Obsidian Charmaw
+2 Orim's Chant
+2 Wear // Tear
+2 Wrath of the Skies
+1 Blood Moon
+1 Celestial Purge
+1 Damping Sphere
+1 High Noon
+1 Surgical Extraction
+1 The Legend of Roku
+1 Vexing Bauble

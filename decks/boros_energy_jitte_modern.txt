@@ -1,0 +1,63 @@
+// Boros Energy -- UMEZAWA'S JITTE build (Modern, post-ban May-2026)
+// Context: the post-unban Jitte axis of the arc #6 build-off. Umezawa's Jitte
+//   was UNBANNED in the May-2026 Modern B&R; this list runs it as the grind-
+//   and-protect payoff that replaces the banned Phlage top-end slot. Jitte on
+//   any of the deck's cheap evasive/recurring bodies (Ragavan, Ocelot/Cat
+//   tokens, Voice mobilize Warriors) snowballs charge counters into board
+//   control (-1/-1), a lethal clock (+2/+2), and a life buffer (gain 2) --
+//   the classic creature-mirror + aggro-race payoff.
+// Design (author-derived; NOT primer-documented -- the Team Resolve primer is
+//   the Low Curve guide and never lists Jitte): consensus energy manabase +
+//   core, top-end = 3 Umezawa's Jitte instead of Fable/Roku, plus 2 Ranger-
+//   Captain of Eos (protect the equipped body / silence combo) and 2 Lightning
+//   Bolt for the "protect-the-carrier" interaction the grind axis wants.
+// Main: 60 | Sideboard: 15
+// audit:custom_variant -- Jitte grind-and-protect build for the arc #6 build-off.
+//   No banned cards (Phlage / Lotus Field absent).
+//
+// ENGINE-FIDELITY WARNING (arc #6 Jitte gate): the sim does NOT model Umezawa's
+//   Jitte. There is no "Umezawa's Jitte" card handler (the "Lost Jitte" ETB proxy
+//   is a DIFFERENT card), no equip step, no charge-counter accrual on combat
+//   damage, and none of the three activated modes in engine/match_runner. FURTHER,
+//   BorosEnergyMatchAPL has no Jitte constant or artifact/equip cast logic, so the
+//   3 Jitte are cast-inert dead blanks under the shared APL. Any gauntlet WR for
+//   this build is therefore PROVISIONAL and reads STRICTLY LOWER than paper. See
+//   the arc #6 findings for the UNMODELED verdict.
+
+// --- Lands (23) ---
+4 Arid Mesa
+4 Flooded Strand
+4 Marsh Flats
+3 Arena of Glory
+3 Sacred Foundry
+2 Elegant Parlor
+2 Plains
+1 Mountain
+
+// --- Creatures (24) ---
+4 Ajani, Nacatl Pariah
+4 Guide of Souls
+4 Ocelot Pride
+4 Ragavan, Nimble Pilferer
+3 Voice of Victory
+3 Seasoned Pyromancer
+2 Ranger-Captain of Eos
+
+// --- Other (13) ---
+3 Umezawa's Jitte
+4 Galvanic Discharge
+2 Lightning Bolt
+2 Goblin Bombardment
+2 Thraben Charm
+
+SIDEBOARD:
+2 Celestial Purge
+2 Wrath of the Skies
+2 Blood Moon
+2 Wear // Tear
+2 Vexing Bauble
+1 Clarion Conqueror
+1 High Noon
+1 Rest in Peace
+1 Surgical Extraction
+1 Soul-Guide Lantern

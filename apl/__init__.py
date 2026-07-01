@@ -49,6 +49,10 @@ APL_REGISTRY = {
     # Team Resolve post-ban "Low Curve Boros Energy" (Zuxas, ~70% real WR). Reuses
     # the existing match APL for goldfishing; deck file is the low-curve list.
     "borosenergylowcurve": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_lowcurve_modern.txt"),
+    # arc #6 build-off candidates -- registration-only (reuse the SHARED Boros
+    # Energy APL/MatchAPL; no fidelity change). Fable-consensus + Jitte axes.
+    "borosenergyfable": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_fable_modern.txt"),
+    "borosenergyjitte": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_jitte_modern.txt"),
     "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
     "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
@@ -268,6 +272,8 @@ MATCH_APL_REGISTRY = {
     "grixismidrange":  ("apl.grixis_midrange_match",  "GrixisMidrangeMatchAPL"),
     "borosenergy":     ("apl.boros_energy_match",   "BorosEnergyMatchAPL"),
     "borosenergylowcurve": ("apl.boros_energy_match", "BorosEnergyMatchAPL"),      # Low Curve post-ban variant
+    "borosenergyfable": ("apl.boros_energy_match", "BorosEnergyMatchAPL"),         # arc #6 Fable-consensus axis
+    "borosenergyjitte": ("apl.boros_energy_match", "BorosEnergyMatchAPL"),         # arc #6 Jitte axis (Jitte UNMODELED in engine)
     "izzetprowess":    ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern
     "prowess":         ("apl.izzet_prowess_match",  "IzzetProwessMatchAPL"),       # Modern alias
     "izzetprowessstandard": ("apl.izzet_prowess_standard_match", "IzzetProwessStandardMatchAPL"),

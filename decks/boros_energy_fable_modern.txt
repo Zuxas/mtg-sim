@@ -1,4 +1,7 @@
 // Boros Energy -- FABLE-CONSENSUS build (Modern, post-ban May-2026)
+// audit:custom_variant -- clean 60/15 (verified via data.deck loader); the
+//   lint blank-line section breaks trip its sideboard-flip parser, same as
+//   decks/boros_energy_lowcurve_modern.txt. Full derivation note below.
 // Context: the "other pilots" consensus post-Phlage build that the Team Resolve
 //   Low Curve primer (TeamResolve_BorosEnergy_Primer_4.pdf, p.3) explicitly
 //   contrasts against: "the plethora of three-drops and one or two maindeck

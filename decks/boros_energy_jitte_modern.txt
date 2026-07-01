@@ -1,4 +1,7 @@
 // Boros Energy -- UMEZAWA'S JITTE build (Modern, post-ban May-2026)
+// audit:custom_variant -- clean 60/15 (verified via data.deck loader); the
+//   lint blank-line section breaks trip its sideboard-flip parser. Full
+//   design + engine-fidelity warning below.
 // Context: the post-unban Jitte axis of the arc #6 build-off. Umezawa's Jitte
 //   was UNBANNED in the May-2026 Modern B&R; this list runs it as the grind-
 //   and-protect payoff that replaces the banned Phlage top-end slot. Jitte on

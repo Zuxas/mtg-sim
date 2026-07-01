@@ -68,6 +68,46 @@ MISMODELED_MATCHUPS = {
         "why": "the Broodscale APL is a SYNTHETIC creature-deck stub that does not model the infinite "
                "combo at all -- the cell only fills the field row.",
     },
+    "belcher": {
+        "direction": "INFLATED / STUB (silent until 2026-07-01 -- worse than flagged cells)",
+        "sim": "~100% Boros (belcher effectively never wins the played-out cell)",
+        "truth": "no primer cell (unknown; certainly not ~0% for belcher)",
+        "why": "BATCH I0 honesty flag (combo spec Amendment 2026-07-01). The belcher decklist is a "
+               "64-card audit:stub and the played-out APL under-assembles the Charbelcher kill, so "
+               "the row fed false ~100%-Boros wins across ~3.5% of the modeled field with NO "
+               "down-weight warning. Fix type = author a real 60 (decklist-stub cluster). "
+               "Direction-only cell; do not trust the number.",
+    },
+    "neobrand": {
+        "direction": "INFLATED / STUB (silent until 2026-07-01 -- worse than flagged cells)",
+        "sim": "~100% Boros (neobrand effectively never wins the played-out cell)",
+        "truth": "no primer cell (unknown; certainly not ~0% for neobrand)",
+        "why": "BATCH I0 honesty flag (combo spec Amendment 2026-07-01). Griselbrand kill channel "
+               "is unmodeled (Griselbrand draws score no clock -- see GRIS-SPIKE batch), so the "
+               "row fed false ~100%-Boros wins across ~2.0% of the modeled field with NO warning. "
+               "Fix type = APL kill-line (APL-stub cluster) + GRIS-SPIKE. Direction-only cell.",
+    },
+    "temur crashcade": {
+        "direction": "INFLATED",
+        "sim": "~96% Boros",
+        "truth": "no primer cell (unknown; flag-forever split B = direction-only)",
+        "why": "BATCH I0 honesty flag (combo spec Amendment 2026-07-01). Cascade fires at sorcery "
+               "speed in the played-out APL; the instant-speed end_step seam (BATCH A, shared with "
+               "living_end) is unbuilt, so the cascade payload under-fires. ~3.4% of the modeled "
+               "field. Direction-only cell.",
+    },
+    "ruby storm": {
+        "direction": "INFLATED (payoff-reachability, NOT the damage channel)",
+        "sim": "~100% Boros (ruby_storm wins 0/50)",
+        "truth": "no primer cell (unknown; certainly not 0% for storm)",
+        "why": "BATCH I0 honesty flag (combo spec Amendment 2026-07-01). The old IMPERFECTION "
+               "(ruby-storm-fires-but-never-closes -> WANTS_STORM/damage_dealt path) is "
+               "SUPERSEDED/WRONG: WANTS_STORM is already True and mp1 damage IS synced "
+               "(Component 2 Site 1 is a no-op for it, baseline 496 byte-identical). Real cause = "
+               "payoff REACHABILITY: Grapeshot is Wish/SB-gated so the engine never reaches the "
+               "kill (Step-2.0 Stop-condition-4 re-scope). ~4.1% of the modeled field. "
+               "Direction-only cell.",
+    },
     "izzet affinity": {
         "direction": "INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
         "sim": "~76% Boros / ~24% Affinity POST-FIX (boros_energy_lowcurve seat A vs izzet_affinity "
@@ -124,8 +164,10 @@ MISMODELED_MATCHUPS = {
 
 def _norm(name: str) -> str:
     # strip apostrophes (straight + curly) so "Goryo's Vengeance" matches the
-    # apostrophe-less stored key "goryos vengeance" (else the flag is silently missed)
-    return (name or "").lower().replace("-", " ").replace("'", "").replace("’", "").strip()
+    # apostrophe-less stored key "goryos vengeance" (else the flag is silently missed);
+    # underscores -> spaces so deck keys like "temur_crashcade" match "temur crashcade"
+    # (same silent-miss class, found during BATCH I0 verification 2026-07-01)
+    return (name or "").lower().replace("-", " ").replace("_", " ").replace("'", "").replace("’", "").strip()
 
 
 def lookup(name: str):

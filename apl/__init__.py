@@ -76,6 +76,12 @@ APL_REGISTRY = {
     "rubystorm":       ("apl.ruby_storm",       "RubyStormAPL",      "decks/ruby_storm_modern.txt"),
     "belcher":         ("apl.belcher_match",     "BelcherMatchAPL",   "decks/belcher_modern.txt"),
     "goblincharbelcher":("apl.belcher_match",    "BelcherMatchAPL",   "decks/belcher_modern.txt"),
+    # BATCH I0 (2026-07-01, combo spec Amendment): cure the silent 0/0 field skip --
+    # get_match_apl('landlessbelcher') returned None so the gauntlet skipped the row.
+    # CAVEAT: BelcherMatchAPL pilots the LAND build; the landless variant's
+    # Sea-Gate Restoration ramp lines are NOT modeled (cell is flagged in
+    # mismodeled_matchups.py; trust direction only).
+    "landlessbelcher": ("apl.belcher_match",     "BelcherMatchAPL",   "decks/auto/landless_belcher_modern.txt"),
     "neobrand":        ("apl.neobrand_match",    "NeobrandMatchAPL",  "decks/neobrand_modern.txt"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL","decks/grixis_reanimator_modern.txt"),
     # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29).
@@ -323,6 +329,7 @@ MATCH_APL_REGISTRY = {
     # New 2026-04-29: real-meta gap decks
     "belcher":         ("apl.belcher_match",         "BelcherMatchAPL"),
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
+    "landlessbelcher": ("apl.belcher_match",         "BelcherMatchAPL"),  # I0 2026-07-01: cures 0/0 skip; Sea-Gate lines unmodeled
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
     # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29). SYNTHETIC stub number.

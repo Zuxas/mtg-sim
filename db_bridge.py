@@ -23,11 +23,33 @@ import json
 import sqlite3
 from typing import Optional
 
-# Path to the meta-analyzer database
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
-)
+# Path to the meta-analyzer database.
+# Resolution ladder (2026-07-01, "one knob" decoupling -- lets the DB live
+# outside any repo tree, e.g. D:\mtg-data\mtg_meta.db):
+#   1. MTG_META_DB env var (canonical knob, machine-wide)
+#   2. mtg-meta-analyzer/config.ini [database] path (the analyzer's own knob)
+#   3. legacy relative path (pre-2026-07-01 behavior, unchanged default)
+def _resolve_meta_db() -> str:
+    env = os.environ.get("MTG_META_DB")
+    if env:
+        return env
+    here = os.path.dirname(os.path.abspath(__file__))
+    analyzer_root = os.path.join(here, "..", "mtg-meta-analyzer")
+    cfg_path = os.path.join(analyzer_root, "config.ini")
+    if os.path.exists(cfg_path):
+        import configparser
+        cfg = configparser.ConfigParser()
+        try:
+            cfg.read(cfg_path)
+            raw = cfg.get("database", "path", fallback=None)
+            if raw:
+                return raw if os.path.isabs(raw) else os.path.join(analyzer_root, raw)
+        except Exception:
+            pass  # unreadable config -> fall through to legacy path
+    return os.path.join(here, "..", "mtg-meta-analyzer", "data", "mtg_meta.db")
+
+
+DB_PATH = _resolve_meta_db()
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data.deck import load_deck_from_text

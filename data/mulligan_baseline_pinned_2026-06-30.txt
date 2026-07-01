@@ -12,10 +12,12 @@
 #
 # GATE 0 RESULT: 12 of 13 cells byte-identical across all 4 pinned launches -> PASS on the stable set.
 #   EXCLUDED: boros_vs_uw_control is NOT cross-launch stable (a_wins = 446,447,447,447 across launches 1-4).
-#   This is OPPONENT-SIDE (UW Control) id()-ordering nondeterminism -- amulet_vs_uw_control WAS stable (283 x4),
-#   so it is the specific boros/UW pairing, not UW Control unconditionally. Deferred to the named predecessor
-#   spec (full-field id()-ordering stabilization). It is NOT a boros/amulet-hero regression: every hero-side
-#   lane is stable. This cell is reported but NOT gated (Gate 0 / Gate 1).
+#   Opponent-side (UW Control) id()-ordering nondeterminism; it reproduces on PRE-change code so keep-routing
+#   did NOT introduce it. amulet_vs_uw_control was byte-stable across the same 4 launches (283 x4), WEAKLY
+#   suggesting this is pairing-specific -- but 4 launches cannot rule out a low-rate flip, so the predecessor
+#   spec should re-sample widely (>=20 launches) before trusting that attribution. Firmly established: every
+#   hero-side (boros/amulet own-lane) result is stable. Deferred to the predecessor (full-field id()-ordering
+#   stabilization); reported but NOT gated (Gate 0 / Gate 1).
 #
 # GATE column: GATED = in the byte-identity gate set; EXCLUDED = opponent-side nondeterminism, tracked.
 # =====================================================================================================

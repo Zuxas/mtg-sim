@@ -69,17 +69,33 @@ MISMODELED_MATCHUPS = {
                "combo at all -- the cell only fills the field row.",
     },
     "izzet affinity": {
-        "direction": "INFLATED",
-        "sim": "~81% (boros_energy_lowcurve seat A vs izzet_affinity seat B; run_match n=100, "
-               "PYTHONHASHSEED=0, seed=42+i, seat-alternating on_play)",
+        "direction": "INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+        "sim": "~76% Boros / ~24% Affinity POST-FIX (boros_energy_lowcurve seat A vs izzet_affinity "
+               "seat B; run_match, seat-alternating on_play, seed=42+i, PYTHONHASHSEED=0, global RNG "
+               "pinned, n=300). Down from ~85.7% Boros PRE-FIX under the SAME pin (-9.7pp). NOTE: the "
+               "legacy ~81% was an n=100 non-global-pinned figure -- use the pinned 85.7->76.0 for the "
+               "apples-to-apples move; do not compare 81 vs 76.",
         "truth": "~44% (direction only -- no empirical anchor; no post-ban Modern DB data)",
-        "why": "Affinity's APL never DEVELOPS A BOARD: the Urza's Saga chapter/Construct engine is "
-               "entirely unimplemented (0 Constructs / 100 games; peak attacking power median ~1.0, "
-               "~46% of games have zero attacking power ever), so we beat it far more often in sim "
-               "than in reality. Trust the INFLATED direction, not the number. Arc #3 "
-               "(harness/specs/2026-07-01-affinity-offense-rebaseline.md) was attempted 2026-07-01 but "
-               "landed NO fix (implementer null; apl/affinity_match.py byte-identical to pre-spec HEAD), "
-               "so the mechanism did not move and this cell stays flagged at its pre-fix ~81% baseline.",
+        "why": "Affinity's APL historically never DEVELOPED A BOARD (Urza's Saga chapter/Construct "
+               "engine unimplemented; 0 Constructs / 100 games). Arc #3 "
+               "(harness/specs/2026-07-01-affinity-offense-rebaseline.md, mtg-sim commit ae9cb12) "
+               "IMPLEMENTED the Urza's Saga chapter/Construct engine, oracle-faithful (0/0 Construct, "
+               "P/T = live artifact count recomputed each main phase, summoning-sick, {2},{T} paid from "
+               "an honest pool with the Saga's own {C} forgone, Saga sacrificed at chapter III) + a "
+               "Thoughtcast card-advantage branch + Munitions WANTS_BURN fidelity + honest Mox-metalcraft "
+               "{C} mana routing. MECHANISM MOVED, NOT TUNED: Constructs 0->~24% present, peak attacking "
+               "board power median 0->1 / mean 2.94->4.53, %games-zero-attacking-power-ever 53->43, "
+               "kill-turn-when-Aff-wins median 6->5; all THREE Boros builds fall comparably (standard "
+               "-13.5, lowcurve -9.5, variant_jermey -10.0 = a genuine clock, not a per-cell constant). "
+               "But the cell did NOT reach the ~44-56 band and STAYS INFLATED (overall verdict PARTIAL): "
+               "the faithful clock is present in only ~24% of games (early-Saga/tight-mana -- the honest "
+               "{2},{T} gate that forgoes the Saga's own {C} was deliberately NOT relaxed to inflate "
+               "presence), so the board-development thresholds (median>=3, %zero<20%) are only partially "
+               "met. The residual above the band is EXPECTED and is attributed to the mana model / "
+               "opponent overmodel, NOT tuned away (Aff 24% << 56%, no overshoot; no cell hand-edited). "
+               "The broader field lift is substantially the honest Mox-mana routing (present every game), "
+               "not the construct (present ~24%). Trust the INFLATED DIRECTION, not the number; no "
+               "reverse-fit.",
     },
     "yawgmoth": {
         "direction": "DEFLATED (combat over-credited; mulligan does NOT unstarve assembly)",

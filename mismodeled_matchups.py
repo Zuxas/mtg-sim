@@ -25,30 +25,28 @@ the sim divergence is structural).
 # direction: how the SIM errs relative to real-world truth.
 MISMODELED_MATCHUPS = {
     "grixis reanimator": {
-        "direction": "INVERTED (improved, still flagged)",
-        "sim": "~55% favored (was ~69-75%)",
+        "direction": "INVERTED (improved, still flagged, assembly ~32% production / ~35% keep-mode)",
+        "sim": "~57% favored (56.6% production keep-slice; was ~55% crude-both)",
         "truth": "~38% (we are the DOG)",
         "why": "handoff #2 grixis cell (2026-06-30) built the intrinsic-fragility threat model + "
                "turned the interaction layer ON. The reanimated Archon's RECURRING attack trigger "
-               "(sacrifice + discard + 3 life drain) now fires in main_phase_match -- it was dropped "
-               "entirely because declare_attackers is never called on the run_match path, so the body "
-               "acted as a vanilla beater; the 3-drain is routed through gs.damage_dealt + WANTS_BURN "
-               "(scalar life writes don't propagate). The Archon is now the reliable reanimation target "
-               "(Unmarked Grave fetches it, Faithless Looting pitches it, Persist/Reanimate recur it "
-               "through our DESTROY-only removal -- only exile, which maindeck Boros lacks, permanently "
-               "answers it), and Thoughtseize/Inquisition strip our removal. RESULT: when the Archon "
+               "(sacrifice + discard + 3 life drain) now fires in main_phase_match; when the Archon "
                "comes online grixis wins ~82% (the named mechanisms work). Our interaction is honest "
                "but NON-LOAD-BEARING (answer_combo fires ~1-3/500 G1: Boros's cheap burn can't kill a "
-               "6-toughness body, energy isn't visible in the window, and there's no maindeck GY-hate). "
-               "STILL FLAGGED per Stop condition 2: ASSEMBLY FREQUENCY is the binding constraint -- "
-               "match P_assemble is only ~32% vs the deck's faithful GOLDFISH assembly of ~56% (measured "
-               "with the APL's combo-aware keep()). The goldfish shows real headroom; the match shortfall "
-               "is part run_match's crude inline mulligan (mull-if-<2-lands, NOT keep()) + the 66-card stub "
-               "deck file, and part LEGITIMATE boros pressure (racing/removing grixis before it assembles, "
-               "which belongs in the matchup). A back-of-envelope boros = 0.73 - 0.55*P_assemble (coeffs "
-               "measured AT P~0.32) would put boros in the low 40s at the goldfish rate, but that "
-               "extrapolation is UNVERIFIED (the coeffs likely shift under a different mulligan). NOT tuned "
-               "into band (forbidden). Trust the DIRECTION (improving toward dog), not the 55%.",
+               "6-toughness body, no maindeck GY-hate). STILL FLAGGED per Stop condition 2. "
+               "MULLIGAN KEEP-ROUTING RE-MEASURE (2026-07-01, PYTHONHASHSEED=0, seed=42, n=500): the "
+               "'crude mulligan starves match assembly' premise is LARGELY DISPROVEN. Paired isolation "
+               "(boros held keep, grixis crude->keep) moves grixis Archon-online only 32.4%->35.4% "
+               "(+3.0pp, ~1 SE) and our WR 55.0%->55.0% (flat); routing grixis through its OWN combo-aware "
+               "keep() does NOT lift assembly to Gate-2's 42% nor near the goldfish ~56%. The 32%-match-vs-"
+               "56%-goldfish gap was a MISATTRIBUTION: goldfish-vs-match conflates the mulligan with the "
+               "entire opponent-pressure effect; the isolated mulligan contribution is only ~+3pp, so the "
+               "residual gap is dominated by (c) LEGITIMATE boros pressure (racing/removing before assembly, "
+               "part of the matchup) + (b) the 66-card audit:stub decklist -- NOT the crude mulligan. In "
+               "SHIPPED PRODUCTION grixis is seat B and NOT in _KEEP_ROUTED_APLS, so it stays crude: "
+               "assembly 32.4%, our WR 56.6% (the +1.6pp over crude-both 55.0% is boros's OWN seat-A keep, "
+               "not any grixis-assembly change). Cell stays INVERTED + flagged; NOT tuned into band "
+               "(forbidden). Trust the DIRECTION (improving toward dog), not the ~55-57%.",
     },
     "goryos vengeance": {
         "direction": "INFLATED",
@@ -79,20 +77,26 @@ MISMODELED_MATCHUPS = {
                "stale 63.5% 'Modern lock'.)",
     },
     "yawgmoth": {
-        "direction": "DEFLATED (combat over-credited)",
-        "sim": "~49% (combo NOW assembles 9.8%/game and kills)",
+        "direction": "DEFLATED (combat over-credited; mulligan does NOT unstarve assembly)",
+        "sim": "~50% production (combo assembles ~9.4%/game); was 49% crude-both",
         "truth": "spec band [55,80] -- we should be favored",
         "why": "The Agatha's-Cauldron/Walking-Ballista combo was REPAIRED 2026-06-30 (handoff #2): the "
-               "old DRAINS/UNDYING constants named Blood Artist/Zulaport/Geralf's Messenger -- none in "
-               "decks/yawgmoth_modern.txt -- so the combo fired 0/50. It now assembles (Yawgmoth + 2 "
-               "undying + Cauldron + Ballista) at ~9.8%/game and its damage is rerouted through "
-               "gs.damage_dealt + WANTS_BURN so it reaches the match life total. BUT the cell FAILS LOW: "
-               "our no-combo race_baseline is only ~53.8% because the APL plays as an over-strong generic "
-               "creature deck (yawgmoth wins ~46%/game on combat with NO combo), so the now-correct combo "
-               "only DROPS our WR (53.8% -> 49.0%), it cannot raise it into [55,80]. The binding "
-               "constraint is the combat model, not assembly -- re-modeling yawgmoth's beatdown is OUT OF "
-               "SCOPE here, and tuning assembly frequency to hit the band is forbidden (Stop condition 2). "
-               "Trust the DIRECTION (we are favored), not the 49%.",
+               "old DRAINS/UNDYING constants named cards not in decks/yawgmoth_modern.txt, so the combo "
+               "fired 0/50. It now assembles (Yawgmoth + 2 undying + Cauldron + Ballista) at ~9.4%/game "
+               "and its damage is rerouted through gs.damage_dealt + WANTS_BURN to the match life total. "
+               "The cell FAILS LOW: the APL plays as an over-strong generic creature deck (yawgmoth wins "
+               "~46%/game on combat with NO combo), so the now-correct combo only DROPS our WR, it cannot "
+               "raise it into [55,80]. MULLIGAN KEEP-ROUTING RE-MEASURE (2026-07-01, PYTHONHASHSEED=0, "
+               "seed=42, n=500): keep-routing does NOT raise yawgmoth assembly toward its goldfish rate -- "
+               "it LOWERS it. Routing yawgmoth through its own keep() (crude-both->keep-both) moves combo "
+               "assembly 9.8%->6.8% (DOWN) because the keep mulls away resources for its 5-piece combo. "
+               "Our keep-mode WR does rise 49.0%->54.6%, but ONLY because yawgmoth mulligans into weaker "
+               "boards (less combat pressure) -- confirming the binding constraint is the OVER-CREDITED "
+               "COMBAT MODEL, not assembly (spec Gate 2 stop-trigger 'P_assemble does not rise' fired). "
+               "In SHIPPED PRODUCTION yawgmoth is seat B and NOT in _KEEP_ROUTED_APLS, so it stays crude: "
+               "assembly 9.4%, our WR 50.0% -- effectively unchanged. Re-modeling yawgmoth's beatdown is "
+               "OUT OF SCOPE; tuning assembly to hit the band is forbidden (Stop condition 2). Trust the "
+               "DIRECTION (we are favored), not the ~50%.",
     },
 }
 

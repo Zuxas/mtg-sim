@@ -30,6 +30,8 @@ REBUKE     = "Metallic Rebuke"
 SAGA       = "Urza's Saga"
 SHADOWSPEAR= "Shadowspear"
 SKATEBOARD = "Skateboard"
+THOUGHTCAST= "Thoughtcast"
+CONSTRUCT  = "Construct Token"
 
 ARTIFACTS = {MOX_OPAL, BAUBLE, EE, SHADOWSPEAR, SKATEBOARD, WEAPONS,
              "Tormod's Crypt", "Claws of Gix", "Welding Jar", "Aether Spellbomb", "Pithing Needle"}
@@ -46,6 +48,12 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
     # warp-casts Pinnacle cheaply for an early Drone-engine turn, the tick exiles
     # it, and the recast block below replays it for full value on a later turn.
     WANTS_WARP = True
+
+    # arc #3 (2026-07-01): opt into the match_runner:279 mp1-damage propagation so the
+    # section-6b Munitions leave-trigger (Weapons Manufacturing) is no longer discarded.
+    # Only section-6b writes gs.damage_dealt in this APL, so the gate propagates ONLY
+    # faithful Munitions damage; Boros never sets WANTS_BURN so its cells stay byte-identical.
+    WANTS_BURN = True
 
     # R1 opt-in (Stage B 2026-06-27): now extends AwareMatchAPL, so the inherited
     # priority_action / _r1_choose_counter route the 3 Metallic Rebukes through the
@@ -69,6 +77,111 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
         """Count artifacts on battlefield for affinity/metalcraft."""
         return sum(1 for c in gs.zones.battlefield
                   if not c.is_land() and 'artifact' in (getattr(c, 'type_line', '') or '').lower())
+
+    # ---------------------------------------------------------------------
+    # Urza's Saga chapter/Construct engine (arc #3). APL-LOCAL: all chapter
+    # state is attached to the Saga Card object itself (persists across turns
+    # because the match view aliases the persistent battlefield list). Keyed off
+    # the Saga's turn_entered exactly the way boros_energy_match self-generates
+    # its tokens off turn state. Oracle (scryfall_oracle_cards.json):
+    #   "(As this Saga enters and after your draw step, add a lore counter.
+    #     Sacrifice after III.)"
+    #   I   -- "{T}: Add {C}."
+    #   II  -- "{2}, {T}: Create a 0/0 colorless Construct artifact creature token
+    #           with 'This token gets +1/+1 for each artifact you control.'"
+    #   III -- "Search your library for an artifact card with mana cost {0} or {1},
+    #           put it onto the battlefield, then shuffle."  (then sac after III)
+    # ---------------------------------------------------------------------
+    def _advance_saga_chapters(self, gs, on_artifact_enter):
+        """Add one lore counter per Saga per MY main phase (turn-guarded so a
+        second main-phase call in the same turn does not double-advance). Fire
+        chapter III (tutor + sacrifice) the turn a Saga reaches lore 3."""
+        for c in list(gs.zones.battlefield):
+            if c.name != SAGA:
+                continue
+            if getattr(c, '_saga_turn_seen', None) == gs.turn:
+                continue
+            c._saga_turn_seen = gs.turn
+            ch = getattr(c, '_saga_chapter', 0) + 1
+            c._saga_chapter = ch
+            if ch >= 3:
+                self._saga_chapter_three(gs, c, on_artifact_enter)
+
+    def _saga_chapter_three(self, gs, saga, on_artifact_enter):
+        """III: search library for an MV 0-1 artifact -> battlefield, then sac Saga."""
+        def _mv(card):
+            return getattr(card, 'cmc', 0) or 0
+        # Prefer Mox Opal (mana), then any other MV0-1 artifact.
+        candidates = [x for x in gs.zones.library
+                      if _mv(x) <= 1
+                      and 'artifact' in (getattr(x, 'type_line', '') or '').lower()
+                      and not x.is_land()]
+        if candidates:
+            candidates.sort(key=lambda x: (x.name != MOX_OPAL, _mv(x)))
+            tgt = candidates[0]
+            gs.zones.library.remove(tgt)
+            gs.zones.battlefield.append(tgt)
+            tgt.turn_entered = gs.turn
+            tgt.tapped = True  # entered this main; no fresh mana this turn
+            on_artifact_enter(is_nontoken=True)
+            gs._log(f"  Urza's Saga III: tutor {tgt.name} (MV{_mv(tgt)}) -> battlefield")
+        # Sacrifice after III.
+        if saga in gs.zones.battlefield:
+            gs.zones.battlefield.remove(saga)
+            gs.zones.graveyard.append(saga)
+        gs._log("  Urza's Saga III: sacrificed Saga")
+
+    def _activate_saga_constructs(self, gs, on_artifact_enter):
+        """II: for each untapped chapter-II+ Saga, pay {2} and tap it to make a
+        0/0 Construct (P/T set from live artifact count; summoning-sick). Honest
+        mana only: {2} is an activated-ability cost (NOT affinity/improvise), paid
+        from the real pool via ManaPool.pay, and the Saga's own {T} is consumed."""
+        made = 0
+        for c in list(gs.zones.battlefield):
+            if c.name != SAGA:
+                continue
+            if getattr(c, '_saga_chapter', 0) < 2:
+                continue
+            # One activation per Saga per turn (needs {T}). Note tap_lands() has
+            # already tapped the Saga for mana; the {T} for THIS ability competes
+            # with that, which is why the honest >=3 gate below forgoes the Saga's
+            # own {C}. Guard on a per-turn-use flag, not the tapped-for-mana state.
+            if getattr(c, '_saga_used_turn', None) == gs.turn:
+                continue
+            # {2},{T}: the Saga is being tapped for the ability (not for mana), so
+            # require >=3 in pool -- 1 stands in for the Saga's own {C} we forgo --
+            # then pay the {2} generic with no cost_reduction.
+            if gs.mana_pool.total() < 3:
+                continue
+            gs.mana_pool.cost_reduction = 0
+            if not gs.mana_pool.pay("{2}", 2):
+                continue
+            c._saga_used_turn = gs.turn
+            c.tapped = True  # {T}
+            tok = gs._make_token(CONSTRUCT, "0", "0",
+                                 "Artifact Creature - Construct")
+            on_artifact_enter(is_nontoken=False)  # a token; no Munitions trigger
+            self._recompute_constructs(gs)
+            made += 1
+            gs._log(f"  Urza's Saga II: {{2}},{{T}} -> 0/0 Construct "
+                    f"(now {safe_power(tok)}/{safe_toughness(tok)}, artifacts={self._count_artifacts(gs)})")
+        return made
+
+    def _recompute_constructs(self, gs):
+        """Construct 'gets +1/+1 for each artifact you control': set P/T to the live
+        artifact count (which includes the Construct itself, an artifact creature).
+        A Construct reduced to 0/0 (no artifacts) dies as a state-based action."""
+        n = self._count_artifacts(gs)
+        dead = []
+        for c in list(gs.zones.battlefield):
+            if c.name == CONSTRUCT:
+                c.power = str(n)
+                c.toughness = str(n)
+                if n <= 0:
+                    dead.append(c)
+        for c in dead:
+            gs.zones.battlefield.remove(c)
+            gs.zones.graveyard.append(c)
 
     def keep(self, hand, mulligans, on_play):
         if len(hand) <= 4: return True
@@ -125,15 +238,20 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
             """Fire cast triggers when an artifact spell is cast."""
             self._artifacts_cast_this_turn += 1
 
-        # 0. Mox Opal — free mana if metalcraft (3+ artifacts)
+        # Urza's Saga lore: add a counter per main phase; chapter III (tutor + sac)
+        # is a free triggered ability that fires at the start of the main phase.
+        self._advance_saga_chapters(gs, _on_artifact_enter)
+
+        # 0. Mox Opal — deploy; its metalcraft {C} is tapped AFTER cheap artifacts
+        # land (section 1) so metalcraft can actually be online. Real Mox mana now
+        # goes into gs.mana_pool (not just the local `avail`) so the gs.mana_pool-gated
+        # spells (Emry/Kappa) and the {2},{T} Saga construct can honestly use it.
         for c in list(gs.zones.hand):
             if c.name == MOX_OPAL:
                 gs.zones.hand.remove(c); gs.zones.battlefield.append(c)
                 c.turn_entered = gs.turn
                 _on_artifact_enter(is_nontoken=True)
-                if self._artifact_count >= 3:
-                    avail += 1
-                gs._log(f"  Mox Opal (artifacts: {self._artifact_count}, metalcraft: {self._artifact_count >= 3})")
+                gs._log(f"  Mox Opal deployed (artifacts: {self._artifact_count})")
                 break
 
         # 1. Deploy cheap artifacts (free, ETB triggers Kappa + Weapons Manufacturing)
@@ -145,6 +263,16 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
                 _on_artifact_cast()
                 gs._log(f"  Deploy {c.name} (artifact #{self._artifact_count})")
 
+        # 1b. Tap Mox Opal for {C} (metalcraft: 3+ artifacts) — evaluated here, after
+        # the cheap artifacts have entered, since metalcraft is usually only online
+        # once they're down. Honest real mana into gs.mana_pool, one {C} per Mox, once.
+        if self._count_artifacts(gs) >= 3:
+            for c in gs.zones.battlefield:
+                if c.name == MOX_OPAL and getattr(c, '_mox_mana_turn', None) != gs.turn:
+                    gs.mana_pool.add("C", 1)
+                    c._mox_mana_turn = gs.turn
+            avail = gs.mana_pool.total()
+
         # 2. Weapons Manufacturing ({2}) — creates Munitions tokens on each artifact entering
         # Oracle: "Whenever a nontoken artifact you control enters, create a Munitions token
         # (an artifact token with 'When this token leaves the battlefield, it deals 2 damage')."
@@ -154,6 +282,13 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
                 avail = gs.mana_pool.total()
                 gs._log(f"  Weapons Manufacturing: each artifact entering now creates Munitions (+2 dmg on sac)")
                 break
+
+        # 2b. Urza's Saga II — {2},{T} makes a Construct (sized to live artifact count,
+        # recomputed each main phase). Activated here, after the free/cheap artifacts and
+        # BEFORE the {2}{U}+ mana sinks (Emry/Kappa/Pinnacle), because the {2} board-builder
+        # otherwise never gets mana on the tight chapter-II turn. P/T is re-set at end of main.
+        self._activate_saga_constructs(gs, _on_artifact_enter)
+        avail = gs.mana_pool.total()
 
         # 3. Emry ({2}{U} with affinity for artifacts) — cast artifacts from GY
         # Oracle (ETB): "When Emry enters, mill four cards." — puts 4 cards from library to GY
@@ -236,21 +371,44 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
                 gs._log(f"  Ravager: {counters} counters (modular 1 + {counters-1} sac)")
                 break
 
-        # 6b. Weapons Manufacturing Munitions — convert pending Munitions to face damage.
-        # Oracle: "When this token leaves the battlefield, it deals 2 damage to any target."
-        # Sacrifice all Munitions tokens at end of main for damage (aggressive line).
-        if self._munitions_pending > 0:
+        # 6b. Weapons Manufacturing Munitions — a Munitions token deals 2 damage WHEN
+        # IT LEAVES the battlefield (oracle). Faithful crack-for-reach: only sacrifice
+        # the pending Munitions when we are the beatdown (a real closing decision), not
+        # a free blanket dump every turn. WANTS_BURN=True lets match_runner:279 sync it.
+        if self._munitions_pending > 0 and self._affinity_is_beatdown(gs):
             dmg = self._munitions_pending * 2
             gs.damage_dealt += dmg
-            gs._log(f"  Weapons Mfg Munitions: sac {self._munitions_pending} tokens → {dmg} face")
+            gs._log(f"  Weapons Mfg Munitions: sac {self._munitions_pending} tokens (leave) -> {dmg} face")
             self._munitions_pending = 0
 
         # 7. Removal with Metallic Rebuke (handled in respond_to_spell)
+
+        # 7b. Thoughtcast — Affinity for artifacts; "Draw two cards." Placed BEFORE the
+        # section-8 Tag.CREATURE fill-curve gate (an instant can never satisfy it, so it
+        # would otherwise strand). Affinity reduces the {3} generic by artifact count.
+        for c in list(gs.zones.hand):
+            if c.name == THOUGHTCAST:
+                gs.mana_pool.cost_reduction = self._count_artifacts(gs)
+                if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                    gs.cast_spell(c)
+                    drawn = 0
+                    for _ in range(2):
+                        if gs.zones.library:
+                            gs.zones.hand.append(gs.zones.library.pop(0))
+                            drawn += 1
+                    gs._log(f"  Thoughtcast: affinity -{self._count_artifacts(gs)}, draw {drawn}")
+                gs.mana_pool.cost_reduction = 0
+                avail = gs.mana_pool.total()
+                break
 
         # 8. Fill curve
         for c in list(gs.zones.hand):
             if c.has(Tag.CREATURE) and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.cast_spell(c)
+
+        # Final: recompute every Construct's P/T from the live artifact count so combat
+        # (and next turn) sees the current size. Dynamic, not frozen at creation.
+        self._recompute_constructs(gs)
 
     def declare_attackers(self, gs, opponent):
         return [c for c in gs.zones.battlefield

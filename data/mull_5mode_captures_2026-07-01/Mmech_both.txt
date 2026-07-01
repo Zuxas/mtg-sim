@@ -1,0 +1,14 @@
+# mull-routing capture  n=500 seed=42 n_workers=1  PYTHONHASHSEED=0  MULL_MODE=london_crude
+boros_vs_eldrazi_tron             206    294 7.6220      500  BorosEnergyMatchAPL      EldraziTronMatchAPL     
+boros_vs_uw_control               441     59 8.6860      500  BorosEnergyMatchAPL      UWControlModernMatchAPL 
+boros_vs_dimir_murktide           349    151 6.3380      500  BorosEnergyMatchAPL      MurktideMatchAPL        
+boros_vs_humans                   130    370 6.6560      500  BorosEnergyMatchAPL      HumansMatchAPL          
+boros_vs_sultai_midrange          296    204 6.9160      500  BorosEnergyMatchAPL      SultaiMidrangeMatchAPL  
+boros_vs_izzet_prowess            372    128 6.7380      500  BorosEnergyMatchAPL      IzzetProwessMatchAPL    
+boros_vs_amulet_titan             393    107 5.8520      500  BorosEnergyMatchAPL      AmuletTitanMatchAPL     
+boros_vs_grixis_reanim            267    233 6.4560      500  BorosEnergyMatchAPL      GrixisReanimatorMatchAPL
+amulet_vs_eldrazi_tron            104    396 7.8960      500  AmuletTitanMatchAPL      EldraziTronMatchAPL     
+amulet_vs_uw_control              279    221 11.2840      500  AmuletTitanMatchAPL      UWControlModernMatchAPL 
+amulet_vs_humans                   59    441 5.0380      500  AmuletTitanMatchAPL      HumansMatchAPL          
+amulet_vs_izzet_prowess           173    327 6.4200      500  AmuletTitanMatchAPL      IzzetProwessMatchAPL    
+amulet_vs_boros                    96    404 5.9520      500  AmuletTitanMatchAPL      BorosEnergyMatchAPL     

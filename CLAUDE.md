@@ -73,6 +73,19 @@ B&R (BANNED Phlage + Lotus Field; UNBANNED Umezawa's Jitte + Violent Outburst).
   with zero unresolved cards; no banned card lines remain in any modern deck.
   Scope was data/coverage only — no engine/APL-fidelity changes.
 
+### Match mulligan keep-routing — landed, then reverted to crude default (2026-07-01)
+
+`engine/match_runner._do_mulligan_runner` routes `run_match` opening hands through each
+deck's real `keep()`/`bottom()` (London, seeded via `gs.rng`), with three modes
+(`crude` / `london_crude` / `keep`) selected by `_mull_mode`. The Boros+Amulet first-slice
+production flip was **reverted**: `_KEEP_ROUTED_APLS` is now empty, so the production default
+is `crude` for every deck. The 5-mode attribution (spec Amendment 2) found the slice's only
+production effect was a +1.89pp London-vs-Vancouver mechanic artifact that inflated Boros field
+WR ~1.7pp and did NOT unstarve combo assembly. The routing machinery is retained (B0 for the WR
+mulligan sweep; enables a future symmetric full-field flip after the id()-ordering predecessor).
+keep-mode stays reachable via `MULL_MODE` / `MULL_MODE_A/B` env overrides. Findings:
+`harness/knowledge/tech/mull-routing-falsification-2026-07-01.md`.
+
 ### Low Curve Boros Energy (Modern) — added 2026-06-29 (post-ban)
 
 - Deck: `decks/boros_energy_lowcurve_modern.txt` (60+15, Team Resolve primer, post-Phlage)

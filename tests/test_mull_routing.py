@@ -133,12 +133,14 @@ class SomeFieldMatchAPL:        # any other deck -> crude
 
 
 def test_mode_selector_production_default():
+    # Production default is crude for EVERY deck (the Boros+Amulet slice was reverted
+    # 2026-07-01 after the 5-mode attribution found it artifact-only; _KEEP_ROUTED_APLS
+    # is empty). keep-mode stays reachable via env overrides (tested below).
     for k in ("MULL_MODE", "MULL_MODE_A", "MULL_MODE_B"):
         os.environ.pop(k, None)
-    assert "BorosEnergyMatchAPL" in _KEEP_ROUTED_APLS
-    assert "AmuletTitanMatchAPL" in _KEEP_ROUTED_APLS
-    assert _mull_mode("a", BorosEnergyMatchAPL()) == "keep"
-    assert _mull_mode("b", AmuletTitanMatchAPL()) == "keep"
+    assert _KEEP_ROUTED_APLS == set()
+    assert _mull_mode("a", BorosEnergyMatchAPL()) == "crude"
+    assert _mull_mode("b", AmuletTitanMatchAPL()) == "crude"
     assert _mull_mode("a", SomeFieldMatchAPL()) == "crude"
 
 

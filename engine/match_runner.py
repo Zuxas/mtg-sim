@@ -1595,10 +1595,22 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
 # pending the full-field id()-ordering stabilization predecessor spec.
 # ---------------------------------------------------------------------------
 
-# Match-APL class names whose keep()/bottom() are validated for keep-routing
-# (first slice). String-set gating (not isinstance) avoids a circular import
-# between match_runner and the APL modules.
-_KEEP_ROUTED_APLS = {"BorosEnergyMatchAPL", "AmuletTitanMatchAPL"}
+# Match-APL class names whose keep()/bottom() are routed to keep-mode BY DEFAULT.
+# String-set gating (not isinstance) avoids a circular import between match_runner
+# and the APL modules.
+#
+# REVERTED to empty 2026-07-01. The Boros+Amulet first slice was validated (Steps 5-6,
+# spec 2026-06-30-match-mulligan-keep-routing Amendment 2) and the 5-mode attribution
+# showed its ONLY production effect was a +1.89pp London-vs-Vancouver mechanic ARTIFACT
+# (keep-quality self-help was -0.17pp, negligible) that inflated Boros field WR ~1.7pp and
+# did NOT unstarve combo assembly (grixis +3pp iso / WR flat; yawgmoth assembly fell). See
+# harness/knowledge/tech/mull-routing-falsification-2026-07-01.md. The routing machinery
+# (_do_mulligan_runner + crude/london_crude/keep modes + _mull_mode + fallbacks + tests) is
+# RETAINED: it is the B0 prerequisite for the WR mulligan sweep and enables a future SYMMETRIC
+# full-field London flip once the id()-ordering-stabilization predecessor lands (which removes
+# the asymmetry that made the slice artifact-only). Until then the production default is crude
+# for every deck; keep-mode remains reachable via the MULL_MODE / MULL_MODE_A/B env overrides.
+_KEEP_ROUTED_APLS = set()
 
 # goldfish-parity London cap for keep/london_crude (spec 2.4). Crude keeps its
 # historical cap of 3 (mull to 4) for byte-identity; keep/london_crude use 4 to

@@ -1,0 +1,38 @@
+{
+  "protocol": "n=5000/pairing, seed=42, PYTHONHASHSEED=0, tmp/calibration_rerun_2026-07-01.py driver, modern-postban-arc @ 3ed5d98 (execution commit)",
+  "normalization": "JSON: drop top-level timestamp + pairings[*].runtime_s; logs: strip ISO timestamps + '| N.Ns' runtimes",
+  "byte_identity_instrument": "P1 cell (Dimir Midrange vs Izzet Prowess): normalized-identical across ALL THREE runs (pre-change x2, post-change x1). P1 normalized sha256 pinned below.",
+  "known_imperfection_p2": "P2 (Izzet Prowess vs Mono Green Landfall) has PRE-EXISTING same-seed drift at HEAD with zero repo changes: 71.4 / 72.0 / 71.6 (and 71.5 on 2026-07-01 @ d9b708a). Reproduced SAME-PROCESS (n=1000 seed=42 consecutive fresh-deck runs: 728 vs 725 a_wins). Outside the Stage-1.7-tested Boros mirror. Gate 2 of the 2026-07-02 spec is unsatisfiable for P2 until this is fixed (13 global-random sites / B1 RNG-threading territory).",
+  "runs": {
+    "stage0_pin_run1": {
+      "json": "data/sim_calibration_2026-07-02_stage0_pin.json",
+      "json_sha256_raw": "6d47f6ca8049cf099ad8e644156551fe8c1a517a9d72f2d1886453fae6dc46bf",
+      "json_sha256_normalized": "6c1cad70a15bf0aef89e3251351532dffbbc135cd80b1fd6c557637fb6ba10f9",
+      "log": "calibration-rerun-2026-07-02-stage0.log",
+      "log_sha256_normalized": "19086721a74169410b7671bbd764193d08ea9f8595ba63f25b0981482c274ba9",
+      "p1_cell_sha256_normalized": "b76c3711d49ae12b72322873647d54c95e8d7d1c18c7a5535287c3352386045e",
+      "p1_sim_wr": 5.3,
+      "p2_sim_wr": 71.4
+    },
+    "stage0_run2": {
+      "json": "data/sim_calibration_2026-07-02_stage0_run2.json",
+      "json_sha256_raw": "ecea5243de4a3d210a657c3668bd4968f69a6c3bdd13164864cab87fd37f2036",
+      "json_sha256_normalized": "45076e4ef257a64bf8972cb286540c06a5a847e086f8aa8d9d0e56b17b4014f1",
+      "log": "calibration-rerun-2026-07-02-stage0-run2.log",
+      "log_sha256_normalized": "f4ce447f83bee83a17e05f6a63c9da420dc8580e182b40cf32c5b8ea90338644",
+      "p1_cell_sha256_normalized": "b76c3711d49ae12b72322873647d54c95e8d7d1c18c7a5535287c3352386045e",
+      "p1_sim_wr": 5.3,
+      "p2_sim_wr": 72.0
+    },
+    "postchange_run3": {
+      "json": "data/sim_calibration_2026-07-02.json",
+      "json_sha256_raw": "2d28e09da565dabd6b74d64252aef2316476b3a53faa511dda3bd8907899bea4",
+      "json_sha256_normalized": "36391f89d2c8c0a26777376e78f9e3e340c3c3fdeba7fbd4ddf0b49605ee620d",
+      "log": "calibration-rerun-2026-07-02-postchange.log",
+      "log_sha256_normalized": "9b37df92ab60bc4fef4283360f50b6652cd3a56db4a55447ca764fa7541cbc8a",
+      "p1_cell_sha256_normalized": "b76c3711d49ae12b72322873647d54c95e8d7d1c18c7a5535287c3352386045e",
+      "p1_sim_wr": 5.3,
+      "p2_sim_wr": 71.6
+    }
+  }
+}

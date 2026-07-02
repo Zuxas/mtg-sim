@@ -1,0 +1,869 @@
+card,deck,timing,status,kinds,cost,max_tgh,detail
+Abrupt Decay,5_color_niv_mizzet_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Dovin's Veto,5_color_niv_mizzet_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Kolaghan's Command,5_color_niv_mizzet_pioneer.txt,instant,UNHANDLED,,,,bounce-unparsed:Return target creature card from your graveyard to your hand
+Leyline Binding,5_color_niv_mizzet_pioneer.txt,flash,UNHANDLED,,,,cost-reduction-static
+Lightning Helix,5_color_niv_mizzet_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Vanishing Verse,5_color_niv_mizzet_pioneer.txt,instant,UNHANDLED,,,,exile-rider:monocolored permanent
+Doorkeeper Thrull,abzan_greasefang_pioneer.txt,flash,INERT,,,,
+Fatal Push,abzan_greasefang_pioneer.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Vanishing Verse,abzan_greasefang_pioneer.txt,instant,UNHANDLED,,,,exile-rider:monocolored permanent
+Dismember,amulet_titan_modern.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Fire Magic,amulet_titan_modern.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Force of Vigor,amulet_titan_modern.txt,instant,INERT,,,,alt-pitch-cost
+Summoner's Pact,amulet_titan_modern.txt,instant,INERT,,,,
+Deepway Navigator,azorius_aggro_standard.txt,flash,INERT,,,,
+Disruptor of Currents,azorius_aggro_standard.txt,flash,INERT,,,,
+Floodpits Drowner,azorius_aggro_standard.txt,flash,INERT,,,,
+Get Lost,azorius_aggro_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Negate,azorius_aggro_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Spell Pierce,azorius_aggro_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Three Steps Ahead,azorius_aggro_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Tishana's Tidebinder,azorius_aggro_standard.txt,flash,INERT,,,,
+"Aang, Swift Savior",azorius_blink_standard.txt,flash,INERT,,,,
+Disdainful Stroke,azorius_blink_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Erode,azorius_blink_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Negate,azorius_blink_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Spell Pierce,azorius_blink_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Consult the Star Charts,azorius_control_pioneer.txt,instant,INERT,,,,
+Dovin's Veto,azorius_control_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Get Lost,azorius_control_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Kutzil's Flanker,azorius_control_pioneer.txt,flash,UNHANDLED,,,,exile-rider:player's graveyard
+March of Otherworldly Light,azorius_control_pioneer.txt,instant,UNHANDLED,,,,x-cost;cost-reduction-static
+Memory Deluge,azorius_control_pioneer.txt,instant,INERT,,,,
+No More Lies,azorius_control_pioneer.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+The Wandering Emperor,azorius_control_pioneer.txt,flash,DERIVED,REMOVAL_EXILE,4,,
+Three Steps Ahead,azorius_control_pioneer.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Get Lost,azorius_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Shardmage's Rescue,azorius_control_standard.txt,flash,INERT,,,,
+"Aang, Swift Savior",azorius_high_noon_standard.txt,flash,INERT,,,,
+Annul,azorius_high_noon_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Aven Interrupter,azorius_high_noon_standard.txt,flash,UNHANDLED,,,,exile-rider:spell
+Disdainful Stroke,azorius_high_noon_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Flashfreeze,azorius_high_noon_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Floodpits Drowner,azorius_high_noon_standard.txt,flash,INERT,,,,
+Get Lost,azorius_high_noon_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Pyrrhic Strike,azorius_high_noon_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature with mana value 3 or greater.
+Skycoach Conductor,azorius_high_noon_standard.txt,flash,INERT,,,,
+Spectacular Tactics,azorius_high_noon_standard.txt,instant,UNHANDLED,,,,
+"Aang, Swift Savior",azorius_high_noon_top20_standard.txt,flash,INERT,,,,
+Annul,azorius_high_noon_top20_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Aven Interrupter,azorius_high_noon_top20_standard.txt,flash,UNHANDLED,,,,exile-rider:spell
+Disdainful Stroke,azorius_high_noon_top20_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Erode,azorius_high_noon_top20_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Flashfreeze,azorius_high_noon_top20_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Floodpits Drowner,azorius_high_noon_top20_standard.txt,flash,INERT,,,,
+Skycoach Conductor,azorius_high_noon_top20_standard.txt,flash,INERT,,,,
+Spell Snare,azorius_high_noon_top20_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+The Unagi of Kyoshi Island,azorius_high_noon_top20_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",azorius_high_noon_top20_standard.txt,flash,INERT,,,,x-cost
+Doorkeeper Thrull,azorius_momo_standard.txt,flash,INERT,,,,
+Get Lost,azorius_momo_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Shardmage's Rescue,azorius_momo_standard.txt,flash,INERT,,,,
+Get Lost,azorius_omniscience_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Shardmage's Rescue,azorius_omniscience_standard.txt,flash,INERT,,,,
+Annul,azorius_tempo_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Doorkeeper Thrull,azorius_tempo_standard.txt,flash,INERT,,,,
+Essence Scatter,azorius_tempo_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Flashfreeze,azorius_tempo_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Get Lost,azorius_tempo_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+No More Lies,azorius_tempo_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Opt,azorius_tempo_standard.txt,instant,INERT,,,,
+"Aang, Swift Savior",bant_airbending_standard.txt,flash,INERT,,,,
+"Appa, Steadfast Guardian",bant_airbending_standard.txt,flash,INERT,,,,
+Bovine Intervention,bant_airbending_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Cathar Commando,bant_airbending_standard.txt,flash,UNHANDLED,,,,
+Disdainful Stroke,bant_airbending_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Get Lost,bant_airbending_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Consult the Star Charts,bant_omniscience_standard.txt,instant,INERT,,,,
+Erode,bant_omniscience_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Kutzil's Flanker,bant_omniscience_standard.txt,flash,UNHANDLED,,,,exile-rider:player's graveyard
+Spell Pierce,bant_omniscience_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spider-Sense,bant_omniscience_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Disdainful Stroke,bant_rhythm_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Get Lost,bant_rhythm_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Spider-Sense,bant_rhythm_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Desperate Ritual,belcher_modern.txt,instant,INERT,,,,
+Disrupting Shoal,belcher_modern.txt,instant,WHITELIST_FALLBACK,,,,x-cost;alt-pitch-cost
+Force of Negation,belcher_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Manamorphose,belcher_modern.txt,instant,INERT,,,,
+Pyretic Ritual,belcher_modern.txt,instant,INERT,,,,
+Seething Song,belcher_modern.txt,instant,INERT,,,,
+Burst Lightning,boros_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Full Bore,boros_aggro_standard.txt,instant,INERT,,,,
+Get Lost,boros_aggro_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Lightning Helix,boros_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Might of the Meek,boros_aggro_standard.txt,instant,INERT,,,,
+Turn Inside Out,boros_aggro_standard.txt,instant,INERT,,,,
+Aven Interrupter,boros_convoke_pioneer.txt,flash,UNHANDLED,,,,exile-rider:spell
+Torch the Tower,boros_convoke_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Burst Lightning,boros_discard_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Erode,boros_discard_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Burst Lightning,boros_dragons_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Doorkeeper Thrull,boros_dragons_standard.txt,flash,INERT,,,,
+Get Lost,boros_dragons_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Spectacular Tactics,boros_dragons_standard.txt,instant,UNHANDLED,,,,
+Galvanic Discharge,boros_energy_avenger_variant_test.txt,instant,INERT,,,,
+Orim's Chant,boros_energy_avenger_variant_test.txt,instant,INERT,,,,
+Surgical Extraction,boros_energy_avenger_variant_test.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_avenger_variant_test.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_avenger_variant_test.txt,instant,UNHANDLED,,,,
+Celestial Purge,boros_energy_fable_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Galvanic Discharge,boros_energy_fable_modern.txt,instant,INERT,,,,
+Orim's Chant,boros_energy_fable_modern.txt,instant,INERT,,,,
+Surgical Extraction,boros_energy_fable_modern.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_fable_modern.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_fable_modern.txt,instant,UNHANDLED,,,,
+Celestial Purge,boros_energy_jitte_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Galvanic Discharge,boros_energy_jitte_modern.txt,instant,INERT,,,,
+Lightning Bolt,boros_energy_jitte_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Surgical Extraction,boros_energy_jitte_modern.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_jitte_modern.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_jitte_modern.txt,instant,UNHANDLED,,,,
+Celestial Purge,boros_energy_lowcurve_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Galvanic Discharge,boros_energy_lowcurve_modern.txt,instant,INERT,,,,
+Lightning Bolt,boros_energy_lowcurve_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Surgical Extraction,boros_energy_lowcurve_modern.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_lowcurve_modern.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_lowcurve_modern.txt,instant,UNHANDLED,,,,
+Celestial Purge,boros_energy_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Galvanic Discharge,boros_energy_modern.txt,instant,INERT,,,,
+Orim's Chant,boros_energy_modern.txt,instant,INERT,,,,
+Surgical Extraction,boros_energy_modern.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_modern.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_modern.txt,instant,UNHANDLED,,,,
+Celestial Purge,boros_energy_variant_jermey_2026-04-26.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Galvanic Discharge,boros_energy_variant_jermey_2026-04-26.txt,instant,INERT,,,,
+Lightning Bolt,boros_energy_variant_jermey_2026-04-26.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Surgical Extraction,boros_energy_variant_jermey_2026-04-26.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_variant_jermey_2026-04-26.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_variant_jermey_2026-04-26.txt,instant,UNHANDLED,,,,
+Galvanic Discharge,boros_energy_variant_test.txt,instant,INERT,,,,
+Lightning Bolt,boros_energy_variant_test.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Lightning Helix,boros_energy_variant_test.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Orim's Chant,boros_energy_variant_test.txt,instant,INERT,,,,
+Surgical Extraction,boros_energy_variant_test.txt,instant,INERT,,,,
+Thraben Charm,boros_energy_variant_test.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Wear // Tear,boros_energy_variant_test.txt,instant,UNHANDLED,,,,
+Cathar Commando,death_and_taxes_modern.txt,flash,UNHANDLED,,,,
+Containment Priest,death_and_taxes_modern.txt,flash,INERT,,,,
+Path to Exile,death_and_taxes_modern.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+"Phelia, Exuberant Shepherd",death_and_taxes_modern.txt,flash,INERT,,,,
+Settle the Wreckage,death_and_taxes_modern.txt,instant,INERT,,,,
+Solitude,death_and_taxes_modern.txt,flash,INERT,,,,
+Swords to Plowshares,death_and_taxes_modern.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+Bitterbloom Bearer,dimir_aggro_standard.txt,flash,INERT,,,,
+Enduring Curiosity,dimir_aggro_standard.txt,flash,INERT,,,,
+Floodpits Drowner,dimir_aggro_standard.txt,flash,INERT,,,,
+Get Lost,dimir_aggro_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+No More Lies,dimir_aggro_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Requiting Hex,dimir_aggro_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Spell Pierce,dimir_aggro_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Tishana's Tidebinder,dimir_aggro_standard.txt,flash,INERT,,,,
+Annul,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Floodpits Drowner,dimir_bounce_jermey_hybrid_standard.txt,flash,INERT,,,,
+Long Goodbye,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Negate,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Nowhere to Run,dimir_bounce_jermey_hybrid_standard.txt,flash,INERT,,,,
+Shoot the Sheriff,dimir_bounce_jermey_hybrid_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Snare,dimir_bounce_jermey_hybrid_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Spider-Sense,dimir_bounce_jermey_hybrid_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+The Unagi of Kyoshi Island,dimir_bounce_jermey_hybrid_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,dimir_bounce_jermey_hybrid_standard.txt,flash,INERT,,,,
+Annul,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_bounce_linden_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Get Out,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Into the Flood Maw,dimir_bounce_linden_standard.txt,instant,DERIVED,BOUNCE,1,,
+Negate,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Nowhere to Run,dimir_bounce_linden_standard.txt,flash,INERT,,,,
+Requiting Hex,dimir_bounce_linden_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_bounce_linden_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Pierce,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_bounce_linden_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Tishana's Tidebinder,dimir_bounce_linden_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_bounce_linden_standard.txt,flash,INERT,,,,x-cost
+Bitter Triumph,dimir_excruciator_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_excruciator_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Flashfreeze,dimir_excruciator_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Requiting Hex,dimir_excruciator_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_excruciator_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+The End,dimir_excruciator_standard.txt,instant,UNHANDLED,,,,cost-reduction-static
+Annul,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Enduring Curiosity,dimir_midrange_jermey_sleeved_standard.txt,flash,INERT,,,,
+Essence Scatter,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Floodpits Drowner,dimir_midrange_jermey_sleeved_standard.txt,flash,INERT,,,,
+Into the Flood Maw,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,BOUNCE,1,,
+Long Goodbye,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Phantom Interference,dimir_midrange_jermey_sleeved_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:spree
+Requiting Hex,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_midrange_jermey_sleeved_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Pierce,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_midrange_jermey_sleeved_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Spider-Sense,dimir_midrange_jermey_sleeved_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+The Unagi of Kyoshi Island,dimir_midrange_jermey_sleeved_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,dimir_midrange_jermey_sleeved_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_midrange_jermey_sleeved_standard.txt,flash,INERT,,,,x-cost
+Annul,dimir_midrange_jermey_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_midrange_jermey_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Enduring Curiosity,dimir_midrange_jermey_standard.txt,flash,INERT,,,,
+Faebloom Trick,dimir_midrange_jermey_standard.txt,instant,INERT,,,,
+Floodpits Drowner,dimir_midrange_jermey_standard.txt,flash,INERT,,,,
+Negate,dimir_midrange_jermey_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Phantom Interference,dimir_midrange_jermey_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:spree
+Shoot the Sheriff,dimir_midrange_jermey_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Pierce,dimir_midrange_jermey_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_midrange_jermey_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Spider-Sense,dimir_midrange_jermey_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+The Unagi of Kyoshi Island,dimir_midrange_jermey_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,dimir_midrange_jermey_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_midrange_jermey_standard.txt,flash,INERT,,,,x-cost
+Annul,dimir_midrange_marcelo_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_midrange_marcelo_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_midrange_marcelo_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Enduring Curiosity,dimir_midrange_marcelo_standard.txt,flash,INERT,,,,
+Essence Scatter,dimir_midrange_marcelo_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Floodpits Drowner,dimir_midrange_marcelo_standard.txt,flash,INERT,,,,
+Requiting Hex,dimir_midrange_marcelo_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_midrange_marcelo_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Snare,dimir_midrange_marcelo_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+The End,dimir_midrange_marcelo_standard.txt,instant,UNHANDLED,,,,cost-reduction-static
+The Unagi of Kyoshi Island,dimir_midrange_marcelo_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,dimir_midrange_marcelo_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_midrange_marcelo_standard.txt,flash,INERT,,,,x-cost
+Celestial Purge,dimir_midrange_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Cling to Dust,dimir_midrange_modern.txt,instant,UNHANDLED,,,,exile-rider:card from a graveyard
+Consign to Memory,dimir_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Consult the Star Charts,dimir_midrange_modern.txt,instant,INERT,,,,
+Counterspell,dimir_midrange_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Fatal Push,dimir_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Force of Negation,dimir_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Mystical Dispute,dimir_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Orcish Bowmasters,dimir_midrange_modern.txt,flash,DERIVED,REMOVAL_DMG_N,2,1,
+Sheoldred's Edict,dimir_midrange_modern.txt,instant,INERT,,,,
+Snapcaster Mage,dimir_midrange_modern.txt,flash,INERT,,,,
+Spell Snare,dimir_midrange_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Sphinx's Revelation,dimir_midrange_modern.txt,instant,INERT,,,,x-cost
+Subtlety,dimir_midrange_modern.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_midrange_modern.txt,flash,INERT,,,,x-cost
+Assassin's Trophy,dimir_midrange_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Consult the Star Charts,dimir_midrange_standard.txt,instant,INERT,,,,
+Disdainful Stroke,dimir_midrange_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Feed the Cycle,dimir_midrange_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Flashfreeze,dimir_midrange_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Heritage Reclamation,dimir_midrange_standard.txt,instant,UNHANDLED,,,,
+Negate,dimir_midrange_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Requiting Hex,dimir_midrange_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_midrange_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+The Unagi of Kyoshi Island,dimir_midrange_standard.txt,flash,INERT,,,,
+Three Steps Ahead,dimir_midrange_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+"Wan Shi Tong, Librarian",dimir_midrange_standard.txt,flash,INERT,,,,x-cost
+Annul,dimir_midrange_std_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bitter Triumph,dimir_midrange_std_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,dimir_midrange_std_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Enduring Curiosity,dimir_midrange_std_standard.txt,flash,INERT,,,,
+Essence Scatter,dimir_midrange_std_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Floodpits Drowner,dimir_midrange_std_standard.txt,flash,INERT,,,,
+Phantom Interference,dimir_midrange_std_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:spree
+Requiting Hex,dimir_midrange_std_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,dimir_midrange_std_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Spell Pierce,dimir_midrange_std_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_midrange_std_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+The Unagi of Kyoshi Island,dimir_midrange_std_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,dimir_midrange_std_standard.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",dimir_midrange_std_standard.txt,flash,INERT,,,,x-cost
+Counterspell,dimir_murktide_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Dress Down,dimir_murktide_modern.txt,flash,INERT,,,,
+Flusterstorm,dimir_murktide_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Lightning Bolt,dimir_murktide_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Spell Pierce,dimir_murktide_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_murktide_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Stern Scolding,dimir_murktide_modern.txt,instant,DERIVED,COUNTER_CREATURE,1,,
+Tishana's Tidebinder,dimir_murktide_modern.txt,flash,INERT,,,,
+Unholy Heat,dimir_murktide_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Consider,dimir_oculus_modern.txt,instant,INERT,,,,
+Consign to Memory,dimir_oculus_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Counterspell,dimir_oculus_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Fatal Push,dimir_oculus_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Force of Negation,dimir_oculus_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Orcish Bowmasters,dimir_oculus_modern.txt,flash,DERIVED,REMOVAL_DMG_N,2,1,
+Shoot the Sheriff,dimir_oculus_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Sink into Stupor,dimir_oculus_modern.txt,instant,UNHANDLED,,,,bounce-rider:spell or nonland permanent an opponent controls
+Spell Pierce,dimir_oculus_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,dimir_oculus_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Stern Scolding,dimir_oculus_modern.txt,instant,DERIVED,COUNTER_CREATURE,1,,
+Thought Scour,dimir_oculus_modern.txt,instant,INERT,,,,
+Bitter Triumph,domain_ramp_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Requiting Hex,domain_ramp_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Consign to Memory,domain_zoo_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Doorkeeper Thrull,domain_zoo_modern.txt,flash,INERT,,,,
+Leyline Binding,domain_zoo_modern.txt,flash,UNHANDLED,,,,cost-reduction-static
+Lightning Bolt,domain_zoo_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Stubborn Denial,domain_zoo_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Thraben Charm,domain_zoo_modern.txt,instant,UNHANDLED,,,,damage-unparsed:~ deals damage equal to twice the number of creatures you co
+Disruptor Flute,eldrazi_ramp_modern.txt,flash,INERT,,,,
+Kozilek's Command,eldrazi_ramp_modern.txt,instant,UNHANDLED,,,,x-cost
+Kozilek's Return,eldrazi_ramp_modern.txt,instant,INERT,,,,
+Unholy Heat,eldrazi_ramp_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Dismember,eldrazi_tron_modern.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Disruptor Flute,eldrazi_tron_modern.txt,flash,INERT,,,,
+Kozilek's Command,eldrazi_tron_modern.txt,instant,UNHANDLED,,,,x-cost
+Consign to Memory,esper_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Ephemerate,esper_blink_modern.txt,instant,UNHANDLED,,,,"exile-rider:creature you control, then return it to the battlefield unde"
+Fatal Push,esper_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Mystical Dispute,esper_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+"Phelia, Exuberant Shepherd",esper_blink_modern.txt,flash,INERT,,,,
+Solitude,esper_blink_modern.txt,flash,INERT,,,,
+Annul,esper_pixie_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+No More Lies,esper_pixie_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Nowhere to Run,esper_pixie_standard.txt,flash,INERT,,,,
+Sunpearl Kirin,esper_pixie_standard.txt,flash,INERT,,,,
+Tishana's Tidebinder,esper_pixie_standard.txt,flash,INERT,,,,
+Cut Down,esper_raffine_standard.txt,instant,UNHANDLED,,,,destroy-unparsed:Destroy target creature with total power and toughness 5 or 
+Enduring Curiosity,esper_raffine_standard.txt,flash,INERT,,,,
+Faerie Mastermind,esper_raffine_standard.txt,flash,INERT,,,,
+Floodpits Drowner,esper_raffine_standard.txt,flash,INERT,,,,
+Go for the Throat,esper_raffine_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+"Malcolm, Alluring Scoundrel",esper_raffine_standard.txt,flash,INERT,,,,
+Phantom Interference,esper_raffine_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:spree
+Three Steps Ahead,esper_raffine_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Consult the Star Charts,four_color_control_standard.txt,instant,INERT,,,,
+Disdainful Stroke,four_color_control_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fire Magic,four_color_control_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Flashback,four_color_control_standard.txt,instant,INERT,,,,
+Flashfreeze,four_color_control_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Get Lost,four_color_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Inevitable Defeat,four_color_control_standard.txt,instant,DERIVED,REMOVAL_EXILE,4,,
+Jeskai Revelation,four_color_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,7,4,bounce-rider:spell or permanent
+Lightning Helix,four_color_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Negate,four_color_control_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+No More Lies,four_color_control_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Outrageous Robbery,four_color_control_standard.txt,instant,INERT,,,,x-cost
+Spell Snare,four_color_control_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Stoic Sphinx,four_color_control_standard.txt,flash,INERT,,,,
+Traumatic Critique,four_color_control_standard.txt,instant,UNHANDLED,,,,x-cost
+"Wan Shi Tong, Librarian",four_color_control_standard.txt,flash,INERT,,,,x-cost
+Abrade,four_color_elemental_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Bounce Off,four_color_elemental_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Broadside Barrage,four_color_elemental_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,four_color_elemental_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,four_color_elemental_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Sear,four_color_elemental_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Elspeth's Smite,four_color_overlords_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Get Lost,four_color_overlords_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Leyline Binding,four_color_overlords_standard.txt,flash,UNHANDLED,,,,cost-reduction-static
+Negate,four_color_overlords_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Not on My Watch,four_color_overlords_standard.txt,instant,DERIVED,REMOVAL_EXILE,2,,
+Pawpatch Formation,four_color_overlords_standard.txt,instant,UNHANDLED,,,,destroy-rider:creature with flying
+Scrollshift,four_color_overlords_standard.txt,instant,INERT,,,,
+Drown in the Loch,glockulous_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Fatal Push,glockulous_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Mystical Dispute,glockulous_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Spell Pierce,glockulous_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Surgical Extraction,glockulous_modern.txt,instant,INERT,,,,
+Thought Scour,glockulous_modern.txt,instant,INERT,,,,
+Bitter Triumph,golgari_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Nowhere to Run,golgari_control_standard.txt,flash,INERT,,,,
+Requiting Hex,golgari_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,golgari_control_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Archdruid's Charm,golgari_kona_standard.txt,instant,UNHANDLED,,,,
+"Armaggon, Future Shark",golgari_kona_standard.txt,flash,INERT,,,,
+Bitter Triumph,golgari_kona_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Dina's Guidance,golgari_kona_standard.txt,instant,INERT,,,,
+Requiting Hex,golgari_kona_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Zuko's Conviction,golgari_kona_standard.txt,instant,UNHANDLED,,,,bounce-unparsed:Return target creature card from your graveyard to your hand
+Abrupt Decay,golgari_midrange_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Fatal Push,golgari_midrange_pioneer.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Tear Asunder,golgari_midrange_pioneer.txt,instant,UNHANDLED,,,,
+Outrageous Robbery,golgari_midrange_standard.txt,instant,INERT,,,,x-cost
+Requiting Hex,golgari_midrange_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,golgari_midrange_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Witherbloom Charm,golgari_midrange_standard.txt,instant,UNHANDLED,,,,
+Consign to Memory,goryos_vengeance_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Ephemerate,goryos_vengeance_modern.txt,instant,UNHANDLED,,,,"exile-rider:creature you control, then return it to the battlefield unde"
+Faithful Mending,goryos_vengeance_modern.txt,instant,INERT,,,,
+Force of Negation,goryos_vengeance_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Goryo's Vengeance,goryos_vengeance_modern.txt,instant,INERT,,,,
+March of Otherworldly Light,goryos_vengeance_modern.txt,instant,UNHANDLED,,,,x-cost;cost-reduction-static
+Mystical Dispute,goryos_vengeance_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Solitude,goryos_vengeance_modern.txt,flash,INERT,,,,
+Spell Snare,goryos_vengeance_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Subtlety,goryos_vengeance_modern.txt,flash,INERT,,,,
+Desperate Ritual,grinding_breach_modern.txt,instant,INERT,,,,
+Manamorphose,grinding_breach_modern.txt,instant,INERT,,,,
+March of Reckless Joy,grinding_breach_modern.txt,instant,INERT,,,,x-cost;cost-reduction-static
+Orim's Chant,grinding_breach_modern.txt,instant,INERT,,,,
+Pyretic Ritual,grinding_breach_modern.txt,instant,INERT,,,,
+Valakut Awakening,grinding_breach_modern.txt,instant,INERT,,,,
+Wear // Tear,grinding_breach_modern.txt,instant,UNHANDLED,,,,
+Abrade,grixis_discard_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,grixis_discard_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Disdainful Stroke,grixis_discard_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fresh Start,grixis_discard_standard.txt,flash,INERT,,,,
+Into the Flood Maw,grixis_discard_standard.txt,instant,DERIVED,BOUNCE,1,,
+Spell Pierce,grixis_discard_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Torch the Tower,grixis_discard_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Orcish Bowmasters,grixis_reanimator_modern.txt,flash,DERIVED,REMOVAL_DMG_N,2,1,
+Solitude,grixis_reanimator_modern.txt,flash,INERT,,,,
+Fire Magic,gruul_aggro_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Heritage Reclamation,gruul_aggro_standard.txt,instant,UNHANDLED,,,,
+Sear,gruul_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Smuggler's Surprise,gruul_aggro_standard.txt,instant,INERT,,,,additional-cost-modes:spree
+Abrade,gruul_broodscale_modern.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Burst Lightning,gruul_broodscale_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Force of Vigor,gruul_broodscale_modern.txt,instant,INERT,,,,alt-pitch-cost
+Kozilek's Command,gruul_broodscale_modern.txt,instant,UNHANDLED,,,,x-cost
+Lightning Bolt,gruul_broodscale_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Veil of Summer,gruul_broodscale_modern.txt,instant,INERT,,,,
+Abandon Attachments,gruul_prowess_pioneer.txt,instant,INERT,,,,
+Academic Dispute,gruul_prowess_pioneer.txt,instant,INERT,,,,
+Burst Lightning,gruul_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Firebending Lesson,gruul_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Origin of Metalbending,gruul_prowess_pioneer.txt,instant,UNHANDLED,,,,
+Reckless Rage,gruul_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Redcap Melee,gruul_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Rending Volley,gruul_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Containment Priest,humans_legacy.txt,flash,INERT,,,,
+Path to Exile,humans_legacy.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+Swords to Plowshares,humans_legacy.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+"Aang, Swift Savior",humans_modern.txt,flash,INERT,,,,
+Dismember,humans_modern.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Containment Priest,humans_new.txt,flash,INERT,,,,
+Path to Exile,humans_new.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+Swords to Plowshares,humans_new.txt,instant,DERIVED,REMOVAL_EXILE,1,,
+Consign to Memory,izzet_affinity_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Galvanic Blast,izzet_affinity_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Metallic Rebuke,izzet_affinity_modern.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,3,,
+Mystical Dispute,izzet_affinity_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Sink into Stupor,izzet_affinity_modern.txt,instant,UNHANDLED,,,,bounce-rider:spell or nonland permanent an opponent controls
+Swan Song,izzet_affinity_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Abrade,izzet_cauldron_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_cauldron_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Broadside Barrage,izzet_cauldron_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Disdainful Stroke,izzet_cauldron_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fire Magic,izzet_cauldron_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Into the Flood Maw,izzet_cauldron_standard.txt,instant,DERIVED,BOUNCE,1,,
+Spell Pierce,izzet_cauldron_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Tishana's Tidebinder,izzet_cauldron_standard.txt,flash,INERT,,,,
+Torch the Tower,izzet_cauldron_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Annul,izzet_control_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bounce Off,izzet_control_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Broadside Barrage,izzet_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,izzet_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Eddymurk Crab,izzet_control_standard.txt,flash,INERT,,,,cost-reduction-static
+Fire Magic,izzet_control_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Get Out,izzet_control_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Opt,izzet_control_standard.txt,instant,INERT,,,,
+Sear,izzet_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Snare,izzet_control_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Abandon Attachments,izzet_lesson_standard.txt,instant,INERT,,,,
+Accumulate Wisdom,izzet_lesson_standard.txt,instant,INERT,,,,
+Broadside Barrage,izzet_lesson_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Combustion Technique,izzet_lesson_standard.txt,instant,WHITELIST_FALLBACK,,,,damage-unparsed:~ deals damage equal to 2 plus the number of Lesson cards in
+Consult the Star Charts,izzet_lesson_standard.txt,instant,INERT,,,,
+Firebending Lesson,izzet_lesson_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Flashfreeze,izzet_lesson_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+It'll Quench Ya!,izzet_lesson_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Negate,izzet_lesson_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Spell Pierce,izzet_lesson_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,izzet_lesson_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Three Steps Ahead,izzet_lesson_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Abandon Attachments,izzet_lessons_pioneer.txt,instant,INERT,,,,
+Abrade,izzet_lessons_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Accumulate Wisdom,izzet_lessons_pioneer.txt,instant,INERT,,,,
+Annul,izzet_lessons_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Chandra's Defeat,izzet_lessons_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,5,
+Combustion Technique,izzet_lessons_pioneer.txt,instant,WHITELIST_FALLBACK,,,,damage-unparsed:~ deals damage equal to 2 plus the number of Lesson cards in
+Consider,izzet_lessons_pioneer.txt,instant,INERT,,,,
+Divide by Zero,izzet_lessons_pioneer.txt,instant,UNHANDLED,,,,bounce-unparsed:Return target spell or permanent with mana value 1 or greate
+Fiery Impulse,izzet_lessons_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Fire Magic,izzet_lessons_pioneer.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Firebending Lesson,izzet_lessons_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+It'll Quench Ya!,izzet_lessons_pioneer.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Spell Pierce,izzet_lessons_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Test of Talents,izzet_lessons_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Abrade,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Broadside Barrage,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Disdainful Stroke,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Flashfreeze,izzet_looting_mcnamara_spotlight_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Into the Flood Maw,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,BOUNCE,1,,
+Spell Pierce,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Torch the Tower,izzet_looting_mcnamara_spotlight_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Abrade,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Burst Lightning,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Flashfreeze,izzet_looting_portland_feb2026_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Into the Flood Maw,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,BOUNCE,1,,
+Sear,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Snare,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Tishana's Tidebinder,izzet_looting_portland_feb2026_standard.txt,flash,INERT,,,,
+Torch the Tower,izzet_looting_portland_feb2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Abrade,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Burst Lightning,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Flashfreeze,izzet_looting_store_champ_may2026_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Into the Flood Maw,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,BOUNCE,1,,
+Sear,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Snare,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Tishana's Tidebinder,izzet_looting_store_champ_may2026_standard.txt,flash,INERT,,,,
+Torch the Tower,izzet_looting_store_champ_may2026_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Abrade,izzet_maestro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_maestro_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Chase Inspiration,izzet_maestro_standard.txt,instant,INERT,,,,
+Choreographed Sparks,izzet_maestro_standard.txt,instant,INERT,,,,
+Combustion Technique,izzet_maestro_standard.txt,instant,WHITELIST_FALLBACK,,,,damage-unparsed:~ deals damage equal to 2 plus the number of Lesson cards in
+Firebending Lesson,izzet_maestro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Flashback,izzet_maestro_standard.txt,instant,INERT,,,,
+Negate,izzet_maestro_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Vibrant Outburst,izzet_maestro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Abrade,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_phoenix_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Brazen Borrower,izzet_phoenix_pioneer.txt,flash,INERT,,,,
+Chandra's Defeat,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,5,
+Change the Equation,izzet_phoenix_pioneer.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Consider,izzet_phoenix_pioneer.txt,instant,INERT,,,,
+Fiery Impulse,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Into the Flood Maw,izzet_phoenix_pioneer.txt,instant,DERIVED,BOUNCE,1,,
+Lightning Axe,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,5,
+Opt,izzet_phoenix_pioneer.txt,instant,INERT,,,,
+Redcap Melee,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Spell Pierce,izzet_phoenix_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Torch the Tower,izzet_phoenix_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Consign to Memory,izzet_prowess_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Heritage Reclamation,izzet_prowess_modern.txt,instant,UNHANDLED,,,,
+Lava Dart,izzet_prowess_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,1,
+Lightning Bolt,izzet_prowess_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Mutagenic Growth,izzet_prowess_modern.txt,instant,INERT,,,,
+Spell Pierce,izzet_prowess_modern.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Surgical Extraction,izzet_prowess_modern.txt,instant,INERT,,,,
+Unholy Heat,izzet_prowess_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Violent Urge,izzet_prowess_modern.txt,instant,INERT,,,,
+Abrade,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Bounce Off,izzet_prowess_nick_pt_sos_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Broadside Barrage,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Eddymurk Crab,izzet_prowess_nick_pt_sos_standard.txt,flash,INERT,,,,cost-reduction-static
+Get Out,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Negate,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Opt,izzet_prowess_nick_pt_sos_standard.txt,instant,INERT,,,,
+Prismari Charm,izzet_prowess_nick_pt_sos_standard.txt,instant,UNHANDLED,,,,
+Spell Pierce,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,izzet_prowess_nick_pt_sos_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+"Wan Shi Tong, Librarian",izzet_prowess_nick_pt_sos_standard.txt,flash,INERT,,,,x-cost
+Abrade,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Annul,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Bounce Off,izzet_prowess_nick_tokyo_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Broadside Barrage,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Eddymurk Crab,izzet_prowess_nick_tokyo_standard.txt,flash,INERT,,,,cost-reduction-static
+Get Out,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Opt,izzet_prowess_nick_tokyo_standard.txt,instant,INERT,,,,
+Prismari Charm,izzet_prowess_nick_tokyo_standard.txt,instant,UNHANDLED,,,,
+Sear,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Pierce,izzet_prowess_nick_tokyo_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+"Wan Shi Tong, Librarian",izzet_prowess_nick_tokyo_standard.txt,flash,INERT,,,,x-cost
+Abrade,izzet_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Academic Dispute,izzet_prowess_pioneer.txt,instant,INERT,,,,
+Combustion Technique,izzet_prowess_pioneer.txt,instant,WHITELIST_FALLBACK,,,,damage-unparsed:~ deals damage equal to 2 plus the number of Lesson cards in
+Divide by Zero,izzet_prowess_pioneer.txt,instant,UNHANDLED,,,,bounce-unparsed:Return target spell or permanent with mana value 1 or greate
+Fiery Impulse,izzet_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Firebending Lesson,izzet_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+It'll Quench Ya!,izzet_prowess_pioneer.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Octopus Form,izzet_prowess_pioneer.txt,instant,INERT,,,,
+Reckless Rage,izzet_prowess_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Spell Pierce,izzet_prowess_pioneer.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Burst Lightning,izzet_prowess_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Eddymurk Crab,izzet_prowess_standard.txt,flash,INERT,,,,cost-reduction-static
+Fire Magic,izzet_prowess_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Get Out,izzet_prowess_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Opt,izzet_prowess_standard.txt,instant,INERT,,,,
+Sear,izzet_prowess_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Pierce,izzet_prowess_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Three Steps Ahead,izzet_prowess_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Annul,izzet_spellementals_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Broadside Barrage,izzet_spellementals_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,izzet_spellementals_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,izzet_spellementals_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Eddymurk Crab,izzet_spellementals_standard.txt,flash,INERT,,,,cost-reduction-static
+Opt,izzet_spellementals_standard.txt,instant,INERT,,,,
+Prismari Charm,izzet_spellementals_standard.txt,instant,UNHANDLED,,,,
+Spell Pierce,izzet_spellementals_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,izzet_spellementals_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Traumatic Critique,izzet_spellementals_standard.txt,instant,UNHANDLED,,,,x-cost
+"Wan Shi Tong, Librarian",izzet_spellementals_standard.txt,flash,INERT,,,,x-cost
+Celestial Purge,jeskai_blink_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Consign to Memory,jeskai_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Ephemerate,jeskai_blink_modern.txt,instant,UNHANDLED,,,,"exile-rider:creature you control, then return it to the battlefield unde"
+Force of Negation,jeskai_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Lightning Bolt,jeskai_blink_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+March of Otherworldly Light,jeskai_blink_modern.txt,instant,UNHANDLED,,,,x-cost;cost-reduction-static
+Mystical Dispute,jeskai_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+"Phelia, Exuberant Shepherd",jeskai_blink_modern.txt,flash,INERT,,,,
+Solitude,jeskai_blink_modern.txt,flash,INERT,,,,
+Strix Serenade,jeskai_blink_modern.txt,instant,DERIVED,COUNTER_CREATURE,1,,
+Surgical Extraction,jeskai_blink_modern.txt,instant,INERT,,,,
+Wear // Tear,jeskai_blink_modern.txt,instant,UNHANDLED,,,,
+Celestial Purge,jeskai_control_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Consign to Memory,jeskai_control_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Consult the Star Charts,jeskai_control_modern.txt,instant,INERT,,,,
+Counterspell,jeskai_control_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Fire Magic,jeskai_control_modern.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Force of Negation,jeskai_control_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Galvanic Discharge,jeskai_control_modern.txt,instant,INERT,,,,
+Mystical Dispute,jeskai_control_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Orim's Chant,jeskai_control_modern.txt,instant,INERT,,,,
+Solitude,jeskai_control_modern.txt,flash,INERT,,,,
+Spell Snare,jeskai_control_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Subtlety,jeskai_control_modern.txt,flash,INERT,,,,
+Abrade,jeskai_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Consult the Star Charts,jeskai_control_standard.txt,instant,INERT,,,,
+Disdainful Stroke,jeskai_control_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fire Magic,jeskai_control_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Get Lost,jeskai_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Get Out,jeskai_control_standard.txt,instant,DERIVED,COUNTER_CREATURE,2,,
+Jeskai Revelation,jeskai_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,7,4,bounce-rider:spell or permanent
+Lightning Helix,jeskai_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+No More Lies,jeskai_control_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Three Steps Ahead,jeskai_control_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Torch the Tower,jeskai_control_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+"Wan Shi Tong, Librarian",jeskai_control_standard.txt,flash,INERT,,,,x-cost
+Abrade,jeskai_lute_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Consult the Star Charts,jeskai_lute_standard.txt,instant,INERT,,,,
+Disdainful Stroke,jeskai_lute_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fire Magic,jeskai_lute_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Flashback,jeskai_lute_standard.txt,instant,INERT,,,,
+Flashfreeze,jeskai_lute_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Get Lost,jeskai_lute_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Jeskai Revelation,jeskai_lute_standard.txt,instant,DERIVED,REMOVAL_DMG_N,7,4,bounce-rider:spell or permanent
+Lightning Helix,jeskai_lute_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+No More Lies,jeskai_lute_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Spell Snare,jeskai_lute_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+The Unagi of Kyoshi Island,jeskai_lute_standard.txt,flash,INERT,,,,
+Three Steps Ahead,jeskai_lute_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+"Wan Shi Tong, Librarian",jeskai_lute_standard.txt,flash,INERT,,,,x-cost
+Bounce Off,jeskai_oculus_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Into the Flood Maw,jeskai_oculus_standard.txt,instant,DERIVED,BOUNCE,1,,
+Magma Opus,jeskai_oculus_standard.txt,instant,INERT,,,,
+Opt,jeskai_oculus_standard.txt,instant,INERT,,,,
+Commandeer,living_end_modern.txt,instant,INERT,,,,alt-pitch-cost
+Endurance,living_end_modern.txt,flash,INERT,,,,
+Force of Negation,living_end_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Force of Vigor,living_end_modern.txt,instant,INERT,,,,alt-pitch-cost
+Mystical Dispute,living_end_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Sink into Stupor,living_end_modern.txt,instant,UNHANDLED,,,,bounce-rider:spell or nonland permanent an opponent controls
+Subtlety,living_end_modern.txt,flash,INERT,,,,
+Violent Outburst,living_end_modern.txt,instant,INERT,,,,
+Abrupt Decay,lotus_combo_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Tear Asunder,lotus_combo_pioneer.txt,instant,UNHANDLED,,,,
+Tishana's Tidebinder,lotus_combo_pioneer.txt,flash,INERT,,,,
+Burst Lightning,mardu_discard_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Erode,mardu_discard_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shardmage's Rescue,mardu_discard_standard.txt,flash,INERT,,,,
+Shoot the Sheriff,mardu_discard_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Archdruid's Charm,mono_green_aggro_standard.txt,instant,UNHANDLED,,,,
+Pawpatch Formation,mono_green_aggro_standard.txt,instant,UNHANDLED,,,,destroy-rider:creature with flying
+Royal Treatment,mono_green_aggro_standard.txt,instant,INERT,,,,
+Archdruid's Charm,mono_green_landfall_standard.txt,instant,UNHANDLED,,,,
+Pawpatch Formation,mono_green_landfall_standard.txt,instant,UNHANDLED,,,,destroy-rider:creature with flying
+Boros Charm,mono_red_aggro_modern.txt,instant,UNHANDLED,,,,
+Deflecting Palm,mono_red_aggro_modern.txt,instant,INERT,,,,
+Hallowed Moonlight,mono_red_aggro_modern.txt,instant,INERT,,,,
+Lightning Bolt,mono_red_aggro_modern.txt,instant,DERIVED,REMOVAL_DMG_N,1,3,
+Lightning Helix,mono_red_aggro_modern.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Searing Blaze,mono_red_aggro_modern.txt,instant,UNHANDLED,,,,
+Skullcrack,mono_red_aggro_modern.txt,instant,UNHANDLED,,,,
+Smash to Smithereens,mono_red_aggro_modern.txt,instant,UNHANDLED,,,,
+Wear // Tear,mono_red_aggro_modern.txt,instant,UNHANDLED,,,,
+Abrade,mono_red_aggro_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Burst Lightning,mono_red_aggro_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Lightning Strike,mono_red_aggro_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Monstrous Rage,mono_red_aggro_pioneer.txt,instant,INERT,,,,
+Reckless Rage,mono_red_aggro_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Redcap Melee,mono_red_aggro_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,4,
+Burst Lightning,mono_red_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Sear,mono_red_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Shock,mono_red_aggro_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Force of Vigor,neobrand_modern.txt,instant,INERT,,,,alt-pitch-cost
+Manamorphose,neobrand_modern.txt,instant,INERT,,,,
+Once Upon a Time,neobrand_modern.txt,instant,INERT,,,,
+Seething Song,neobrand_modern.txt,instant,INERT,,,,
+Summoner's Pact,neobrand_modern.txt,instant,INERT,,,,
+Consign to Memory,neoform_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Dismember,neoform_modern.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Endurance,neoform_modern.txt,flash,INERT,,,,
+Into the Flood Maw,neoform_modern.txt,instant,DERIVED,BOUNCE,1,,
+Mystical Dispute,neoform_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Nature's Claim,neoform_modern.txt,instant,UNHANDLED,,,,
+Nourishing Shoal,neoform_modern.txt,instant,INERT,,,,x-cost;alt-pitch-cost
+Pact of Negation,neoform_modern.txt,instant,DERIVED,COUNTER_ANY,0,,
+Planar Genesis,neoform_modern.txt,instant,INERT,,,,
+Summoner's Pact,neoform_modern.txt,instant,INERT,,,,
+Veil of Summer,neoform_modern.txt,instant,INERT,,,,
+Consign to Memory,orzhov_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Ephemerate,orzhov_blink_modern.txt,instant,UNHANDLED,,,,"exile-rider:creature you control, then return it to the battlefield unde"
+Fatal Push,orzhov_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Mystical Dispute,orzhov_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+"Phelia, Exuberant Shepherd",orzhov_blink_modern.txt,flash,INERT,,,,
+Solitude,orzhov_blink_modern.txt,flash,INERT,,,,
+Anoint with Affliction,orzhov_midrange_pioneer.txt,instant,UNHANDLED,,,,destroy-unparsed:Exile target creature if it has mana value 3 or less.
+Fatal Push,orzhov_midrange_pioneer.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Ray of Enfeeblement,orzhov_midrange_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,1,1,
+Vanishing Verse,orzhov_midrange_pioneer.txt,instant,UNHANDLED,,,,exile-rider:monocolored permanent
+Abrade,rakdos_demons_pioneer.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Fatal Push,rakdos_demons_pioneer.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Go for the Throat,rakdos_demons_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Bitter Triumph,rakdos_discard_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Requiting Hex,rakdos_discard_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Bounce Off,roaming_elementals_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Broadside Barrage,roaming_elementals_standard.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Burst Lightning,roaming_elementals_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Disdainful Stroke,roaming_elementals_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Sear,roaming_elementals_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Unsummon,roaming_elementals_standard.txt,instant,DERIVED,BOUNCE,1,,
+Desperate Ritual,ruby_storm_modern.txt,instant,INERT,,,,
+Manamorphose,ruby_storm_modern.txt,instant,INERT,,,,
+March of Otherworldly Light,ruby_storm_modern.txt,instant,UNHANDLED,,,,x-cost;cost-reduction-static
+Orim's Chant,ruby_storm_modern.txt,instant,INERT,,,,
+Pyretic Ritual,ruby_storm_modern.txt,instant,INERT,,,,
+Untimely Malfunction,ruby_storm_modern.txt,instant,UNHANDLED,,,,
+Valakut Awakening,ruby_storm_modern.txt,instant,INERT,,,,
+Wear // Tear,ruby_storm_modern.txt,instant,UNHANDLED,,,,
+Aven Interrupter,selesnya_company_pioneer.txt,flash,UNHANDLED,,,,exile-rider:spell
+Collected Company,selesnya_company_pioneer.txt,instant,INERT,,,,
+Dromoka's Command,selesnya_company_pioneer.txt,instant,INERT,,,,
+Get Lost,selesnya_company_pioneer.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Erode,selesnya_landfall_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Restoration Magic,selesnya_landfall_standard.txt,instant,INERT,,,,additional-cost-modes:tiered
+Snakeskin Veil,selesnya_landfall_standard.txt,instant,INERT,,,,
+Erode,selesnya_ouroboroid_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Focus Fire,selesnya_ouroboroid_standard.txt,instant,UNHANDLED,,,,
+Get Lost,selesnya_rhythm_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Pyrrhic Strike,selesnya_rhythm_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature with mana value 3 or greater.
+Archdruid's Charm,simic_cub_standard.txt,instant,UNHANDLED,,,,
+Disdainful Stroke,simic_cub_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Into the Flood Maw,simic_cub_standard.txt,instant,DERIVED,BOUNCE,1,,
+Spider-Sense,simic_cub_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Annul,simic_jackal_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Enduring Curiosity,simic_jackal_standard.txt,flash,INERT,,,,
+Flashfreeze,simic_jackal_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Floodpits Drowner,simic_jackal_standard.txt,flash,INERT,,,,
+Heritage Reclamation,simic_jackal_standard.txt,instant,UNHANDLED,,,,
+Into the Flood Maw,simic_jackal_standard.txt,instant,DERIVED,BOUNCE,1,,
+Royal Treatment,simic_jackal_standard.txt,instant,INERT,,,,
+Bounce Off,simic_omniscience_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Consult the Star Charts,simic_omniscience_standard.txt,instant,INERT,,,,
+Into the Flood Maw,simic_omniscience_standard.txt,instant,DERIVED,BOUNCE,1,,
+Opt,simic_omniscience_standard.txt,instant,INERT,,,,
+Spell Pierce,simic_omniscience_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Spell Snare,simic_omniscience_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Spider-Sense,simic_omniscience_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Consult the Star Charts,simic_ouroboroid_standard.txt,instant,INERT,,,,
+Abrade,simic_rhythm_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Into the Flood Maw,simic_rhythm_standard.txt,instant,DERIVED,BOUNCE,1,,
+Origin of Metalbending,simic_rhythm_standard.txt,instant,UNHANDLED,,,,
+Spider-Sense,simic_rhythm_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Bitter Triumph,sultai_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Disdainful Stroke,sultai_control_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Negate,sultai_control_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Quandrix Charm,sultai_control_standard.txt,instant,DERIVED,COUNTER_UNLESS_PAY_N,2,,
+Rakshasa's Bargain,sultai_control_standard.txt,instant,INERT,,,,
+Requiting Hex,sultai_control_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Shoot the Sheriff,sultai_control_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-rider:non-outlaw creature
+Witherbloom Charm,sultai_control_standard.txt,instant,UNHANDLED,,,,
+Consign to Memory,sultai_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Endurance,sultai_midrange_modern.txt,flash,INERT,,,,
+Fatal Push,sultai_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Flare of Denial,sultai_midrange_modern.txt,instant,UNHANDLED,,,,alt-pitch-cost
+Flare of Malice,sultai_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Force of Despair,sultai_midrange_modern.txt,instant,INERT,,,,alt-pitch-cost
+Force of Negation,sultai_midrange_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Force of Vigor,sultai_midrange_modern.txt,instant,INERT,,,,alt-pitch-cost
+Subtlety,sultai_midrange_modern.txt,flash,INERT,,,,
+Surgical Extraction,sultai_midrange_modern.txt,instant,INERT,,,,
+Witherbloom Charm,sultai_midrange_modern.txt,instant,UNHANDLED,,,,
+Fatal Push,sultai_reanimator_standard.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Feed the Cycle,sultai_reanimator_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Nowhere to Run,sultai_reanimator_standard.txt,flash,INERT,,,,
+Archenemy's Charm,superior_doomsday_standard.txt,instant,DERIVED,REMOVAL_EXILE,3,,
+Bitter Triumph,superior_doomsday_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Get Lost,superior_doomsday_standard.txt,instant,DERIVED,REMOVAL_DESTROY,2,,
+Requiting Hex,superior_doomsday_standard.txt,instant,DERIVED,REMOVAL_DESTROY,1,,
+Spell Pierce,superior_doomsday_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Tishana's Tidebinder,superior_doomsday_standard.txt,flash,INERT,,,,
+Desperate Ritual,temur_breach_modern.txt,instant,INERT,,,,
+Manamorphose,temur_breach_modern.txt,instant,INERT,,,,
+March of Reckless Joy,temur_breach_modern.txt,instant,INERT,,,,x-cost;cost-reduction-static
+Orim's Chant,temur_breach_modern.txt,instant,INERT,,,,
+Pyretic Ritual,temur_breach_modern.txt,instant,INERT,,,,
+Valakut Awakening,temur_breach_modern.txt,instant,INERT,,,,
+Wear // Tear,temur_breach_modern.txt,instant,UNHANDLED,,,,
+Brazen Borrower,temur_crashcade_modern.txt,flash,INERT,,,,
+Endurance,temur_crashcade_modern.txt,flash,INERT,,,,
+Force of Negation,temur_crashcade_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+Force of Vigor,temur_crashcade_modern.txt,instant,INERT,,,,alt-pitch-cost
+Mystical Dispute,temur_crashcade_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Subtlety,temur_crashcade_modern.txt,flash,INERT,,,,
+Veil of Summer,temur_crashcade_modern.txt,instant,INERT,,,,
+Violent Outburst,temur_crashcade_modern.txt,instant,INERT,,,,
+Annul,temur_lute_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Consult the Star Charts,temur_lute_standard.txt,instant,INERT,,,,
+Disdainful Stroke,temur_lute_standard.txt,instant,DERIVED,COUNTER_CMC_COND,2,,
+Fire Magic,temur_lute_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Firebending Lesson,temur_lute_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Flashback,temur_lute_standard.txt,instant,INERT,,,,
+Flashfreeze,temur_lute_standard.txt,instant,UNHANDLED,,,,counter-filter:red or green
+Negate,temur_lute_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,2,,
+Prismari Charm,temur_lute_standard.txt,instant,UNHANDLED,,,,
+Sear,temur_lute_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,4,
+Spell Pierce,temur_lute_standard.txt,instant,DERIVED,COUNTER_NONCREATURE,1,,
+Three Steps Ahead,temur_lute_standard.txt,instant,UNHANDLED,,,,additional-cost-modes:spree
+Traumatic Critique,temur_lute_standard.txt,instant,UNHANDLED,,,,x-cost
+Abrade,temur_omniscience_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Bounce Off,temur_omniscience_standard.txt,instant,UNHANDLED,,,,bounce-rider:creature or Vehicle
+Fire Magic,temur_omniscience_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Firebending Lesson,temur_omniscience_standard.txt,instant,DERIVED,REMOVAL_DMG_N,1,2,
+Origin of Metalbending,temur_omniscience_standard.txt,instant,UNHANDLED,,,,
+Spell Snare,temur_omniscience_standard.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Spider-Sense,temur_omniscience_standard.txt,instant,WHITELIST_FALLBACK,,,,"counter-filter:instant spell, sorcery"
+Abrade,temur_prowess_standard.txt,instant,DERIVED,REMOVAL_DMG_N,2,3,
+Dreadmaw's Ire,temur_prowess_standard.txt,instant,UNHANDLED,,,,destroy-rider:artifact that player controls
+Fire Magic,temur_prowess_standard.txt,instant,WHITELIST_FALLBACK,,,,additional-cost-modes:tiered
+Overprotect,temur_prowess_standard.txt,instant,INERT,,,,
+Violent Urge,temur_prowess_standard.txt,instant,INERT,,,,
+Dismember,urzatron_modern.txt,instant,DERIVED,REMOVAL_DMG_N,3,5,
+Disruptor Flute,urzatron_modern.txt,flash,INERT,,,,
+Kozilek's Command,urzatron_modern.txt,instant,UNHANDLED,,,,x-cost
+Consign to Memory,uw_blink_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Ephemerate,uw_blink_modern.txt,instant,UNHANDLED,,,,"exile-rider:creature you control, then return it to the battlefield unde"
+Orim's Chant,uw_blink_modern.txt,instant,INERT,,,,
+"Phelia, Exuberant Shepherd",uw_blink_modern.txt,flash,INERT,,,,
+Solitude,uw_blink_modern.txt,flash,INERT,,,,
+Celestial Purge,uw_control_modern.txt,instant,UNHANDLED,,,,exile-rider:black or red permanent
+Consign to Memory,uw_control_modern.txt,instant,WHITELIST_FALLBACK,,,,counter-filter:triggered ability or colorless
+Counterspell,uw_control_modern.txt,instant,DERIVED,COUNTER_ANY,2,,
+Force of Negation,uw_control_modern.txt,instant,WHITELIST_FALLBACK,,,,alt-pitch-cost
+March of Otherworldly Light,uw_control_modern.txt,instant,UNHANDLED,,,,x-cost;cost-reduction-static
+Mystical Dispute,uw_control_modern.txt,instant,WHITELIST_FALLBACK,,,,cost-reduction-static
+Orim's Chant,uw_control_modern.txt,instant,INERT,,,,
+Solitude,uw_control_modern.txt,flash,INERT,,,,
+Spell Snare,uw_control_modern.txt,instant,DERIVED,COUNTER_CMC_COND,1,,
+Subtlety,uw_control_modern.txt,flash,INERT,,,,
+The Wandering Emperor,uw_control_modern.txt,flash,DERIVED,REMOVAL_EXILE,4,,
+Tune the Narrative,uw_control_modern.txt,instant,INERT,,,,
+Vendilion Clique,uw_control_modern.txt,flash,INERT,,,,
+"Wan Shi Tong, Librarian",uw_control_modern.txt,flash,INERT,,,,x-cost
+Chord of Calling,yawgmoth_modern.txt,instant,INERT,,,,x-cost
+Endurance,yawgmoth_modern.txt,flash,INERT,,,,
+Fatal Push,yawgmoth_modern.txt,instant,WHITELIST_FALLBACK,,,,destroy-unparsed:Destroy target creature if it has mana value 2 or less.
+Force of Vigor,yawgmoth_modern.txt,instant,INERT,,,,alt-pitch-cost
+Orcish Bowmasters,yawgmoth_modern.txt,flash,DERIVED,REMOVAL_DMG_N,2,1,
+Pile On,yawgmoth_modern.txt,instant,DERIVED,REMOVAL_DESTROY,4,,

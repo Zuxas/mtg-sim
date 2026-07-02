@@ -83,3 +83,8 @@ Thumbs.db
 
 # Generated plot outputs
 reports/*.png
+
+# Local-only: raw Untapped dumps contain session cookies / account tokens / PII (2026-07-01)
+data/untapped/
+# Machine-local Claude settings
+.claude/settings.local.json

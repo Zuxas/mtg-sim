@@ -65,11 +65,37 @@ MISMODELED_MATCHUPS = {
         "why": "cascade under-fires in the played-out APL; almost certainly not 96%.",
     },
     "gruul broodscale": {
-        "direction": "INFLATED / STUB",
-        "sim": "~89%",
-        "truth": "~55%",
-        "why": "the Broodscale APL is a SYNTHETIC creature-deck stub that does not model the infinite "
-               "combo at all -- the cell only fills the field row.",
+        "direction": "broodscale WR DEFLATED vs anchors (from the Boros-centric gauntlet's POV the "
+                     "cell reads INFLATED-for-Boros, but only ~12pp now, was ~34pp as a stub)",
+        "sim": "broodscale WR vs Boros Energy 33.2% [29.2-37.4] / vs Urzatron 38.2% [34.0-42.5] / "
+               "vs Goryo's Reanimator 40.0% [35.8-44.4] (n=500 each, seed=42, PYTHONHASHSEED=0, "
+               "run_match_set mix_play_draw, 2026-07-02)",
+        "truth": "matchup_matrix 2026-04-24 (STALE pre-ban; 'Eldrazi Bloodchief Combo' rows -- this "
+                 "archetype's April DB label; June-2026 decks table has the lists but matches has "
+                 "no fresher Modern rounds): vs Boros Energy 45% (n=173), vs Eldrazi Tron 66% "
+                 "(n=38; colorless-shell proxy for the urzatron cell, same convention as the "
+                 "urzatron flag), vs Esper Reanimator 56% (n=71; that archetype's April label, "
+                 "same convention as the goryos flag). The old flag's '~55%' was the Boros side "
+                 "of the n=173 row.",
+        "why": "PROMOTED CELL (2026-07-02): real modal June-2026 'Broodscale Bloodchief' list "
+               "(decks/gruul_broodscale_modern.txt, 5 top finishes: MC_amp2267/Hirano Mikita/"
+               "Thomas Brusilovsky/daviddmtg 1sts + TomBombadi1) + hand-written combo APL replace "
+               "the 2026-06-29 synthetic creature-deck stub (guessed dork/Grumgully 60, no combo; "
+               "its ~89%-for-Boros was pure stub inflation). The Broodscale+Blade sac-loop is "
+               "modeled the sanctioned yawgmoth way (one-shot damage_dealt lethal w/ WANTS_BURN "
+               "when Fleshraker is the payoff; bounded 20/20+mana proxy when not). Goldfish: 100% "
+               "kill by T15, median T6, combo lethal 50.2%/games (median T5), 19% T4 kills -- ~1 "
+               "turn slower than paper T4-5. All 3 cells FAIL LOW 12-28pp. Attribution is "
+               "structural, NOT tuned away (forbidden): (a) modeled clock ~1 turn slow -- 1-land-"
+               "per-turn mana model, Eldrazi Temple's 2nd {C} only via the Eldrazi manual-cast "
+               "discount, Ugin's Labyrinth imprint mana + Urza's Saga ch.I mana / ch.II Constructs "
+               "unmodeled; (b) opponent removal kills Broodscale freely (no protection response; "
+               "Vexing Bauble INERT -- no fake reactivity) while match combo assembly drops to "
+               "13-29%/500 vs 50% goldfish; (c) the urzatron cell shares the known ALL-Tron-cells-"
+               "INFLATED direction (land hate unmodeled), widening that gap from the other side; "
+               "(d) anchors are pre-ban STALE with small n (38/71). Trust the DIRECTION (real "
+               "broodscale is a slight dog to Boros, favored vs Tron/reanimator shells), not the "
+               "sim numbers.",
     },
     "belcher": {
         "direction": "INFLATED / STUB (silent until 2026-07-01 -- worse than flagged cells)",
@@ -267,6 +293,13 @@ MISMODELED_MATCHUPS["green tron"] = MISMODELED_MATCHUPS["urzatron"]
 for _alias in ("goryos vengeance", "grixis reanimator", "instant reanimator",
                "esper reanimator", "esper goryo"):
     MISMODELED_MATCHUPS[_alias] = MISMODELED_MATCHUPS["goryos reanimator"]
+
+# Broodscale name variants (2026-07-02 promotion): the June DB label
+# ("Broodscale Bloodchief") and the matchup_matrix label ("Eldrazi Bloodchief
+# Combo") share no substring with the stored "gruul broodscale" key, so
+# lookup() would silently miss them without explicit aliases.
+for _alias in ("broodscale bloodchief", "eldrazi bloodchief combo"):
+    MISMODELED_MATCHUPS[_alias] = MISMODELED_MATCHUPS["gruul broodscale"]
 
 
 def _norm(name: str) -> str:

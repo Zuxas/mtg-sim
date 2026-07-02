@@ -17,7 +17,8 @@ creatures, hold up nothing, and let the engine resolve combat + removal. Any
 gauntlet number produced against this opponent is therefore a STUB/SYNTHETIC
 result that fills the post-ban Modern field row so gauntlets RUN -- it is NOT
 a primer-validated matchup. Promote to a real APL before trusting its cells.
-(Pattern mirrors apl/gruul_broodscale_match.py.)
+(Pattern mirrors the RETIRED 2026-06-29 broodscale synthetic stub; that file
+is now a real combo APL -- see decks/archive/gruul_broodscale_modern_synthetic_stub_2026-06-29.txt.)
 """
 from apl.match_apl import MatchAPL
 

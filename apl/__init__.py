@@ -95,10 +95,15 @@ APL_REGISTRY = {
     # DB: 2 Grixis decks vs 41 Instant Reanimator). Old 66-card stub deck kept on
     # disk (tests/test_grixis_reanimator_no_crash.py references it directly).
     "grixisreanimator":("apl.goryos_reanimator_match","GoryosReanimatorMatchAPL","decks/goryos_reanimator_modern.txt"),
-    # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29).
-    # SYNTHETIC: APL plays it as an aggressive creature deck; not primer-validated.
-    "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
-    "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    # Broodscale Bloodchief (Modern) -- 2026-07-02: REAL June-2026 modal list +
+    # hand-written combo APL replace the 2026-06-29 synthetic stub (archived at
+    # decks/archive/gruul_broodscale_modern_synthetic_stub_2026-06-29.txt).
+    # Keys cover the June DB label ('Broodscale Bloodchief'), the old gauntlet
+    # keys, and the matchup_matrix label ('Eldrazi Bloodchief Combo').
+    "gruulbroodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    "broodscale":           ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    "broodscalebloodchief": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
+    "eldrazibloodchiefcombo": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
     # Post-ban Modern field refresh (2026-06-30). STUB match APLs (synthetic
     # numbers) -- deck FILE + registry exist so gauntlets RUN; not primer-validated.
     # Death and Taxes: Umezawa's Jitte unban payoff (fair white hatebears).
@@ -368,9 +373,12 @@ MATCH_APL_REGISTRY = {
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
     # 2026-07-02: consolidated into Goryo's Reanimator (see APL_REGISTRY note).
     "grixisreanimator":("apl.goryos_reanimator_match","GoryosReanimatorMatchAPL"),
-    # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29). SYNTHETIC stub number.
-    "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
-    "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    # Broodscale Bloodchief (Modern) -- 2026-07-02: real June list + hand-written
+    # combo APL (sac-loop drain modeled the yawgmoth way). See APL_REGISTRY note.
+    "gruulbroodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    "broodscale":           ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    "broodscalebloodchief": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
+    "eldrazibloodchiefcombo": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
     # Post-ban Modern field refresh (2026-06-30). STUB match APLs (synthetic).
     "deathandtaxes":   ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL"),
     "dnt":             ("apl.death_and_taxes_match", "DeathAndTaxesMatchAPL"),

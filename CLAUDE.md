@@ -61,9 +61,12 @@ B&R (BANNED Phlage + Lotus Field; UNBANNED Umezawa's Jitte + Violent Outburst).
 - **New archetypes (deck FILE + BOTH registries + STUB synthetic MatchAPL):**
   - `deathandtaxes` / `dnt` -> `DeathAndTaxesMatchAPL` (`decks/death_and_taxes_modern.txt`) — Jitte payoff.
   - `temurcrashcade` / `crashcade` -> `TemurCrashcadeMatchAPL` (`decks/temur_crashcade_modern.txt`) — Violent Outburst cascade.
-  - Both stubs follow the `apl/gruul_broodscale_match.py` synthetic-matchup
+  - Both stubs follow the (now-retired) 2026-06-29 broodscale synthetic-matchup
     pattern: they play as generic creature/tempo decks so gauntlets RUN; their
     numbers are NOT primer-validated. Promote before trusting any cell.
+    (2026-07-02: `apl/gruul_broodscale_match.py` itself was PROMOTED to a real
+    hand-written combo APL + real June list; the old stub deck is archived at
+    `decks/archive/gruul_broodscale_modern_synthetic_stub_2026-06-29.txt`.)
 - **Retired from field** (deck files + registry kept): Esper Blink (folded into
   the shrunken Jeskai Blink shell), Jeskai Control (Phlage-dependent, fell out
   of top-18). Boros Energy share 21.2->14.5; Jeskai Blink 10.6->3.0; Living End

@@ -1,50 +1,64 @@
-// Gruul Broodscale Combo (Modern) -- gauntlet opponent for the Low Curve field
-// Source: representative MH3-era "Broodscale Combo" build (Gruul / R-G).
-// Plan: Basking Broodscale ({1}{G} Eldrazi) + Glaring Fleshraker, fueled by a
-//       turn-1 mana-dork shell (Llanowar Elves / Elvish Mystic / Birds), with
-//       Grumgully + Eldrazi Spawn tokens as the +1/+1-counter engine. Goldfishes
-//       a creature-combo backbone that closes ~T3-5 (primer: 2-2, ~55% vs field).
-// NOTE: this is a representative list, not a copied tournament decklist; card
-//       choices are illustrative of the archetype's curve and color identity.
+// Broodscale Bloodchief (Modern) -- REAL June-2026 modal list (replaces the
+// 2026-06-29 synthetic stub, archived at
+// decks/archive/gruul_broodscale_modern_synthetic_stub_2026-06-29.txt).
+// Source: D:\mtg-data\mtg_meta.db, June-2026 Modern top finishes, archetype
+// 'Broodscale Bloodchief' (39 June decks; also 'Gruul Broodscale' x1,
+// 'Broodscale Combo' x1). Modal 60+15 from 5 top finishes:
+//   deck 186988  MC_amp2267          1st  MTGO Challenge 64             2026-06-29
+//   deck 187136  Hirano Mikita       1st  Champions Cup Store Qualifier 2026-06-27
+//   deck 187275  Thomas Brusilovsky  1st  ReCQ 1:00pm                   2026-06-26
+//   deck 187418  daviddmtg           1st  MTGO League                   2026-06-23
+//   deck 187360  TomBombadi1         4th  MTGO Challenge 96             2026-06-24
+// Modal method: every card in 5/5 lists at modal qty (47 cards) + Haywire Mite
+// (4/5) + the three 3/5-appearance 4-ofs (Devourer of Destiny, Sowing
+// Mycospawn, Ugin's Labyrinth) = exactly 60. Walking Ballista (3/5, 2x) and
+// Cavern of Souls (3/5, 1x) miss the cut on modal-quantity tiebreak.
+// SB: all 5/5 cards (8) + 2 Thief of Existence (3/5) + Cavern/Warping Wail
+// (2/5, 2x each) + Bojuka Bog (2/5, alpha tiebreak) = 15.
+// Combo core verified via deck_cards: Basking Broodscale (sac-loop engine)
+// + Blade of the Bloodchief (death -> +1/+1 counter -> new Spawn = infinite)
+// + Glaring Fleshraker (each Spawn entering pings face = the kill), in an
+// eldrazi ramp shell (Temple / Ugin's Labyrinth / Mycospawn / Emrakul).
 // Main: 60 | Sideboard: 15
-// audit:custom_variant -- authored representative Gruul Broodscale build; the
-//   APL (apl/gruul_broodscale_match.py) plays it as an aggressive creature deck
-//   and does NOT model the infinite Broodscale loop, so any gauntlet WR sourced
-//   from this entry is SYNTHETIC (fills the field row; not primer-validated).
 
-// --- Lands (18) ---
-4 Stomping Ground
-3 Copperline Gorge
-2 Karplusan Forest
-3 Wooded Foothills
-2 Bloodstained Mire
-1 Cavern of Souls
-2 Forest
-1 Mountain
+// --- Lands (22) ---
+4 Eldrazi Temple
+4 Forest
+4 Grove of the Burnwillows
+4 Urza's Saga
+4 Ugin's Labyrinth
+2 Boseiju, Who Endures
 
-// --- Mana dorks (12) ---
-4 Llanowar Elves
-4 Elvish Mystic
-4 Birds of Paradise
-
-// --- Combo core (8) ---
+// --- Combo core (11) ---
 4 Basking Broodscale
 4 Glaring Fleshraker
+3 Blade of the Bloodchief
 
-// --- Engine / payoff (10) ---
-4 Grumgully, the Generous
-3 Genesis Hydra
-3 Sakura-Tribe Elder
-
-// --- Interaction / reach (12) ---
-4 Lightning Bolt
-4 Burst Lightning
+// --- Selection / glue (12) ---
+4 Ancient Stirrings
+4 Malevolent Rumble
 4 Kozilek's Command
 
+// --- Eldrazi ramp top-end (10) ---
+// (no blank line before the next section: the loader's blank-line rule flips
+//  to sideboard once 50+ main cards are parsed)
+4 Devourer of Destiny
+4 Sowing Mycospawn
+2 Emrakul, the Promised End
+// --- Utility artifacts (5) ---
+2 Vexing Bauble
+1 Springleaf Drum
+1 Soul-Guide Lantern
+1 Haywire Mite
+
 SIDEBOARD:
-3 Tarmogoyf
-2 Boseiju, Who Endures
-2 Abrade
-3 Veil of Summer
-2 Force of Vigor
-3 Blood Moon
+2 Nature's Claim
+2 Soulless Jailer
+2 Thief of Existence
+2 Cavern of Souls
+2 Warping Wail
+1 Dismember
+1 Grafdigger's Cage
+1 Pithing Needle
+1 Vexing Bauble
+1 Bojuka Bog

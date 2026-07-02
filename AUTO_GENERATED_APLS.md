@@ -45,7 +45,7 @@ decision-aware opponents. Exclude from gauntlets until rewritten.
 |  |  | Izzet Lessons | NEEDS REWRITE |
 |  |  | Belcher | NEEDS REWRITE |
 |  |  | Neoform | NEEDS REWRITE |
-|  |  | Ruby Storm | NEEDS REWRITE |
+| RubyStormMatchAPL | apl/ruby_storm_match.py | Ruby Storm | REWRITTEN + HAND-AUDITED 2026-07-02 (kill reachability via wishboard fix; see mismodeled_matchups 'ruby storm' — cell still INFLATED, clock too slow) |
 |  |  | UW Blink | NEEDS REWRITE |
 |  |  | UW Control | NEEDS REWRITE |
 

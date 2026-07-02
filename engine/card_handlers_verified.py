@@ -16277,15 +16277,48 @@ def _white_orchid_phantom_etb(gs, card):
 
 def _wish_spell(gs, card):
     """Wish — {2}{R} Sorcery.
-    'You may play a card you own from outside the game this turn.'"""
-    # Fetch top-value sideboard card heuristically
+    'You may play a card you own from outside the game this turn.'
+
+    Kill-reachability fix (2026-07-02, Ruby Storm hand-audit): NO runner ever
+    populates gs._sideboard (run_match/run_simulation pass mainboards only),
+    so the old sb[0]-only branch was a silent no-op in EVERY sim and the
+    archetype's wishboard kill (Grapeshot) was unreachable — see
+    mismodeled_matchups 'ruby storm'. Least-fake sanctioned proxy:
+      - if a tracked sideboard exists, fetch the best STORM PAYOFF from it
+        (Grapeshot > Empty the Warrens > Past in Flames), else keep the old
+        first-card heuristic;
+      - else synthesize the archetype's canonical wish target: ONE Grapeshot
+        per game (every June-2026 mtg_meta.db Ruby Storm list sideboards
+        exactly 1 — deck_cards audit 2026-07-02), marked _wished so repeat
+        Wishes cannot mint extras. Cap is enforced by scanning PERSISTENT
+        zones (hand/GY/BF are aliased across match view rebuilds; a gs
+        attribute would not survive them).
+    Nothing is free: Wish's own {2}{R} is paid by cast_spell before this
+    handler runs, and the fetched Grapeshot still costs its full {1}{R} to
+    cast from hand (wish-cost + card-cost).
+    """
     sb = getattr(gs, "_sideboard", None) or []
     if sb:
-        # Wish brings the chosen card to hand (approximation)
-        t = sb[0]
+        prefs = ("Grapeshot", "Empty the Warrens", "Past in Flames")
+        t = next((c for p in prefs for c in sb if c.name == p), sb[0])
         gs.zones.hand.append(t)
         sb.remove(t)
         gs._log(f"  Wish: grab {t.name} from sideboard")
+        return
+    already = any(getattr(c, "_wished", False)
+                  for zone in (gs.zones.hand, gs.zones.graveyard,
+                               gs.zones.battlefield, gs.zones.exile)
+                  for c in zone)
+    if already:
+        gs._log("  Wish: wishboard Grapeshot already fetched (no target)")
+        return
+    from data.card import Card
+    g = Card(name="Grapeshot", mana_cost="{1}{R}", cmc=2.0,
+             type_line="Sorcery",
+             oracle_text="Grapeshot deals 1 damage to any target.\nStorm")
+    g._wished = True
+    gs.zones.hand.append(g)
+    gs._log("  Wish: fetch wishboard Grapeshot (castable at {1}{R})")
 
 
 def _witch_enchanter_etb(gs, card):

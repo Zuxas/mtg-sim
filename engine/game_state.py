@@ -71,6 +71,16 @@ def _artifact_count_on_board(gs) -> int:
     )
 
 
+def _ruby_medallion_count(gs) -> int:
+    """Ruby Medallion: 'Red spells you cast cost {1} less to cast.'
+    One {1} off per Medallion on the caster's battlefield; the max(1, ...)
+    colored floor in _effective_cmc keeps {R}-pip spells honest. Registered
+    (2026-07-02 Ruby Storm hand-audit) for the red spells of the Ruby Storm
+    shell so match-path casts through gs.cast_spell see the discount the
+    goldfish RubyStormAPL was already modeling by hand."""
+    return sum(1 for c in gs.zones.battlefield if c.name == "Ruby Medallion")
+
+
 _COST_REDUCTIONS = {
     # 'Hearth Elemental': costs {X} less per instant/sorcery in your GY
     "Hearth Elemental": _gy_instant_sorcery_count,
@@ -98,6 +108,19 @@ _COST_REDUCTIONS = {
     "Kappa Cannoneer":   _artifact_count_on_board,
     "Metallic Rebuke":   _artifact_count_on_board,
     "Whir of Invention": _artifact_count_on_board,
+    # Ruby Medallion — red spells cost {1} less (Ruby Storm shell, 2026-07-02).
+    "Pyretic Ritual":         _ruby_medallion_count,
+    "Desperate Ritual":       _ruby_medallion_count,
+    "Manamorphose":           _ruby_medallion_count,
+    "Reckless Impulse":       _ruby_medallion_count,
+    "Wrenn's Resolve":        _ruby_medallion_count,
+    "Glimpse the Impossible": _ruby_medallion_count,
+    "Valakut Awakening":      _ruby_medallion_count,
+    "Past in Flames":         _ruby_medallion_count,
+    "Grapeshot":              _ruby_medallion_count,
+    "Wish":                   _ruby_medallion_count,
+    "Ral, Monsoon Mage":      _ruby_medallion_count,
+    "Urabrask":               _ruby_medallion_count,
 }
 
 

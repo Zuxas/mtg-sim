@@ -97,16 +97,29 @@ MISMODELED_MATCHUPS = {
                "field. Direction-only cell.",
     },
     "ruby storm": {
-        "direction": "INFLATED (payoff-reachability, NOT the damage channel)",
-        "sim": "~100% Boros (ruby_storm wins 0/50)",
-        "truth": "no primer cell (unknown; certainly not 0% for storm)",
-        "why": "BATCH I0 honesty flag (combo spec Amendment 2026-07-01). The old IMPERFECTION "
-               "(ruby-storm-fires-but-never-closes -> WANTS_STORM/damage_dealt path) is "
-               "SUPERSEDED/WRONG: WANTS_STORM is already True and mp1 damage IS synced "
-               "(Component 2 Site 1 is a no-op for it, baseline 496 byte-identical). Real cause = "
-               "payoff REACHABILITY: Grapeshot is Wish/SB-gated so the engine never reaches the "
-               "kill (Step-2.0 Stop-condition-4 re-scope). ~4.1% of the modeled field. "
-               "Direction-only cell.",
+        "direction": "INFLATED (kill now REACHABLE; residual = modeled clock too slow)",
+        "sim": "~99.6% Boros / ~0.4% ruby [0.1-1.4] vs boros_energy; ~1.0% ruby [0.4-2.3] vs "
+               "urzatron (n=500 each, seed=42, PYTHONHASHSEED=0, run_match_set mix_play_draw, "
+               "established deck seat A, 2026-07-02). Was literally 0/500 vs both pre-fix.",
+        "truth": "matchup_matrix 2026-04-24 (STALE pre-ban; verified 2026-07-02 that no fresher "
+                 "Modern rows exist): Boros Energy vs Ruby Storm 50% (n=215) -> ruby ~50%; "
+                 "Eldrazi Tron vs Ruby Storm 48% (n=46) -> ruby ~52% (colorless-shell proxy row, "
+                 "same convention as the urzatron flag). Paper goldfish medians ~T3-4.",
+        "why": "PAYOFF-REACHABILITY FIXED (2026-07-02 hand-audit, was BATCH I0): engine "
+               "_wish_spell required gs._sideboard which NO runner populates -> Wish (3 main) "
+               "was a silent no-op and the SB Grapeshot unreachable; now models the wishboard "
+               "(1 Grapeshot/game at wish-cost + card-cost). RubyStormMatchAPL rewritten + "
+               "hand-audited: Medallion-first sequencing (engine _COST_REDUCTIONS now covers "
+               "the red shell), Ral cast + flip pings (old loop skipped ALL creatures), PiF "
+               "flashback rebuy (goldfish-parity), sculpt-then-go-off with payoff strictly "
+               "last (storm arithmetic verified: copies = prior spells + 1). Goldfish moved "
+               "11.5%->69.2% wins by T12, storm-majority kills 1/1000->603/1000, Grapeshot "
+               "median 3 copies/shot. BUT kill-turn median is still T10 vs paper T3-4 (mana "
+               "model 1-land/turn + flex-fetch, impulse-draw proxies, Pyromancer Ascension / "
+               "Artist's Talent unmodeled, Ral eats match-path removal), so vs a T4.3 Boros "
+               "clock the cell stays ~-49.6pp off anchor. NOT tuned toward the anchor "
+               "(forbidden). Trust the DIRECTION (real cell ~even), not the ~99.6%. "
+               "~4.1% of the modeled field.",
     },
     "izzet affinity": {
         "direction": "INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",

@@ -159,6 +159,60 @@ MISMODELED_MATCHUPS = {
                "OUT OF SCOPE; tuning assembly to hit the band is forbidden (Stop condition 2). Trust the "
                "DIRECTION (we are favored), not the ~50%.",
     },
+    # ── audit:stub Standard decks feeding current gauntlet fields ──────────────
+    # (2026-07-01 handover / mismodel-coverage lint: same silent-inflation class as
+    # belcher/neobrand in BATCH I0 -- stub decklists fill field rows with NO
+    # down-weight warning. Direction-only cells; do not trust the numbers.)
+    "azorius omniscience": {
+        "direction": "INFLATED / STUB (decklist is a guess)",
+        "sim": "whatever the PT-SOS swiss row says (sim_pt_sos_swiss.py field)",
+        "truth": "no primer cell (unknown)",
+        "why": "mismodel-coverage flag (2026-07-01 handover). decks/azorius_omniscience_standard.txt "
+               "is an audit:stub ('deck list pending; Azorius Omniscience combo' -- approximate "
+               "build), so every cell it feeds is built on a guessed 75, and the combo kill is "
+               "likely under-assembled like the other played-out combo cells. Fix type = author "
+               "the real list (decklist-stub cluster). Direction-only cell.",
+    },
+    "esper raffine": {
+        "direction": "INFLATED / STUB (pre-Strixhaven approximate shell)",
+        "sim": "whatever the swiss-gauntlet row says (rc_swiss_gauntlet.py / rc_underdog_scout.py fields)",
+        "truth": "no primer cell (unknown)",
+        "why": "mismodel-coverage flag (2026-07-01 handover). decks/esper_raffine_standard.txt is an "
+               "audit:stub ('pre-Strixhaven Esper Raffine baseline -- real list pending post-PT "
+               "data'), so its field rows are approximate-build cells. NOTE the registry also "
+               "routes dimiraggro/espermidrange through EsperRaffineMatchAPL, widening the blast "
+               "radius of this stub. Fix type = refresh from post-PT data. Direction-only cell.",
+    },
+    "izzet lessons": {
+        "direction": "MILDLY OFF / STUB (real PT list, 14-card sideboard)",
+        "sim": "whatever the gauntlet rows say (rc_ptsos_gauntlet.py / rc_dimir_gauntlet.py / sim_pt_sos_swiss.py fields)",
+        "truth": "PT WR 49.44% overall (real-world anchor exists; see deck file header)",
+        "why": "mismodel-coverage flag (2026-07-01 handover). decks/izzet_lesson_standard.txt is the "
+               "real Rui Zhang PT SOS list but carries audit:stub for a 14-card sideboard (PT DB "
+               "record missing 1 SB slot), so BO3 post-board cells run a card short. Mildest stub "
+               "in this batch: G1 cells are a real 60. Fix type = recover the missing SB slot. "
+               "Covers both registry keys (izzetlesson + izzetlessons dup).",
+    },
+    "jeskai oculus": {
+        "direction": "INFLATED / STUB (decklist is a guess)",
+        "sim": "whatever the swiss-gauntlet row says (rc_swiss_gauntlet.py field)",
+        "truth": "no primer cell (unknown)",
+        "why": "mismodel-coverage flag (2026-07-01 handover). decks/jeskai_oculus_standard.txt is an "
+               "audit:stub ('deck list pending; approximate Jeskai Oculus post-Strixhaven'), so its "
+               "field row is an approximate-build cell. Fix type = author the real list "
+               "(decklist-stub cluster). Direction-only cell.",
+    },
+    "sultai reanimator": {
+        "direction": "INFLATED / STUB (decklist is a guess; reanimator kill likely under-assembles)",
+        "sim": "whatever the gauntlet rows say (rc_dimir_gauntlet.py + hill-climb/calibrate fields)",
+        "truth": "no primer cell (unknown; 10.1% of PT Lorwyn Eclipsed field, so this cell MATTERS)",
+        "why": "mismodel-coverage flag (2026-07-01 handover). decks/sultai_reanimator_standard.txt is "
+               "an audit:stub ('deck list pending; Sultai Reanimator'), and reanimator kill channels "
+               "are exactly the class run_match under-assembles (cf. grixis reanimator above), so "
+               "expect the same INFLATED-for-us direction on top of the guessed 75. Widely used "
+               "(domainramp also proxies to this APL). Fix type = author the real list. "
+               "Direction-only cell.",
+    },
 }
 
 

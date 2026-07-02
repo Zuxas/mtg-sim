@@ -1,4 +1,8 @@
-// audit:stub reason="deck list pending; Simic Ouroboroid counter-based engine"
+// audit:intentional -- retired stub (2026-07-01 handover): NOT in any current gauntlet
+// field config, so the audit-stub marker was retired instead of adding a
+// mismodeled_matchups.py flag. 59-card mainboard is a known artifact of the old stub.
+// Original marker: reason="deck list pending; Simic Ouroboroid counter-based engine"
+// File kept (not archived) because apl/__init__.py 'simicouroboroid' still points here.
 // Simic Ouroboroid Standard - approximate build
 4 Ouroboroid
 4 Zimone, Infinite Analyst

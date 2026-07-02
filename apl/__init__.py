@@ -63,6 +63,14 @@ APL_REGISTRY = {
     "titan":           ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
     "eldrazitron":     ("apl.eldrazi_tron",     "EldraziTronAPL",    "decks/eldrazi_tron_modern.txt"),
     "etron":           ("apl.eldrazi_tron",     "EldraziTronAPL",    "decks/eldrazi_tron_modern.txt"),
+    # Mono-Green Tron / Urzatron (2026-07-02): the June-2026 5.2%-share meta cell.
+    # Meta label is historical -- the 2026 list is COLORLESS (Karn/Kozilek's Command
+    # shell, zero green cards in the DB); see decks/urzatron_modern.txt header.
+    # Hand-written MatchAPL doubles as the goldfish APL (same pattern as
+    # borosenergylowcurve). Distinct archetype cell from eldrazitron.
+    "urzatron":        ("apl.urzatron_modern_match", "UrzatronMatchAPL", "decks/urzatron_modern.txt"),
+    "monogreentron":   ("apl.urzatron_modern_match", "UrzatronMatchAPL", "decks/urzatron_modern.txt"),
+    "greentron":       ("apl.urzatron_modern_match", "UrzatronMatchAPL", "decks/urzatron_modern.txt"),
     "eldraziramp":     ("apl.eldrazi_ramp",     "EldraziRampAPL",    "decks/eldrazi_ramp_modern.txt"),
     "neoform":         ("apl.neoform_combo",    "NeoformComboAPL",   "decks/neoform_modern.txt"),
     "neoformcombo":    ("apl.neoform_combo",    "NeoformComboAPL",   "decks/neoform_modern.txt"),
@@ -298,6 +306,12 @@ MATCH_APL_REGISTRY = {
     "titan":           ("apl.amulet_titan_match",   "AmuletTitanMatchAPL"),
     "eldrazitron":     ("apl.eldrazi_tron_match",   "EldraziTronMatchAPL"),
     "etron":           ("apl.eldrazi_tron_match",   "EldraziTronMatchAPL"),
+    # Mono-Green Tron / Urzatron (2026-07-02): hand-written, calibration-gated.
+    # "Mono-Green Tron" / "Mono Green Tron" / "Urzatron" all normalize here;
+    # distinct cell from eldrazitron (see apl/urzatron_modern_match.py docstring).
+    "urzatron":        ("apl.urzatron_modern_match", "UrzatronMatchAPL"),
+    "monogreentron":   ("apl.urzatron_modern_match", "UrzatronMatchAPL"),
+    "greentron":       ("apl.urzatron_modern_match", "UrzatronMatchAPL"),
     "eldraziramp":     ("apl.eldrazi_ramp_match",   "EldraziRampMatchAPL"),
     "rubystorm":       ("apl.ruby_storm_match",     "RubyStormMatchAPL"),
     "uwblink":         ("apl.uw_blink_match",       "UWBlinkMatchAPL"),

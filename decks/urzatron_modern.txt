@@ -1,0 +1,52 @@
+// Mono-Green Tron (Urzatron) - June 2026 consensus list
+// NOTE: the meta label is historical -- the June-2026 "Urzatron"/"Mono-Green Tron"
+//   archetype cell (5.2% of Modern) is the COLORLESS Karn/Kozilek's Command build.
+//   Zero June-2026 DB decks play Sylvan Scrying/Chromatic eggs/Wurmcoil; the green
+//   package is gone from the data. Do not confuse with decks/eldrazi_tron_modern.txt
+//   (separate archetype cell; the shells have converged but are tracked separately).
+// Modal 60+15 built from mtg_meta.db (D:\mtg-data), format=modern, archetype=Urzatron:
+//   deck_id=186967 Argjent Kurtaj  1st  RCQ                2026-06-29
+//   deck_id=186990 Jumba           3rd  MTGO Challenge 64  2026-06-29
+//   deck_id=187561 Samcaster-Mage  3rd  MTGO Challenge 64  2026-06-20
+//   deck_id=187022 Derek Mccormack 4th  RCQ 10:00am        2026-06-28 (cross-check)
+//   deck_id=187330 Jumba           2nd  MTGO Challenge 64  2026-06-25 (cross-check)
+// Every slot is the mode across those 5 lists; no real-WR derivable (matches table
+//   has no June-2026 Modern rounds), placements above are the strength evidence.
+// Main: 60 | Sideboard: 15 (Karn wishboard) | pulled 2026-07-02
+
+4 Urza's Tower
+4 Urza's Mine
+4 Urza's Power Plant
+4 Eldrazi Temple
+4 Ugin's Labyrinth
+1 Swamp
+1 Wastes
+4 Expedition Map
+4 Mind Stone
+4 Kozilek's Command
+4 Karn, the Great Creator
+4 Thought-Knot Seer
+4 Ugin, Eye of the Storms
+3 Devourer of Destiny
+3 Glaring Fleshraker
+2 Sire of Seven Deaths
+2 Chalice of the Void
+2 Dismember
+1 All Is Dust
+1 Ulamog, the Ceaseless Hunger
+
+// Sideboard
+2 Disruptor Flute
+1 Chalice of the Void
+1 Cityscape Leveler
+1 Ensnaring Bridge
+1 Extinguisher Battleship
+1 Liquimetal Coating
+1 Skysovereign, Consul Flagship
+1 The Filigree Sylex
+1 The Stone Brain
+1 The Ten Rings
+1 Tormod's Crypt
+1 Torpor Orb
+1 Trinisphere
+1 Walking Ballista

@@ -159,6 +159,27 @@ MISMODELED_MATCHUPS = {
                "OUT OF SCOPE; tuning assembly to hit the band is forbidden (Stop condition 2). Trust the "
                "DIRECTION (we are favored), not the ~50%.",
     },
+    "urzatron": {
+        "direction": "INFLATED (all 3 calibration cells; Amulet cell INVERTED)",
+        "sim": "vs Boros Energy 56.4% [52.0-60.7] / vs Affinity 58.4% [54.0-62.6] / "
+               "vs Amulet Titan 85.6% [82.3-88.4] (n=500 each, seed=42, PYTHONHASHSEED=0, "
+               "run_match_set mix_play_draw, 2026-07-02)",
+        "truth": "matchup_matrix 2026-04-24 (STALE pre-ban; Eldrazi Tron rows -- same "
+                 "colorless shell by April; matches table has no June-2026 Modern rounds): "
+                 "vs Boros 42% (n=168), vs Affinity 38% (n=116), vs Amulet 19% (n=119)",
+        "why": "Calibration gate for the new hand-written UrzatronMatchAPL (Mono-Green Tron "
+               "meta cell, 2026-07-02). NOT tuned toward the anchors (forbidden). Attribution "
+               "is structural, shared with existing flags: (a) opponent LAND HATE (Boseiju/"
+               "Ghost Quarter/Demolition Field-class Tron-land destruction -- the spine of "
+               "every real anti-Tron plan) is entirely unmodeled, inflating ALL Tron cells "
+               "(this also means the sibling eldrazitron cells share this direction); "
+               "(b) Amulet Titan under-kills in the played-out cell (combo-decks-not-sampled "
+               "class; anchor says Tron is a 19% dog, sim says 86% favored -> INVERTED, do "
+               "not trust this cell at all); (c) Affinity board under-development (see "
+               "'izzet affinity' flag). Trust the DIRECTION (real Tron is roughly even-to-dog "
+               "vs Boros/Affinity and a heavy dog vs Amulet), not the sim numbers. Anchors "
+               "are themselves pre-ban/stale -- re-anchor when post-ban Modern rounds land.",
+    },
     # ── audit:stub Standard decks feeding current gauntlet fields ──────────────
     # (2026-07-01 handover / mismodel-coverage lint: same silent-inflation class as
     # belcher/neobrand in BATCH I0 -- stub decklists fill field rows with NO
@@ -214,6 +235,14 @@ MISMODELED_MATCHUPS = {
                "Direction-only cell.",
     },
 }
+
+
+# Aliases: the Mono-Green Tron meta cell must hit the urzatron flag whichever
+# label a gauntlet feeds lookup() ("Mono-Green Tron", "Green Tron", registry key
+# "monogreentron"/"greentron") -- same silent-miss class as the BATCH I0
+# apostrophe/underscore fixes below.
+MISMODELED_MATCHUPS["mono green tron"] = MISMODELED_MATCHUPS["urzatron"]
+MISMODELED_MATCHUPS["green tron"] = MISMODELED_MATCHUPS["urzatron"]
 
 
 def _norm(name: str) -> str:

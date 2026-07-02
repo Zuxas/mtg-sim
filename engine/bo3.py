@@ -209,6 +209,16 @@ class Bo3GauntletResult:
     matchups:   list[Bo3Result]   = field(default_factory=list)
     avg_match_win: float          = 0.0
 
+    def avg_match_win_band(self) -> tuple[float, float]:
+        """95% Wilson bounds (0-100 pcts) on the field-weighted match win.
+
+        Effective N = total games simulated across matchups. Display /
+        serialization only -- do not use in decision logic."""
+        from engine.stats_util import wilson_bounds_pct
+        n_eff = sum(r.n_g1 for r in self.matchups)
+        lo, hi = wilson_bounds_pct(self.avg_match_win, n_eff)
+        return (round(lo, 1), round(hi, 1))
+
     def summary_table(self) -> str:
         lines = [f"Bo3 Gauntlet — {self.our_deck} ({self.format_name})\n"]
         lines.append(f"  {'Opponent':<28} {'G1':>6} {'G2':>6} {'Match':>7}")
@@ -217,7 +227,9 @@ class Bo3GauntletResult:
             lines.append(f"  {r.opponent:<28} {r.g1_win_pct:>5.1f}% {r.g2_win_pct:>5.1f}% "
                          f"{r.match_win_pct:>6.1f}%")
         lines.append("  " + "-" * 52)
-        lines.append(f"  {'AVERAGE':<28} {'':>6} {'':>6} {self.avg_match_win:>6.1f}%")
+        b_lo, b_hi = self.avg_match_win_band()
+        lines.append(f"  {'AVERAGE':<28} {'':>6} {'':>6} {self.avg_match_win:>6.1f}%"
+                     f" [{b_lo:.1f}–{b_hi:.1f}]")
         return "\n".join(lines)
 
 

@@ -126,7 +126,12 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
 
     print(f"{'-'*70}")
     fw = weighted / total_w if total_w else 0
-    print(f"  Field-weighted match win%: {fw:.1f}%")
+    # Wilson 95% band on the FWR (effective N = total games behind the
+    # weighted rate). Appended AFTER the pct so arl_loop.FWR_RE still parses.
+    from engine.stats_util import wilson_bounds_pct
+    n_eff = n * sum(1 for r in done if not r.get("error"))
+    fw_lo, fw_hi = wilson_bounds_pct(fw, n_eff)
+    print(f"  Field-weighted match win%: {fw:.1f}% [{fw_lo:.1f}–{fw_hi:.1f}]")
     print(f"  Total: {elapsed:.0f}s  |  {n * total:,} games  |  {n_cores} cores")
 
     # Save
@@ -136,6 +141,8 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
         json.dump({
             "our_deck": our_deck, "format": format_name,
             "field_weighted_match": round(fw, 1),
+            "field_weighted_match_lo": round(fw_lo, 1),
+            "field_weighted_match_hi": round(fw_hi, 1),
             "elapsed_s": round(elapsed, 1),
             "n_per_matchup": n, "results": done,
         }, f, indent=2)

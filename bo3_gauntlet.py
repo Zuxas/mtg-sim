@@ -161,7 +161,9 @@ def main():
 
     print()
     print(gauntlet.summary_table())
-    print(f"\nField-weighted match win rate: {gauntlet.avg_match_win:.1f}%")
+    fw_lo, fw_hi = gauntlet.avg_match_win_band()
+    print(f"\nField-weighted match win rate: {gauntlet.avg_match_win:.1f}%"
+          f" [{fw_lo:.1f}–{fw_hi:.1f}]")
 
     # Compare G1 vs Match
     print(f"\n{'='*60}")

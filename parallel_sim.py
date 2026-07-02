@@ -193,8 +193,14 @@ def run_parallel(
         total_w += fp
 
     print(f"{'─'*65}")
+    # Wilson 95% band on the FWR (effective N = total games behind the
+    # weighted rate). Appended AFTER the pct so arl_loop.FWR_RE still parses.
+    from engine.stats_util import wilson_bounds_pct
+    fw = weighted_match / total_w if total_w else 0
+    n_eff = n * sum(1 for r in results if not r.get("error"))
+    fw_lo, fw_hi = wilson_bounds_pct(fw, n_eff)
     if total_w > 0:
-        print(f"  Field-weighted match win%: {weighted_match/total_w:.1f}%")
+        print(f"  Field-weighted match win%: {fw:.1f}% [{fw_lo:.1f}–{fw_hi:.1f}]")
     print(f"  Time: {elapsed:.0f}s on {n_cores} cores  "
           f"({n * len(tasks):,} total games)")
 
@@ -209,6 +215,8 @@ def run_parallel(
             "cores":      n_cores,
             "elapsed_s":  round(elapsed, 1),
             "field_weighted_match": round(weighted_match / total_w, 1) if total_w else 0,
+            "field_weighted_match_lo": round(fw_lo, 1),
+            "field_weighted_match_hi": round(fw_hi, 1),
             "results":    results,
         }, f, indent=2)
     print(f"  Saved: {out_path}")

@@ -140,7 +140,10 @@ class MTGSim:
         r = run_bo3_set(apl_a, self._decks[deck_a], self._sbs.get(deck_a, {}),
                         apl_b, self._decks[deck_b], self._sbs.get(deck_b, {}),
                         sb_plan_a=sb_a, sb_plan_b=sb_b, n=n, seed=seed)
+        wr_lo, wr_hi = r.match_wr_band_a()
         return {"match_wr": r.match_wr_a(),
+                "match_wr_lo": wr_lo,
+                "match_wr_hi": wr_hi,
                 "g1_wr": round(r.g1_wr_a, 1),
                 "g2_wr": round(r.g2_wr_a, 1),
                 "to_g3_pct": round(r.g3_rate, 1),

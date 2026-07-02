@@ -283,7 +283,9 @@ def main():
 
     field_avg = sum(matchup_table[o] * field.get(o, 1/len(field))
                     for o in matchup_table) / sum(field.values())
-    print(f"\nField-weighted match win%: {field_avg:.1f}%")
+    from engine.stats_util import wilson_bounds_pct
+    fa_lo, fa_hi = wilson_bounds_pct(field_avg, args.n_games * max(1, len(matchup_table)))
+    print(f"\nField-weighted match win%: {field_avg:.1f}% [{fa_lo:.1f}–{fa_hi:.1f}]")
 
     # Run event simulation
     print(f"\n{'='*60}")

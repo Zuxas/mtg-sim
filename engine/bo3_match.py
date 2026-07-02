@@ -61,6 +61,14 @@ class Bo3SetResults:
     def match_wr_a(self) -> float:
         return round(self.a_wins / max(1, self.n_matches) * 100, 1)
 
+    def match_wr_band_a(self) -> tuple[float, float]:
+        """95% Wilson bounds on A's match win rate, as 0-100 pcts.
+
+        Display/serialization only -- do not use in decision logic."""
+        from engine.stats_util import wilson_bounds
+        lo, hi = wilson_bounds(self.a_wins, self.n_matches)
+        return (round(lo * 100, 1), round(hi * 100, 1))
+
     def play_draw_split(self) -> dict:
         play_w = sum(1 for r in self.results if r.winner == 'a' and r._a_on_play_g1)
         play_n = sum(1 for r in self.results if r._a_on_play_g1)
@@ -279,7 +287,8 @@ def print_bo3_report(results: Bo3SetResults,
     print(f"  Bo3 MATCHUP: {name_a} vs {name_b}")
     print(f"  {results.n_matches} matches")
     print(f"{'='*55}")
-    print(f"  {name_a} MATCH win rate: {results.match_wr_a()}%"
+    wr_lo, wr_hi = results.match_wr_band_a()
+    print(f"  {name_a} MATCH win rate: {results.match_wr_a()}% [{wr_lo:.1f}–{wr_hi:.1f}]"
           f" ({results.a_wins}-{results.b_wins})")
     pd = results.play_draw_split()
     print(f"  On play: {pd['on_play']}% | On draw: {pd['on_draw']}%")

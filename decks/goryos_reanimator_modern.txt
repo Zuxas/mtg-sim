@@ -1,0 +1,55 @@
+// Goryo's Reanimator (DB label "Instant Reanimator") - Modern, June-2026 modal list
+// Consolidates the goryos (Goryo's Vengeance) + grixisreanimator cells (2026-07-02).
+// Source: mtg_meta.db June-2026 Modern decks, archetype name variants:
+//   Instant Reanimator 41 / Dimir Reanimator 32 / Goryo's Vengeance 4 /
+//   Esper Goryo 3 / Grixis Reanimator 2  -> modal shell = "Instant Reanimator".
+// Built as per-card MEDIAN across 5 first-place June-2026 finishes (3 pilots):
+//   deck_id 186951  Rvng          MTGO Challenge 96             2026-06-29  1st
+//   deck_id 187054  KingHairy     MTGO Challenge 64             2026-06-28  1st
+//   deck_id 187128  Miyata Masaki Overlord of the Balemurk *2   2026-06-27  1st
+//   deck_id 187373  Rvng          MTGO Challenge 32             2026-06-24  1st
+//   deck_id 187551  Miyata Masaki MMM                           2026-06-20  1st
+// Color identity call: Esper (WUB) + 1-of green source. All five winners are the
+// Esper-based shell (Solitude/Prismatic white, Frog/Fallaji blue, Goryo's black);
+// 3/5 run a single Breeding Pool purely to hardcast Atraxa ({3}{G}{W}{U}{B}).
+// No red anywhere -> the old "Grixis Reanimator" 66-card stub cell is superseded.
+// Medians summed to 59 main / 11 SB. 60th card = 2nd Otherworldly Gaze (2/5 lists
+// run 2). SB filled to 15 with 3 Vexing Bauble + 1 Hallowed Moonlight (the Miyata
+// cluster, the most recent paper winner). Main: 60 | Sideboard: 15
+
+4 Atraxa, Grand Unifier
+4 Ephemerate
+4 Fallaji Archaeologist
+4 Goryo's Vengeance
+4 Psychic Frog
+3 Solitude
+3 Thoughtseize
+2 Faithful Mending
+2 Force of Negation
+2 Griselbrand
+2 Otherworldly Gaze
+2 Prismatic Ending
+1 Consign to Memory
+1 March of Otherworldly Light
+4 Flooded Strand
+4 Marsh Flats
+4 Polluted Delta
+1 Breeding Pool
+1 Godless Shrine
+1 Hallowed Fountain
+1 Island
+1 Meticulous Archive
+1 Plains
+1 Shadowy Backstreet
+1 Swamp
+1 Undercity Sewers
+1 Watery Grave
+
+// Sideboard
+3 Consign to Memory
+3 Mystical Dispute
+3 Vexing Bauble
+3 Wrath of the Skies
+1 Fatal Push
+1 Hallowed Moonlight
+1 Thoughtseize

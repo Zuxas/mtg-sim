@@ -39,7 +39,7 @@ from apl.affinity_match import IzzetAffinityMatchAPL as AffinityMatchAPL
 from apl.esper_blink_match import EsperBlinkMatchAPL
 from apl.eldrazi_tron_match import EldraziTronMatchAPL
 from apl.eldrazi_ramp_match import EldraziRampMatchAPL
-from apl.goryos_match import GoryosMatchAPL
+from apl.goryos_reanimator_match import GoryosReanimatorMatchAPL
 from apl.amulet_titan_match import AmuletTitanMatchAPL
 from apl.dimir_oculus_match import DimirOculusMatchAPL
 from apl.glockulous_match import GlockulousMatchAPL
@@ -64,7 +64,7 @@ APL_REGISTRY = {
     "Orzhov Blink": EsperBlinkMatchAPL,
     "Eldrazi Tron": EldraziTronMatchAPL,
     "Eldrazi Ramp": EldraziRampMatchAPL,
-    "Goryos Vengeance": GoryosMatchAPL,
+    "Goryos Vengeance": GoryosReanimatorMatchAPL,
     "Amulet Titan": AmuletTitanMatchAPL,
     "Dimir Oculus": DimirOculusMatchAPL,
     "Glockulous": GlockulousMatchAPL,

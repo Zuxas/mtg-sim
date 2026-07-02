@@ -24,36 +24,39 @@ the sim divergence is structural).
 # Keyed by normalized opponent name/archetype (lowercase, hyphens->spaces).
 # direction: how the SIM errs relative to real-world truth.
 MISMODELED_MATCHUPS = {
-    "grixis reanimator": {
-        "direction": "INVERTED (improved, still flagged, assembly ~32% production / ~35% keep-mode)",
-        "sim": "~57% favored (56.6% production keep-slice; was ~55% crude-both)",
-        "truth": "~38% (we are the DOG)",
-        "why": "handoff #2 grixis cell (2026-06-30) built the intrinsic-fragility threat model + "
-               "turned the interaction layer ON. The reanimated Archon's RECURRING attack trigger "
-               "(sacrifice + discard + 3 life drain) now fires in main_phase_match; when the Archon "
-               "comes online grixis wins ~82% (the named mechanisms work). Our interaction is honest "
-               "but NON-LOAD-BEARING (answer_combo fires ~1-3/500 G1: Boros's cheap burn can't kill a "
-               "6-toughness body, no maindeck GY-hate). STILL FLAGGED per Stop condition 2. "
-               "MULLIGAN KEEP-ROUTING RE-MEASURE (2026-07-01, PYTHONHASHSEED=0, seed=42, n=500): the "
-               "'crude mulligan starves match assembly' premise is LARGELY DISPROVEN. Paired isolation "
-               "(boros held keep, grixis crude->keep) moves grixis Archon-online only 32.4%->35.4% "
-               "(+3.0pp, ~1 SE) and our WR 55.0%->55.0% (flat); routing grixis through its OWN combo-aware "
-               "keep() does NOT lift assembly to Gate-2's 42% nor near the goldfish ~56%. The 32%-match-vs-"
-               "56%-goldfish gap was a MISATTRIBUTION: goldfish-vs-match conflates the mulligan with the "
-               "entire opponent-pressure effect; the isolated mulligan contribution is only ~+3pp, so the "
-               "residual gap is dominated by (c) LEGITIMATE boros pressure (racing/removing before assembly, "
-               "part of the matchup) + (b) the 66-card audit:stub decklist -- NOT the crude mulligan. In "
-               "SHIPPED PRODUCTION grixis is seat B and NOT in _KEEP_ROUTED_APLS, so it stays crude: "
-               "assembly 32.4%, our WR 56.6% (the +1.6pp over crude-both 55.0% is boros's OWN seat-A keep, "
-               "not any grixis-assembly change). Cell stays INVERTED + flagged; NOT tuned into band "
-               "(forbidden). Trust the DIRECTION (improving toward dog), not the ~55-57%.",
-    },
-    "goryos vengeance": {
-        "direction": "INFLATED",
-        "sim": "~84-92%",
-        "truth": "~73% (still favored)",
-        "why": "combo under-fires; sign is correct but optimistic. Real edge comes from removal on the "
-               "single fragile threat, which the gauntlet only partly captures.",
+    # ── Goryo's Reanimator consolidation (2026-07-02) ───────────────────────────
+    # Replaces BOTH the old "goryos vengeance" INFLATED flag (sim 84-92 vs ~73)
+    # and the old "grixis reanimator" INVERTED flag (66-card audit:stub cell).
+    # Aliased below so every archetype name variant hits this record.
+    "goryos reanimator": {
+        "direction": "our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; "
+                     "from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+        "sim": "our WR vs Boros Energy 15.4% [12.5-18.8] / vs Izzet Affinity 26.6% "
+               "[22.9-30.6] / vs Urzatron 37.6% [33.5-41.9] (n=500 each, seed=42, "
+               "PYTHONHASHSEED=0, run_match_set mix_play_draw, 2026-07-02)",
+        "truth": "matchup_matrix 2026-04-24 (STALE pre-ban; 'Esper Reanimator' rows -- this "
+                 "archetype's April DB label per meta_bridge.py; verified 2026-07-02 no "
+                 "fresher Modern rows exist): vs Boros 46% (n=352), vs Affinity 36% "
+                 "(n=240), vs Eldrazi Tron 47% (n=66; colorless-shell proxy row for the "
+                 "urzatron cell, same convention as the urzatron flag)",
+        "why": "CONSOLIDATED CELL (2026-07-02): real modal June-2026 'Instant Reanimator' "
+               "list (decks/goryos_reanimator_modern.txt, 5 first-place finishes) + "
+               "hand-written GoryosReanimatorMatchAPL supersede the old goryos cell "
+               "(never exiled the Goryo's body -- delayed trigger unmodeled -- and "
+               "double-fired a flat draw-4 Atraxa ETB: its 84-92% was inflated mechanics "
+               "on an April list) and the old grixis cell (June DB: 2 Grixis decks vs 41 "
+               "Instant Reanimator -- the archetype IS this Esper shell). Affinity and "
+               "Urzatron cells sit ~9.4pp low with overlapping Wilson bands. The Boros "
+               "cell FAILS LOW at -30.6pp: goldfish kill median T8 (12.9% reanimate by "
+               "T3, 27.9% by T4) vs paper T4-5, so the modeled clock loses the race to "
+               "Boros's T4.3. Attribution is structural, shared with existing flags: "
+               "1-land-per-turn mana model, Psychic Frog's combat-damage draw engine "
+               "unmodeled, no own-turn instant window (FoN/Consign INERT by design -- no "
+               "fake reactivity), and the combo-decks-not-sampled opponent-pressure "
+               "class. Honest fidelity fixes (exile discipline, engine-owned ETBs, "
+               "base-class blocking) moved the cell 8.0%->15.4%; NOT tuned toward "
+               "anchors (forbidden). Trust the DIRECTION (real Boros cell ~even, we are "
+               "a slight dog), not the 15%.",
     },
     "living end": {
         "direction": "INFLATED",
@@ -256,6 +259,14 @@ MISMODELED_MATCHUPS = {
 # apostrophe/underscore fixes below.
 MISMODELED_MATCHUPS["mono green tron"] = MISMODELED_MATCHUPS["urzatron"]
 MISMODELED_MATCHUPS["green tron"] = MISMODELED_MATCHUPS["urzatron"]
+
+# Goryo's Reanimator name variants (2026-07-02 consolidation): every DB label /
+# registry key for the archetype must hit the consolidated record, including the
+# two RETIRED flag keys ("goryos vengeance", "grixis reanimator") so existing
+# gauntlet lookups keep warning.
+for _alias in ("goryos vengeance", "grixis reanimator", "instant reanimator",
+               "esper reanimator", "esper goryo"):
+    MISMODELED_MATCHUPS[_alias] = MISMODELED_MATCHUPS["goryos reanimator"]
 
 
 def _norm(name: str) -> str:

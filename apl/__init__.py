@@ -91,7 +91,10 @@ APL_REGISTRY = {
     # mismodeled_matchups.py; trust direction only).
     "landlessbelcher": ("apl.belcher_match",     "BelcherMatchAPL",   "decks/auto/landless_belcher_modern.txt"),
     "neobrand":        ("apl.neobrand_match",    "NeobrandMatchAPL",  "decks/neobrand_modern.txt"),
-    "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL","decks/grixis_reanimator_modern.txt"),
+    # 2026-07-02: Grixis Reanimator consolidated into Goryo's Reanimator (June-2026
+    # DB: 2 Grixis decks vs 41 Instant Reanimator). Old 66-card stub deck kept on
+    # disk (tests/test_grixis_reanimator_no_crash.py references it directly).
+    "grixisreanimator":("apl.goryos_reanimator_match","GoryosReanimatorMatchAPL","decks/goryos_reanimator_modern.txt"),
     # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29).
     # SYNTHETIC: APL plays it as an aggressive creature deck; not primer-validated.
     "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL", "decks/gruul_broodscale_modern.txt"),
@@ -136,10 +139,21 @@ APL_REGISTRY = {
     # 2026-04-26 Stage A BUCKET 1: orzhov_blink_modern.txt is misnamed
     # -- header reads "Esper Blink - botje_". Alias to EsperBlinkAPL.
     "orzhovblink":     ("apl.esper_blink",      "EsperBlinkAPL",     "decks/orzhov_blink_modern.txt"),
-    "goryosvengeance": ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
-    "goryovengeance":  ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
-    "espervengance":   ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
-    "goryos":          ("apl.goryo_vengeance",  "GoryoVengeanceAPL", "decks/goryos_vengeance_modern.txt"),
+    # ── Goryo's Reanimator consolidation (2026-07-02): one real June-2026 list
+    #    + one hand-written MatchAPL for every name variant of the archetype
+    #    (DB labels: Instant Reanimator / Goryo's Vengeance / Esper Goryo /
+    #    Grixis Reanimator). Replaces GoryoVengeanceAPL (April list) and the
+    #    grixis 66-card audit:stub cell. NOTE: "dimirreanimator" is NOT routed
+    #    here — the strict key would shadow the Legacy prefix-strip route
+    #    ("Dimir Reanimator" -> "reanimator" -> Legacy ReanimatorAPL).
+    "goryosvengeance":  ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "goryovengeance":   ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "espervengance":    ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "goryos":           ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "goryosreanimator": ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "instantreanimator":("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "espergoryo":       ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
+    "esperreanimator":  ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL", "decks/goryos_reanimator_modern.txt"),
     "jeskaicontrol":   ("apl.jeskai_control_standard", "JeskaiControlAPL",  "decks/jeskai_control_standard.txt"),
     "jeskailute":      ("apl.jeskai_control_standard", "JeskaiControlAPL",  "decks/jeskai_lute_standard.txt"),
     "control":         ("apl.jeskai_control",   "JeskaiControlAPL",  "control"),
@@ -316,8 +330,15 @@ MATCH_APL_REGISTRY = {
     "rubystorm":       ("apl.ruby_storm_match",     "RubyStormMatchAPL"),
     "uwblink":         ("apl.uw_blink_match",       "UWBlinkMatchAPL"),
     "esperblink":      ("apl.esper_blink_match",    "EsperBlinkMatchAPL"),
-    "goryosvengeance": ("apl.goryos_match",         "GoryosMatchAPL"),
-    "goryos":          ("apl.goryos_match",         "GoryosMatchAPL"),
+    # Goryo's Reanimator consolidation (2026-07-02): all archetype name variants
+    # route to the hand-written consolidated APL (see apl/goryos_reanimator_match.py
+    # docstring). "dimirreanimator" intentionally NOT added (Legacy shadow risk).
+    "goryosvengeance":  ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
+    "goryos":           ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
+    "goryosreanimator": ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
+    "instantreanimator":("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
+    "espergoryo":       ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
+    "esperreanimator":  ("apl.goryos_reanimator_match", "GoryosReanimatorMatchAPL"),
     "humans":          ("apl.humans_match",          "HumansMatchAPL"),
     "legacyhumans":    ("apl.humans_match",          "HumansMatchAPL"),
     "5chumans":        ("apl.humans_match",          "HumansMatchAPL"),
@@ -345,7 +366,8 @@ MATCH_APL_REGISTRY = {
     "goblincharbelcher":("apl.belcher_match",        "BelcherMatchAPL"),
     "landlessbelcher": ("apl.belcher_match",         "BelcherMatchAPL"),  # I0 2026-07-01: cures 0/0 skip; Sea-Gate lines unmodeled
     "neobrand":        ("apl.neobrand_match",        "NeobrandMatchAPL"),
-    "grixisreanimator":("apl.grixis_reanimator_match","GrixisReanimatorMatchAPL"),
+    # 2026-07-02: consolidated into Goryo's Reanimator (see APL_REGISTRY note).
+    "grixisreanimator":("apl.goryos_reanimator_match","GoryosReanimatorMatchAPL"),
     # Gruul Broodscale Combo (Modern) -- Low Curve gauntlet opponent (2026-06-29). SYNTHETIC stub number.
     "gruulbroodscale": ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
     "broodscale":      ("apl.gruul_broodscale_match", "GruulBroodscaleMatchAPL"),
@@ -454,8 +476,8 @@ MATCH_APL_REGISTRY = {
     "dimiragggrostandard": ("apl.esper_raffine_standard_match",            "EsperRaffineMatchAPL"),           # typo of dimiraggro
     "dimiroculus":         ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"), # Dimir Oculus ~ Dimir Midrange
     "espermidrange":       ("apl.esper_raffine_standard_match",            "EsperRaffineMatchAPL"),           # Esper midrange
-    "espervengance":       ("apl.goryos_match",                            "GoryosMatchAPL"),                 # typo of Esper Goryo's
-    "goryovengeance":      ("apl.goryos_match",                            "GoryosMatchAPL"),                 # Goryo's Vengeance
+    "espervengance":       ("apl.goryos_reanimator_match",                 "GoryosReanimatorMatchAPL"),       # typo of Esper Goryo's
+    "goryovengeance":      ("apl.goryos_reanimator_match",                 "GoryosReanimatorMatchAPL"),       # Goryo's Vengeance
     "orzhovblink":         ("apl.uw_blink_match",                          "UWBlinkMatchAPL"),                # Orzhov Blink ~ UW Blink
     "rakdos":              ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"), # generic Rakdos -> midrange proxy
     "rakdosmidrange":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"), # Rakdos Midrange

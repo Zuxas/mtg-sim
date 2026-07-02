@@ -324,7 +324,7 @@ MATCH_APL_REGISTRY = {
     "yawgmoth":        ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "golariyawgmoth":  ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "uwcontrol":       ("apl.uw_control_modern_match","UWControlModernMatchAPL"),  # R1 priority-stack opt-in (real control APL)
-    "dimirmidrange":   ("apl.murktide_match",         "MurktideMatchAPL"),   # proxy: both Dimir tempo/control -- OVERRIDDEN below (2026-07-01) by the real DimirMidrangeStandardMatchAPL
+    "dimirmidrange":   ("apl.murktide_match",         "MurktideMatchAPL"),   # proxy: both Dimir tempo/control (MODERN key; Standard traffic uses "dimirmidrangestd")
     "dimir":           ("apl.murktide_match",         "MurktideMatchAPL"),
     # New 2026-04-29: real-meta gap decks
     "belcher":         ("apl.belcher_match",         "BelcherMatchAPL"),
@@ -415,12 +415,13 @@ MATCH_APL_REGISTRY = {
     # Proxy mappings: route to nearest strategic equivalent
     # 2026-07-01 handover: dimirmidrangestd used to proxy to DimirExcruciatorStandardMatchAPL
     # while the real hand-written apl/dimir_midrange_standard_match.py was registered NOWHERE.
-    # Route both keys to the real APL so the P1 calibration cell (rc_swiss_gauntlet.py maps
-    # "Dimir Midrange" -> "dimirmidrangestd") measures the real Dimir deck, not Excruciator.
-    # NOTE: "dimirmidrange" also appears earlier as a Modern murktide proxy; this later
-    # entry intentionally overrides it (same later-key-wins pattern as simicrhythm et al).
+    # Route the STANDARD key to the real APL so the P1 calibration cell (rc_swiss_gauntlet.py
+    # maps "Dimir Midrange" -> "dimirmidrangestd") measures the real Dimir deck, not Excruciator.
+    # 2026-07-02 repair: the 2026-07-01 fix ALSO re-pointed "dimirmidrange" here, clobbering
+    # the MODERN murktide-proxy mapping declared earlier in this dict (later-key-wins).
+    # "dimirmidrange" is the Modern key: it keeps its earlier MurktideMatchAPL proxy entry
+    # (no later override); Standard traffic must use "dimirmidrangestd".
     "dimirmidrangestd":    ("apl.dimir_midrange_standard_match",           "DimirMidrangeStandardMatchAPL"),
-    "dimirmidrange":       ("apl.dimir_midrange_standard_match",           "DimirMidrangeStandardMatchAPL"),
     "dimirmidrangestdstd": ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
     "dimirmidrangejermey": ("apl.dimir_midrange_jermey_match",             "JermeyDimirMatchAPL"),
     "fourcolorcontrol":    ("apl.jeskai_control_standard_match",           "JeskaiControlStandardMatchAPL"),

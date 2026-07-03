@@ -40,6 +40,26 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
 
 ## Current APL status
 
+### Puzzle mining — Track T2 (goldfish lethal puzzles) — 2026-07-03
+
+`scripts/mine_lethal_puzzles.py` mines "you have lethal THIS turn — find the
+line" positions out of goldfish games for the analyzer's Puzzle Trainer
+(spec `harness/specs/2026-07-03-puzzle-trainer-v0.md`). It hooks a deck APL's
+`main_phase` in goldfish; per position it skips trivial on-board lethal, runs a
+bounded DFS (500-node budget) for a lethal line that DEPENDS on a specific
+main-phase play ("the winning line isn't obvious"), and self-verifies each line
+replays to engine-lethal before recording. Lethality oracle is the engine's own
+`gs.run_combat()` + `has_won()` on a throwaway fork — NOT a re-summed power
+formula (keeps the replay gate independent). Output is a JSONL of candidates
+with a one-way `GameState -> analyzer-Scene` dict; the analyzer ingests via
+`scripts/import_lethal_puzzles.py -> puzzle_inbox`. Gates (Boros Energy):
+T2-G2 42 candidates / 500 games (seed 42); T2-G3 byte-identical across 2 runs;
+T2-G1 replay-gated at record time. Test: `tests/test_lethal_miner.py`.
+CAVEATS carried in every candidate: puzzle truth = ENGINE truth (inherits sim
+card-fidelity limits); goldfish = open board (no blockers / no opp instant
+interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
+reuses this whole pipeline.
+
 ### Post-ban Modern field refresh (data/coverage) — 2026-06-30
 
 The modeled Modern field in `format_config.py` was refreshed for the May-2026

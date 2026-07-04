@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // Dimir Bounce - Linden Koot (Decktionary, 2026-02-21)
 // Linden_43, RC Montreal 2025 winner. Standard 2026.
 // UB version of "pixieless pixie" -- bounce engine with Boomerang Basics

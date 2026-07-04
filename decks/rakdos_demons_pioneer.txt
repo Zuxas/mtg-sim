@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Rakdos Demons - pepeteam (2026-03-14)
 // Event: MTGO Pioneer Challenge 32 #12835319, Place: 16
 2 Abrade

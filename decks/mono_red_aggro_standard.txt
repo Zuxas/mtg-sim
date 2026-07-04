@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // Mono Red Aggro - botboy (2026-04-03, top 8)
 // Event: MTGO Standard Challenge 32 #12838105
 // Post-ban build (no Heartfire Hero, no Monstrous Rage)

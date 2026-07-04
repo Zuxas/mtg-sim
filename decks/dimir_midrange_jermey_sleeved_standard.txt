@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // Dimir Midrange - Jermey's sleeved deck (2026-05-07, post-swap)
 // Closest to original v1 + Marcelo AC11 trophy shape (4 Kaito, Wan Shi
 // Tong SB) with a -2/-1 Beastbinder/Qarsi swap for +3 Deep-Cavern Bat

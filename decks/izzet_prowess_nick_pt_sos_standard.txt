@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Izzet Prowess -- Nick Odenheimer (Worldly Counsel) PT Secrets of Strixhaven (2026-05-01)
 // Source: A Primer on Izzet Prowess, original PT SOS submitted list
 // PT SOS finish: Nick place 15 (Worldly Counsel team, 11 PT pilots clustered places 12-35)

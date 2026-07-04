@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Green Devotion - Vladimir Shrebakov (28/03/26)
 // Event: Yaroslavl Event, Place: 3
 2 Boseiju, Who Endures

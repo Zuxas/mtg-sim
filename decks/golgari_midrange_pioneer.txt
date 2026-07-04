@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Golgari Midrange - Oleksiy Bilyaze (21/03/26)
 // Event: League, Place: 3
 4 Abrupt Decay

@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // Dimir Midrange -- Marcelo Rodrigues Cavalcante, AC11 winner (12-0-1)
 // Arena Championship 11, Feb 21 2026 (post-DSK pre-SOS meta)
 // First-place finish across 13 rounds; only loss R1 vs Rakdos Monument.

@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 7: Matthew Stefansson - Mono Green Landfall (PT SOS 2026)
 14 Forest
 4 Llanowar Elves

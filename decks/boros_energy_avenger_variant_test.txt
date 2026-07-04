@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // BE Avenger-variant test — synthetic 2026-04-26
 // Stage 5b validation deck for the mid-game expected-damage bucket.
 //

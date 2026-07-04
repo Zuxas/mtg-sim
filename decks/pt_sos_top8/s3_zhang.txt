@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 3: Rui Zhang - Izzet Lessons (PT SOS 2026)
 6 Island
 4 Monument to Endurance

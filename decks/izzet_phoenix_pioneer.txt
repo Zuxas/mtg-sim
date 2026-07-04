@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Izzet Phoenix - ResponsiblyStupid (23/03/26)
 // Event: MTGO Challenge 32, Place: 15
 4 Arclight Phoenix

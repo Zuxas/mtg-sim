@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // Domain Zoo -- post-ban update 2026-06-30: cut 3 Phlage, Titan of Fire's
 //   Fury (BANNED May 2026); kept the Zoo core and replaced with deck-native
 //   filler (Psychic Frog 3->4, Tribal Flames 3->4, Stubborn Denial 3->4).

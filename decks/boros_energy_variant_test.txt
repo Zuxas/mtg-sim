@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // BE variant test - synthetic 2026-04-25
 // Stress test for role-based detection. Diff from canonical
 // (boros_energy_modern.txt):

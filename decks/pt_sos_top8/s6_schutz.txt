@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 6: Stefan Schutz - Mono Green Landfall (PT SOS 2026)
 13 Forest
 4 Llanowar Elves

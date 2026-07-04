@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Azorius Control - Diego Reynaldo (25/03/26)
 // Event: 6º Etapa - Liga Praia 2026.1, Place: 5
 1 Beza, the Bounding Spring

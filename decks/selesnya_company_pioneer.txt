@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Selesnya Company - _Batutinha_ (30/03/26)
 // Event: MTGO Challenge 32, Place: 11
 2 Abandoned Air Temple

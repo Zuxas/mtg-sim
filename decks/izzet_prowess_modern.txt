@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // Izzet Prowess - arturcosta (2026-04-29)
 // Event: MTGO Modern Challenge 64 #12840702
 // Source: mtg_meta.db deck_id=133110 pulled 2026-04-30

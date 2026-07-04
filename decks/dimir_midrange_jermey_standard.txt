@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // Dimir Midrange - Jermey personal build (Standard 2026, RC DC prep v5)
 // User-directed config 2026-05-07: keep Kaito 2 + Bat 4, add Spell Snare 2,
 // bump to 25 lands, add Wan Shi Tong (Marcelo-aligned).

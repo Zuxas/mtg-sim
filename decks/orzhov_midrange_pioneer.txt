@@ -1,3 +1,4 @@
+// audit:intentional -- Pioneer reference list, out of current Standard/Modern arc; kept
 // Orzhov Midrange - arkany1 (2026-04-04)
 // Event: MTGO Pioneer Challenge 32 #12838133, Place: 16
 3 Anoint with Affliction

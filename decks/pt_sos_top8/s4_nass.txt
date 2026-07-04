@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 4: Matt Nass - Selesnya Ouroboroid (PT SOS 2026)
 6 Forest
 4 Llanowar Elves

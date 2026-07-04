@@ -1,3 +1,4 @@
+// audit:custom_variant -- personal/test list; kept
 // Dimir Bounce / Jermey hybrid -- Standard 2026, RC DC prep
 // Combines Linden Koot's UB Bounce engine (Stormchaser/Boomerang/Quantum Riddler/Kaito)
 // with Jermey's familiar Dimir core (Spyglass Siren, Deep-Cavern Bat, Tishana, Cecil).

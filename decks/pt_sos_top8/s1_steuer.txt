@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 1: Nathan Steuer - Selesnya Landfall (PT SOS 2026)
 7 Forest
 4 Llanowar Elves

@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // White Humans - Standard/Pioneer build
 2 Adeline, Resplendent Cathar
 4 Cavern of Souls

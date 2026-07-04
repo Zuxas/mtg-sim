@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // Teg - Arets77 (30/03/26)
 // Event: MTGO League, Place: 3
 3 Arid Mesa

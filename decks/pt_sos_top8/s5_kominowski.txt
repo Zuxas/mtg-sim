@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 5: Maxx Kominowski - Izzet Spellementals (PT SOS 2026)
 5 Island
 4 Riverpyre Verge

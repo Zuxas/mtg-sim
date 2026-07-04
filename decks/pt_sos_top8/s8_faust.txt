@@ -1,3 +1,4 @@
+// audit:intentional -- historical PT-SOS reference, path-loaded; not a wire candidate
 // Seed 8: Zevin Faust - Azorius Tempo (PT SOS 2026)
 4 Plains
 4 High Noon

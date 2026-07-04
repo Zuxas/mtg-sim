@@ -1,3 +1,4 @@
+// audit:intentional -- referenced by MATCH_APL_REGISTRY/a script; not an APL_REGISTRY orphan
 // Dimir Midrange — Bigbrain (placement 1, 2026-04-08)
 // Source: mtg_meta.db deck_id=103203 event='$$Big Brain Games #10 $$'
 1 Ba Sing Se

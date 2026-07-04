@@ -159,8 +159,11 @@ def _find_assignment(tree: ast.Module, name: str) -> ast.AST | None:
 # Extract APL_REGISTRY
 # ---------------------------------------------------------------------------
 
-def _extract_apl_registry(path: Path) -> dict | None:
-    """Parse apl/__init__.py and extract APL_REGISTRY as a dict.
+def _extract_apl_registry(path: Path, name: str = "APL_REGISTRY") -> dict | None:
+    """Parse apl/__init__.py and extract a registry dict (default APL_REGISTRY).
+
+    `name` selects which top-level dict to extract, so this also serves
+    MATCH_APL_REGISTRY (2-tuples of (module, class)) for the orphan-deck check.
 
     Returns None if file missing or registry not parseable.
     Each value is the literal-extracted form (typically a tuple of
@@ -169,7 +172,7 @@ def _extract_apl_registry(path: Path) -> dict | None:
     tree = _safe_parse(path)
     if tree is None:
         return None
-    val = _find_assignment(tree, "APL_REGISTRY")
+    val = _find_assignment(tree, name)
     if val is None:
         return None
     if not isinstance(val, ast.Dict):
@@ -456,12 +459,19 @@ def check_registry(report: Report) -> None:
 # ---------------------------------------------------------------------------
 
 def check_orphan_decks(report: Report) -> None:
-    """Decks in decks/*.txt that no APL_REGISTRY entry references.
+    """Decks in decks/*.txt that no registry / script reference points at.
 
     Stage S4 / 2026-04-28: also reads data/auto_apl_registry.json so
     auto-registered deck files don't show as orphans. Files marked with
     audit:auto-generated are also suppressed via _deck_is_audit_triaged
     as a backstop in case the JSON registry is missing.
+
+    2026-07-04: the "referenced" set is widened beyond APL_REGISTRY so a
+    deck reachable via MATCH_APL_REGISTRY or loaded by a script/test via a
+    relative 'decks/<name>.txt' literal is not false-flagged as an orphan
+    (previously papered over with hand-added audit:* markers). A deck with
+    NO registry entry, NO script/test reference, and NO audit marker is
+    STILL flagged -- the final loop is unchanged.
     """
 
     if not DECKS_DIR.exists() or not APL_INIT.exists():
@@ -493,6 +503,52 @@ def check_orphan_decks(report: Report) -> None:
                     referenced.add(str(p).lower())
         except Exception:
             pass  # corrupt registry -> fall through to marker-based suppression
+
+    def _add_ref(deck_rel: str) -> None:
+        """Add a 'decks/...txt' path to the referenced set, normalized EXACTLY
+        like the APL_REGISTRY refs above (resolve() + lowercase) so membership
+        tests match."""
+        deck_rel = deck_rel.replace("\\", "/")
+        if deck_rel.endswith(".txt"):
+            referenced.add(str((MTG_SIM_ROOT / deck_rel).resolve()).lower())
+
+    # (a) MATCH_APL_REGISTRY. Its entries are (module, class) 2-tuples today with
+    # NO deck path, so direct extraction resolves 0 additional decks; this is kept
+    # future-proof (picks up any 3rd-element .txt added later) and also resolves a
+    # match key back through APL_REGISTRY for its deck path -- a deck reachable via
+    # a match-registry key counts as referenced.
+    match_reg = _extract_apl_registry(APL_INIT, "MATCH_APL_REGISTRY")
+    if match_reg:
+        for key, value in match_reg.items():
+            if isinstance(value, tuple) and len(value) >= 3:
+                d = value[2]
+                if isinstance(d, str) and d.endswith(".txt"):
+                    _add_ref(d)
+            apl_entry = registry.get(key)
+            if isinstance(apl_entry, tuple) and len(apl_entry) >= 3:
+                d = apl_entry[2]
+                if isinstance(d, str) and d.endswith(".txt"):
+                    _add_ref(d)
+
+    # (b) Script / test relative-path loads: any 'decks/....txt' string literal in
+    # a .py under scripts/ or tests/ (e.g. load_deck_from_file('decks/humans_new.txt')).
+    # A grep-style text scan -- deliberately NOT importing the files, preserving this
+    # linter's "safe to run while the project is being edited" property. Only decks
+    # that appear as a *complete* 'decks/...txt' literal count (a glob like
+    # decks/*.txt or a comment mention that lacks the .txt path does NOT).
+    import re
+    _deck_literal = re.compile(r"decks[/\\][\w./\\-]+\.txt")
+    for scan_dir in ("scripts", "tests"):
+        base = MTG_SIM_ROOT / scan_dir
+        if not base.exists():
+            continue
+        for py in base.rglob("*.py"):
+            try:
+                text = py.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for hit in _deck_literal.findall(text):
+                _add_ref(hit)
 
     for deck_file in DECKS_DIR.rglob("*.txt"):
         p = str(deck_file.resolve()).lower()

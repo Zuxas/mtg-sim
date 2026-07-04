@@ -45,6 +45,8 @@ data/rules_reference/MagicCompRules.txt
 data/parallel_results_*.json
 data/batch*.json
 data/n500_*.json
+# Puzzle-mining candidate dumps (regenerate via scripts/mine_lethal_puzzles.py)
+data/lethal_candidates_*.jsonl
 data/ab_*.json
 data/post_*_fix.json
 data/final_*.json

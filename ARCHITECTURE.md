@@ -314,10 +314,35 @@ NOT: combat → main1 → main2 (old broken order)
   Other shifts within +/-2pp. Sleeve-up read holds: variant clearly
   faster (T4.40 vs T4.50) AND clearly higher field-weighted edge
   (+12.8pp). Match-runner combat-gap arc fully complete.
-- **Boros Energy Modern gauntlet (2026-05-01 N=100k seed=42, 18-DECK POST-ORACLE-SPRINT
+- **Boros Energy Modern gauntlet (2026-07-04 N=100k, POST-WP-B4 POST-BAN FIELD
   -- CURRENT CANONICAL 100k ANCHOR)**:
+  **62.9% field-weighted match [62.8-62.9] Wilson** (1,700,000 games, 2001s wall,
+  17 opponents). Branch modern-postban-arc, HEAD ee83e45 (WP-B4 per-state RNG
+  threading). Field = post-ban Modern estimate in format_config.py (refreshed
+  2026-06-30). Mirror EXCLUDED; FWR renormalized over the 17 non-mirror opponents
+  (weights sum 63.2%). Supersedes the 2026-05-01 68.4% anchor (now historical).
+  The 68.4->62.9 delta is MULTI-CAUSAL, NOT a WP-B4 regression: the largest single
+  driver is the Affinity fidelity correction (83.2%->38.8%, -6.55pp FWR-contrib --
+  larger than the whole net delta; the old 83.2% was the INFLATED never-develops-
+  board bug, fixed by the affinity-offense-rebaseline arc); field change (removed
+  Jeskai Control + Esper Blink, added Death and Taxes + Temur Crashcade, Jeskai
+  Blink share collapse) is net-modest; combo cells rose ~+10-18pp each purely
+  because the post-ban DB hole forced them from db anchors to the combo-sampler
+  (a data-availability artifact, masks part of the Affinity drop); WP-B4's marginal
+  effect is UNMEASURED (no pre-WP-B4 100k on this field exists). Worst cells:
+  Eldrazi Ramp 16.5%, Temur Crashcade 24.8%, Izzet Prowess 32.7%, Affinity 38.8%
+  (largest field share at 9.0%, now a LOSING cell). Best: Eldrazi Tron 86.8%,
+  Domain Zoo 84.7%, Grixis 76.9%, Amulet 75.3%. Several constituent cells carry
+  KNOWN model uncertainty in different directions (Affinity below both its ~76%
+  pinned flag and ~44% truth; combo cells are soft sampler estimates; Temur
+  Crashcade + Eldrazi Ramp are stub/unmodeled-hate cells) -- trust the aggregate
+  as an anchor, not the exact per-cell numbers. Saved:
+  data/parallel_results_20260704_194815.json. Full analysis + cell-by-cell
+  decomposition: harness/knowledge/tech/reanchor-boros-canonical-2026-07-04.md.
+- **Boros Energy Modern gauntlet (2026-05-01 N=100k seed=42, 18-DECK POST-ORACLE-SPRINT
+  -- HISTORICAL; SUPERSEDED 2026-07-04 by the 62.9% post-ban anchor above)**:
   **68.4% field-weighted** (1,800,000 games, 2651.7s wall, 17 matchups).
-  18-deck real meta. Supersedes 2026-04-29 67.4% as the trusted 100k anchor.
+  18-deck real meta. Superseded 2026-04-29 67.4% as the trusted 100k anchor.
   Key oracle fixes since 2026-04-29 baseline: JB Phase B (Wrath X, Phlage+Consign,
   Consign Replicate), Goryo's Vengeance oracle audit (Solitude white-pitch, lifegain),
   cross-APL sprint (Domain Zoo, Eldrazi Ramp, Esper Blink, Eldrazi Tron, Dimir Mid,

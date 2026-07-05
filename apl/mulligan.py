@@ -44,6 +44,7 @@ def take_opening_hand(
     max_mulligans:  int  = 4,
     verbose:        bool = False,
     opp_archetype:  str  = "",
+    rng=None,
 ) -> tuple[list[Card], list[Card], int]:
     """
     Simulate London Mulligan.
@@ -55,10 +56,17 @@ def take_opening_hand(
     opp_archetype is passed to keep_vs() when the APL supports it,
     enabling deck-specific mulligan logic vs specific opponents.
 
+    rng (WP-B4): the per-game random.Random to shuffle with. This routine fires
+    BEFORE the GameState exists, so the caller (run_game) threads the same
+    per-game rng it will later install as gs.rng — keeping the opening shuffle on
+    the one per-game stream. Falls back to the global `random` module when None
+    so un-migrated callers stay byte-identical.
+
     Returns (hand, remaining_library, mulligans_taken).
     """
     keep_fn   = keep_fn   or generic_keep
     bottom_fn = bottom_fn or generic_bottom
+    _rng      = rng if rng is not None else random
 
     # Detect whether keep_fn accepts an opp_archetype 4th argument
     try:
@@ -68,7 +76,7 @@ def take_opening_hand(
         supports_opp = False
 
     library = list(deck)
-    random.shuffle(library)
+    _rng.shuffle(library)
     mulligans = 0
 
     while True:
@@ -99,7 +107,7 @@ def take_opening_hand(
             break
         else:
             library.extend(hand)
-            random.shuffle(library)
+            _rng.shuffle(library)
             mulligans += 1
             if verbose:
                 print(f"  Mulligan {mulligans}")

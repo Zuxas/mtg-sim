@@ -2147,16 +2147,21 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         from apl.mulligan import take_opening_hand
         import random
 
-        if seed is not None:
-            random.seed(seed)
+        # WP-B4: per-game rng threaded through the opening shuffle and installed
+        # as gs.rng (same pattern as base_apl.run_game). Phase 3: the old global
+        # random.seed(seed) is gone -- every Amulet consumer (opening shuffle,
+        # engine fetch zones.shuffle, handler sites) now reads gs.rng.
+        rng = random.Random(seed) if seed is not None else random.Random()
 
         gs = GameState(mainboard=mainboard, on_play=on_play)
         gs.new_game()
+        gs.rng = rng
         result = GameResult()
         result.archetype = self.name
 
         hand, library, mulligans = take_opening_hand(
-            deck=mainboard, keep_fn=self.keep, bottom_fn=self.bottom, on_play=on_play
+            deck=mainboard, keep_fn=self.keep, bottom_fn=self.bottom, on_play=on_play,
+            rng=rng,
         )
         result.mulligans = mulligans
         result.opening_hand = [c.name for c in hand]

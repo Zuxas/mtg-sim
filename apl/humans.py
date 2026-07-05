@@ -127,8 +127,8 @@ class HumansAPL(BaseAPL):
 
         # Estimate mana held up (opponent's lands - spells played)
         # Simplified: assume they tap most of their mana most turns
-        import random
-        mana_left = random.choices([0, 1, 2], weights=[0.60, 0.25, 0.15])[0]
+        # WP-B4: draw from the per-game/per-match stream (gs.rng), not global.
+        mana_left = gs.rng.choices([0, 1, 2], weights=[0.60, 0.25, 0.15])[0]
         bus.publish_mana_state(mana_left, gs.turn)
 
     def _name_meddling_mage(self, gs: GameState) -> str:

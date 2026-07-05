@@ -71,8 +71,14 @@ class BaseAPL(ABC):
         opp_archetype: opponent deck name passed to keep_vs() and sideboard logic.
         Returns a GameResult with kill turn and stats.
         """
-        import copy
+        import copy, random
         result = GameResult()
+
+        # WP-B4: one per-game rng. take_opening_hand fires BEFORE the GameState
+        # exists, so we build the rng here, thread it into the opening shuffle,
+        # and install the SAME object as gs.rng below — the whole game (opening
+        # shuffle + in-play handler draws) runs off this single per-game stream.
+        rng = random.Random(seed) if seed is not None else random.Random()
 
         fresh_deck = copy.deepcopy(mainboard)
 
@@ -85,6 +91,7 @@ class BaseAPL(ABC):
             on_play=on_play,
             verbose=verbose,
             opp_archetype=opp_archetype,
+            rng=rng,
         )
 
         result.mulligans    = mulligans
@@ -93,6 +100,7 @@ class BaseAPL(ABC):
         # --- Initialize game state ---
         gs = GameState(mainboard=mainboard, on_play=on_play)
         gs.new_game()
+        gs.rng           = rng   # WP-B4: same per-game stream as the opening shuffle
         gs.zones.hand    = hand
         gs.zones.library = library
 

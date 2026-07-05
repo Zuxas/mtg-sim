@@ -201,6 +201,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
                 hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
                 life, land_played = gs.life_b, gs.land_played_b
             v = GameState(mainboard=[], on_play=on_play)
+            v.rng               = gs.rng  # WP-B4: alias shared match rng (single per-match stream)
             v.turn              = gs.turn
             v.zones.hand        = hand   # list aliased — mutations propagate
             v.zones.battlefield = bf
@@ -520,6 +521,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         prev_damage = gs.damage_to_a
 
     view = GameState(mainboard=[], on_play=on_play)
+    view.rng               = gs.rng  # WP-B4
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -550,6 +552,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         opp_hand, opp_bf, opp_gy = gs.hand_a, gs.bf_a, gs.gy_a
         opp_life = gs.life_a
     opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.rng = gs.rng  # WP-B4: opp view aliases same match rng (opp.rng.shuffle sites)
     opp_view.turn = gs.turn
     opp_view.zones.hand = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -787,6 +790,7 @@ def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
                 c.loyalty = start
 
     view = GameState(mainboard=[], on_play=on_play)
+    view.rng             = gs.rng  # WP-B4
     view.turn            = gs.turn
     view.zones.hand      = hand   # aliased lists -> mutations propagate
     view.zones.battlefield = bf
@@ -796,6 +800,7 @@ def _run_pw_activations(gs: TwoPlayerGameState, player: str, apl) -> int:
     view._self_apl       = apl
 
     opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.rng             = gs.rng  # WP-B4
     opp_view.turn            = gs.turn
     opp_view.zones.hand      = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -854,6 +859,7 @@ def _build_combat_view(gs: "TwoPlayerGameState", player: str):
         hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
         life = gs.life_b
     v = GameState(mainboard=[], on_play=on_play)
+    v.rng  = gs.rng  # WP-B4
     v.turn = gs.turn
     v.zones.hand        = hand
     v.zones.battlefield = bf
@@ -1516,6 +1522,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         opp_life = gs.life_a
 
     view = GameState(mainboard=[], on_play=on_play)
+    view.rng               = gs.rng  # WP-B4
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -1531,6 +1538,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
                 view.mana_pool.add("C", 1)
 
     opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view.rng               = gs.rng  # WP-B4
     opp_view.turn              = gs.turn
     opp_view.zones.hand        = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -1812,7 +1820,9 @@ def run_match(
 def _run_single_match(args):
     """Module-level worker for ProcessPoolExecutor — must be picklable."""
     game_seed, apl_a_class, apl_b_class, deck_a, deck_b, on_play, use_combo_sampler = args
-    random.seed(game_seed)
+    # WP-B4 Phase 3: dead global seed removed. Every consumer now draws from
+    # gs.rng (threaded via run_match(seed=game_seed) -> TwoPlayerGameState.rng)
+    # or ComboKillSampler's own Random(game_seed); nothing reads global random.
     fresh_apl_a = apl_a_class()
     fresh_apl_b = apl_b_class()
     if use_combo_sampler:
@@ -1865,10 +1875,11 @@ def run_match_set(
     try:
         if n_workers <= 1:
             for i in range(n):
-                # Per-game global seed: makes naked random.foo() consumers in
-                # engine code (zones.shuffle, opponent.py, ~10 handler sites)
-                # deterministic for this game independently of other games.
-                random.seed(game_seeds[i])
+                # WP-B4 Phase 3: dead global seed removed. Per-game determinism
+                # now flows through run_match(seed=game_seeds[i]) -> gs.rng, which
+                # every migrated consumer (zones.shuffle, handler sites, mulligan)
+                # reads; the save/restore guard below is retained as a harmless
+                # no-op safety net (nothing here mutates global random anymore).
                 fresh_apl_a = apl_a_class()
                 fresh_apl_b = apl_b_class()
                 if use_combo_sampler:

@@ -6307,7 +6307,7 @@ def _burning_inquiry_spell(gs, card):
     for g in (gs, opp) if opp else (gs,):
         for _ in range(3):
             if g.zones.hand:
-                victim = random.choice(g.zones.hand)
+                victim = g.rng.choice(g.zones.hand)  # WP-B4
                 g.zones.hand.remove(victim)
                 g.zones.graveyard.append(victim)
     gs._log("  Burning Inquiry: both draw 3 discard 3 random")
@@ -7015,7 +7015,7 @@ def _cragganwick_cremator_etb(gs, card):
     if not gs.zones.hand:
         gs._log("  Cragganwick: no card to discard")
         return
-    victim = random.choice(gs.zones.hand)
+    victim = gs.rng.choice(gs.zones.hand)  # WP-B4
     gs.zones.hand.remove(victim)
     gs.zones.graveyard.append(victim)
     from data.card import Tag
@@ -7374,7 +7374,7 @@ def _days_undoing_spell(gs, card):
         if c in gs.zones.hand: gs.zones.hand.remove(c)
         if c in gs.zones.graveyard: gs.zones.graveyard.remove(c)
         gs.zones.library.append(c)
-    random.shuffle(gs.zones.library)
+    gs.rng.shuffle(gs.zones.library)  # WP-B4
     for _ in range(7):
         if gs.zones.library:
             gs.zones.hand.append(gs.zones.library.pop(0))
@@ -7386,7 +7386,7 @@ def _days_undoing_spell(gs, card):
             if c in opp.zones.hand: opp.zones.hand.remove(c)
             if c in opp.zones.graveyard: opp.zones.graveyard.remove(c)
             opp.zones.library.append(c)
-        random.shuffle(opp.zones.library)
+        opp.rng.shuffle(opp.zones.library)  # WP-B4
         for _ in range(7):
             if opp.zones.library:
                 opp.zones.hand.append(opp.zones.library.pop(0))
@@ -8417,7 +8417,7 @@ def _endurance_etb(gs, card):
         # Shuffle opp GY into lib bottom
         import random
         gy = list(opp.zones.graveyard)
-        random.shuffle(gy)
+        opp.rng.shuffle(gy)  # WP-B4
         for c in gy:
             opp.zones.graveyard.remove(c)
             opp.zones.library.append(c)
@@ -9722,7 +9722,7 @@ def _goblin_lore_spell(gs, card):
     gs.zones.draw(4)
     for _ in range(3):
         if gs.zones.hand:
-            victim = random.choice(gs.zones.hand)
+            victim = gs.rng.choice(gs.zones.hand)  # WP-B4
             gs.zones.hand.remove(victim)
             gs.zones.graveyard.append(victim)
     gs._log("  Goblin Lore: draw 4, discard 3 random")
@@ -11865,7 +11865,7 @@ def _memorys_journey_spell(gs, card):
         for c in picks:
             opp.zones.graveyard.remove(c)
             opp.zones.library.append(c)
-        random.shuffle(opp.zones.library)
+        opp.rng.shuffle(opp.zones.library)  # WP-B4
         gs._log(f"  Memory's Journey: shuffle {len(picks)} opp GY → lib")
 
 
@@ -13641,7 +13641,7 @@ def _ranger_captain_eos_etb(gs, card):
         t = eligible[0]
         gs.zones.library.remove(t)
         gs.zones.hand.append(t)
-        gs.zones.shuffle()
+        gs.zones.shuffle(gs.rng)
         gs._log(f"  Ranger-Captain of Eos: tutor {t.name}, shuffle")
 
 
@@ -17332,8 +17332,7 @@ def _vesuva_etb(gs, card):
     'Copy target land on BF as Vesuva enters, or enter tapped.'"""
     lands = [c for c in gs.zones.battlefield if c.is_land() and c is not card]
     if lands:
-        import random
-        t = random.choice(lands)
+        t = gs.rng.choice(lands)  # WP-B4
         card.name = f"Vesuva (copy of {t.name})"
     else:
         card.tapped = True
@@ -28320,7 +28319,7 @@ def _planar_engineering(gs, card):
         land.turn_entered = gs.turn
         _on_lf(gs)
         found += 1
-    gs.zones.shuffle()
+    gs.zones.shuffle(gs.rng)
     gs._log(f"  Planar Engineering: sac {sacrificed} lands, "
             f"put {found} basics tapped (net +{found - sacrificed} lands)")
 

@@ -152,8 +152,14 @@ def run_simulation(
 
     import random
     import copy
-    if seed is not None:
-        random.seed(seed)
+    # WP-B4: per-game seeding. `batch` deterministically derives one independent
+    # seed per game (parity with the match path's per-game-seed contract; clean
+    # fork/determinization semantics), threaded into run_game(seed=...) -> gs.rng.
+    # Phase 3: the old global random.seed(seed) is gone -- every goldfish consumer
+    # (opening shuffle, zones.shuffle, handler sites) now reads gs.rng. Documented
+    # one-time goldfish baseline shift: single chained global stream -> per-game
+    # independent seeds.
+    batch = random.Random(seed) if seed is not None else random.Random()
 
     start = time.perf_counter()
 
@@ -186,13 +192,18 @@ def run_simulation(
 
         game_on_play = on_play
         if mixed_play_draw:
-            game_on_play = random.random() < 0.5
+            game_on_play = batch.random() < 0.5   # WP-B4: per-batch stream
+
+        # WP-B4: per-game independent seed -> run_game builds gs.rng = Random(seed)
+        # and threads it through the opening shuffle.
+        game_seed = batch.randint(0, 2**63 - 1)
 
         verbose = i < verbose_first
         game_result = apl.run_game(
             mainboard=game_deck,
             on_play=game_on_play,
             verbose=verbose,
+            seed=game_seed,
         )
 
         results.mulligans.append(game_result.mulligans)

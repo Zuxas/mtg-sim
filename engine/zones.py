@@ -25,8 +25,12 @@ class Zones:
     # Library
     # -----------------------------------------------------------------------
 
-    def shuffle(self):
-        random.shuffle(self.library)
+    def shuffle(self, rng):
+        # WP-B4: Zones holds no state back-reference, so the per-game/per-match
+        # rng must be threaded in by the caller (gs.rng). Required (no global
+        # fallback) so a missing/None rng fails fast rather than silently drawing
+        # from the global module.
+        rng.shuffle(self.library)
 
     def draw(self, n: int = 1) -> list[Card]:
         """Draw n cards from top of library to hand. Returns drawn cards."""

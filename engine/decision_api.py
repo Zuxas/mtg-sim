@@ -14,6 +14,7 @@ Design constraints honored:
 """
 from __future__ import annotations
 
+import random
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Optional
@@ -83,7 +84,31 @@ def apply_action(gs, action: Action) -> bool:
     return False
 
 
-def fork(gs, opp):
+def fork(gs, opp, seed=None):
     """v0 fork: deepcopy both seats' views. Correct, slow (~ms); spec Step 6
-    replaces with structured copy + per-state RNG. Eval-only in the prototype."""
-    return deepcopy(gs), deepcopy(opp)
+    replaces with structured copy + per-state RNG. Eval-only in the prototype.
+
+    WP-B4 RNG independence: deepcopy alone would give each child the parent's
+    EXACT internal Random state, so every fork would replay identically and forks
+    could not diverge. After the copy we OVERWRITE each child's rng with a fresh
+    Random object:
+      - explicit `seed`   -> two forks with the same seed are byte-identical
+                             (deterministic search / reproducibility).
+      - derived (seed None) -> each child seeds from ITS OWN parent stream, so the
+                             children are independent and diverge only on
+                             rng-dependent lines; the fresh object means the
+                             parent's own stream is not aliased by the child.
+    Fork is search-only (outside the game byte-stream and the 100k re-anchor)."""
+    child_gs  = deepcopy(gs)
+    child_opp = deepcopy(opp)
+    if child_gs is not None:
+        gs_seed = seed if seed is not None else (
+            gs.rng.randint(0, 2**63 - 1) if getattr(gs, 'rng', None) is not None
+            else random.Random().randint(0, 2**63 - 1))
+        child_gs.rng = random.Random(gs_seed)
+    if child_opp is not None:
+        opp_seed = seed if seed is not None else (
+            opp.rng.randint(0, 2**63 - 1) if getattr(opp, 'rng', None) is not None
+            else random.Random().randint(0, 2**63 - 1))
+        child_opp.rng = random.Random(opp_seed)
+    return child_gs, child_opp

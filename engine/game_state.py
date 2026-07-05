@@ -199,6 +199,14 @@ class GameState:
         self.land_played  = False
         self.mana_pool    = ManaPool()
         self.zones        = Zones()
+        # WP-B4: per-state RNG. Default None during/after the RNG migration so a
+        # missed view-alias site fails FAST on the first .rng.choice/.shuffle
+        # (AttributeError) instead of silently drawing from a fresh OS-seeded
+        # Random and passing a determinism gate by luck. Every path that reaches
+        # a handler sets this: goldfish run_game seeds it per game; the match
+        # view-builders alias it to the shared match rng; MatchGameState aliases
+        # gs_a.rng = gs_b.rng = mgs.rng.
+        self.rng          = None
         self.energy       = 0
         self.life         = 20
         self.noncreature_spells_this_turn = 0  # for prowess
@@ -1466,7 +1474,7 @@ class GameState:
                 # Don't need mana — let it enter tapped, save 2 life
                 best.tapped = True
                 self._log(f"  Fetch → {best.name} (tapped, saved 2 life)")
-                self.zones.shuffle()
+                self.zones.shuffle(self.rng)
                 return True
 
         enters_tapped = self._enters_tapped(best)
@@ -1476,7 +1484,7 @@ class GameState:
         else:
             best.tapped = True
 
-        self.zones.shuffle()
+        self.zones.shuffle(self.rng)
         self._log(f"  Fetch: {card.name} → {best.name}"
                   f"{' (tapped)' if enters_tapped else ''}"
                   f" (life={self.life})")

@@ -103,6 +103,13 @@ class MatchGameState:
         self.gs_a = GameState(list(deck_a), on_play=True)
         self.gs_b = GameState(list(deck_b), on_play=False)
 
+        # WP-B4: both seats' full GameStates draw from the SINGLE per-match rng
+        # (seeded above). The naked handler consumers touch gs_a/gs_b directly
+        # (these ARE the states handlers see in this engine, not throwaway views),
+        # so aliasing here is what makes this second match engine deterministic.
+        self.gs_a.rng = self.rng
+        self.gs_b.rng = self.rng
+
         # Copy mainboard into library (goldfish engine does this in run_game)
         from copy import deepcopy
         self.gs_a.zones.library = deepcopy(self.gs_a.mainboard)

@@ -22,15 +22,23 @@ def race_win_probability(
     our_kill_distribution: dict[int, float],
     opponent: OpponentClock,
     n_samples: int = 100_000,
+    rng=None,
 ) -> dict:
     """
     Monte Carlo race simulation.
     We win if our kill turn <= opponent's kill turn.
     Both distributions are sampled independently.
 
+    WP-B4: analysis-only, OUTSIDE the game byte-stream and the 100k re-anchor.
+    Optional local rng; defaults to the global `random` module so every existing
+    (unseeded) caller -- bo3_gauntlet, event_simulator, engine.bo3, sim_bridge --
+    is byte-identical. These consume aggregated kill-turn distributions, never a
+    live game state, so they carry no gs.rng.
+
     Returns dict with win_pct, loss_pct, draw_pct, avg_margin.
     """
-    import random
+    import random as _randmod
+    _rng = rng if rng is not None else _randmod
 
     # Build our CDF for fast sampling
     our_turns = sorted(our_kill_distribution)
@@ -41,7 +49,7 @@ def race_win_probability(
         our_cumulative.append((t, running))
 
     def sample_us():
-        roll = random.random() * 100
+        roll = _rng.random() * 100
         for t, cum in our_cumulative:
             if roll <= cum:
                 return t
@@ -52,7 +60,7 @@ def race_win_probability(
 
     for _ in range(n_samples):
         our_turn = sample_us()
-        opp_turn = opponent.sample_kill_turn() or 99
+        opp_turn = opponent.sample_kill_turn(rng=_rng if rng is not None else None) or 99
 
         if our_turn <= opp_turn:
             wins += 1

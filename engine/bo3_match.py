@@ -174,7 +174,8 @@ def run_bo3(apl_a: MatchAPL, deck_a: list, sb_a: dict,
 def _run_single_bo3(args):
     """Module-level worker for ProcessPoolExecutor — must be picklable."""
     match_seed, apl_a, deck_a, sb_a, apl_b, deck_b, sb_b, sb_plan_a, sb_plan_b, a_on_play = args
-    random.seed(match_seed)
+    # WP-B4 Phase 3: dead global seed removed. run_bo3(seed=match_seed) threads
+    # into run_match -> MatchGameState.rng, which gs_a/gs_b alias; no global reads.
     return run_bo3(apl_a, deck_a, sb_a, apl_b, deck_b, sb_b,
                    sb_plan_a=sb_plan_a, sb_plan_b=sb_plan_b,
                    a_on_play_g1=a_on_play, seed=match_seed)
@@ -211,7 +212,9 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     try:
         if n_workers <= 1:
             for i in range(n):
-                random.seed(match_seeds[i])
+                # WP-B4 Phase 3: dead global seed removed (per-match determinism
+                # flows through run_bo3(seed=match_seeds[i]) -> gs.rng). Guard
+                # retained below as a harmless no-op.
                 bo3 = run_bo3(
                     apl_a, deck_a, sb_a,
                     apl_b, deck_b, sb_b,

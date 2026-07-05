@@ -241,8 +241,12 @@ class OpponentClock:
             running += kill_distribution[t]
             self._cumulative.append((t, running))
 
-    def sample_kill_turn(self) -> int:
-        roll = random.random() * 100
+    def sample_kill_turn(self, rng=None) -> int:
+        # WP-B4: analysis-only Monte-Carlo (race distributions), OUTSIDE the game
+        # byte-stream and the 100k re-anchor. Optional local rng; defaults to the
+        # global module so every existing (unseeded) caller is byte-identical.
+        _rng = rng if rng is not None else random
+        roll = _rng.random() * 100
         for t, cum in self._cumulative:
             if roll <= cum:
                 return t

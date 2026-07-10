@@ -303,3 +303,9 @@ These two design specs were moved out of this always-loaded bootstrap (2026-06-2
 
 - ARL (loop_state.json spine, iteration cycle, candidate generation, human interface, blockers, entry-point scripts): `docs/arl-spec.md`
 - Sequencing telemetry + heuristic distillation (logging schema, distillation pass, APL candidates, playbook pipeline): `docs/sequencing-telemetry-spec.md`
+
+## Verification & Hot-Zone Protocol
+
+- **State verification first.** Before starting any work, state how you will verify it.
+- **Verify after.** After finishing, run that verification and report the results -- evidence, not just assertion.
+- **Hot zones require sign-off.** Before changing any code in a hot zone, ASK first and explain the blast radius (what breaks if it's wrong, and how far it reaches). Hot zones in this project: the engine core (`engine/match_runner.py`, `engine/game_state.py`, stack/priority/combat), the oracle handlers (`card_handlers_verified.py` / card_specs), and the APL registry (`apl/__init__.py`). A change to any of these shifts every downstream goldfish/gauntlet result.

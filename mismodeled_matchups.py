@@ -150,6 +150,23 @@ MISMODELED_MATCHUPS = {
                "(forbidden). Trust the DIRECTION (real cell ~even), not the ~99.6%. "
                "~4.1% of the modeled field.",
     },
+    "amulet titan": {
+        "direction": "INVERTED (Amulet under-assembles in the played-out cell; opp-vs-Amulet INFLATED)",
+        "sim": "field decks beat Amulet at inflated rates (Boros Energy 61.7%; Mono-Green Tron "
+               "85.6% per the 'urzatron' flag) -- Amulet's combo under-fires in the 2p run_match "
+               "opponent path (combo-decks-not-sampled class). The 95.7% figure in CLAUDE.md is "
+               "goldfish/solitaire, not the played-out opponent row.",
+        "truth": "no post-ban Modern primer cell; pre-ban anchor has Amulet as a strong deck "
+                 "(e.g. Tron is a 19% dog to Amulet, matchup_matrix 2026-04-24) -> real Amulet is a "
+                 "better matchup for itself than these cells show. Direction only.",
+        "why": "Mismodel-coverage flag (2026-07-09, bob run bob-20260709-224538-0021). Amulet Titan "
+               "is a combo field deck (format_config modern field) whose 2p played-out row was "
+               "SILENTLY TRUSTED -- no key/alias resolved via lookup(), so no [!MISMODEL] warning "
+               "fired despite its field share. Same class the 'urzatron' flag already documents at "
+               "(b): 'Amulet under-kills in the played-out cell ... INVERTED, do not trust this cell "
+               "at all.' Completes BATCH I0's intent (no field combo row silently unflagged). "
+               "Direction-only cell; do not trust the number; no sim re-run, no tune.",
+    },
     "izzet affinity": {
         "direction": "INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
         "sim": "~76% Boros / ~24% Affinity POST-FIX (boros_energy_lowcurve seat A vs izzet_affinity "

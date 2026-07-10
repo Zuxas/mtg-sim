@@ -1,0 +1,25 @@
+{
+  "archetype": "Legacy Humans",
+  "n_games": 100000,
+  "win_rate": 1.0,
+  "avg_kill_turn": 4.649186491864919,
+  "median_kill_turn": 5,
+  "win_by_t3": 0.0,
+  "win_by_t4": 45.8,
+  "win_by_t5": 91.5,
+  "avg_mulligans": 0.454,
+  "mull_rate": 31.4,
+  "kill_distribution": {
+    "4": 45.8,
+    "5": 45.8,
+    "6": 6.9,
+    "7": 1.2,
+    "8": 0.3,
+    "9": 0.1,
+    "10": 0.0,
+    "11": 0.0,
+    "12": 0.0
+  },
+  "elapsed_sec": 278.178,
+  "generated_at": "2026-07-04T20:00:11.752773"
+}

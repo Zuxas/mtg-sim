@@ -153,9 +153,10 @@ MISMODELED_MATCHUPS = {
     "amulet titan": {
         "direction": "INVERTED (Amulet under-assembles in the played-out cell; opp-vs-Amulet INFLATED)",
         "sim": "field decks beat Amulet at inflated rates (Boros Energy 61.7%; Mono-Green Tron "
-               "85.6% per the 'urzatron' flag) -- Amulet's combo under-fires in the 2p run_match "
-               "opponent path (combo-decks-not-sampled class). The 95.7% figure in CLAUDE.md is "
-               "goldfish/solitaire, not the played-out opponent row.",
+               "85.6% per the 'urzatron' flag). These cells are combo-sampler sourced "
+               "(g1_source 'com', a kill-turn-race proxy) -- Amulet's combo under-assembles in "
+               "them, crediting the opponent too much. The 95.7% figure in CLAUDE.md is "
+               "goldfish/solitaire; neither is a trustworthy played-out Amulet row.",
         "truth": "no post-ban Modern primer cell; pre-ban anchor has Amulet as a strong deck "
                  "(e.g. Tron is a 19% dog to Amulet, matchup_matrix 2026-04-24) -> real Amulet is a "
                  "better matchup for itself than these cells show. Direction only.",

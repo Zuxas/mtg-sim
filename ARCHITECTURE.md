@@ -336,7 +336,11 @@ NOT: combat → main1 → main2 (old broken order)
   KNOWN model uncertainty in different directions (Affinity below both its ~76%
   pinned flag and ~44% truth; combo cells are soft sampler estimates; Temur
   Crashcade + Eldrazi Ramp are stub/unmodeled-hate cells) -- trust the aggregate
-  as an anchor, not the exact per-cell numbers. Saved:
+  as an anchor, not the exact per-cell numbers. UPDATE (2026-07-10): the Affinity
+  38.8% "LOSING cell" read above is CONTESTED -- see mismodeled_matchups.py
+  note_2026_07_10 and harness/IMPERFECTIONS.md bo3-run_fair-underrates-vs-run_match
+  (+ affinity-prowess-sim-vs-live-anchor-contradiction) before trusting this cell
+  as current. Saved:
   data/parallel_results_20260704_194815.json. Full analysis + cell-by-cell
   decomposition: harness/knowledge/tech/reanchor-boros-canonical-2026-07-04.md.
 - **Boros Energy Modern gauntlet (2026-05-01 N=100k seed=42, 18-DECK POST-ORACLE-SPRINT

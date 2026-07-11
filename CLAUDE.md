@@ -121,12 +121,20 @@ keep-mode stays reachable via `MULL_MODE` / `MULL_MODE_A/B` env overrides. Findi
 - Calibration coupled in same commit: `AwareMatchAPL.declare_attackers` rewrite moved Selesnya-vs-Prowess
   from a wrong ~77% to 65.3% (in band [60,71.5], PT 62.9). See
   `harness/knowledge/tech/boros-energy-postban-validation-2026-06-29.md`.
-- KNOWN gauntlet caveat: opponent-side undermodeling makes several cells unreliable. These are now
-  registered in `mismodeled_matchups.py` (Grixis INVERTED, Goryo's/Living End/Affinity/Broodscale
-  INFLATED) and the gauntlet drivers (full_field_gauntlet, bo3_gauntlet, gauntlet_any_deck) print an
-  inline `[!MISMODEL ...]` flag + legend. **When analyzing matchups or deck choice, DOWN-WEIGHT any
-  flagged cell** -- trust its direction, not its number. Combo-sampler routing was prototyped to fix
-  this and REJECTED (see IMPERFECTIONS combo-decks-not-sampled-in-gauntlet-run_match).
+- KNOWN gauntlet caveat: opponent-side undermodeling makes several cells unreliable. They are flagged
+  in `mismodeled_matchups.py` (combo/reanimator cells -- Goryo's/Grixis, Living End, Amulet Titan
+  [added 2026-07-09], Broodscale, Belcher, Neobrand, Ruby Storm, Temur Crashcade -- each with a per-cell
+  direction; read the flag, do not assume) and the gauntlet drivers (full_field_gauntlet, bo3_gauntlet,
+  gauntlet_any_deck) print an inline `[!MISMODEL ...]` flag + legend. **When analyzing matchups or deck
+  choice, DOWN-WEIGHT any flagged cell** -- trust its direction, not its number. Combo-sampler routing
+  was prototyped to fix this and REJECTED (see IMPERFECTIONS combo-decks-not-sampled-in-gauntlet-run_match).
+- AFFINITY CELL CONTESTED (2026-07-10 decomposition; `izzet affinity` note_2026_07_10): the bo3
+  `_run_fair` field cell (base 42.7 / Low Curve 48.0 g1) reads ~15-25pp BELOW current-engine run_match
+  MATCH (63.0) and live paper (72.7, n=23), both of which put Boros FAVORED. So the old "Affinity
+  INFLATED" read is likely INVERTED (the bo3 cell is DEFLATED); build effect base->lowcurve is only
+  ~+5pp. Do NOT treat the bo3 Affinity cell as a real liability. Broader open question: the bo3
+  `_run_fair` path may under-rate favorable matchups generally -- IMPERFECTIONS
+  bo3-run_fair-underrates-vs-run_match.
 
 ### Amulet Titan (Modern) — RULES-CORRECT, validated April 2026
 

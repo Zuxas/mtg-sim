@@ -196,6 +196,14 @@ MISMODELED_MATCHUPS = {
                "The broader field lift is substantially the honest Mox-mana routing (present every game), "
                "not the construct (present ~24%). Trust the INFLATED DIRECTION, not the number; no "
                "reverse-fit.",
+        "note_2026_07_10": "DECOMPOSITION (bob run, arc-5 follow-up): the played-out bo3 field cell "
+               "(base 42.7 / lowcurve 48.0 g1, run_matchup _run_fair) DISAGREES with BOTH the arc-3 "
+               "run_match ~76% AND the live paper anchor (72.7%, n=23) by ~25-28pp; the build effect "
+               "(base->lowcurve) is only ~+5pp. Dominant term = METHOD (bo3 path vs run_match). The "
+               "'INFLATED/truth~44' call above is now CONTESTED: live paper says Boros FAVORED ~72.7, "
+               "i.e. the bo3 cell is more likely DEFLATED than inflated. NO direction flip (n=23 too "
+               "small); grow n + re-verify run_match. See IMPERFECTION "
+               "affinity-prowess-sim-vs-live-anchor-contradiction + evidence/affinity-decomposition.md.",
     },
     "yawgmoth": {
         "direction": "DEFLATED (combat over-credited; mulligan does NOT unstarve assembly)",

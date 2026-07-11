@@ -199,14 +199,14 @@ MISMODELED_MATCHUPS = {
         "note_2026_07_10": "DECOMPOSITION (bob run, arc-5 follow-up): the played-out bo3 _run_fair field "
                "cell (base 42.7 / lowcurve 48.0 g1; lowcurve match 46.7) reads LOW vs two non-_run_fair "
                "sources: current-engine run_match MATCH 63.0% (docs/wpb4-documented-shifts-2026-07-04.md:8, "
-               "n=300 seed42 POST-WP-B4; the old ~76% was PRE-WP-B4/stale) and live paper 72.7% (n=23, "
+               "n=300 seed42 POST-WP-B4; the old ~76% was a lowcurve read, so 76-vs-63 is a build/config diff NOT staleness) and live paper 72.7% (n=23,"
                "Wilson [52,87]). Build effect base->lowcurve ~+5pp (small); method effect (bo3 _run_fair vs "
                "run_match) ~15-25pp = the larger term but magnitude is soft (metric/build-mixed). Both "
                "non-bo3 sources put Boros FAVORED (>50%), though they differ ~10pp. So the 'INFLATED/"
                "truth~44' call above is CONTESTED: the bo3 field cell is more likely DEFLATED than inflated. "
                "NO direction flip (n=23 too small); grow n + re-run current-engine run_match on lowcurve to "
                "pin the method term. See IMPERFECTION affinity-prowess-sim-vs-live-anchor-contradiction + "
-               "evidence/affinity-decomposition.md.",
+               "mtg-sim/docs/affinity-decomposition-2026-07-10.md.",
     },
     "yawgmoth": {
         "direction": "DEFLATED (combat over-credited; mulligan does NOT unstarve assembly)",

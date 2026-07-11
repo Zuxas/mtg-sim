@@ -131,10 +131,11 @@ keep-mode stays reachable via `MULL_MODE` / `MULL_MODE_A/B` env overrides. Findi
 - AFFINITY CELL CONTESTED (2026-07-10 decomposition; `izzet affinity` note_2026_07_10): the bo3
   `_run_fair` field cell (base 42.7 / Low Curve 48.0 g1) reads ~15-25pp BELOW current-engine run_match
   MATCH (63.0) and live paper (72.7, n=23), both of which put Boros FAVORED. So the old "Affinity
-  INFLATED" read is likely INVERTED (the bo3 cell is DEFLATED); build effect base->lowcurve is only
-  ~+5pp. Do NOT treat the bo3 Affinity cell as a real liability. Broader open question: the bo3
-  `_run_fair` path may under-rate favorable matchups generally -- IMPERFECTIONS
-  bo3-run_fair-underrates-vs-run_match.
+  INFLATED" read is CONTESTED / possibly INVERTED (the bo3 cell may be DEFLATED; direction NOT flipped
+  at n=23); build effect base->lowcurve is only ~+5pp. Do NOT treat the bo3 Affinity cell as a CONFIRMED
+  liability. Broader open question: the bo3 `_run_fair` path DIVERGES from run_match (~15-25pp; which
+  side is wrong is unresolved -- bo3 may under-rate OR run_match may over-rate) -- IMPERFECTIONS
+  bo3-run_fair-vs-run_match-divergence.
 
 ### Amulet Titan (Modern) — RULES-CORRECT, validated April 2026
 

@@ -338,7 +338,7 @@ NOT: combat → main1 → main2 (old broken order)
   Crashcade + Eldrazi Ramp are stub/unmodeled-hate cells) -- trust the aggregate
   as an anchor, not the exact per-cell numbers. UPDATE (2026-07-10): the Affinity
   38.8% "LOSING cell" read above is CONTESTED -- see mismodeled_matchups.py
-  note_2026_07_10 and harness/IMPERFECTIONS.md bo3-run_fair-underrates-vs-run_match
+  note_2026_07_10 and harness/IMPERFECTIONS.md bo3-run_fair-vs-run_match-divergence
   (+ affinity-prowess-sim-vs-live-anchor-contradiction) before trusting this cell
   as current. Saved:
   data/parallel_results_20260704_194815.json. Full analysis + cell-by-cell

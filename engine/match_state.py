@@ -284,6 +284,31 @@ def resolve_combat(attackers: list[Card],
     result = CombatResult()
     damage_taken = {}  # id(card) -> damage received
 
+    # Battle cry (rule 702.92) -- attacker-ONLY +1/+0 per OTHER attacker's battle-cry
+    # instance. Mirrors match_runner._resolve_combat (engine/match_runner.py ~1139-1159)
+    # and goldfish game_state._do_combat so the MatchGameState/bo3 field-read path is
+    # consistent (previously it silently dropped battle cry: safe_power -> effective_power
+    # excludes _battle_cry_instances). Pump each attacker's power string ONCE here and
+    # RESTORE before every return -- attackers are persistent battlefield cards, so an
+    # unrestored pump leaks across turns and compounds.
+    _STATIC_BATTLE_CRY = {"Signal Pest", "Sanguine Evangelist"}
+    def _bc_instances(c):
+        return (1 if c.name in _STATIC_BATTLE_CRY else 0) \
+            + getattr(c, "_battle_cry_instances", 0)
+    _bc_restore = []  # (card, orig_power_str)
+    _total_bc = sum(_bc_instances(c) for c in attackers)
+    if _total_bc:
+        for _atk in attackers:
+            _bonus = _total_bc - _bc_instances(_atk)   # never pumps itself
+            if _bonus <= 0:
+                continue
+            try:
+                _orig = _atk.power
+                _atk.power = str(int(_atk.power) + _bonus)
+                _bc_restore.append((_atk, _orig))
+            except (ValueError, TypeError):
+                pass
+
     def deal_strike(strike_attackers, is_first_strike=False):
         for atk in strike_attackers:
             atk_pwr = safe_power(atk)
@@ -368,6 +393,11 @@ def resolve_combat(attackers: list[Card],
                 result.attacker_deaths.append(card)
             else:
                 result.defender_deaths.append(card)
+
+    # Restore battle-cry pumps (attacker-only) before returning -- prevents a
+    # cross-turn power leak on persistent battlefield cards.
+    for _atk, _orig in _bc_restore:
+        _atk.power = _orig
 
     return result
 

@@ -65,10 +65,15 @@ def main():
                        n=n, seed=seed, mix_play_draw=True, n_workers=1)
     rm_wr = rm.win_pct()
 
+    # run_match is single-game; convert to Bo3 match-level (p^2*(3-2p)) so it can be
+    # compared to MATCH-level paper anchors apples-to-apples (advisor/fable metric fix).
+    p = rm_wr / 100.0
+    rm_match = 100.0 * (p * p * (3 - 2 * p))
+
     print("=" * 60)
-    print(f"  MatchGameState  bo3 g1 (single-game): {bo3_g1:.1f}%   (bo3 match: {bo3_match:.1f}%)")
-    print(f"  TwoPlayerGameState run_match single-game: {rm_wr:.1f}%")
-    print(f"  ENGINE DELTA (run_match - bo3_g1): {rm_wr - bo3_g1:+.1f}pp")
+    print(f"  [ENGINE DIVERGENCE, single-game g1]  bo3_g1 {bo3_g1:.1f}%  vs  run_match {rm_wr:.1f}%"
+          f"   (delta {rm_wr - bo3_g1:+.1f}pp)")
+    print(f"  [MATCH-LEVEL, vs paper]  bo3_match {bo3_match:.1f}%  vs  run_match->Bo3 {rm_match:.1f}%")
     print("=" * 60)
 
 if __name__ == "__main__":

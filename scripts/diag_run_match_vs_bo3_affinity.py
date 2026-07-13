@@ -22,12 +22,12 @@ os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 
 OUR = "borosenergylowcurve"
-OPP = "affinity"
 FMT = "modern"
 
 def main():
     n    = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
     seed = int(sys.argv[2]) if len(sys.argv) > 2 else 42
+    OPP  = sys.argv[3] if len(sys.argv) > 3 else "affinity"
 
     from generate_matchup_data import load_deck_and_apl
     from apl import get_match_apl

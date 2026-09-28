@@ -44,7 +44,12 @@ class Tag:
 # Card dataclass
 # ---------------------------------------------------------------------------
 
-@dataclass
+# eq=False: a Card is a physical object, so equality is identity. The default
+# value-equality made `zone.remove(card)` / `card in zone` match a *different*
+# same-named copy (e.g. the first of four Mountains), leaving the moved card in
+# two zones at once -- 72/88 APLs duplicated cards before this (2026-09-24,
+# harness IMPERFECTIONS apl-card-duplication-live-apls). Compare by .name.
+@dataclass(eq=False)
 class Card:
     # Core identity (from Scryfall)
     name: str

@@ -90,3 +90,8 @@ reports/*.png
 data/untapped/
 # Machine-local Claude settings
 .claude/settings.local.json
+
+# Chapin 'Next Level Magic Forever' rule corpus - paraphrased from a
+# purchased copy for local Pinecone retrieval. Personal reference only;
+# must not be pushed to a public remote.
+docs/chapin_*_rules_reference.md

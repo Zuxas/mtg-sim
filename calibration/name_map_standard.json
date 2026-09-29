@@ -1,0 +1,227 @@
+{
+ "_doc": "Modeled STANDARD deck -> its Standard decklist, the match-APL registry key, and the exact DB labels. Only decks with a *_standard.txt list + a MatchAPL (the registry ignores format, so every entry is checked to point at a _standard list). Spec harness/specs/2026-09-30-sim-real-scoreboard.md.",
+ "Izzet Spellementals": {
+  "deck_file": "decks/izzet_spellementals_standard.txt",
+  "apl": "Izzet Spellementals",
+  "labels": [
+   "Izzet Spellementals"
+  ]
+ },
+ "Four-Color Control": {
+  "deck_file": "decks/four_color_control_standard.txt",
+  "apl": "Four-Color Control",
+  "labels": [
+   "Four-Color Control"
+  ]
+ },
+ "Dimir Excruciator": {
+  "deck_file": "decks/dimir_excruciator_standard.txt",
+  "apl": "Dimir Excruciator",
+  "labels": [
+   "Dimir Excruciator"
+  ]
+ },
+ "Mardu Discard": {
+  "deck_file": "decks/mardu_discard_standard.txt",
+  "apl": "Mardu Discard",
+  "labels": [
+   "Mardu Discard"
+  ]
+ },
+ "Izzet Lessons": {
+  "deck_file": "decks/izzet_lesson_standard.txt",
+  "apl": "Izzet Lessons",
+  "labels": [
+   "Izzet Lessons"
+  ]
+ },
+ "Azorius Momo": {
+  "deck_file": "decks/azorius_momo_standard.txt",
+  "apl": "Azorius Momo",
+  "labels": [
+   "Azorius Momo"
+  ]
+ },
+ "Jeskai Control": {
+  "deck_file": "decks/jeskai_control_standard.txt",
+  "apl": "Jeskai Control",
+  "labels": [
+   "Jeskai Control"
+  ]
+ },
+ "Selesnya Ouroboroid": {
+  "deck_file": "decks/selesnya_ouroboroid_standard.txt",
+  "apl": "Selesnya Ouroboroid",
+  "labels": [
+   "Selesnya Ouroboroid"
+  ]
+ },
+ "Izzet Control": {
+  "deck_file": "decks/izzet_control_standard.txt",
+  "apl": "Izzet Control",
+  "labels": [
+   "Izzet Control"
+  ]
+ },
+ "Temur Omniscience": {
+  "deck_file": "decks/temur_omniscience_standard.txt",
+  "apl": "Temur Omniscience",
+  "labels": [
+   "Temur Omniscience"
+  ]
+ },
+ "Azorius Control": {
+  "deck_file": "decks/azorius_control_standard.txt",
+  "apl": "Azorius Control",
+  "labels": [
+   "Azorius Control"
+  ]
+ },
+ "Temur Prowess": {
+  "deck_file": "decks/temur_prowess_standard.txt",
+  "apl": "Temur Prowess",
+  "labels": [
+   "Temur Prowess"
+  ]
+ },
+ "Azorius Prison": {
+  "deck_file": "decks/azorius_high_noon_standard.txt",
+  "apl": "Azorius Prison",
+  "labels": [
+   "Azorius Prison"
+  ]
+ },
+ "Sultai Control": {
+  "deck_file": "decks/sultai_control_standard.txt",
+  "apl": "Sultai Control",
+  "labels": [
+   "Sultai Control"
+  ]
+ },
+ "Azorius Aggro": {
+  "deck_file": "decks/azorius_aggro_standard.txt",
+  "apl": "Azorius Aggro",
+  "labels": [
+   "Azorius Aggro"
+  ]
+ },
+ "Golgari Midrange": {
+  "deck_file": "decks/golgari_midrange_standard.txt",
+  "apl": "Golgari Midrange",
+  "labels": [
+   "Golgari Midrange"
+  ]
+ },
+ "Bant Rhythm": {
+  "deck_file": "decks/bant_rhythm_standard.txt",
+  "apl": "Bant Rhythm",
+  "labels": [
+   "Bant Rhythm"
+  ]
+ },
+ "Sultai Reanimator": {
+  "deck_file": "decks/sultai_reanimator_standard.txt",
+  "apl": "Sultai Reanimator",
+  "labels": [
+   "Sultai Reanimator"
+  ]
+ },
+ "Azorius Blink": {
+  "deck_file": "decks/azorius_blink_standard.txt",
+  "apl": "Azorius Blink",
+  "labels": [
+   "Azorius Blink"
+  ]
+ },
+ "Boros Aggro": {
+  "deck_file": "decks/boros_aggro_standard.txt",
+  "apl": "Boros Aggro",
+  "labels": [
+   "Boros Aggro"
+  ]
+ },
+ "Selesnya Rhythm": {
+  "deck_file": "decks/selesnya_rhythm_standard.txt",
+  "apl": "Selesnya Rhythm",
+  "labels": [
+   "Selesnya Rhythm"
+  ]
+ },
+ "Boros Dragons": {
+  "deck_file": "decks/boros_dragons_standard.txt",
+  "apl": "Boros Dragons",
+  "labels": [
+   "Boros Dragons"
+  ]
+ },
+ "Bant Airbending": {
+  "deck_file": "decks/bant_airbending_standard.txt",
+  "apl": "Bant Airbending",
+  "labels": [
+   "Bant Airbending"
+  ]
+ },
+ "Mono Green Aggro": {
+  "deck_file": "decks/mono_green_aggro_standard.txt",
+  "apl": "Mono Green Aggro",
+  "labels": [
+   "Mono Green Aggro"
+  ]
+ },
+ "Simic Rhythm": {
+  "deck_file": "decks/simic_rhythm_standard.txt",
+  "apl": "Simic Rhythm",
+  "labels": [
+   "Simic Rhythm"
+  ]
+ },
+ "Selesnya Landfall": {
+  "deck_file": "decks/selesnya_landfall_standard.txt",
+  "apl": "Selesnya Landfall",
+  "labels": [
+   "Selesnya Landfall"
+  ]
+ },
+ "Mono Green Landfall": {
+  "deck_file": "decks/mono_green_landfall_standard.txt",
+  "apl": "Mono Green Landfall",
+  "labels": [
+   "Mono Green Landfall"
+  ]
+ },
+ "Izzet Looting": {
+  "deck_file": "decks/izzet_looting_store_champ_may2026_standard.txt",
+  "apl": "Izzet Looting",
+  "labels": [
+   "Izzet Looting"
+  ]
+ },
+ "Rakdos Discard": {
+  "deck_file": "decks/rakdos_discard_standard.txt",
+  "apl": "Rakdos Discard",
+  "labels": [
+   "Rakdos Discard"
+  ]
+ },
+ "Boros Discard": {
+  "deck_file": "decks/boros_discard_standard.txt",
+  "apl": "Boros Discard",
+  "labels": [
+   "Boros Discard"
+  ]
+ },
+ "Izzet Prowess": {
+  "deck_file": "decks/izzet_prowess_standard.txt",
+  "apl": "izzetprowessstandard",
+  "labels": [
+   "Izzet Prowess"
+  ]
+ },
+ "Dimir Midrange": {
+  "deck_file": "decks/dimir_midrange_std_standard.txt",
+  "apl": "dimirmidrangestd",
+  "labels": [
+   "Dimir Midrange"
+  ]
+ }
+}

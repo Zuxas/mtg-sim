@@ -90,6 +90,12 @@ Temur Crashcade (modeled 5.5% / 3.4%) have NO real lists. Stale sim lists: Belch
 0.27 cosine (old Chancellor Belcher vs real Tameshi Belcher), Neobrand 0.20, Grixis
 Reanimator 0.60, Dimir Midrange 0.70. The "no post-ban Modern data" notes below and
 in format_config.py are OUT OF DATE.
+**Standard (commit a98c6fb, `name_map_standard.json`, 32 decks):** covers 45% of 24,659
+real rows; 19 cells; weighted MAE **35.9pp**; 18/19 outside the real CI; same favourite 4/7;
+r = 0.30; **5.7x too one-sided**. The sim's control decks can't win: Four-Color Control
+wins 0% vs Izzet Lessons (real 47%), 4% vs Izzet Prowess (real 38%); Izzet Prowess beats
+Spellementals 94% G1 (real 51%, n=843). Stale Standard lists: Azorius Control 0.19,
+Sultai Reanimator 0.29, Azorius Aggro 0.40, Boros Aggro 0.45.
 Tests `tests/test_scoreboard.py` (metric math hand-computed; in-memory DB rules).
 
 ### Fabricated goldfish flying-draw REMOVED — 2026-09-29 (engine, user sign-off)

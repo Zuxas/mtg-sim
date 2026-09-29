@@ -2,7 +2,8 @@
 boros_energy.py — APL for Modern Boros Energy/Ocelot
 
 VERIFIED card interactions (from oracle text):
-  - Ragavan: haste, combat damage → Treasure + exile top card. Dash {1}{R}.
+  - Ragavan: NO printed haste ({R} hardcast attacks next turn); Dash {1}{R} gives
+    haste + returns to hand at end step (match APL only). Combat damage -> Treasure + exile top card.
   - Ocelot Pride: first_strike, lifelink. END STEP: if you gained life, create
     1/1 Cat token. City's blessing: copy each token that entered this turn.
   - Ajani, Nacatl Pariah: ETB creates 2/1 Cat Warrior token. When 1+ other Cats

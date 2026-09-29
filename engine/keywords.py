@@ -94,7 +94,7 @@ _KEYWORD_RULES: list[tuple[str, list[str]]] = [
     (KWTag.DEATHTOUCH,    [r"\bdeathtouch\b"]),
     (KWTag.LIFELINK,      [r"\blifelink\b"]),
     (KWTag.VIGILANCE,     [r"\bvigilance\b"]),
-    (KWTag.HASTE,         [r"\bhaste\b"]),
+    # HASTE: printed keyword only -- see _has_printed_keyword / _PREDICATE_RULES
     (KWTag.DEFENDER,      [r"\bdefender\b"]),
     (KWTag.INDESTRUCTIBLE,[r"\bindestructible\b"]),
 
@@ -175,6 +175,29 @@ _COMPILED_RULES: list[tuple[str, list[re.Pattern]]] = [
     for tag, patterns in _KEYWORD_RULES
 ]
 
+_REMINDER_RE = re.compile(r"\([^)]*\)")
+
+
+def _has_printed_keyword(text: str, word: str) -> bool:
+    """True when `word` is one of the card's OWN keyword abilities: a whole
+    comma-separated token on a line, reminder text stripped ("Haste",
+    "Flying, haste"). A regex over the full text also matches text that only
+    MENTIONS the keyword -- Ragavan's Dash reminder, Bloodghast's "has haste as
+    long as", Badgermole Cub's earthbend land, "Demons you control have ...
+    haste" -- and gave those cards haste they don't have (spec
+    harness/specs/2026-09-29-haste-from-printed-keyword.md)."""
+    for line in (text or "").lower().split("\n"):
+        line = _REMINDER_RE.sub("", line)
+        if word in {t.strip().rstrip(".") for t in line.split(",")}:
+            return True
+    return False
+
+
+# Keywords decided by a predicate on the oracle text instead of regexes.
+_PREDICATE_RULES = {
+    KWTag.HASTE: lambda text: _has_printed_keyword(text, "haste"),
+}
+
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -199,6 +222,10 @@ def tag_keywords(card: Card) -> set[str]:
                 card.tags.add(tag)
                 added.add(tag)
                 break
+    for tag, pred in _PREDICATE_RULES.items():
+        if tag not in card.tags and pred(card.oracle_text):
+            card.tags.add(tag)
+            added.add(tag)
 
     return added
 
@@ -216,6 +243,9 @@ def get_keywords(card: Card) -> set[str]:
             if pattern.search(text):
                 found.add(tag)
                 break
+    for tag, pred in _PREDICATE_RULES.items():
+        if pred(card.oracle_text):
+            found.add(tag)
 
     return found
 

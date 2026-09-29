@@ -37,23 +37,13 @@ def dash(gs, opponent=None) -> bool:
     Goldfish: not useful (Ragavan would just leave the board EOT).
     Match: useful when opp will block but we want a treasure trigger.
 
-    Returns True if dashed. Currently a placeholder; engine support for
-    dash mechanic may be incomplete.
+    Returns True if dashed. Routes through the engine's GameState.cast_spell_dash
+    (pays {1}{R}, counts as a spell, no summoning sickness, returns to hand at
+    the end step -- spec harness/specs/2026-09-29-haste-from-printed-keyword.md).
     """
     if opponent is None:
         return False  # goldfish-skip
     for c in list(gs.zones.hand):
-        if c.name == NAME and gs.mana_pool.total() >= DASH_CMC:
-            try:
-                gs.mana_pool.pay("{1}{R}", DASH_CMC)
-            except Exception:
-                continue
-            gs.zones.hand.remove(c)
-            gs.zones.battlefield.append(c)
-            c.turn_entered = gs.turn
-            # Dash grants haste, marks for EOT return
-            c.summoning_sickness = False
-            c.dashed_until_eot = True
-            gs._log(f"  Ragavan DASH: enters with haste, returns EOT")
+        if c.name == NAME and gs.cast_spell_dash(c):
             return True
     return False

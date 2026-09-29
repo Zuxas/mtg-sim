@@ -731,6 +731,10 @@ class GameState:
         # 'Exile this creature at the beginning of the next end step.'
         self._tick_warp()
 
+        # Dash: 'return it to its owner's hand at the beginning of the next
+        # end step'. No-op unless something was dashed this turn.
+        self._tick_dash()
+
 
     def _update_ml_trackers(self):
         """Track milestone features for richer ML training data."""
@@ -868,6 +872,60 @@ class GameState:
             on_cosmogrand_second_spell(self)
         self.check_state_based_actions()
         return True
+
+    # Dash (rule 702.109): cast for the dash cost; it gains haste and returns to
+    # its owner's hand at the beginning of the next end step. Only verified
+    # Dash cards (oracle "Dash {cost}") belong here. Spec
+    # harness/specs/2026-09-29-haste-from-printed-keyword.md -- the keyword
+    # regex used to hand Ragavan haste for its {R} hardcast; the hasty mode
+    # now costs what the card says.
+    _DASH_CARDS = {
+        "Ragavan, Nimble Pilferer": ("{1}{R}", 2),
+    }
+
+    def cast_spell_dash(self, card: Card) -> bool:
+        """Cast `card` for its Dash cost: pays it, counts as a spell cast,
+        enters with no summoning sickness (haste until it leaves), fires ETB,
+        and is marked to return to hand at the next end step. Mirrors
+        cast_spell_warp. Returns True if cast."""
+        spec = self._DASH_CARDS.get(card.name)
+        if spec is None or card not in self.zones.hand:
+            return False
+        dash_cost_str, dash_cmc = spec
+        if not self.mana_pool.can_cast(dash_cost_str, dash_cmc):
+            return False
+        opp = getattr(self, "_match_opp", None)
+        high_noon_in_play = (
+            any(c.name == "High Noon" for c in self.zones.battlefield)
+            or (opp is not None
+                and any(c.name == "High Noon" for c in opp.zones.battlefield))
+        )
+        if high_noon_in_play and self.spells_cast_this_turn >= 1:
+            return False
+        self.mana_pool.pay(dash_cost_str, dash_cmc)
+        self.spells_cast_this_turn += 1
+        self.zones.play_from_hand(card)
+        card.turn_entered = self.turn
+        # haste from dash: can attack this turn. Not a HASTE tag -- the card
+        # keeps its identity when it returns to hand and is cast again.
+        card.summoning_sickness = False
+        card._dashed = True
+        self._fire_etb_triggers(card)
+        self._log(f"  Cast {card.name} via Dash ({dash_cost_str}, returns to hand at end step)")
+        if self.spells_cast_this_turn == 2:
+            from engine.card_effects import on_cosmogrand_second_spell
+            on_cosmogrand_second_spell(self)
+        self.check_state_based_actions()
+        return True
+
+    def _tick_dash(self):
+        """End step: dashed creatures still on the battlefield return to hand."""
+        for c in list(self.zones.battlefield):
+            if getattr(c, "_dashed", False):
+                self.zones.battlefield.remove(c)
+                self.zones.hand.append(c)
+                c._dashed = False
+                self._log(f"  EOT: {c.name} (dash) returns to hand")
 
     def _tick_warp(self):
         """End-step: exile any battlefield creature cast via Warp.

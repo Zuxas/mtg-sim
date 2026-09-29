@@ -140,6 +140,19 @@ class BorosEnergyMatchAPL(AnswerComboMixin, MatchAPL):
             creature.summoning_sickness = False
             gs._log(f"  Arena of Glory haste: {creature.name}")
 
+    def _should_dash_ragavan(self, gs, opponent) -> bool:
+        """Dash Ragavan ({1}{R}, attacks now, returns to hand at end step)
+        instead of hardcasting it for {R} (no haste -- it attacks next turn)
+        when the hasty attack connects: the opponent has no untapped creature
+        to block it. Not on turn 1 (a {R} Ragavan that sticks is the stronger
+        opener), and only with 2 mana for the dash."""
+        if gs.turn <= 1 or gs.mana_pool.total() < 2 or opponent is None:
+            return False
+        return not any(
+            not c.is_land() and c.has(Tag.CREATURE)
+            and not getattr(c, 'tapped_from_attack', False)
+            for c in opponent.zones.battlefield)
+
     # ------------------------------------------------------------------
     # Mulligan
     # ------------------------------------------------------------------
@@ -403,6 +416,15 @@ class BorosEnergyMatchAPL(AnswerComboMixin, MatchAPL):
         from engine.keywords import KWTag
         for name in (RAGAVAN, SCREAMING_NEMESIS):
             for c in list(gs.zones.hand):
+                if c.name == RAGAVAN and self._should_dash_ragavan(gs, opponent) \
+                        and gs.cast_spell_dash(c):
+                    # Dash {1}{R}: attacks now, back to hand at end step
+                    guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
+                    if guides:
+                        gs.life += guides
+                        gs.energy = getattr(gs, 'energy', 0) + guides
+                        self._gained_life_this_turn = True
+                    break
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     self._grant_arena_haste(gs, c)

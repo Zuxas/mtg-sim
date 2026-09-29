@@ -1490,6 +1490,17 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     # early-returns below. Gate OFF -> pure no-op, end-step path byte-identical.
     if _warp_match_gate(gs):
         gs._tick_warp_player(active_player)
+    # Dash: the active player's dashed creatures return to hand at the
+    # beginning of the end step (their own trigger -- runs before the
+    # reactive early-returns). No-op unless something was dashed, so the
+    # end step is unchanged for every game without a dash.
+    own_bf = gs.bf_a if active_player == "a" else gs.bf_b
+    own_hand = gs.hand_a if active_player == "a" else gs.hand_b
+    for c in list(own_bf):
+        if getattr(c, "_dashed", False):
+            own_bf.remove(c)
+            own_hand.append(c)
+            c._dashed = False
     if reactive_apl is None:
         return
     from engine.game_state import GameState

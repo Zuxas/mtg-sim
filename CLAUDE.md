@@ -60,6 +60,35 @@ card-fidelity limits); goldfish = open board (no blockers / no opp instant
 interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
 reuses this whole pipeline.
 
+### Haste only from a printed keyword + Dash — 2026-09-29 (engine, user sign-off)
+
+Spec `harness/specs/2026-09-29-haste-from-printed-keyword.md`. `engine/keywords.py`
+tagged `KWTag.HASTE` from `\bhaste\b` anywhere in the oracle text, so every card
+that MENTIONS haste had it: Ragavan (Dash reminder; cast for {R} and attacked
+that turn), Badgermole Cub (14 decks, earthbend land), Bloodghast (conditional),
+Emperor of Bones, Ardyn, Greasefang, Rootha, Summon: Brynhildr, Xenagos. Now a
+predicate (`_PREDICATE_RULES` / `_has_printed_keyword`): haste only when it is a
+whole comma-separated keyword token on a line, reminder text stripped. Dash is
+real: `GameState.cast_spell_dash` (beside `cast_spell_warp`; `_DASH_CARDS` =
+Ragavan {1}{R}) pays the cost, counts as a spell, no summoning sickness, marked
+`_dashed`; returns to hand at the end step in BOTH paths (`_tick_dash` goldfish,
+`_run_end_step` match). `BorosEnergyMatchAPL._should_dash_ragavan`: dash when
+turn > 1, 2+ mana and the opponent has no untapped creature; else hardcast {R}
+(87 dashes in 180 test games). `card_specs.ragavan.dash` routes through it.
+**Measured (PYTHONHASHSEED=0):** Boros goldfish n=2000 avg kill T4.592 -> T4.832
+(median 4 -> 5, by-T4 51.7% -> 38.0%); Boros vs the modeled Modern field through
+`run_match` (18 decks, n=200 each, same seeds, pre-fix commit in a worktree)
+field-weighted 58.04% -> 57.32% (-0.72pp; cells within noise, combo races down
+most). **Note:** `bo3_gauntlet.py --deck "Boros Energy"` silently loads
+`--deck-file`'s default `decks/humans_legacy.txt` and is a goldfish-race model --
+it cannot measure an engine change for Boros (86.1% both runs); pass
+`--deck-file` explicitly. NOT fixed (logged): the same regex class for other
+keywords (~40 creatures: flying on DRC / Guide of Souls / Psychic Frog, trample on
+Scion of Draco ...) -- many are conditional grants needing handlers.
+Tests: `tests/test_haste_printed_keyword.py` (H1 tags on real oracle text, H2 dash
+goldfish + match). pytest 123 passed (was 119 + 4 new), same 3 pre-existing
+failures / 4 collection errors.
+
 ### Puzzle mining — gauntlet slice (real opponent board) — 2026-09-29
 
 `scripts/mine_gauntlet_puzzles.py` mines the same "lethal THIS turn" puzzles
@@ -75,7 +104,7 @@ per node gives both "kills?" and the next legal actions. Caps: opp life <= 12,
 120 nodes, depth 6, one puzzle per game; the empty line (just attack) must NOT
 kill. The scene exports the opponent's board (tapped = attacked last turn) AND
 hand, revealed, because the kill is verified against exactly that hand.
-**Engine finding (not fixed, hot zone):** the keyword regex tags haste on any
+**Engine finding (FIXED later 2026-09-29, see the haste section above):** the keyword regex tagged haste on any
 text that MENTIONS haste -- Ragavan (dash reminder, and cmc 1 so it attacks
 the turn it is cast for {R}), Bloodghast (conditional), Emperor of Bones,
 Badgermole Cub, Xenagos. The miner drops any line that casts a creature
@@ -88,12 +117,14 @@ the engine cannot make: `survives_best_blocks` (the opponent's k blockers take
 our k biggest attackers -- the sim defender blocks by heuristic; the search
 prefers a line that passes) and `hand_threats` (instant / flash / evoke /
 channel in the revealed hand unless our Voice of Victory stops spells; Aether
-Vial + a creature). **16 CLEAN** -> `--out`; 7 flagged -> `<out>_flagged.jsonl`
-(3 need a weak block; 4 hold Solitude / Dismember / Vial + creature). ~100 s.
-Gates in `tests/test_gauntlet_miner.py`: printed-haste, hand-threat and
-best-block units, G4 no perturbation (240 games identical with/without the
-hook), G5 byte-identical, G1/G2/G3 on every candidate via an independent
-re-played game (shipped batch: 23/23). Output `data/gauntlet_candidates.jsonl`
+Vial + a creature). Pre-fix engine: 16 CLEAN, 7 flagged (3 weak block; 4 hold
+Solitude / Dismember / Vial + creature). **Re-mined on the haste-fixed engine
+(current `data/gauntlet_candidates.jsonl`): 24 kills -> 17 CLEAN -> `--out`, 7
+flagged -> `<out>_flagged.jsonl` (4 weak block, 3 real answer in hand); 0
+fake-haste lines left.** ~150 s. Gates in `tests/test_gauntlet_miner.py`:
+printed-haste, hand-threat and best-block units, G4 no perturbation (240 games
+identical with/without the hook), G5 byte-identical, G1/G2/G3 on every
+candidate via an independent re-played game (current batch: 24/24). Output `data/gauntlet_candidates.jsonl`
 (gitignored run artifact) -> analyzer `python -m scripts.import_lethal_puzzles <jsonl>
 [--commit]`.
 ```

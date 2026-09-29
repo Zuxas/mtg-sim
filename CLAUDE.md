@@ -60,6 +60,28 @@ card-fidelity limits); goldfish = open board (no blockers / no opp instant
 interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
 reuses this whole pipeline.
 
+### All plain keywords from printed text — 2026-09-29 (engine, user sign-off)
+
+Spec `harness/specs/2026-09-29-keywords-from-printed-text.md`. The haste
+predicate now covers flying, reach, menace, trample, shadow, fear, intimidate,
+first/double strike, deathtouch, lifelink, vigilance, defender, indestructible,
+hexproof (incl. "hexproof from X"), shroud, flash (`_PRINTED_KEYWORDS`). Ward,
+protection, prowess, undying, persist, dredge, unblockable and role tags stay
+regex. Tag diff across all deck files: 87 cards lose >= 1 tag, 0 gain. Creatures
+that matter: Guide of Souls (flying, 11 Boros lists), DRC / Psychic Frog
+(flying -- DRC's delirium flying is still granted dynamically in goldfish),
+Scion of Draco (5 colour grants), Kellan / Expressive Firedancer / Burnout
+Bashtronaut / Urdnan (double strike), Preacher (lifelink). **Found on the way:**
+`GameState` combat has a FABRICATED "Guide of Souls flying trigger: draw a card"
+on ANY flying attacker (since 0af1d98) -- Guide's false flying made Boros draw
+~1.5 free cards per goldfish game (3,016 in 2,000 games -> 0 now). Not removed
+(logged: IMPERFECTIONS goldfish-fake-flying-draw) -- it still fires for real
+fliers (Delver, DRC at delirium, Slickshot). **Measured:** goldfish Boros Energy
+T4.832 -> T4.942 (the fake draw), Izzet Maestro T5.425 -> T5.866, Boros Aggro
+T4.437 -> T4.685; Boros vs the Modern field (run_match) 57.32% -> 56.96%.
+Tests `tests/test_keywords_printed_text.py`; pytest 125 passed, same 3 failures /
+4 errors. `mono_red_aggro_standard` never kills in goldfish (pre-existing).
+
 ### Haste only from a printed keyword + Dash — 2026-09-29 (engine, user sign-off)
 
 Spec `harness/specs/2026-09-29-haste-from-printed-keyword.md`. `engine/keywords.py`

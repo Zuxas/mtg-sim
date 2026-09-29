@@ -78,34 +78,16 @@ class KWTag:
 # ---------------------------------------------------------------------------
 
 _KEYWORD_RULES: list[tuple[str, list[str]]] = [
-    # Evasion
-    (KWTag.FLYING,        [r"\bflying\b"]),
-    (KWTag.REACH,         [r"\breach\b"]),
-    (KWTag.MENACE,        [r"\bmenace\b"]),
-    (KWTag.TRAMPLE,       [r"\btrample\b"]),
-    (KWTag.SHADOW,        [r"\bshadow\b"]),
-    (KWTag.FEAR,          [r"\bfear\b"]),
-    (KWTag.INTIMIDATE,    [r"\bintimidate\b"]),
+    # Plain keywords (flying, reach, menace, trample, shadow, fear, intimidate,
+    # first/double strike, deathtouch, lifelink, vigilance, haste, defender,
+    # indestructible, hexproof, shroud, flash): printed keyword only -- see
+    # _PRINTED_KEYWORDS / _has_printed_keyword below. A regex over the whole
+    # text also tagged cards that merely MENTION the keyword.
     (KWTag.UNBLOCKABLE,   [r"can't be blocked"]),
 
-    # Combat
-    (KWTag.FIRST_STRIKE,  [r"\bfirst strike\b"]),
-    (KWTag.DOUBLE_STRIKE, [r"\bdouble strike\b"]),
-    (KWTag.DEATHTOUCH,    [r"\bdeathtouch\b"]),
-    (KWTag.LIFELINK,      [r"\blifelink\b"]),
-    (KWTag.VIGILANCE,     [r"\bvigilance\b"]),
-    # HASTE: printed keyword only -- see _has_printed_keyword / _PREDICATE_RULES
-    (KWTag.DEFENDER,      [r"\bdefender\b"]),
-    (KWTag.INDESTRUCTIBLE,[r"\bindestructible\b"]),
-
-    # Protection
-    (KWTag.HEXPROOF,      [r"\bhexproof\b"]),
+    # Protection (parameterised -- still regex)
     (KWTag.WARD,          [r"\bward\b"]),
     (KWTag.PROTECTION,    [r"\bprotection from\b"]),
-    (KWTag.SHROUD,        [r"\bshroud\b"]),
-
-    # Timing
-    (KWTag.FLASH,         [r"\bflash\b"]),
 
     # Prowess
     (KWTag.PROWESS,       [r"\bprowess\b"]),
@@ -188,14 +170,33 @@ def _has_printed_keyword(text: str, word: str) -> bool:
     harness/specs/2026-09-29-haste-from-printed-keyword.md)."""
     for line in (text or "").lower().split("\n"):
         line = _REMINDER_RE.sub("", line)
-        if word in {t.strip().rstrip(".") for t in line.split(",")}:
-            return True
+        for t in line.split(","):
+            t = t.strip().rstrip(".")
+            # "hexproof from blue" is still hexproof (as the old regex read it)
+            if t == word or t.startswith(word + " from "):
+                return True
     return False
 
 
 # Keywords decided by a predicate on the oracle text instead of regexes.
+# Conditional / granted keywords (DRC's delirium flying, Guide of Souls' pump,
+# Craterhoof's team trample, Scion of Draco's colour grants) come from card
+# handlers / APLs when they apply, never from a static tag.
+# Specs harness/specs/2026-09-29-haste-from-printed-keyword.md and
+# harness/specs/2026-09-29-keywords-from-printed-text.md.
+_PRINTED_KEYWORDS = {
+    KWTag.HASTE: "haste", KWTag.FLYING: "flying", KWTag.REACH: "reach",
+    KWTag.MENACE: "menace", KWTag.TRAMPLE: "trample", KWTag.SHADOW: "shadow",
+    KWTag.FEAR: "fear", KWTag.INTIMIDATE: "intimidate",
+    KWTag.FIRST_STRIKE: "first strike", KWTag.DOUBLE_STRIKE: "double strike",
+    KWTag.DEATHTOUCH: "deathtouch", KWTag.LIFELINK: "lifelink",
+    KWTag.VIGILANCE: "vigilance", KWTag.DEFENDER: "defender",
+    KWTag.INDESTRUCTIBLE: "indestructible", KWTag.HEXPROOF: "hexproof",
+    KWTag.SHROUD: "shroud", KWTag.FLASH: "flash",
+}
 _PREDICATE_RULES = {
-    KWTag.HASTE: lambda text: _has_printed_keyword(text, "haste"),
+    tag: (lambda text, w=word: _has_printed_keyword(text, w))
+    for tag, word in _PRINTED_KEYWORDS.items()
 }
 
 

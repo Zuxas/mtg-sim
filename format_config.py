@@ -32,6 +32,8 @@ FORMATS = {
     # ── POST-BAN field (May-2026 B&R: BANNED Phlage + Lotus Field;
     #    UNBANNED Umezawa's Jitte + Violent Outburst). Refreshed 2026-06-30. ──
     #
+    # !! OUT OF DATE 2026-09-29: real post-ban Modern data now exists (19k matches since
+    # !! 2026-05-09) and differs sharply -- see `python -m calibration.scoreboard` FIELD table.
     # SOURCE / METHOD — DOCUMENTED ESTIMATE, *not* a live snapshot:
     #   The meta-analyzer DB (mtg_meta.db) has NO post-ban Modern tournament
     #   data: its most recent Modern event is 2026-04-24 (pre-ban), and the

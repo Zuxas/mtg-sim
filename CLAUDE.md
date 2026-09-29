@@ -60,6 +60,38 @@ card-fidelity limits); goldfish = open board (no blockers / no opp instant
 interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
 reuses this whole pipeline.
 
+### Sim-vs-real SCOREBOARD — 2026-09-29 (read this before judging any engine change)
+
+Spec `harness/specs/2026-09-30-sim-real-scoreboard.md`.
+`PYTHONHASHSEED=0 python -m calibration.scoreboard --format modern --since 2026-05-15`
+(~80 s) scores the two-player engine (`engine.match_runner.run_match`, seed 42+i,
+alternating on_play, NO ComboKillSampler) against REAL match results in the meta DB
+(`matches`, read-only, via `db_bridge._resolve_meta_db`). Per cell: sim G1, sim
+match (Bo3 without sideboarding, p^2(3-2p)), real WR + Wilson CI, delta, miss,
+trust band, mismodel flag. Headline: real-n-weighted mean |delta|, misses,
+direction agreement, Pearson r, spread (mean distance from 50%) sim vs real.
+Also a FIELD table (format_config share vs real share) and a LIST table (sim
+decklist vs real decklists: cosine, missing staples, cards real lists rarely run).
+Output `data/scoreboard/<fmt>-<date>-<commit>.json/.md` + `history.csv` (one row per
+run -- the trend line for "is the sim getting closer to reality").
+Name map `calibration/name_map_modern.json`: explicit, Modern-only (the registry
+ignores format -- 'Domain Ramp', 'Jeskai Control', 'Azorius Control', 'Boros Aggro'
+resolve to STANDARD lists); add a DB label only when the LIST check backs it.
+**First result (commit e439caa, real data 2026-05-15..09-13):** covers 35% of 19,141
+real Modern rows (the rest are decks the sim cannot play: 5C Combo, W-U-B-G Goryo's,
+Boros Convoke, Simic Neoform, Domain Ramp ...); 21 cells; weighted MAE **21.4pp**;
+18/21 outside the real CI; same favourite 6/8; **r = 0.28; the sim is 3.4x too
+one-sided** (mean distance from 50%: sim 23pp, real 7pp). Today's three rules fixes
+moved the MAE 21.15 -> 21.43 (no closer). **The field in `format_config.py` is
+stale:** real post-ban Modern (since 2026-05-09) = Izzet Prowess 9.0%, Eldrazi Tron
+8.1%, Izzet Affinity 6.3%, Mono Red Aggro 6.1% (unmodeled), Esper Blink 5.4%
+(retired from the model), Boros Energy 4.7% (modeled 14.5%); Death and Taxes and
+Temur Crashcade (modeled 5.5% / 3.4%) have NO real lists. Stale sim lists: Belcher
+0.27 cosine (old Chancellor Belcher vs real Tameshi Belcher), Neobrand 0.20, Grixis
+Reanimator 0.60, Dimir Midrange 0.70. The "no post-ban Modern data" notes below and
+in format_config.py are OUT OF DATE.
+Tests `tests/test_scoreboard.py` (metric math hand-computed; in-memory DB rules).
+
 ### Fabricated goldfish flying-draw REMOVED — 2026-09-29 (engine, user sign-off)
 
 Spec `harness/specs/2026-09-29-remove-fake-flying-draw.md`. `GameState._do_combat`

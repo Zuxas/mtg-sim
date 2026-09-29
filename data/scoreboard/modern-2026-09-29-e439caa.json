@@ -1,0 +1,875 @@
+{
+ "cells": [
+  {
+   "a": "Esper Blink",
+   "b": "Izzet Affinity",
+   "delta": 0.5029,
+   "mismodel": "Izzet Affinity: INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 116,
+   "real_draws": 2,
+   "real_hi": 0.5048,
+   "real_lo": 0.3283,
+   "real_wr": 0.4138,
+   "same_side": false,
+   "sim_g1": 0.8225,
+   "sim_match": 0.9167,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Amulet Titan",
+   "b": "Eldrazi Tron",
+   "delta": -0.5038,
+   "mismodel": "Amulet Titan: INVERTED (Amulet under-assembles in the played-out cell; opp-vs-Amulet INFLATED)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 101,
+   "real_draws": 1,
+   "real_hi": 0.7301,
+   "real_lo": 0.5465,
+   "real_wr": 0.6436,
+   "same_side": false,
+   "sim_g1": 0.235,
+   "sim_match": 0.1397,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Eldrazi Tron",
+   "b": "Izzet Prowess",
+   "delta": 0.2892,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 277,
+   "real_draws": 5,
+   "real_hi": 0.6864,
+   "real_lo": 0.5735,
+   "real_wr": 0.6318,
+   "same_side": true,
+   "sim_g1": 0.8275,
+   "sim_match": 0.921,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Esper Blink",
+   "b": "Izzet Prowess",
+   "delta": 0.3007,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 213,
+   "real_draws": 3,
+   "real_hi": 0.5918,
+   "real_lo": 0.4589,
+   "real_wr": 0.5258,
+   "same_side": true,
+   "sim_g1": 0.735,
+   "sim_match": 0.8265,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Dimir Midrange",
+   "b": "Eldrazi Tron",
+   "delta": -0.3834,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 104,
+   "real_draws": 1,
+   "real_hi": 0.4999,
+   "real_lo": 0.3146,
+   "real_wr": 0.4038,
+   "same_side": true,
+   "sim_g1": 0.085,
+   "sim_match": 0.0204,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Boros Energy",
+   "b": "Eldrazi Tron",
+   "delta": -0.3043,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 128,
+   "real_draws": 0,
+   "real_hi": 0.608,
+   "real_lo": 0.4375,
+   "real_wr": 0.5234,
+   "same_side": false,
+   "sim_g1": 0.3025,
+   "sim_match": 0.2192,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Goryo's Vengeance",
+   "b": "Mono Red Aggro",
+   "delta": -0.3054,
+   "mismodel": "Goryo's Vengeance: our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 127,
+   "real_draws": 1,
+   "real_hi": 0.4964,
+   "real_lo": 0.3278,
+   "real_wr": 0.4094,
+   "same_side": true,
+   "sim_g1": 0.2,
+   "sim_match": 0.104,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Eldrazi Tron",
+   "b": "Goryo's Vengeance",
+   "delta": 0.2898,
+   "mismodel": "Goryo's Vengeance: our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 133,
+   "real_draws": 2,
+   "real_hi": 0.6165,
+   "real_lo": 0.4493,
+   "real_wr": 0.5338,
+   "same_side": true,
+   "sim_g1": 0.7325,
+   "sim_match": 0.8236,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Goryo's Vengeance",
+   "b": "Izzet Prowess",
+   "delta": -0.2508,
+   "mismodel": "Goryo's Vengeance: our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 171,
+   "real_draws": 1,
+   "real_hi": 0.6392,
+   "real_lo": 0.4923,
+   "real_wr": 0.5673,
+   "same_side": false,
+   "sim_g1": 0.375,
+   "sim_match": 0.3164,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Boros Energy",
+   "b": "Izzet Prowess",
+   "delta": 0.2395,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 143,
+   "real_draws": 2,
+   "real_hi": 0.5432,
+   "real_lo": 0.3819,
+   "real_wr": 0.4615,
+   "same_side": false,
+   "sim_g1": 0.6375,
+   "sim_match": 0.7011,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Prowess",
+   "b": "Mono Red Aggro",
+   "delta": -0.1692,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 232,
+   "real_draws": 2,
+   "real_hi": 0.5255,
+   "real_lo": 0.3982,
+   "real_wr": 0.4612,
+   "same_side": true,
+   "sim_g1": 0.3575,
+   "sim_match": 0.292,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Eldrazi Tron",
+   "b": "Izzet Affinity",
+   "delta": 0.1758,
+   "mismodel": "Izzet Affinity: INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 193,
+   "real_draws": 1,
+   "real_hi": 0.6178,
+   "real_lo": 0.4787,
+   "real_wr": 0.5492,
+   "same_side": true,
+   "sim_g1": 0.655,
+   "sim_match": 0.7251,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Esper Blink",
+   "b": "Mono Red Aggro",
+   "delta": -0.1845,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 175,
+   "real_draws": 4,
+   "real_hi": 0.5537,
+   "real_lo": 0.4072,
+   "real_wr": 0.48,
+   "same_side": true,
+   "sim_g1": 0.36,
+   "sim_match": 0.2955,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Eldrazi Tron",
+   "b": "Mono Red Aggro",
+   "delta": 0.1697,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 170,
+   "real_draws": 2,
+   "real_hi": 0.528,
+   "real_lo": 0.38,
+   "real_wr": 0.4529,
+   "same_side": false,
+   "sim_g1": 0.5825,
+   "sim_match": 0.6226,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Affinity",
+   "b": "Mono Red Aggro",
+   "delta": 0.1455,
+   "mismodel": "Izzet Affinity: INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 151,
+   "real_draws": 1,
+   "real_hi": 0.4903,
+   "real_lo": 0.3353,
+   "real_wr": 0.4106,
+   "same_side": false,
+   "sim_g1": 0.5375,
+   "sim_match": 0.5561,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Boros Energy",
+   "b": "Izzet Affinity",
+   "delta": 0.1319,
+   "mismodel": "Izzet Affinity: INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 124,
+   "real_draws": 2,
+   "real_hi": 0.6023,
+   "real_lo": 0.429,
+   "real_wr": 0.5161,
+   "same_side": true,
+   "sim_g1": 0.6,
+   "sim_match": 0.648,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Esper Blink",
+   "b": "Goryo's Vengeance",
+   "delta": 0.1205,
+   "mismodel": "Goryo's Vengeance: our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 120,
+   "real_draws": 0,
+   "real_hi": 0.7447,
+   "real_lo": 0.5783,
+   "real_wr": 0.6667,
+   "same_side": true,
+   "sim_g1": 0.7025,
+   "sim_match": 0.7871,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Affinity",
+   "b": "Izzet Prowess",
+   "delta": -0.0775,
+   "mismodel": "Izzet Affinity: INFLATED (mechanism moved arc #3, cell still OUT OF BAND -- trust direction)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 200,
+   "real_draws": 2,
+   "real_hi": 0.6654,
+   "real_lo": 0.5308,
+   "real_wr": 0.6,
+   "same_side": true,
+   "sim_g1": 0.515,
+   "sim_match": 0.5225,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Goryo's Vengeance",
+   "b": "Izzet Affinity",
+   "delta": -0.0292,
+   "mismodel": "Goryo's Vengeance: our WR DEFLATED vs anchors (Boros cell only one >10pp out of band; from the Boros-centric gauntlet's POV that cell reads INFLATED-for-Boros)",
+   "miss": false,
+   "real_clear": true,
+   "real_decisive": 131,
+   "real_draws": 2,
+   "real_hi": 0.4594,
+   "real_lo": 0.2959,
+   "real_wr": 0.374,
+   "same_side": true,
+   "sim_g1": 0.395,
+   "sim_match": 0.3448,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Dimir Midrange",
+   "b": "Izzet Prowess",
+   "delta": -0.0288,
+   "mismodel": null,
+   "miss": false,
+   "real_clear": false,
+   "real_decisive": 101,
+   "real_draws": 1,
+   "real_hi": 0.5909,
+   "real_lo": 0.3995,
+   "real_wr": 0.495,
+   "same_side": true,
+   "sim_g1": 0.4775,
+   "sim_match": 0.4663,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Eldrazi Tron",
+   "b": "Esper Blink",
+   "delta": 0.0023,
+   "mismodel": null,
+   "miss": false,
+   "real_clear": false,
+   "real_decisive": 140,
+   "real_draws": 3,
+   "real_hi": 0.5538,
+   "real_lo": 0.3906,
+   "real_wr": 0.4714,
+   "same_side": true,
+   "sim_g1": 0.4825,
+   "sim_match": 0.4738,
+   "sim_n": 400,
+   "trust": "directional"
+  }
+ ],
+ "commit": "e439caa",
+ "coverage": {
+  "mapped_rows": 6676,
+  "mapped_share": 0.349,
+  "real_field_unmapped_pct": 42.2,
+  "real_rows": 19141,
+  "top_unmapped": {
+   "5C Combo": 1551,
+   "Abzan Greasefang": 571,
+   "Azorius Control": 460,
+   "Boros Convoke": 913,
+   "Burn": 267,
+   "Cycle Storm": 250,
+   "Dimir Reanimator": 378,
+   "Domain Ramp": 599,
+   "Four-Color": 334,
+   "Four-Color Domain": 420,
+   "Jeskai Control": 562,
+   "Jeskai Energy": 345,
+   "Simic Birthing Ritual": 314,
+   "Simic Neoform": 804,
+   "W-U-B-G Goryo's": 1316
+  }
+ },
+ "field": [
+  {
+   "deck": "Izzet Prowess",
+   "modeled_pct": 1.7,
+   "real_pct": 8.98
+  },
+  {
+   "deck": "Eldrazi Tron",
+   "modeled_pct": 3.7,
+   "real_pct": 8.07
+  },
+  {
+   "deck": "Izzet Affinity",
+   "modeled_pct": 9.0,
+   "real_pct": 6.3
+  },
+  {
+   "deck": "Mono Red Aggro",
+   "modeled_pct": null,
+   "real_pct": 6.1
+  },
+  {
+   "deck": "Esper Blink",
+   "modeled_pct": null,
+   "real_pct": 5.35
+  },
+  {
+   "deck": "Boros Energy",
+   "modeled_pct": 14.5,
+   "real_pct": 4.69
+  },
+  {
+   "deck": "Goryo's Vengeance",
+   "modeled_pct": 3.5,
+   "real_pct": 4.39
+  },
+  {
+   "deck": "Dimir Midrange",
+   "modeled_pct": 2.6,
+   "real_pct": 3.31
+  },
+  {
+   "deck": "Amulet Titan",
+   "modeled_pct": 4.8,
+   "real_pct": 2.84
+  },
+  {
+   "deck": "Living End",
+   "modeled_pct": 6.5,
+   "real_pct": 2.35
+  },
+  {
+   "deck": "Gruul Broodscale",
+   "modeled_pct": null,
+   "real_pct": 1.58
+  },
+  {
+   "deck": "Ruby Storm",
+   "modeled_pct": 4.1,
+   "real_pct": 1.4
+  },
+  {
+   "deck": "Grixis Reanimator",
+   "modeled_pct": 2.4,
+   "real_pct": 1.2
+  },
+  {
+   "deck": "Golgari Yawgmoth",
+   "modeled_pct": null,
+   "real_pct": 0.85
+  },
+  {
+   "deck": "Jeskai Blink",
+   "modeled_pct": 3.0,
+   "real_pct": 0.36
+  },
+  {
+   "deck": "5C Humans",
+   "modeled_pct": 2.5,
+   "real_pct": 0.03
+  },
+  {
+   "deck": "Domain Zoo",
+   "modeled_pct": 3.2,
+   "real_pct": 0
+  },
+  {
+   "deck": "Belcher",
+   "modeled_pct": 3.5,
+   "real_pct": 0
+  },
+  {
+   "deck": "Eldrazi Ramp",
+   "modeled_pct": 1.8,
+   "real_pct": 0
+  },
+  {
+   "deck": "Death and Taxes",
+   "modeled_pct": 5.5,
+   "real_pct": 0
+  },
+  {
+   "deck": "Temur Crashcade",
+   "modeled_pct": 3.4,
+   "real_pct": 0
+  },
+  {
+   "deck": "Neobrand",
+   "modeled_pct": 2.0,
+   "real_pct": 0
+  }
+ ],
+ "format": "modern",
+ "generated": "2026-09-29",
+ "headline": {
+  "all": {
+   "cells": 21,
+   "direction_agree": 0.75,
+   "direction_cells": 8,
+   "median_abs_delta_pp": 18.45,
+   "misses": 18,
+   "pearson_r": 0.276,
+   "real_matches": 3250,
+   "slope_real_on_sim": 0.084,
+   "spread_ratio": 3.43,
+   "spread_real_pp": 6.78,
+   "spread_sim_pp": 23.23,
+   "weighted_mae_pp": 21.43
+  },
+  "not_flagged": {
+   "cells": 10,
+   "direction_agree": 1.0,
+   "direction_cells": 2,
+   "median_abs_delta_pp": 23.95,
+   "misses": 8,
+   "pearson_r": 0.649,
+   "real_matches": 1683,
+   "slope_real_on_sim": 0.139,
+   "spread_ratio": 5.06,
+   "spread_real_pp": 4.55,
+   "spread_sim_pp": 23.04,
+   "weighted_mae_pp": 21.44
+  },
+  "trusted": {
+   "cells": 0
+  }
+ },
+ "lists": {
+  "5C Humans": {
+   "cosine": 0.814,
+   "missing_staples": [
+    "Lavinia, Azorius Renegade",
+    "Spectacular Spider-Man"
+   ],
+   "rare_in_real": [
+    "Ademi of the Silkchutes",
+    "Makdee and Itla, Skysnarers"
+   ],
+   "real_decks": 2
+  },
+  "Amulet Titan": {
+   "cosine": 0.954,
+   "missing_staples": [
+    "The Mycosynth Gardens"
+   ],
+   "rare_in_real": [],
+   "real_decks": 212
+  },
+  "Belcher": {
+   "cosine": 0.27,
+   "missing_staples": [
+    "Hydroelectric Specimen",
+    "Jwari Disruption",
+    "Lotus Bloom",
+    "Sink into Stupor",
+    "Suppression Ray",
+    "Tameshi, Reality Architect",
+    "Whir of Invention",
+    "Spell Snare",
+    "Waterlogged Teachings",
+    "Into the Flood Maw",
+    "Stern Scolding",
+    "Beyeen Veil",
+    "Counterspell",
+    "Preordain"
+   ],
+   "rare_in_real": [
+    "Burning Inquiry",
+    "Chancellor of the Annex",
+    "Chancellor of the Tangle",
+    "Desperate Ritual",
+    "Elvish Spirit Guide",
+    "Irencrag Feat",
+    "Manamorphose",
+    "Pyretic Ritual",
+    "Rite of Flame",
+    "Seething Song",
+    "Simian Spirit Guide",
+    "Street Wraith"
+   ],
+   "real_decks": 154
+  },
+  "Boros Energy": {
+   "cosine": 0.887,
+   "missing_staples": [
+    "Dalkovan Encampment",
+    "Ranger-Captain of Eos",
+    "Static Prison"
+   ],
+   "rare_in_real": [
+    "Umezawa's Jitte"
+   ],
+   "real_decks": 260
+  },
+  "Death and Taxes": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Dimir Midrange": {
+   "cosine": 0.703,
+   "missing_staples": [
+    "Sink into Stupor",
+    "Thoughtseize",
+    "Psychic Frog",
+    "Quantum Riddler",
+    "Otawara, Soaring City",
+    "Tamiyo, Inquisitive Student",
+    "Darkslick Shores"
+   ],
+   "rare_in_real": [
+    "Hallowed Fountain",
+    "Meticulous Archive",
+    "Pest Control",
+    "Sphinx's Revelation"
+   ],
+   "real_decks": 250
+  },
+  "Domain Zoo": {
+   "cosine": 0.869,
+   "missing_staples": [],
+   "rare_in_real": [
+    "Thraben Charm"
+   ],
+   "real_decks": 16
+  },
+  "Eldrazi Ramp": {
+   "cosine": 0.778,
+   "missing_staples": [],
+   "rare_in_real": [],
+   "real_decks": 316
+  },
+  "Eldrazi Tron": {
+   "cosine": 0.919,
+   "missing_staples": [
+    "All Is Dust",
+    "Wastes"
+   ],
+   "rare_in_real": [
+    "Snow-Covered Wastes"
+   ],
+   "real_decks": 27
+  },
+  "Esper Blink": {
+   "cosine": 0.992,
+   "missing_staples": [],
+   "rare_in_real": [],
+   "real_decks": 370
+  },
+  "Golgari Yawgmoth": {
+   "cosine": 0.886,
+   "missing_staples": [
+    "Dredger's Insight",
+    "Ouroboroid",
+    "Sephiroth, Fabled SOLDIER"
+   ],
+   "rare_in_real": [
+    "Ignoble Hierarch",
+    "Wooded Foothills"
+   ],
+   "real_decks": 4
+  },
+  "Goryo's Vengeance": {
+   "cosine": 0.932,
+   "missing_staples": [
+    "Quantum Riddler"
+   ],
+   "rare_in_real": [
+    "Otherworldly Gaze"
+   ],
+   "real_decks": 14
+  },
+  "Grixis Reanimator": {
+   "cosine": 0.598,
+   "missing_staples": [
+    "Emperor of Bones",
+    "Fatal Push",
+    "Psychic Frog",
+    "Raucous Theater",
+    "Undercity Sewers",
+    "Unearth",
+    "Scalding Tarn",
+    "Spell Pierce",
+    "Thought Scour"
+   ],
+   "rare_in_real": [
+    "Expressive Iteration",
+    "Grief",
+    "Mountain",
+    "Orcish Bowmasters",
+    "Reanimate",
+    "Solitude",
+    "Unmarked Grave"
+   ],
+   "real_decks": 23
+  },
+  "Gruul Broodscale": {
+   "cosine": 0.776,
+   "missing_staples": [
+    "Cavern of Souls",
+    "Commercial District",
+    "Stomping Ground",
+    "Unholy Heat",
+    "Writhing Chrysalis",
+    "Walking Ballista",
+    "Wooded Foothills"
+   ],
+   "rare_in_real": [
+    "Devourer of Destiny",
+    "Sowing Mycospawn",
+    "Ugin's Labyrinth"
+   ],
+   "real_decks": 4
+  },
+  "Izzet Affinity": {
+   "cosine": 0.974,
+   "missing_staples": [
+    "Shivan Reef"
+   ],
+   "rare_in_real": [],
+   "real_decks": 206
+  },
+  "Izzet Prowess": {
+   "cosine": 0.904,
+   "missing_staples": [
+    "Fiery Islet",
+    "Arid Mesa"
+   ],
+   "rare_in_real": [
+    "Founding the Third Path",
+    "Stomping Ground"
+   ],
+   "real_decks": 61
+  },
+  "Jeskai Blink": {
+   "cosine": 0.818,
+   "missing_staples": [
+    "Plains",
+    "Mountain",
+    "Island",
+    "Galvanic Discharge"
+   ],
+   "rare_in_real": [
+    "Snow-Covered Island",
+    "Snow-Covered Mountain",
+    "Snow-Covered Plains"
+   ],
+   "real_decks": 9
+  },
+  "Living End": {
+   "cosine": 0.779,
+   "missing_staples": [
+    "Stomping Ground",
+    "Oliphaunt",
+    "Steam Vents",
+    "Thundering Falls",
+    "Commercial District"
+   ],
+   "rare_in_real": [
+    "Ardent Plea",
+    "Commandeer",
+    "Flooded Strand",
+    "Lush Portico",
+    "Meticulous Archive"
+   ],
+   "real_decks": 275
+  },
+  "Mono Red Aggro": {
+   "cosine": 0.76,
+   "missing_staples": [
+    "Boltwave",
+    "Barbarian Ring",
+    "Eidolon of the Great Revel",
+    "Wooded Foothills",
+    "Scalding Tarn"
+   ],
+   "rare_in_real": [
+    "Fiery Islet",
+    "Roiling Vortex"
+   ],
+   "real_decks": 42
+  },
+  "Neobrand": {
+   "cosine": 0.197,
+   "missing_staples": [
+    "Allosaurus Rider",
+    "Atraxa, Grand Unifier",
+    "Boseiju, Who Endures",
+    "Breeding Pool",
+    "Bridgeworks Battle",
+    "Consign to Memory",
+    "Disciple of Freyalise",
+    "Endurance",
+    "Generous Ent",
+    "Ghalta, Stampede Tyrant",
+    "Hedge Maze",
+    "Hooting Mandrills",
+    "Misty Rainforest",
+    "Pact of Negation",
+    "Planar Genesis",
+    "Polluted Delta",
+    "Scalding Tarn",
+    "Snow-Covered Island",
+    "Ureni, the Song Unending",
+    "Veil of Summer",
+    "Xenagos, God of Revels",
+    "Flooded Strand",
+    "Nourishing Shoal",
+    "Repudiate / Replicate",
+    "Snow-Covered Forest",
+    "Wooded Foothills"
+   ],
+   "rare_in_real": [
+    "Allosaurus Shepherd",
+    "Autochthon Wurm",
+    "Burning-Tree Emissary",
+    "Chancellor of the Tangle",
+    "Force of Vigor",
+    "Manamorphose",
+    "Once Upon a Time",
+    "Seething Song",
+    "Simian Spirit Guide",
+    "Street Wraith",
+    "Wild Cantor"
+   ],
+   "real_decks": 3
+  },
+  "Ruby Storm": {
+   "cosine": 0.886,
+   "missing_staples": [
+    "Arid Mesa",
+    "Hex Magic",
+    "Sunbaked Canyon"
+   ],
+   "rare_in_real": [
+    "Pyromancer Ascension",
+    "Urabrask"
+   ],
+   "real_decks": 252
+  },
+  "Temur Crashcade": {
+   "cosine": null,
+   "real_decks": 0
+  }
+ },
+ "min_real": 100,
+ "n_per_cell": 400,
+ "seed": 42,
+ "since": "2026-05-15",
+ "until": null
+}

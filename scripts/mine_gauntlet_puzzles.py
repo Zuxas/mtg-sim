@@ -64,18 +64,68 @@ def _label(action) -> str:
             else action.card_name)
 
 
-def printed_haste(card) -> bool:
-    """True only when Haste is one of the card's own keyword abilities ("Haste",
-    "Flying, haste"). The engine's keyword regex also tags cards whose text
-    merely MENTIONS haste -- Ragavan (dash reminder), Bloodghast (conditional),
-    Emperor of Bones, Badgermole Cub -- so a cast of one of those attacking
-    this turn is not a trustworthy puzzle answer."""
+def _printed_keyword(card, word: str) -> bool:
+    """`word` is one of the card's own keyword abilities ("Haste", "Flying,
+    haste"); reminder text in parentheses is ignored."""
     import re
     for line in (getattr(card, "oracle_text", "") or "").split("\n"):
         line = re.sub(r"\([^)]*\)", "", line)
-        if "haste" in {t.strip().lower() for t in line.split(",")}:
+        if word in {t.strip().lower() for t in line.split(",")}:
             return True
     return False
+
+
+def printed_haste(card) -> bool:
+    """True only when Haste is one of the card's own keyword abilities. The
+    engine's keyword regex also tags cards whose text merely MENTIONS haste --
+    Ragavan (dash reminder), Bloodghast (conditional), Emperor of Bones,
+    Badgermole Cub -- so a cast of one of those attacking this turn is not a
+    trustworthy puzzle answer."""
+    return _printed_keyword(card, "haste")
+
+
+def hand_threats(opp_hand, opp_bf, our_bf) -> list[str]:
+    """Cards a REAL opponent could use on our turn that the sim opponent did
+    not: instants, flash cards, evoke (a free Solitude/Subtlety), channel.
+    Voice of Victory ("your opponents can't cast spells during your turn")
+    shuts off every spell; Aether Vial with a creature in hand is an ability
+    and still counts."""
+    voice = any(c.name == "Voice of Victory" for c in our_bf)
+    out = []
+    for c in opp_hand:
+        text = (getattr(c, "oracle_text", "") or "").lower()
+        spell = ("instant" in (getattr(c, "type_line", "") or "").lower()
+                 or _printed_keyword(c, "flash") or "evoke" in text)
+        if (spell and not voice) or "channel" in text:
+            out.append(c.name)
+    if any(c.name == "Aether Vial" for c in opp_bf) and \
+            any(_is_creature(c) for c in opp_hand):
+        out.append("Aether Vial (+ creature in hand)")
+    return out
+
+
+def survives_best_blocks(gs, opponent) -> bool:
+    """Conservative check after the line: the opponent's k untapped creatures
+    each block one of our k BIGGEST attackers, and the rest must still be
+    lethal. Ignores trample and evasion, so it can only under-count us. Voice
+    of Victory adds its two mobilize 1/1s. The engine's defender blocks by a
+    heuristic, so this keeps only puzzles that don't rely on a weak block."""
+    from engine.keywords import KWTag
+    powers = []
+    for c in gs.zones.battlefield:
+        if c.is_land() or not _is_creature(c) or KWTag.DEFENDER in c.tags:
+            continue
+        if getattr(c, "summoning_sickness", False) and not printed_haste(c):
+            continue
+        powers.append(max(0, mr._safe_power(c)))
+        if c.name == "Voice of Victory":
+            powers += [1, 1]
+    k = sum(1 for c in opponent.zones.battlefield
+            if not c.is_land() and _is_creature(c)
+            and not getattr(c, "tapped_from_attack", False)
+            and "planeswalker" not in (getattr(c, "type_line", "") or "").lower())
+    powers.sort(reverse=True)
+    return sum(powers[k:]) >= int(opponent.life)
 
 
 def _haste_suspect(card) -> bool:
@@ -163,6 +213,8 @@ class LinePilot(MatchAPL):
         self.children: list = []
         self.scene = None
         self.haste_suspect = False   # line casts a creature with engine-only haste
+        self.robust = False          # survives the opponent's best blocks (after the line)
+        self.threats: list = []      # revealed-hand cards a real opponent could use
 
     def keep(self, *a, **k):
         return True
@@ -194,6 +246,10 @@ class LinePilot(MatchAPL):
                 self.haste_suspect = True
         self.ok = True
         self.children = [_label(a) for a in _ordered(gs)]
+        if opponent is not None:
+            self.robust = survives_best_blocks(gs, opponent)
+            self.threats = hand_threats(opponent.zones.hand, opponent.zones.battlefield,
+                                        gs.zones.battlefield)
 
 
 # ---------------------------------------------------------------- the miner
@@ -238,6 +294,7 @@ class GauntletMiner:
         if won or not base.ok:
             return                          # trivial (just attack) or broken
         budget = [NODE_BUDGET]
+        first_win: list = []    # fallback when no line survives best blocks
 
         def dfs(prefix, children, depth):
             for child in children:
@@ -251,14 +308,18 @@ class GauntletMiner:
                         self.haste_rejects += 1
                     continue
                 if w:
-                    return line
+                    if p.robust:
+                        return line     # kills even through the best blocks
+                    if not first_win:
+                        first_win.append(line)
+                    continue
                 if depth + 1 < MAX_DEPTH:
                     got = dfs(line, p.children, depth + 1)
                     if got:
                         return got
             return None
 
-        line = dfs([], base.children, 0)
+        line = dfs([], base.children, 0) or (first_win[0] if first_win else None)
         if not line:
             return
         # G1: independent re-run from a fresh fork, every step must apply
@@ -276,6 +337,8 @@ class GauntletMiner:
             "solution_line": line, "scene": scene, "source": "gauntlet-miner",
             "our_deck": self.our_name, "opp_deck": self.opp_name,
             "live_blockers": blockers, "opp_permanents": opp_perms,
+            "robust_vs_best_blocks": p.robust, "hand_threats": p.threats,
+            "clean": p.robust and not p.threats,
             "caveats": CAVEATS,
         }
         self._found = True
@@ -365,9 +428,13 @@ def main(argv=None) -> int:
     cands, results, miner = mine(args.deck, args.format, args.games_per_opp,
                                  args.seed, opps)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
-        for c in cands:
-            f.write(json.dumps(c, sort_keys=True) + "\n")
+    clean = [c for c in cands if c["clean"]]
+    flagged = [c for c in cands if not c["clean"]]
+    flagged_path = args.out.replace(".jsonl", "_flagged.jsonl")
+    for path, rows in ((args.out, clean), (flagged_path, flagged)):
+        with open(path, "w", encoding="utf-8") as f:
+            for c in rows:
+                f.write(json.dumps(c, sort_keys=True) + "\n")
 
     games = len(results)
     missed = sum(1 for c in cands if not c["apl_found"])
@@ -385,7 +452,11 @@ def main(argv=None) -> int:
         by_opp[c["opp_deck"]] = by_opp.get(c["opp_deck"], 0) + 1
     for o, n in sorted(by_opp.items(), key=lambda x: -x[1]):
         print(f"    {o}: {n}")
-    print(f"  Written to {args.out}")
+    weak = sum(1 for c in flagged if not c["robust_vs_best_blocks"])
+    answer = sum(1 for c in flagged if c["hand_threats"])
+    print(f"  CLEAN {len(clean)} -> {args.out}")
+    print(f"  FLAGGED {len(flagged)} -> {flagged_path} ({weak} need a weak block, "
+          f"{answer} have a real-opponent answer in the revealed hand)")
     return 0
 
 

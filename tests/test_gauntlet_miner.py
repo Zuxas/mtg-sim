@@ -48,6 +48,45 @@ def test_printed_haste():
     print("[ok] printed_haste separates printed Haste from engine-only haste")
 
 
+def test_hand_threats():
+    solitude = _card("Solitude", "Flash\nLifelink\nWhen this creature enters, exile up to "
+                     "one other target creature.\nEvoke—Exile a white card from your hand.")
+    dismember = _card("Dismember", "Target creature gets -5/-5 until end of turn.",
+                      type_line="Instant")
+    stoneforge = _card("Thalia, Guardian of Thraben", "First strike\nNoncreature spells cost {1} more.")
+    vial = _card("Aether Vial", "{T}: You may put a creature card ...", type_line="Artifact")
+    voice = _card("Voice of Victory", "Mobilize 2\nYour opponents can't cast spells during your turn.")
+    assert gm.hand_threats([solitude, dismember], [], []) == ["Solitude", "Dismember"]
+    # Voice of Victory stops every opposing spell on our turn...
+    assert gm.hand_threats([solitude, dismember], [], [voice]) == []
+    # ...but not Aether Vial's ability putting a creature in as a blocker
+    assert gm.hand_threats([stoneforge], [vial], [voice]) == ["Aether Vial (+ creature in hand)"]
+    assert gm.hand_threats([stoneforge], [], []) == []
+    print("[ok] hand_threats: instants/flash/evoke flagged, Voice shuts spells, Vial still counts")
+
+
+def test_survives_best_blocks():
+    from types import SimpleNamespace as NS
+
+    def crt(name, p, **kw):
+        c = _card(name, "", type_line="Creature")
+        c.power, c.toughness = str(p), str(p)
+        for k, v in kw.items():
+            setattr(c, k, v)
+        return c
+
+    def side(cards, life=20):
+        return NS(zones=NS(battlefield=cards), life=life)
+
+    ours = [crt("A", 3), crt("B", 2), crt("C", 2), crt("Sick", 5, summoning_sickness=True)]
+    # one untapped blocker takes our 3-power attacker: 2 + 2 = 4 left
+    assert gm.survives_best_blocks(side(ours), side([crt("X", 1)], life=4))
+    assert not gm.survives_best_blocks(side(ours), side([crt("X", 1)], life=5))
+    # a creature that attacked last turn is still tapped and can't block
+    assert gm.survives_best_blocks(side(ours), side([crt("X", 1, tapped_from_attack=True)], life=7))
+    print("[ok] survives_best_blocks: best k blocks removed, sick/tapped handled")
+
+
 def _root_replay(cand):
     """Re-play the recorded game up to the candidate's turn and re-check the
     line on a fresh fork (independent of the miner's own search)."""
@@ -81,6 +120,8 @@ def _root_replay(cand):
 
 def main() -> int:
     test_printed_haste()
+    test_hand_threats()
+    test_survives_best_blocks()
 
     a, res_hook, _ = gm.mine("Boros Energy", "modern", GAMES, SEED, OPPS)
     b, _, _ = gm.mine("Boros Energy", "modern", GAMES, SEED, OPPS)
@@ -100,6 +141,7 @@ def main() -> int:
         opp = c["scene"]["opp"]
         assert opp["battlefield_creatures"] or opp["battlefield_other"], \
             "G3 FAIL: opponent has no nonland permanent"
+        assert c["clean"] == (c["robust_vs_best_blocks"] and not c["hand_threats"])
         seen = _root_replay(c)
         assert seen.get("line") is True, f"G1 FAIL: line does not replay {c['arena_match_id']}"
         assert seen.get("empty") is False, f"G2 FAIL: empty line kills {c['arena_match_id']}"

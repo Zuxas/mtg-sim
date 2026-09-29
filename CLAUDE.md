@@ -82,13 +82,19 @@ Badgermole Cub, Xenagos. The miner drops any line that casts a creature
 whose haste is not PRINTED (`printed_haste`): 563 lines dropped in the 3300-game
 run. See IMPERFECTIONS `haste-tag-from-reminder-text`. Results (seed 42,
 PYTHONHASHSEED=0): 990 games -> 8 (0.8%, the <=1000-game yield gate FAILED,
-reported not loosened); 3300 games -> **23 puzzles, all with >=1 untapped
-opposing blocker, 7 the Boros pilot itself missed** (mostly "remove the only
-blocker = exact lethal"). ~100 s. Gates in `tests/test_gauntlet_miner.py`:
-printed-haste unit, G4 no perturbation (240 games identical with/without the
+reported not loosened); 3300 games -> 23 engine-proven kills (all with >=1
+untapped opposing blocker, 7 the Boros pilot itself missed), then two checks
+the engine cannot make: `survives_best_blocks` (the opponent's k blockers take
+our k biggest attackers -- the sim defender blocks by heuristic; the search
+prefers a line that passes) and `hand_threats` (instant / flash / evoke /
+channel in the revealed hand unless our Voice of Victory stops spells; Aether
+Vial + a creature). **16 CLEAN** -> `--out`; 7 flagged -> `<out>_flagged.jsonl`
+(3 need a weak block; 4 hold Solitude / Dismember / Vial + creature). ~100 s.
+Gates in `tests/test_gauntlet_miner.py`: printed-haste, hand-threat and
+best-block units, G4 no perturbation (240 games identical with/without the
 hook), G5 byte-identical, G1/G2/G3 on every candidate via an independent
-re-played game. Output `data/gauntlet_candidates.jsonl` (gitignored run
-artifact) -> analyzer `python -m scripts.import_lethal_puzzles <jsonl>
+re-played game (shipped batch: 23/23). Output `data/gauntlet_candidates.jsonl`
+(gitignored run artifact) -> analyzer `python -m scripts.import_lethal_puzzles <jsonl>
 [--commit]`.
 ```
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42

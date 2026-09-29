@@ -60,6 +60,23 @@ card-fidelity limits); goldfish = open board (no blockers / no opp instant
 interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
 reuses this whole pipeline.
 
+### Fabricated goldfish flying-draw REMOVED — 2026-09-29 (engine, user sign-off)
+
+Spec `harness/specs/2026-09-29-remove-fake-flying-draw.md`. `GameState._do_combat`
+ended with "Guide of Souls flying damage trigger: draw a card" for ANY flying
+attacker (since 0af1d98) -- no printed card does that. Fake draws per goldfish
+game before removal: Izzet Prowess std 5.98, Azorius Blink std 5.36, Sultai
+Reanimator 4.71, Esper Raffine 4.37, Dimir Midrange std 4.10, Dimir Midrange
+Jermey 3.65, Tokyo Prowess 3.30 ... 40+ lists >= 1.5. Goldfish only: the match
+path (`match_runner._resolve_combat`) never had it -- run_match field unchanged
+(Boros vs Modern 56.96% exactly). Measured n=2000: Azorius Blink T7.17 -> T8.13,
+Tokyo Prowess T8.60 -> T9.02 (win 92.9% -> 89.1%), Sultai Reanimator T9.96 ->
+T10.28, Dimir Midrange Jermey T6.23 -> T6.40, Boros Energy unchanged.
+**Every goldfish-derived number for a flying deck before 2026-09-29 is
+inflated** -- including the bo3_gauntlet race-model FWs quoted below (Tokyo
+Prowess 67.8%, Looting 63-64%): re-run before relying on them.
+Test `tests/test_no_fake_flying_draw.py` (red on the old code, green now).
+
 ### All plain keywords from printed text — 2026-09-29 (engine, user sign-off)
 
 Spec `harness/specs/2026-09-29-keywords-from-printed-text.md`. The haste

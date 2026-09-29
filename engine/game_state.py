@@ -686,13 +686,11 @@ class GameState:
         for card, bonus in coppercoat_boosted:
             card.counters -= bonus
 
-        # ── Guide of Souls flying damage trigger: draw a card ─────────────
-        flying_attackers = [c for c in attackers
-                            if KWTag.FLYING in c.tags and c.effective_power() > 0]
-        if flying_attackers:
-            drawn = self.zones.draw(1)
-            if drawn:
-                self._log(f"  Guide of Souls flying trigger: drew {drawn[0].name}")
+        # (Removed 2026-09-29: a "Guide of Souls flying damage trigger: draw a
+        # card" fired here for ANY flying attacker. No printed card does that --
+        # Guide of Souls puts a flying counter on another creature and draws
+        # nothing. It gave flying decks up to ~6 free cards per goldfish game.
+        # Spec harness/specs/2026-09-29-remove-fake-flying-draw.md.)
 
     def _end(self):
         self.phase = Phase.END

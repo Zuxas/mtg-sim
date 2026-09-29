@@ -95,3 +95,6 @@ data/untapped/
 # purchased copy for local Pinecone retrieval. Personal reference only;
 # must not be pushed to a public remote.
 docs/chapin_*_rules_reference.md
+
+# puzzle miner run artifacts (reproducible: seed 42, PYTHONHASHSEED=0)
+data/*_candidates.jsonl

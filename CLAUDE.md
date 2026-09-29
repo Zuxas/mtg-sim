@@ -60,6 +60,40 @@ card-fidelity limits); goldfish = open board (no blockers / no opp instant
 interaction). NEXT: gauntlet slice (real opponent + no-untapped-blocker filter)
 reuses this whole pipeline.
 
+### Puzzle mining — gauntlet slice (real opponent board) — 2026-09-29
+
+`scripts/mine_gauntlet_puzzles.py` mines the same "lethal THIS turn" puzzles
+from TWO-PLAYER games: our deck (seat A, default Boros Energy) vs every
+non-combo deck in the format field (spec
+`harness/specs/2026-09-29-gauntlet-lethal-puzzles.md`). No engine edits:
+`match_runner._run_player_turn` is wrapped in the miner process only; at each
+of our turns the TwoPlayerGameState is deepcopy-forked and main-phase-1 lines
+(decision_api PLAY_LAND/CAST) are searched with a scripted `LinePilot`. The
+ORACLE is the engine's own full turn on the fork (draw, line, combat with the
+defender's real blocks + response windows, win check) -- one fork + one turn
+per node gives both "kills?" and the next legal actions. Caps: opp life <= 12,
+120 nodes, depth 6, one puzzle per game; the empty line (just attack) must NOT
+kill. The scene exports the opponent's board (tapped = attacked last turn) AND
+hand, revealed, because the kill is verified against exactly that hand.
+**Engine finding (not fixed, hot zone):** the keyword regex tags haste on any
+text that MENTIONS haste -- Ragavan (dash reminder, and cmc 1 so it attacks
+the turn it is cast for {R}), Bloodghast (conditional), Emperor of Bones,
+Badgermole Cub, Xenagos. The miner drops any line that casts a creature
+whose haste is not PRINTED (`printed_haste`): 563 lines dropped in the 3300-game
+run. See IMPERFECTIONS `haste-tag-from-reminder-text`. Results (seed 42,
+PYTHONHASHSEED=0): 990 games -> 8 (0.8%, the <=1000-game yield gate FAILED,
+reported not loosened); 3300 games -> **23 puzzles, all with >=1 untapped
+opposing blocker, 7 the Boros pilot itself missed** (mostly "remove the only
+blocker = exact lethal"). ~100 s. Gates in `tests/test_gauntlet_miner.py`:
+printed-haste unit, G4 no perturbation (240 games identical with/without the
+hook), G5 byte-identical, G1/G2/G3 on every candidate via an independent
+re-played game. Output `data/gauntlet_candidates.jsonl` (gitignored run
+artifact) -> analyzer `python -m scripts.import_lethal_puzzles <jsonl>
+[--commit]`.
+```
+PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
+```
+
 ### Post-ban Modern field refresh (data/coverage) — 2026-06-30
 
 The modeled Modern field in `format_config.py` was refreshed for the May-2026

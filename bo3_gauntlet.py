@@ -21,7 +21,10 @@ def main():
     ap.add_argument("--top-n",   type=int, default=8)
     ap.add_argument("--field",   default="")
     ap.add_argument("--n-games", type=int, default=1000)
-    ap.add_argument("--deck-file", default="decks/humans_legacy.txt")
+    ap.add_argument("--deck-file", default=None,
+                    help="explicit decklist; default = the deck registered for --deck "
+                         "(before 2026-09-29 this defaulted to decks/humans_legacy.txt for EVERY "
+                         "--deck, so e.g. --deck 'Boros Energy' measured Legacy Humans)")
     args = ap.parse_args()
 
     # ── Load our deck ─────────────────────────────────────────────────────
@@ -30,17 +33,31 @@ def main():
     from apl.generic_apl import GenericAPL
     from apl.playbook_parser import load_all_playbooks, find_playbook
 
-    deck_file = args.deck_file or "decks/humans_legacy.txt"
-    main_deck, side_deck = load_deck_from_file(deck_file)
-    side_dict = {}
-    for card in side_deck:
-        side_dict[card.name] = side_dict.get(card.name, 0) + 1
+    our_apl = None
+    if args.deck_file:
+        main_deck, side_deck = load_deck_from_file(args.deck_file)
+        print(f"Deck: {args.deck_file} (explicit --deck-file)")
+    else:
+        from generate_matchup_data import load_deck_and_apl
+        main_deck, side_deck, our_apl = load_deck_and_apl(args.deck, args.format)
+        if not main_deck:
+            raise SystemExit(f"No deck registered for --deck {args.deck!r} ({args.format}); "
+                             f"pass --deck-file")
+        print(f"Deck: registered list for {args.deck!r} ({args.format})")
+    if isinstance(side_deck, dict):
+        side_dict = dict(side_deck)
+    else:
+        side_dict = {}
+        for card in side_deck or []:
+            side_dict[card.name] = side_dict.get(card.name, 0) + 1
 
-    print(f"Loaded: {len(main_deck)} main / {len(side_deck)} side")
+    print(f"Loaded: {len(main_deck)} main / {sum(side_dict.values())} side")
 
-    # Choose APL
+    # Choose APL (registered goldfish APL first, then the old fallbacks)
     arch_key = _infer_archetype_key(args.deck)
-    if arch_key == "humans":
+    if our_apl is not None:
+        pass
+    elif arch_key == "humans":
         our_apl = HumansAPL()
     else:
         pbs = load_all_playbooks()
@@ -107,11 +124,13 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"Bo3 Gauntlet: {args.deck} vs {len(field)}-deck field")
+    print("  (RACE MODEL: our goldfish kill clock vs fixed opponent clocks -- no two-player"
+          " games; use run_match drivers to measure engine changes)")
     print(f"{'='*60}\n")
 
-    # Simulate our kill distribution
-    _main, _side = _ldf(args.deck_file)
-    _sim = _rs(our_apl, _main, n=3000, on_play=True, seed=42)
+    # Simulate our kill distribution (same list as above -- was re-read from
+    # --deck-file, which defaulted to Legacy Humans)
+    _sim = _rs(our_apl, main_deck, n=3000, on_play=True, seed=42)
     our_dist = _sim.kill_turn_distribution()
     print(f"Our kill dist: T{avg_kill_turn(our_dist):.2f} avg\n")
 

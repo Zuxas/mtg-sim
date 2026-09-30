@@ -53,10 +53,13 @@ APL_REGISTRY = {
     # Energy APL/MatchAPL; no fidelity change). Fable-consensus + Jitte axes.
     "borosenergyfable": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_fable_modern.txt"),
     "borosenergyjitte": ("apl.boros_energy_match", "BorosEnergyMatchAPL", "decks/boros_energy_jitte_modern.txt"),
-    "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
-    "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "prowess"),
-    "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
-    "domain":          ("apl.domain_zoo",       "DomainZooAPL",      "domain"),
+    # 2026-09-29: izzetprowess/prowess/domainzoo/domain/esperblink load their real
+    # Modern .txt (was a data.stub_decks key) so the Modern field key loads the same
+    # list as calibration/name_map_modern.json (spec 2026-09-30-field-registry-stub-fix).
+    "izzetprowess":    ("apl.izzet_prowess",    "IzzetProwessAPL",   "decks/izzet_prowess_modern.txt"),
+    "prowess":         ("apl.izzet_prowess",    "IzzetProwessAPL",   "decks/izzet_prowess_modern.txt"),
+    "domainzoo":       ("apl.domain_zoo",       "DomainZooAPL",      "decks/domain_zoo_modern.txt"),
+    "domain":          ("apl.domain_zoo",       "DomainZooAPL",      "decks/domain_zoo_modern.txt"),
     "moderndomainzoo": ("apl.modern_domain_zoo","ModernDomainZooAPL","domain"),
     "amulettitan":     ("apl.amulet_titan",     "AmuletTitanAPL",    "decks/amulet_titan_modern.txt"),
     "amulet":          ("apl.amulet_titan",     "AmuletTitanAPL",    "titan"),
@@ -140,7 +143,7 @@ APL_REGISTRY = {
     # ── Modern (match-aware) ──
     "uwblink":         ("apl.uw_blink",         "UWBlinkAPL",        "uw_blink"),
     "espermidrange":   ("apl.esper_midrange",   "EsperMidrangeAPL",  "esper_mid"),
-    "esperblink":      ("apl.esper_blink",      "EsperBlinkAPL",     "esper_blink"),
+    "esperblink":      ("apl.esper_blink",      "EsperBlinkAPL",     "decks/esper_blink_modern.txt"),
     # 2026-04-26 Stage A BUCKET 1: orzhov_blink_modern.txt is misnamed
     # -- header reads "Esper Blink - botje_". Alias to EsperBlinkAPL.
     "orzhovblink":     ("apl.esper_blink",      "EsperBlinkAPL",     "decks/orzhov_blink_modern.txt"),

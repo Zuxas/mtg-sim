@@ -136,7 +136,6 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
       3. Otherwise: fall back to G1 sim + sb_premium heuristic
     """
     from generate_matchup_data import load_deck_and_apl
-    from engine.sideboard import get_sb_plan
 
     # ── Load decks ──
     our_main, our_side, our_apl = load_deck_and_apl(our_deck, format_name)
@@ -145,12 +144,19 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
     if not our_main or not opp_main:
         raise ValueError(f"Could not load deck for {opp_name}")
 
-    # ── Try real SB plans ──
-    our_sb_in, our_sb_out = get_sb_plan(our_deck, opp_name)
-    opp_sb_in, opp_sb_out = get_sb_plan(opp_name, our_deck)
+    # ── Sideboard plans: only legal, exact swaps (sideboard_plans.py, spec
+    #    2026-09-30-sideboard-plan-validation). Candidates: the APL's SB_PLANS for the
+    #    opponent's ARCHETYPE, then the playbook plan; anything else = no sideboarding. ──
+    from apl import get_match_apl as _gma
+    from sideboard_plans import choose_plan
+    _our_m, _opp_m = _gma(our_deck, format_name), _gma(opp_name, format_name)
+    our_plan, our_sb_source, our_sb_reason = choose_plan(
+        our_deck, opp_name, our_main, our_side or [], _our_m, _opp_m)
+    opp_plan, opp_sb_source, opp_sb_reason = choose_plan(
+        opp_name, our_deck, opp_main, opp_side or [], _opp_m, _our_m)
 
-    has_our_sb = bool(our_sb_in or our_sb_out)
-    has_opp_sb = bool(opp_sb_in or opp_sb_out)
+    has_our_sb = our_plan is not None
+    has_opp_sb = opp_plan is not None
 
     # FIX 2: route to the real match-APL Bo3 (Path A) whenever our deck has a
     # canonical MATCH_APL, even when no SB plan is registered. Previously the gate
@@ -175,25 +181,15 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
             opp_mapl = get_match_apl(opp_name, format_name)
 
             if our_mapl and opp_mapl:
-                # Build sideboard dicts from loaded side cards
-                our_sb_dict = {}
-                for c in (our_side or []):
-                    our_sb_dict[c.name] = our_sb_dict.get(c.name, 0) + 1
-                opp_sb_dict = {}
-                for c in (opp_side or []):
-                    opp_sb_dict[c.name] = opp_sb_dict.get(c.name, 0) + 1
-
-                # FIX 2: default to an EMPTY plan ([],[]) when we have a real
-                # match APL but no registered SB plan (our_sb_* are [] here), so
-                # G2/G3 run preboard-equivalent (_apply_sb no-ops on empty lists).
-                # Decks WITH an SB plan are UNCHANGED: (our_sb_in, our_sb_out) is
-                # bit-identical to the previous `if has_our_sb` value.
-                sb_plan_a = (our_sb_in, our_sb_out)
-                sb_plan_b = (opp_sb_in, opp_sb_out) if has_opp_sb else None
+                # Pass the real sideboard Card lists (the dict form made the
+                # engine applier rebuild cards from a cache and drop misses).
+                # No validated plan -> None -> G2/G3 are played preboard.
+                sb_plan_a = our_plan
+                sb_plan_b = opp_plan
 
                 bo3 = run_bo3_set(
-                    our_mapl, our_main, our_sb_dict,
-                    opp_mapl, opp_main, opp_sb_dict,
+                    our_mapl, our_main, list(our_side or []),
+                    opp_mapl, opp_main, list(opp_side or []),
                     sb_plan_a=sb_plan_a,
                     sb_plan_b=sb_plan_b,
                     n=n, mix_play_draw=True, seed=seed,
@@ -207,9 +203,11 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
                     "match":   bo3.match_wr_a(),
                     "g3_rate": bo3.g3_rate,
                     "g1_source": "bo3",
-                    "sb_mode": "real",
+                    "sb_mode": "validated" if (has_our_sb or has_opp_sb) else "none",
                     "our_sb":  has_our_sb,
                     "opp_sb":  has_opp_sb,
+                    "our_sb_source": our_sb_source, "our_sb_reason": our_sb_reason,
+                    "opp_sb_source": opp_sb_source, "opp_sb_reason": opp_sb_reason,
                 })
 
                 # Apply credibility caps

@@ -208,6 +208,26 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### STRICT MODE + legacy engines labelled EXPERIMENTAL — 2026-09-30 (engine rebuild step 1-2)
+
+Spec `harness/specs/2026-09-30-strict-mode.md`, commit 3494c17. **Both current engines are legacy; their numbers
+are experimental** (launcher JSON `engine_status: legacy-experimental`; scoreboard header says so). Codex's
+architecture review (one rules engine, typed actions) is the plan: harness/reports/codex-review-mtg-sim-2026-09-29.md.
+`python parallel_launcher.py ... --strict` (or `MTG_SIM_STRICT=1`): a cell is a raw single-engine simulation or an
+ERROR -- no Bo3 -> heuristic fallback, no 25% aggro floor, no real-data substitution, no swallowed handler /
+primitive / APL / sideboard exception (`engine/strict.py`), and `fidelity.py` pre-flight on both decks (main 60,
+side <= 15, exact card names, every nonland card has a handler, a registered MatchAPL). Output reports
+`coverage_pct` = field share that produced a result. Strict runs never write the matchup matrix. Default OFF =
+unchanged (verified cell-for-cell).
+Strict baseline 2026-09-30: Izzet Prowess (modern) 68.2% coverage, Selesnya Landfall (standard) 69.3%, Boros
+Energy 0% (blocked: Umezawa's Jitte has no handler). 25/32 field decks pass the pre-flight. Found:
+- `CardDB.get` FUZZY-matches missing cards: Thor, God of Thunder (Izzet Control MAIN) is simulated as the card
+  "_____"; sideboard cards Belion / Abrupt Inquiry / Kinetic Hellion / Avengers Disassembled likewise -> oracle DB
+  lacks recent cards.
+- Handler crashes hidden by default mode: Resonating Lute ETB (`ManaPool.floating`) -- 4C Control's Lute did
+  nothing; Walking Ballista ETB (`int.get`); Esper Blink APL `list.remove`.
+- Amulet Titan list has 61 cards; Pyromancer Ascension + Urabrask (Ruby Storm) have no handlers.
+
 ### Own pilots for the proxy decks — 2026-09-30
 
 Spec `harness/specs/2026-09-30-proxy-pilots.md`. New MatchAPLs: `four_color_control_standard_match`,

@@ -208,6 +208,19 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### Exact card identity + versioned Scryfall snapshot — 2026-09-30
+
+Spec `harness/specs/2026-09-30-card-identity-gate.md`, commits bd4b87e + the snapshot commit. `CardDB.get` is EXACT
+(normalised name or card-face name; case/punctuation ignored, so "Wear / Tear" == "Wear // Tear") -- the old
+substring match played Thor as "_____". Deck loaders raise `engine.card_db.UnknownCardError(names, suggestions)`:
+no placeholder 1/1s, no Scryfall API fallback, `load_deck_and_apl` does not swallow it. `CardDB.suggest()` is for
+error text only. Oracle/rulings snapshot = Scryfall bulk 2026-09-30T09:01Z, recorded in
+`data/rules_reference/SNAPSHOT.json` (old files kept as *.2026-05-02.json). Explicit deck errors left visible:
+Izzet Spellementals (Belion, the Parched -- in 183 real decklists but not on Scryfall), Azorius Aggro (Abrupt
+Inquiry) and Jeskai Control (Kinetic Hellion) -- 0 real decklists, bad entries in curated files.
+NOTE strict mode guarantees EXECUTION HONESTY, not rules correctness: it still admits `auto` (oracle-parser) and
+`family` handlers; requiring verified semantics belongs to the engine rebuild.
+
 ### STRICT MODE + legacy engines labelled EXPERIMENTAL — 2026-09-30 (engine rebuild step 1-2)
 
 Spec `harness/specs/2026-09-30-strict-mode.md`, commit 3494c17. **Both current engines are legacy; their numbers

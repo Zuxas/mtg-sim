@@ -62,11 +62,11 @@
     "Dimir Midrange": 99.7,
     "Mono Red Aggro": 89.4,
     "Golgari Yawgmoth": 91.6,
-    "Eldrazi Tron": 79.0,
-    "Gruul Broodscale": 64.8,
     "Izzet Prowess": 36.2,
+    "Eldrazi Tron": 79.0,
     "Affinity": 43.5,
-    "Jeskai Blink": 58.5
+    "Jeskai Blink": 58.5,
+    "Gruul Broodscale": 64.8
   },
   "Boros Energy Variant Jermey (modern)": {
     "Amulet Titan": 62.3,
@@ -92,20 +92,20 @@
     "Boros Dragons": 95.2,
     "Mono Green Landfall": 87.8,
     "Izzet Spellementals": 87.9,
+    "Izzet Control": 88.9,
     "Four-Color Control": 84.3,
     "Boros Aggro": 72.4,
     "Dimir Midrange Std": 73.0,
     "Mardu Discard": 84.3,
-    "Azorius Control": 67.3,
     "Azorius Momo": 78.6,
     "Azorius Aggro": 80.7,
-    "Mono Green Aggro": 76.3,
-    "Sultai Control": 67.8,
+    "Azorius Control": 67.3,
     "Jeskai Control": 67.4,
+    "Sultai Control": 67.8,
+    "Mono Green Aggro": 76.3,
     "Dimir Excruciator": 58.1,
-    "Izzet Control": 88.9,
-    "Bant Airbending": 73.9,
-    "Azorius Prison": 56.7
+    "Azorius Prison": 56.7,
+    "Bant Airbending": 73.9
   },
   "UW Control (modern)": {
     "Boros Energy": 7.0,

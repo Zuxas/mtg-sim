@@ -208,6 +208,16 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### Sideboard plans validated (launcher G2/G3) — 2026-09-29
+
+Spec `harness/specs/2026-09-30-sideboard-plan-validation.md`. `sideboard_plans.choose_plan` picks our APL's
+`SB_PLANS[opp.ARCHETYPE]`, then the playbook plan, and uses one only if `validate_plan` passes (every line
+parses, exact card names, enough copies, cards in == cards out, engine applier == exact swap). Otherwise no
+sideboarding. Launcher results: `sb_mode` "validated" / "none" + `our_sb_source/_reason`, `opp_sb_source/_reason`
+(the old "real" label meant nothing). **Today 0 plans validate in the Modern or Standard field** (playbook lines
+like "~18%" / "5.0%", APL lines without quantities, cards no longer in the lists) -> G2/G3 are preboard
+everywhere. Writing real plans per deck is the follow-up.
+
 ### Combo routing + real matchup data in the launcher — 2026-09-29
 
 Spec `harness/specs/2026-09-30-combo-routing-fix.md`. `run_matchup` combo opponents used

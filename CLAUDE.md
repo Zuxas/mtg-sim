@@ -208,6 +208,22 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### Combo routing + real matchup data in the launcher — 2026-09-29
+
+Spec `harness/specs/2026-09-30-combo-routing-fix.md`. `run_matchup` combo opponents used
+`engine.combo_model` = a hard-coded Legacy Humans list (every deck got the same number). Now:
+1. REAL match record vs that opponent (`calibration.real_results.real_match_wr`: `matches` table, name maps,
+   window modern >= 2026-05-15 / standard >= 2026-08-15, >= 20 decisive) SHRUNK toward 50%:
+   (wins + 25) / (decisive + 50) -> `g1_source` "real", `match` = shrunk rate, G1/G2/G3 = its no-SB inverse.
+2. Else real engine Bo3 like a fair matchup (`combo_route` "engine").
+The fallback path (Path B) uses the same real lookup (replaced meta_bridge.get_real_matchup: stale
+`matchup_matrix`, no window, real match WR mis-fed as G1 + sb premium). Path A (fair Bo3 with a MatchAPL) does
+NOT consult real data -- inconsistency, user decision pending.
+Why shrunk real data: on real combo cells engine MAE 27.7pp, kill-clock 51.7, old model 13.9, coin flip 7.5;
+random-split holdout (47 cells): shrunk 7.04 < raw 8.03 < coin 8.12; engine 22.06 on shared cells.
+Boros Energy vs Modern field 68.5 -> 60.0. Esper Blink Bo3 crashes (`list.remove`, Codex finding #5) and falls
+to the fallback path -- now real data for Boros.
+
 ### REAL Standard field (current-meta decklists) — 2026-09-29
 
 Spec `harness/specs/2026-09-30-standard-field-refresh.md`, commit 4d06834. `FORMATS["standard"]["field"]`

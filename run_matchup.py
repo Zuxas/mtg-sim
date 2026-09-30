@@ -106,14 +106,10 @@ def _run_combo(result, opp_name, format_name, n, seed):
                    "match": bo3_win(g1, g2, g3)})
 
 
-# Archetypes whose stub decks lack real interaction — credibility cap applied to SIM G1
-INTERACTIVE = {
-    "thoughtseize","midrange","control","murktide","frog",
-    "rakdos","jund","esper","dimir","grixis",
-    "delver","tempo","taxes","death and","prison",
-    "four-color","four color","bant","azorius","jeskai",
-    "gruul","stompy",
-}
+# 2026-09-29: the opponent-name "credibility cap" (match > 75 -> 70, G1 > 75 -> 65 when
+# the opponent name contained control/dimir/azorius/...) was REMOVED -- fields and lists
+# are real now and it hid sim output. Accuracy is measured by `python -m calibration.scoreboard`.
+# Spec harness/specs/2026-09-30-remove-credibility-cap.md.
 
 # Our aggro decks shouldn't be floored lower than 25% vs anything
 AGGRO_OUR = {"aggro","prowess","burn","swiftspear","mono red","gruul","humans"}
@@ -243,14 +239,9 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
 
 
 def _apply_caps(result, our_deck, opp_name):
-    """Apply credibility caps to Bo3 match results."""
+    """Apply the aggro floor to Bo3 match results (the interactive cap was removed 2026-09-29)."""
     match_wr = result.get("match", 50.0)
-    opp_lower = opp_name.lower()
     our_lower = our_deck.lower()
-
-    if match_wr > 75 and any(k in opp_lower for k in INTERACTIVE):
-        result["match"] = min(match_wr, 70.0)
-        result["match_capped"] = True
 
     if match_wr < 25 and any(k in our_lower for k in AGGRO_OUR):
         result["match"] = max(match_wr, 25.0)
@@ -258,13 +249,8 @@ def _apply_caps(result, our_deck, opp_name):
 
 
 def _apply_caps_g1(result, g1, our_deck, opp_name):
-    """Apply credibility caps to G1 win rate (heuristic path)."""
-    opp_lower = opp_name.lower()
+    """Apply the aggro floor to G1 (heuristic path; the interactive cap was removed 2026-09-29)."""
     our_lower = our_deck.lower()
-
-    if g1 > 75 and any(k in opp_lower for k in INTERACTIVE):
-        g1 = min(g1, 65.0)
-        result["g1_capped"] = True
 
     if g1 < 25 and any(k in our_lower for k in AGGRO_OUR):
         g1 = max(g1, 25.0)

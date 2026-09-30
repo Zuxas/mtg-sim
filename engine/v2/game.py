@@ -18,7 +18,7 @@ from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, sba
 from engine.v2.rules.mana import land_color, payment_assignments, untapped_mana_sources
-from engine.v2.state import PLAYER_ZONES, GameState
+from engine.v2.state import GameState
 
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
          "first_strike_damage", "combat_damage", "end_combat", "main2", "end", "cleanup")
@@ -44,6 +44,7 @@ class Game:
     def __init__(self, state: GameState):
         self.s = state
         self.actions: list = []
+        self.action_transition_index: list = []  # transition count when each action was applied
         self._legal_cache = (None, None)
         self._sba_clean_at = -1          # log length at the last SBA check that found nothing
 
@@ -62,11 +63,7 @@ class Game:
             "starting_player": starting_player, "turn_limit": turn_limit,
             "decks": [list(deck_a), list(deck_b)], "check_invariants": check_invariants,
         }
-        s = GameState(config=config, rng=random.Random(seed))
-        for p in (0, 1):
-            for z in PLAYER_ZONES:
-                s.zones[(p, z)] = []
-        s.zones[("bf",)] = []
+        s = GameState(config=config, rng=random.Random(seed))       # empty zones by construction
         g = cls(s)
         g._setup()
         return g
@@ -113,6 +110,7 @@ class Game:
         if action not in self.legal_actions():
             raise IllegalAction(f"{action!r} is not a legal action now ({self.s.pending})")
         self.actions.append(action)
+        self.action_transition_index.append(len(self.s.log.transitions))
         getattr(self, "_do_" + type(action).__name__)(action)
 
     def run(self, policies, max_actions: int = 200000):

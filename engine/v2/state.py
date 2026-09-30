@@ -19,6 +19,12 @@ from engine.v2.events import EventLog
 PLAYER_ZONES = ("library", "hand", "graveyard", "exile")
 
 
+def _empty_zones() -> dict:
+    z = {(p, name): [] for p in (0, 1) for name in PLAYER_ZONES}
+    z[("bf",)] = []
+    return z
+
+
 @dataclass
 class Pending:
     kind: str                       # mulligan_declare | mulligan_bottom | priority | cast_targets | cast_mana |
@@ -36,7 +42,7 @@ class GameState:
     instances: dict = field(default_factory=dict)          # ciid -> CardInstance
     objects: dict = field(default_factory=dict)            # oid -> GameObject (live or suspended)
     retired: set = field(default_factory=set)              # retired ObjectIds (never reappear)
-    zones: dict = field(default_factory=dict)              # (player, zone) -> [oid]; ("bf",) -> [oid]
+    zones: dict = field(default_factory=_empty_zones)      # (player, zone) -> [oid]; ("bf",) -> [oid]
     stack: list = field(default_factory=list)              # StackEntry, bottom -> top
     life: list = field(default_factory=lambda: [20, 20])   # CR 103.4
     pools: list = field(default_factory=lambda: [dict.fromkeys("WUBRGC", 0), dict.fromkeys("WUBRGC", 0)])

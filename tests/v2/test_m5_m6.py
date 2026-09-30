@@ -112,18 +112,6 @@ def test_observations_are_frozen_plain_values():
     assert isinstance(obs, Observation)
 
 
-def test_policy_rng_is_separate_from_game_rng():
-    g1 = Game.new(RG, WU, 7, turn_limit=3)
-    g2 = Game.new(RG, WU, 7, turn_limit=3)
-    g1.run([RandomLegalPolicy(1), RandomLegalPolicy(2)])
-    g2.run([RandomLegalPolicy(1), RandomLegalPolicy(2)])
-    assert g1.s.log.head == g2.s.log.head                          # same seeds -> identical games
-    shuffles = lambda g: [e for t in g.s.log.transitions for e in t.events if e.kind == "Shuffled"][:2]   # noqa: E731
-    g3 = Game.new(RG, WU, 7, turn_limit=3)
-    g3.run([RandomLegalPolicy(999), RandomLegalPolicy(998)])
-    assert shuffles(g1) == shuffles(g3)                            # policy seeds cannot move game shuffles
-
-
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

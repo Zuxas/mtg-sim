@@ -14,7 +14,9 @@ def make_record(game, policy_seeds=None) -> dict:
     return {
         "config": {k: v for k, v in s.config.items()},
         "policy_seeds": policy_seeds,
+        "starting_player": s.starting_player,                      # resolved (mode is in config)
         "actions": [A.to_record(a) for a in game.actions],
+        "action_transition_index": list(game.action_transition_index),
         "transition_hashes": [t.hash for t in s.log.transitions],
         "log_head": s.log.head,
         "full_state_hash": s.full_state_hash(),
@@ -35,7 +37,12 @@ def replay(record: dict):
     g = Game.new(cfg["decks"][0], cfg["decks"][1], cfg["seed"], starting_mode=cfg["starting_mode"],
                  starting_player=cfg["starting_player"], turn_limit=cfg["turn_limit"],
                  check_invariants=cfg.get("check_invariants", False))
-    for rec in record["actions"]:
+    if g.s.starting_player != record.get("starting_player", g.s.starting_player):
+        raise ReplayMismatch("starting player differs")
+    idx = record.get("action_transition_index")
+    for i, rec in enumerate(record["actions"]):
+        if idx is not None and len(g.s.log.transitions) != idx[i]:
+            raise ReplayMismatch(f"action {i} applied at transition {len(g.s.log.transitions)}, recorded {idx[i]}")
         g.apply(A.from_record(rec))
     got = [t.hash for t in g.s.log.transitions]
     want = record["transition_hashes"]

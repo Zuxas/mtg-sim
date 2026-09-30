@@ -212,8 +212,15 @@ PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --s
 
 Spec `harness/specs/2026-09-30-field-and-lists-refresh.md`. Commits 228b3fc, 03e841e (lists),
 dadf88a (scoreboard after lists), 9d9fa76 (field).
+- **UPDATE same day (d570d9c, 015f947; spec 2026-09-30-field-registry-stub-fix):** registry
+  entries `izzetprowess`/`prowess`/`esperblink`/`domainzoo`/`domain` now load their
+  `decks/*_modern.txt` (were `data.stub_decks` keys) -> Izzet Prowess 9.0 + Esper Blink 5.4
+  re-added: field = 14 decks, ~57% of real appearances. Grixis Reanimator stays out (registry
+  proxies it to the Goryo's list on purpose). Boros vs field 56.00 -> 56.46. STILL OPEN: the
+  Standard field key "Izzet Prowess" and Legacy "Dimir Tempo" resolve format-blind to another
+  format's deck (`izzetprowessstandard` exists but that key never reaches it).
 - `FORMATS["modern"]["field"]` = REAL match-appearance shares (mtg_meta.db `matches`,
-  2026-05-15..09-13), 12 decks, ~42% of real appearances. A key enters only if
+  2026-05-15..09-13), 12 decks, ~42% of real appearances (before the update above). A key enters only if
   `load_deck_and_apl(key, "modern")` loads the name map's `deck_file` AND `get_match_apl(key)`
   is the mapped MatchAPL. **Izzet Prowess (real #1, 9.0%), Esper Blink 5.4%, Grixis Reanimator,
   Domain Zoo are LEFT OUT: their registry key loads a stub/other list** (Grixis Reanimator even

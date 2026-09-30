@@ -2,13 +2,21 @@
 
 commit(state, kind, ops) applies a list of ops as ONE atomic transition: each op is
 validated against the current state (an invalid op is an engine bug and raises
-EngineInvariantError -- never skipped), emits events, and the transition is appended to
-the event log. Invariants run after the whole transition (never mid-transition) when
-state.config["check_invariants"] is set.
+EngineInvariantError -- never skipped), emits at least one event (spec section 8: every
+op applied produces an event, so the chained transition hash covers every state change),
+and the transition is appended to the event log. Invariants run after the whole
+transition (never mid-transition) when state.config["check_invariants"] is set.
+
+Atomicity (spec section 15, copy-on-write of touched objects): while a transaction is
+open, the first touch of any state attribute, zone list, game object, the RNG or the
+object table saves a copy in `state.txn`; on any handler or invariant failure `rollback`
+restores every saved copy and truncates the event log, then the error is re-raised.
+Game.apply opens one transaction per action (all of its transitions); a commit made
+outside an action opens its own.
 """
 from __future__ import annotations
 
-from engine.v2.events import ev
+from engine.v2.events import Event, ev
 from engine.v2.objects import CardInstance, GameObject, StackEntry
 from engine.v2.state import Pending
 
@@ -22,21 +30,128 @@ def _need(cond, msg):
         raise EngineInvariantError(msg)
 
 
+# ---------------------------------------------------------------- transaction journal
+_LOG = ("log",)
+_RNG = ("rng",)
+
+
+def _same(v):                                             # immutable value (int / str / tuple / Pending*)
+    return v                                             # *Pending is replaced, never mutated in place
+
+
+# How each top-level attribute is saved on first touch (containers are copied so that in-place
+# mutation cannot reach the saved copy; stack entries are saved as (entry, field dict)).
+_COPY = {
+    "pools": lambda v: [dict(p) for p in v],
+    "open_cast": lambda v: None if v is None else {**v, "paid": dict(v["paid"]),
+                                                   "activations": list(v["activations"])},
+    "stack": lambda v: [(e, e.__dict__.copy()) for e in v],
+    "objects": dict, "instances": dict, "def_by_ciid": dict, "mull_declared": dict, "mull_bottoms": dict,
+    "attack_choices": dict, "block_choices": dict, "blocks": dict, "divisions": dict,
+    "retired": set,
+    "life": list, "land_played": list, "draw_failed": list, "mull_count": list, "kept": list, "lost": list,
+}
+
+
+def _keep(s, name):
+    t = s.txn
+    if name not in t:
+        t[name] = _COPY.get(name, _same)(getattr(s, name))
+
+
+# Journal keys: str = GameState attribute, int = ObjectId (fields of that object),
+# tuple = a zone key ((player, zone) or ("bf",)) or one of the markers _LOG / _RNG.
+def _obj(s, oid):
+    """The live object, its fields saved before their first mutation in this transaction."""
+    o = s.objects[oid]
+    t = s.txn
+    if oid not in t:
+        t[oid] = (o, o.__dict__.copy())
+    return o
+
+
+def _zone(s, key):
+    t = s.txn
+    if key not in t:
+        t[key] = list(s.zones[key])
+    return s.zones[key]
+
+
+def _keep_rng(s):
+    if _RNG not in s.txn:
+        s.txn[_RNG] = s.rng.getstate()
+
+
+def begin(s) -> bool:
+    """Open a transaction if none is open; returns True if the caller owns it. The journal
+    dict is reused (cleared) rather than reallocated, to keep allocation (GC) pressure low."""
+    if s.txn_open:
+        return False
+    s.txn_open = True
+    s.txn[_LOG] = len(s.log.transitions)
+    return True
+
+
+def end(s):
+    s.txn.clear()
+    s.txn_open = False
+
+
+def rollback(s):
+    """Restore every copy saved since begin() and truncate the event log."""
+    t = s.txn
+    for k, v in t.items():
+        if k == _LOG:
+            del s.log.transitions[v:]
+            del s.log._hashes[v:]
+        elif k == _RNG:
+            s.rng.setstate(v)
+        elif k == "stack":
+            for e, fields in v:
+                e.__dict__.update(fields)
+            s.stack = [e for e, _f in v]
+        elif isinstance(k, str):
+            setattr(s, k, v)
+        elif isinstance(k, int):                         # ObjectId: restore the fields in place
+            live, fields = v
+            live.__dict__.update(fields)
+        else:                                            # zone key
+            s.zones[k] = v
+    end(s)
+
+
+# ---------------------------------------------------------------- event interning
+# Events are immutable values; equal small-domain events (pending / priority / step
+# bookkeeping) share one object. Values and hashes are unchanged; it only keeps the
+# long-lived event log from allocating ~2k duplicate tuples per game (GC pressure).
+_INTERN: dict = {}
+
+
+def _iv(e):
+    got = _INTERN.get(e)
+    if got is None:
+        if len(_INTERN) > 20000:
+            _INTERN.clear()
+        _INTERN[e] = got = e
+    return got
+
+
 # ---------------------------------------------------------------- helpers
 def _alloc_oid(s) -> int:
+    _keep(s, "next_oid")
     oid = s.next_oid
     s.next_oid += 1
     return oid
 
 
-def _zone_list(s, obj_zone, player):
-    return s.zones[("bf",)] if obj_zone == "battlefield" else s.zones[(player, obj_zone)]
+def _zone_key(obj_zone, player):
+    return ("bf",) if obj_zone == "battlefield" else (player, obj_zone)
 
 
 def _remove_from_zone(s, o):
     if o.zone == "stack":
         return None
-    lst = _zone_list(s, o.zone, o.owner)
+    lst = _zone(s, _zone_key(o.zone, o.owner))
     idx = lst.index(o.oid)
     lst.pop(idx)
     return idx
@@ -49,6 +164,8 @@ def _move(s, oid, dest, position, controller, evs):
     src = o.zone
     _need(src != "suspended", f"move of suspended object {oid}")
     _remove_from_zone(s, o)
+    _keep(s, "objects")
+    _keep(s, "retired")
     del s.objects[oid]
     s.retired.add(oid)
     new = _alloc_oid(s)
@@ -57,7 +174,7 @@ def _move(s, oid, dest, position, controller, evs):
                     zone=dest, controlled_since=s.turn)
     s.objects[new] = no
     if dest != "stack":
-        lst = _zone_list(s, dest, o.owner)
+        lst = _zone(s, _zone_key(dest, o.owner))
         if position == "top":
             lst.insert(0, new)
         elif position == "bottom" or position == "end":
@@ -69,6 +186,46 @@ def _move(s, oid, dest, position, controller, evs):
 
 
 # ---------------------------------------------------------------- op handlers
+# TOUCHES[name] lists the top-level GameState attributes an op may mutate; commit saves
+# them before the handler runs. Objects, zone lists and the RNG are saved inside the
+# handlers on first touch (_obj / _zone / _keep_rng).
+TOUCHES = {
+    "create_card": ("next_ciid", "instances", "def_by_ciid", "objects"),
+    "starting_player": ("starting_player",),
+    "draw": ("draw_failed",),
+    "mull_declare": ("mull_declared",),
+    "mull_round_reset": ("mull_declared",),
+    "mull_count_inc": ("mull_count",),
+    "keep": ("kept",),
+    "store_bottom": ("mull_bottoms",),
+    "clear_bottoms": ("mull_bottoms",),
+    "begin_turn": ("turn", "active", "land_played"),
+    "empty_pools": ("pools",),
+    "priority": ("priority", "passes"),
+    "pending": ("pending",),
+    "land_played": ("land_played",),
+    "add_mana": ("pools",),
+    "spend_mana": ("pools", "open_cast"),
+    "open_cast": ("next_prov", "stack", "open_cast"),
+    "set_targets": ("stack",),
+    "record_activation": ("open_cast",),
+    "commit_cast": ("objects", "retired", "stack", "open_cast"),
+    "revert_cast": ("stack", "pools", "priority", "passes", "pending", "open_cast"),
+    "remove_entry": ("stack",),
+    "attack_choice": ("attack_choices",),
+    "block_choice": ("block_choices",),
+    "declare_attackers": ("attackers", "attack_choices"),
+    "declare_blockers": ("blocks", "blocked", "block_choices"),
+    "division": ("divisions",),
+    "clear_combat": ("attackers", "blocks", "blocked", "divisions", "attack_choices", "block_choices",
+                     "first_strike_done"),
+    "damage_player": ("life",),
+    "clear_draw_failed": ("draw_failed",),
+    "lose": ("lost",),
+    "end_game": ("result", "pending"),
+}
+
+
 def _h_create_card(s, evs, owner, name):
     ciid = s.next_ciid
     s.next_ciid += 1
@@ -77,12 +234,13 @@ def _h_create_card(s, evs, owner, name):
     s.def_by_ciid[ciid] = definitions()[name]
     oid = _alloc_oid(s)
     s.objects[oid] = GameObject(oid=oid, ciid=ciid, owner=owner, controller=owner, zone="library")
-    s.zones[(owner, "library")].append(oid)
+    _zone(s, (owner, "library")).append(oid)
     evs.append(ev("CardCreated", ciid=ciid, oid=oid, owner=owner, name=name))
 
 
 def _h_starting_player(s, evs, mode, player):
     if mode == "random":
+        _keep_rng(s)
         player = s.rng.randrange(2)
         evs.append(ev("RngDraw", purpose="starting_player", value=player))
     _need(player in (0, 1), "bad starting player")
@@ -91,7 +249,8 @@ def _h_starting_player(s, evs, mode, player):
 
 
 def _h_shuffle(s, evs, player):
-    lib = s.zones[(player, "library")]
+    _keep_rng(s)
+    lib = _zone(s, (player, "library"))
     s.rng.shuffle(lib)
     evs.append(ev("Shuffled", player=player, order=tuple(lib)))
 
@@ -113,8 +272,9 @@ def _h_move(s, evs, oid, dest, position="end", controller=None):
 def _h_set(s, evs, attr, value):
     """Bookkeeping fields only (whitelisted); rules fields have dedicated ops."""
     _need(attr in _SETTABLE, f"set of non-bookkeeping field {attr}")
+    _keep(s, attr)
     setattr(s, attr, value)
-    evs.append(ev("Set", attr=attr, value=value))
+    evs.append(_iv(ev("Set", attr=attr, value=value)))
 
 
 _SETTABLE = {"mull_stage", "mull_round", "step", "first_strike_done", "attackers", "blocked"}
@@ -128,6 +288,7 @@ def _h_mull_declare(s, evs, player, choice):
 
 def _h_mull_round_reset(s, evs):
     s.mull_declared = {}
+    evs.append(_iv(ev("MulliganRoundReset")))
 
 
 def _h_mull_count_inc(s, evs, player):
@@ -142,12 +303,15 @@ def _h_keep(s, evs, player):
 
 
 def _h_store_bottom(s, evs, player, cards):
+    # The event log is not part of any Observation, so the ordered choice is recorded here
+    # (hashed) without being revealed to the opponent.
     s.mull_bottoms[player] = tuple(cards)
-    evs.append(ev("BottomChosen", player=player))          # hidden: contents not in the event
+    evs.append(ev("BottomChosen", player=player, cards=tuple(cards)))
 
 
 def _h_clear_bottoms(s, evs):
     s.mull_bottoms = {}
+    evs.append(_iv(ev("BottomsCleared")))
 
 
 def _h_begin_turn(s, evs, turn, active):
@@ -160,14 +324,16 @@ def _h_untap_all(s, evs, player=None):
     """CR 502.3: the ACTIVE player untaps their permanents (resolved when the op applies,
     after any begin_turn earlier in the same transition)."""
     player = s.active if player is None else player
+    evs.append(_iv(ev("UntapStep", player=player)))
     for oid in s.zones[("bf",)]:
         o = s.objects[oid]
         if o.controller == player and o.tapped:
-            o.tapped = False
+            _obj(s, oid).tapped = False
             evs.append(ev("Untapped", oid=oid))
 
 
 def _h_empty_pools(s, evs):
+    lost_any = False
     for p in (0, 1):
         pool = s.pools[p]
         if not any(pool.values()):                      # usually already empty: nothing to do
@@ -175,33 +341,42 @@ def _h_empty_pools(s, evs):
         lost = tuple(sorted((c, n) for c, n in pool.items() if n))
         evs.append(ev("ManaEmptied", player=p, mana=lost))
         s.pools[p] = dict.fromkeys("WUBRGC", 0)
+        lost_any = True
+    if not lost_any:
+        evs.append(_NO_MANA_EMPTIED)
+
+
+_NO_MANA_EMPTIED = ev("ManaEmptied", player=None, mana=())
 
 
 def _h_priority(s, evs, player, passes):
     s.priority, s.passes = player, passes
-    evs.append(ev("Priority", player=player, passes=passes))
+    evs.append(_iv(Event("Priority", (("passes", passes), ("player", player)))))
 
 
 def _h_pending(s, evs, kind, player, info=()):
-    s.pending = Pending(kind, player, tuple(info)) if kind else None
+    info = tuple(info)
+    s.pending = Pending(kind, player, info) if kind else None
+    evs.append(_iv(Event("PendingSet", (("info", info), ("pkind", kind), ("player", player)))))
 
 
 def _h_land_played(s, evs, player):
     s.land_played[player] += 1
     _need(s.land_played[player] <= 1, "second land this turn")
+    evs.append(_iv(ev("LandDropUsed", player=player, count=s.land_played[player])))
 
 
 def _h_tap(s, evs, oid):
     o = s.objects[oid]
     _need(o.zone == "battlefield" and not o.tapped, f"tap of untapped-invalid {oid}")
-    o.tapped = True
+    _obj(s, oid).tapped = True
     evs.append(ev("Tapped", oid=oid))
 
 
 def _h_untap(s, evs, oid):
     o = s.objects[oid]
     _need(o.zone == "battlefield" and o.tapped, f"untap of {oid}")
-    o.tapped = False
+    _obj(s, oid).tapped = False
     evs.append(ev("Untapped", oid=oid))
 
 
@@ -223,7 +398,7 @@ def _h_open_cast(s, evs, source_oid, controller):
     o = s.objects[source_oid]
     _need(o.zone == "hand" and o.owner == controller, "cast from outside the caster's hand")
     idx = _remove_from_zone(s, o)
-    o.zone = "suspended"
+    _obj(s, source_oid).zone = "suspended"
     prov = f"P{s.next_prov}"
     s.next_prov += 1
     s.stack.append(StackEntry(sid=prov, ciid=o.ciid, controller=controller, state="proposed"))
@@ -243,6 +418,7 @@ def _h_set_targets(s, evs, sid, targets):
 def _h_record_activation(s, evs, land_oid, color):
     _need(s.open_cast is not None, "activation record without a cast")
     s.open_cast["activations"].append((land_oid, color))
+    evs.append(ev("ActivationRecorded", land=land_oid, color=color))
 
 
 def _h_commit_cast(s, evs, cost_symbols):
@@ -280,15 +456,15 @@ def _h_revert_cast(s, evs, reverse_mana):
     oc = s.open_cast
     _need(oc is not None, "revert without an open cast")
     _need(not oc["paid"], "revert after payment")
-    src = s.objects[oc["source"]]
+    src = _obj(s, oc["source"])
     src.zone = oc["from"]
-    s.zones[(src.owner, oc["from"])].insert(oc["index"], src.oid)
+    _zone(s, (src.owner, oc["from"])).insert(oc["index"], src.oid)
     s.stack = [e for e in s.stack if e.sid != oc["prov"]]
     if reverse_mana:
         for land, color in reversed(oc["activations"]):
             _need(s.pools[oc["controller"]][color] >= 1, "reversed mana already spent")
             s.pools[oc["controller"]][color] -= 1
-            s.objects[land].tapped = False
+            _obj(s, land).tapped = False
     s.priority, s.passes = oc["priority"], oc["passes"]
     s.pending = Pending(*oc["pending"]) if oc["pending"] else None
     s.open_cast = None
@@ -299,14 +475,17 @@ def _h_remove_entry(s, evs, sid):
     e = s.entry(sid)
     _need(e is not None, f"remove of missing stack entry {sid}")
     s.stack.remove(e)
+    evs.append(ev("StackEntryRemoved", sid=sid))
 
 
 def _h_attack_choice(s, evs, oid, attacks):
     s.attack_choices[oid] = bool(attacks)
+    evs.append(ev("AttackChosen", oid=oid, attacks=bool(attacks)))
 
 
 def _h_block_choice(s, evs, blocker, attacker):
     s.block_choices[blocker] = attacker
+    evs.append(ev("BlockChosen", blocker=blocker, attacker=attacker))
 
 
 def _h_declare_attackers(s, evs, attackers):
@@ -314,7 +493,7 @@ def _h_declare_attackers(s, evs, attackers):
         o = s.objects[a]
         _need(o.zone == "battlefield" and o.controller == s.active and not o.tapped, "illegal attacker")
         if not s.definition(a).has("Vigilance"):          # CR 508.1f, 702.20b
-            o.tapped = True
+            _obj(s, a).tapped = True
             evs.append(ev("Tapped", oid=a))
     s.attackers = tuple(attackers)
     s.attack_choices = {}
@@ -336,17 +515,19 @@ def _h_declare_blockers(s, evs, blocks):
 
 def _h_division(s, evs, attacker, division):
     s.divisions[attacker] = tuple(division)
+    evs.append(ev("DamageDivisionChosen", attacker=attacker, division=tuple(division)))
 
 
 def _h_clear_combat(s, evs):
     s.attackers, s.blocks, s.blocked, s.divisions = (), {}, (), {}
     s.attack_choices, s.block_choices, s.first_strike_done = {}, {}, False
+    evs.append(_iv(ev("CombatCleared")))
 
 
 def _h_damage_creature(s, evs, source, oid, n):
     o = s.objects.get(oid)
     _need(o is not None and o.zone == "battlefield", "damage to a creature not on the battlefield")
-    o.damage += n
+    _obj(s, oid).damage += n
     evs.append(ev("DamageDealt", source=source, target=("obj", oid), n=n))
 
 
@@ -359,6 +540,7 @@ def _h_damage_player(s, evs, source, player, n):
 def _h_eot_mod(s, evs, oid, p, t):
     o = s.objects[oid]
     _need(o.zone == "battlefield", "EOT modification of a non-permanent")
+    o = _obj(s, oid)
     o.eot_power += p
     o.eot_toughness += t
     evs.append(ev("PTModified", oid=oid, p=p, t=t))
@@ -368,12 +550,14 @@ def _h_cleanup_wear_off(s, evs):                          # CR 514.2 (simultaneo
     for oid in s.zones[("bf",)]:
         o = s.objects[oid]
         if o.damage or o.eot_power or o.eot_toughness:
+            o = _obj(s, oid)
             o.damage = o.eot_power = o.eot_toughness = 0
-    evs.append(ev("CleanupWearOff"))
+    evs.append(_iv(ev("CleanupWearOff")))
 
 
 def _h_clear_draw_failed(s, evs, player):
     s.draw_failed[player] = False
+    evs.append(_iv(ev("DrawFailedCleared", player=player)))
 
 
 def _h_lose(s, evs, player, reason):
@@ -393,15 +577,38 @@ def _h_note(s, evs, kind, *data):
 
 
 HANDLERS = {n[3:]: f for n, f in globals().items() if n.startswith("_h_")}
+# op name -> (handler, ((attr, copier), ...)): one lookup per op on the hot path
+_DISPATCH = {n: (h, tuple((a, _COPY.get(a, _same)) for a in TOUCHES.get(n, ()))) for n, h in HANDLERS.items()}
+assert set(TOUCHES) <= set(HANDLERS), set(TOUCHES) - set(HANDLERS)
 
 
 def commit(s, kind: str, ops) -> None:
-    evs: list = []
-    for o in ops:
-        h = HANDLERS.get(o.name)
-        _need(h is not None, f"unknown op {o.name}")
-        h(s, evs, *o.args)
-    s.log.append(kind, evs)
-    if s.config["check_invariants"]:
-        from engine.v2.invariants import check
-        check(s, kind)
+    t = s.txn
+    own = not s.txn_open
+    if own:
+        s.txn_open = True
+        t[_LOG] = len(s.log.transitions)
+    try:
+        evs: list = []
+        for name, args in ops:
+            d = _DISPATCH.get(name)
+            if d is None:
+                raise EngineInvariantError(f"unknown op {name}")
+            for attr, cp in d[1]:
+                if attr not in t:
+                    t[attr] = cp(getattr(s, attr))
+            n = len(evs)
+            d[0](s, evs, *args)
+            if len(evs) == n:
+                raise EngineInvariantError(f"op {name} produced no event")          # spec section 8
+        s.log.append(kind, evs)
+        if s.config["check_invariants"]:
+            from engine.v2.invariants import check
+            check(s, kind)
+    except BaseException:
+        if own:
+            rollback(s)
+        raise
+    if own:
+        t.clear()
+        s.txn_open = False

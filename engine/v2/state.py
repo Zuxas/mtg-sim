@@ -76,6 +76,8 @@ class GameState:
     next_prov: int = 1
     log: EventLog = field(default_factory=EventLog)
     def_by_ciid: dict = field(default_factory=dict)       # derived cache: ciid -> CardDefinition (not hashed)
+    txn: dict = field(default_factory=dict)                # reducer transaction journal (not hashed)
+    txn_open: bool = False
 
     # ------------------------------------------------------------ zone helpers (read-only)
     def zone(self, player, name) -> list:

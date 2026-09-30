@@ -109,9 +109,23 @@ class Game:
             raise GameOver(self.s.result)
         if action not in self.legal_actions():
             raise IllegalAction(f"{action!r} is not a legal action now ({self.s.pending})")
-        self.actions.append(action)
-        self.action_transition_index.append(len(self.s.log.transitions))
-        getattr(self, "_do_" + type(action).__name__)(action)
+        # One transaction per action: if any transition inside it fails (handler or invariant),
+        # the state, RNG, id counters, event log and this action record all return to their
+        # values before the action, and the error propagates.
+        n, legal_cache, sba_clean_at = len(self.actions), self._legal_cache, self._sba_clean_at
+        if not reducer.begin(self.s):
+            raise reducer.EngineInvariantError("transaction already open at apply")
+        try:
+            self.actions.append(action)
+            self.action_transition_index.append(len(self.s.log.transitions))
+            getattr(self, "_do_" + type(action).__name__)(action)
+        except BaseException:
+            reducer.rollback(self.s)
+            self._legal_cache, self._sba_clean_at = legal_cache, sba_clean_at
+            del self.actions[n:]
+            del self.action_transition_index[n:]
+            raise
+        reducer.end(self.s)
 
     def run(self, policies, max_actions: int = 200000):
         n = 0

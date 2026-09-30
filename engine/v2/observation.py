@@ -1,6 +1,8 @@
 """Per-seat immutable observation (spec section 4, I9). Hidden information respected:
 own hand (incl. a provisional mulligan hand) is visible, the opponent's hand is a count,
-libraries are counts, staged hidden choices (mulligan bottoms) are never shown."""
+libraries are counts, staged hidden choices (mulligan bottoms) are never shown. A seat sees its
+OWN staged combat choices (attackers and damage division for the active player, blocks for the
+defending player) but never the opponent's."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -16,7 +18,7 @@ class PermanentView:
     damage: int
     power: object
     toughness: object
-    can_attack: bool
+    can_attack: bool                # CR 508.1a: eligible to be declared as an attacker right now
 
 
 @dataclass(frozen=True)
@@ -50,11 +52,16 @@ class Observation:
     kept: tuple
     attackers: tuple
     blocks: tuple
+    my_attack_choices: tuple        # ((oid, attacks), ...) staged by this seat (active player only)
+    my_block_choices: tuple         # ((blocker, attacker or None), ...) staged by this seat (defender only)
+    my_divisions: tuple             # ((attacker, ((blocker, dmg), ...)), ...) staged by this seat (active only)
     result: object
 
 
 def observe(state, seat: int) -> Observation:
+    from engine.v2.rules.combat import eligible_attackers
     name = lambda oid: state.instances[state.objects[oid].ciid].name        # noqa: E731
+    can_attack = set(eligible_attackers(state))        # active player, controller, untapped, sickness/haste
     bf = []
     for oid in state.battlefield():
         o = state.objects[oid]
@@ -62,10 +69,11 @@ def observe(state, seat: int) -> Observation:
         bf.append(PermanentView(oid, d.name, o.owner, o.controller, o.tapped, o.damage,
                                 state.power(oid) if d.is_creature else None,
                                 state.toughness(oid) if d.is_creature else None,
-                                d.is_creature and (o.controlled_since < state.turn or d.has("Haste"))))
+                                oid in can_attack))
     stack = tuple(StackView(e.sid, state.instances[e.ciid].name, e.controller, e.state, tuple(e.targets))
                   for e in state.stack)
     opp = 1 - seat
+    attacking, defending = seat == state.active, seat != state.active
     return Observation(
         seat=seat, turn=state.turn, step=state.step, active=state.active, priority=state.priority,
         starting_player=state.starting_player, life=tuple(state.life),
@@ -79,4 +87,7 @@ def observe(state, seat: int) -> Observation:
         pending=state.pending.view() if state.pending else (),
         mull_counts=tuple(state.mull_count), kept=tuple(state.kept),
         attackers=tuple(state.attackers), blocks=tuple(sorted(state.blocks.items())),
+        my_attack_choices=tuple(sorted(state.attack_choices.items())) if attacking else (),
+        my_block_choices=tuple(sorted(state.block_choices.items(), key=lambda kv: kv[0])) if defending else (),
+        my_divisions=tuple(sorted(state.divisions.items())) if attacking else (),
         result=state.result)

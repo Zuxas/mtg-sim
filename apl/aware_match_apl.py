@@ -149,6 +149,9 @@ class AwareMatchAPL(MatchAPL):
 
     COUNTER_COST:  int = 0       # 0 = no bluffing (aggro); 2 = hold Spell Pierce mana
     COUNTER_CARDS: set = set()   # names of actual counters in this deck
+    # Counters missing from engine.counter_resolver.COUNTER_VALIDITY, same shape:
+    # {name: (validity_fn(spell) -> bool, base_cmc)}. Default {} -> unchanged.
+    EXTRA_COUNTER_VALIDITY: dict = {}
     BLINK_TARGETS: set = set()   # override per deck if needed
 
     # R1 priority-stack opt-in (design 1.5). DEFAULT OFF on the base class so the
@@ -709,8 +712,9 @@ class AwareMatchAPL(MatchAPL):
 
         spell_val = _spell_value(spell)
         candidates = []
+        extra = getattr(self, "EXTRA_COUNTER_VALIDITY", None) or {}
         for c in my_gs.zones.hand:
-            entry = COUNTER_VALIDITY.get(c.name)
+            entry = COUNTER_VALIDITY.get(c.name) or extra.get(c.name)
             if entry is None:
                 continue
             validity_fn, base_cmc = entry

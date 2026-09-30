@@ -471,7 +471,7 @@ MATCH_APL_REGISTRY = {
     "dimirmidrangestd":    ("apl.dimir_midrange_standard_match",           "DimirMidrangeStandardMatchAPL"),
     "dimirmidrangestdstd": ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"),
     "dimirmidrangejermey": ("apl.dimir_midrange_jermey_match",             "JermeyDimirMatchAPL"),
-    "fourcolorcontrol":    ("apl.jeskai_control_standard_match",           "JeskaiControlStandardMatchAPL"),
+    "fourcolorcontrol":    ("apl.four_color_control_standard_match",       "FourColorControlStandardMatchAPL"),   # own pilot 2026-09-30 (was the Jeskai Control proxy)
     "fourcolorelemental":  ("apl.izzet_spellementals_standard_match",      "IzzetSpellementalsStandardMatchAPL"),
     "golgaricontrol":      ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),
     "golgarikona":         ("apl.golgari_midrange_standard_match",         "GolgariMidrangeStandardMatchAPL"),

@@ -1,0 +1,23 @@
+{
+ "source": "Scryfall bulk-data API (https://api.scryfall.com/bulk-data)",
+ "installed": "2026-09-30",
+ "previous": "unversioned snapshot dated 2026-05-02 (kept as *.2026-05-02.json)",
+ "files": {
+  "scryfall_oracle_cards.json": {
+   "bulk_type": "oracle_cards",
+   "updated_at": "2026-09-30T09:01:54.917+00:00",
+   "download_uri": "https://data.scryfall.io/oracle-cards/oracle-cards-20260930090154.jsonl.gz",
+   "compressed_sha256": "7ff0258eede3a4469d4b4fb7764f4c01cc012fb3862bfe6ab6ad93ac5d81c221",
+   "objects": 38690,
+   "installed_bytes": 212205933
+  },
+  "scryfall_rulings.json": {
+   "bulk_type": "rulings",
+   "updated_at": "2026-09-30T09:00:35.559+00:00",
+   "download_uri": "https://data.scryfall.io/rulings/rulings-20260930090035.jsonl.gz",
+   "compressed_sha256": "ea4100c4015cea527b890183b289278716966e551bc9e48f19f98270f2afcb94",
+   "objects": 79706,
+   "installed_bytes": 27307168
+  }
+ }
+}

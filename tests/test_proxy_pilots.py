@@ -70,7 +70,7 @@ def test_pilots_never_cast_counters_proactively():
 def test_pilots_run_on_the_launcher_engine():
     from engine.match_engine import run_match
     for (key, fmt), _cls in PILOTS.items():
-        opp = "Izzet Spellementals" if fmt == "standard" else "Eldrazi Tron"
+        opp = "Mono Green Landfall" if fmt == "standard" else "Eldrazi Tron"   # Spellementals: unknown card (Belion) since 2026-09-30
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             ours, theirs = load_deck_and_apl(key, fmt)[0], load_deck_and_apl(opp, fmt)[0]
             for i in range(10):

@@ -70,8 +70,13 @@ def deck_fidelity(key: str, fmt: str) -> dict:
     from generate_matchup_data import load_deck_and_apl
     from engine.card_db import CardDB
     from apl import MATCH_APL_REGISTRY, _format_key, _normalize_key
-    with contextlib.redirect_stdout(io.StringIO()):
-        main, side, _ = load_deck_and_apl(key, fmt)
+    from engine.card_db import UnknownCardError
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            main, side, _ = load_deck_and_apl(key, fmt)
+    except UnknownCardError as e:     # exact-name loading refuses the deck outright
+        return {"deck": key, "format": fmt, "main": 0, "side": 0, "tier_counts": {}, "tiers": {},
+                "copies": {}, "blocks": [f"unresolved cards: {e.names}"], "ok": False}
     main, side = main or [], side or []
     db = CardDB()
     names = Counter(c.name for c in main)

@@ -162,7 +162,7 @@ def test_run_matchup_no_bo3_fallback():
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             with strict(True):
                 assert _raises(lambda: rm._run_fair({"our_deck": "Four-Color Control"}, "Four-Color Control",
-                                                    "Izzet Spellementals", "standard", 4, 42, 1))
+                                                    "Mono Green Landfall", "standard", 4, 42, 1))
     finally:
         bm.run_bo3_set = orig
 

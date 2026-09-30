@@ -482,7 +482,7 @@ MATCH_APL_REGISTRY = {
     "temuromniscience":    ("apl.azorius_omniscience_standard_match",      "AzoriusOmniscienceMatchAPL"),
     # ── Typo aliases + remaining proxy mappings ───────────────────────────────
     "borordragons":        ("apl.azorius_momo_standard_match",             "AzoriusMomoStandardMatchAPL"),   # typo; Boros Dragons ~ Azorius Momo (flying aggro)
-    "borosdragons":        ("apl.azorius_momo_standard_match",             "AzoriusMomoStandardMatchAPL"),   # proxy; dragon tribal flying aggro
+    "borosdragons":        ("apl.boros_dragons_standard_match",            "BorosDragonsStandardMatchAPL"),   # own pilot 2026-09-30 (was the Azorius Momo proxy)
     "borosenergyvariantjermey": ("apl.boros_energy_match",                 "BorosEnergyMatchAPL"),           # custom variant
     "dimiragggrostandard": ("apl.esper_raffine_standard_match",            "EsperRaffineMatchAPL"),           # typo of dimiraggro
     "dimiroculus":         ("apl.dimir_excruciator_standard_match",        "DimirExcruciatorStandardMatchAPL"), # Dimir Oculus ~ Dimir Midrange

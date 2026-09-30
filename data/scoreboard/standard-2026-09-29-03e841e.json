@@ -1,0 +1,995 @@
+{
+ "cells": [
+  {
+   "a": "Izzet Prowess",
+   "b": "Izzet Spellementals",
+   "delta": 0.4772,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 843,
+   "real_draws": 8,
+   "real_hi": 0.5461,
+   "real_lo": 0.4787,
+   "real_wr": 0.5125,
+   "same_side": true,
+   "sim_g1": 0.94,
+   "sim_match": 0.9896,
+   "sim_n": 400,
+   "trust": "trusted"
+  },
+  {
+   "a": "Four-Color Control",
+   "b": "Izzet Spellementals",
+   "delta": -0.5312,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 370,
+   "real_draws": 4,
+   "real_hi": 0.6145,
+   "real_lo": 0.5139,
+   "real_wr": 0.5649,
+   "same_side": false,
+   "sim_g1": 0.11,
+   "sim_match": 0.0336,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Four-Color Control",
+   "b": "Izzet Prowess",
+   "delta": -0.3731,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 548,
+   "real_draws": 7,
+   "real_hi": 0.419,
+   "real_lo": 0.3381,
+   "real_wr": 0.3777,
+   "same_side": true,
+   "sim_g1": 0.04,
+   "sim_match": 0.0047,
+   "sim_n": 400,
+   "trust": "trusted"
+  },
+  {
+   "a": "Izzet Lessons",
+   "b": "Izzet Prowess",
+   "delta": 0.449,
+   "mismodel": "Izzet Lessons: MILDLY OFF / STUB (real PT list, 14-card sideboard)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 247,
+   "real_draws": 3,
+   "real_hi": 0.5117,
+   "real_lo": 0.3886,
+   "real_wr": 0.4494,
+   "same_side": false,
+   "sim_g1": 0.8025,
+   "sim_match": 0.8984,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Lessons",
+   "b": "Izzet Spellementals",
+   "delta": 0.5646,
+   "mismodel": "Izzet Lessons: MILDLY OFF / STUB (real PT list, 14-card sideboard)",
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 149,
+   "real_draws": 1,
+   "real_hi": 0.4964,
+   "real_lo": 0.34,
+   "real_wr": 0.4161,
+   "same_side": false,
+   "sim_g1": 0.9175,
+   "sim_match": 0.9807,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Azorius Momo",
+   "b": "Four-Color Control",
+   "delta": 0.5895,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 109,
+   "real_draws": 0,
+   "real_hi": 0.4883,
+   "real_lo": 0.3078,
+   "real_wr": 0.3945,
+   "same_side": false,
+   "sim_g1": 0.925,
+   "sim_match": 0.984,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Azorius Momo",
+   "b": "Izzet Spellementals",
+   "delta": 0.5026,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 133,
+   "real_draws": 2,
+   "real_hi": 0.5359,
+   "real_lo": 0.3691,
+   "real_wr": 0.4511,
+   "same_side": false,
+   "sim_g1": 0.87,
+   "sim_match": 0.9537,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Dimir Excruciator",
+   "b": "Four-Color Control",
+   "delta": 0.4053,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 192,
+   "real_draws": 1,
+   "real_hi": 0.6308,
+   "real_lo": 0.4918,
+   "real_wr": 0.5625,
+   "same_side": true,
+   "sim_g1": 0.8925,
+   "sim_match": 0.9678,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Spellementals",
+   "b": "Mardu Discard",
+   "delta": -0.3738,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 193,
+   "real_draws": 2,
+   "real_hi": 0.5109,
+   "real_lo": 0.3722,
+   "real_wr": 0.4404,
+   "same_side": true,
+   "sim_g1": 0.1575,
+   "sim_match": 0.0666,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Four-Color Control",
+   "b": "Izzet Lessons",
+   "delta": -0.4737,
+   "mismodel": "Izzet Lessons: MILDLY OFF / STUB (real PT list, 14-card sideboard)",
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 114,
+   "real_draws": 1,
+   "real_hi": 0.5647,
+   "real_lo": 0.3844,
+   "real_wr": 0.4737,
+   "same_side": true,
+   "sim_g1": 0.0,
+   "sim_match": 0.0,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Prowess",
+   "b": "Mardu Discard",
+   "delta": 0.2702,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 318,
+   "real_draws": 0,
+   "real_hi": 0.6071,
+   "real_lo": 0.4985,
+   "real_wr": 0.5535,
+   "same_side": true,
+   "sim_g1": 0.7325,
+   "sim_match": 0.8236,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Dimir Excruciator",
+   "b": "Izzet Spellementals",
+   "delta": 0.2991,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 233,
+   "real_draws": 2,
+   "real_hi": 0.6286,
+   "real_lo": 0.5023,
+   "real_wr": 0.5665,
+   "same_side": true,
+   "sim_g1": 0.77,
+   "sim_match": 0.8656,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Four-Color Control",
+   "b": "Mardu Discard",
+   "delta": -0.3465,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 141,
+   "real_draws": 1,
+   "real_hi": 0.4581,
+   "real_lo": 0.3002,
+   "real_wr": 0.3759,
+   "same_side": true,
+   "sim_g1": 0.1025,
+   "sim_match": 0.0294,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Dimir Excruciator",
+   "b": "Izzet Prowess",
+   "delta": -0.1949,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": true,
+   "real_decisive": 421,
+   "real_draws": 2,
+   "real_hi": 0.4585,
+   "real_lo": 0.3649,
+   "real_wr": 0.4109,
+   "same_side": true,
+   "sim_g1": 0.3,
+   "sim_match": 0.216,
+   "sim_n": 400,
+   "trust": "trusted"
+  },
+  {
+   "a": "Izzet Prowess",
+   "b": "Jeskai Control",
+   "delta": 0.3121,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 162,
+   "real_draws": 1,
+   "real_hi": 0.6476,
+   "real_lo": 0.4971,
+   "real_wr": 0.5741,
+   "same_side": true,
+   "sim_g1": 0.79,
+   "sim_match": 0.8862,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Azorius Momo",
+   "b": "Izzet Prowess",
+   "delta": -0.1407,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 292,
+   "real_draws": 4,
+   "real_hi": 0.6107,
+   "real_lo": 0.4974,
+   "real_wr": 0.5548,
+   "same_side": false,
+   "sim_g1": 0.4425,
+   "sim_match": 0.4141,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Spellementals",
+   "b": "Jeskai Control",
+   "delta": -0.1483,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 146,
+   "real_draws": 0,
+   "real_hi": 0.5734,
+   "real_lo": 0.4133,
+   "real_wr": 0.4932,
+   "same_side": true,
+   "sim_g1": 0.395,
+   "sim_match": 0.3448,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Azorius Prison",
+   "b": "Izzet Prowess",
+   "delta": 0.1228,
+   "mismodel": null,
+   "miss": true,
+   "real_clear": false,
+   "real_decisive": 107,
+   "real_draws": 1,
+   "real_hi": 0.6511,
+   "real_lo": 0.4662,
+   "real_wr": 0.5607,
+   "same_side": true,
+   "sim_g1": 0.625,
+   "sim_match": 0.6836,
+   "sim_n": 400,
+   "trust": "directional"
+  },
+  {
+   "a": "Izzet Prowess",
+   "b": "Selesnya Ouroboroid",
+   "delta": 0.0192,
+   "mismodel": null,
+   "miss": false,
+   "real_clear": false,
+   "real_decisive": 162,
+   "real_draws": 1,
+   "real_hi": 0.5091,
+   "real_lo": 0.3583,
+   "real_wr": 0.4321,
+   "same_side": true,
+   "sim_g1": 0.4675,
+   "sim_match": 0.4513,
+   "sim_n": 400,
+   "trust": "directional"
+  }
+ ],
+ "commit": "03e841e",
+ "coverage": {
+  "mapped_rows": 11030,
+  "mapped_share": 0.447,
+  "real_field_unmapped_pct": 34.11,
+  "real_rows": 24659,
+  "top_unmapped": {
+   "5C Aggro": 748,
+   "5C Combo": 353,
+   "5C Control": 210,
+   "5C Landfall": 5914,
+   "Azorius Flash": 258,
+   "Azorius Fliers": 310,
+   "Dimir Deceit": 183,
+   "Dimir Reanimator": 178,
+   "Four-Color": 402,
+   "Izzet Aggro": 811,
+   "Jeskai Lessons": 781,
+   "Mardu Aggro": 585,
+   "Mono Red Aggro": 233,
+   "Selesnya Bogles": 241,
+   "Temur Aggro": 199
+  }
+ },
+ "field": [
+  {
+   "deck": "Izzet Prowess",
+   "modeled_pct": 9.5,
+   "real_pct": 15.73
+  },
+  {
+   "deck": "Izzet Spellementals",
+   "modeled_pct": 4.9,
+   "real_pct": 10.88
+  },
+  {
+   "deck": "Four-Color Control",
+   "modeled_pct": null,
+   "real_pct": 7.46
+  },
+  {
+   "deck": "Dimir Excruciator",
+   "modeled_pct": 2.0,
+   "real_pct": 4.85
+  },
+  {
+   "deck": "Mardu Discard",
+   "modeled_pct": null,
+   "real_pct": 3.33
+  },
+  {
+   "deck": "Izzet Lessons",
+   "modeled_pct": 3.5,
+   "real_pct": 2.85
+  },
+  {
+   "deck": "Azorius Momo",
+   "modeled_pct": 1.5,
+   "real_pct": 2.68
+  },
+  {
+   "deck": "Jeskai Control",
+   "modeled_pct": 2.3,
+   "real_pct": 2.42
+  },
+  {
+   "deck": "Selesnya Ouroboroid",
+   "modeled_pct": 1.8,
+   "real_pct": 1.61
+  },
+  {
+   "deck": "Izzet Control",
+   "modeled_pct": null,
+   "real_pct": 1.42
+  },
+  {
+   "deck": "Dimir Midrange",
+   "modeled_pct": null,
+   "real_pct": 1.33
+  },
+  {
+   "deck": "Temur Omniscience",
+   "modeled_pct": null,
+   "real_pct": 1.22
+  },
+  {
+   "deck": "Azorius Control",
+   "modeled_pct": null,
+   "real_pct": 1.19
+  },
+  {
+   "deck": "Temur Prowess",
+   "modeled_pct": null,
+   "real_pct": 1.19
+  },
+  {
+   "deck": "Azorius Prison",
+   "modeled_pct": null,
+   "real_pct": 1.01
+  },
+  {
+   "deck": "Sultai Control",
+   "modeled_pct": null,
+   "real_pct": 0.9
+  },
+  {
+   "deck": "Azorius Aggro",
+   "modeled_pct": null,
+   "real_pct": 0.89
+  },
+  {
+   "deck": "Golgari Midrange",
+   "modeled_pct": null,
+   "real_pct": 0.8
+  },
+  {
+   "deck": "Bant Rhythm",
+   "modeled_pct": 15.0,
+   "real_pct": 0.69
+  },
+  {
+   "deck": "Azorius Blink",
+   "modeled_pct": null,
+   "real_pct": 0.55
+  },
+  {
+   "deck": "Sultai Reanimator",
+   "modeled_pct": 10.1,
+   "real_pct": 0.55
+  },
+  {
+   "deck": "Boros Aggro",
+   "modeled_pct": null,
+   "real_pct": 0.51
+  },
+  {
+   "deck": "Selesnya Rhythm",
+   "modeled_pct": null,
+   "real_pct": 0.51
+  },
+  {
+   "deck": "Boros Dragons",
+   "modeled_pct": null,
+   "real_pct": 0.4
+  },
+  {
+   "deck": "Bant Airbending",
+   "modeled_pct": 6.5,
+   "real_pct": 0.39
+  },
+  {
+   "deck": "Mono Green Aggro",
+   "modeled_pct": null,
+   "real_pct": 0.38
+  },
+  {
+   "deck": "Simic Rhythm",
+   "modeled_pct": 15.7,
+   "real_pct": 0.13
+  },
+  {
+   "deck": "Boros Discard",
+   "modeled_pct": null,
+   "real_pct": 0.01
+  },
+  {
+   "deck": "Rakdos Discard",
+   "modeled_pct": null,
+   "real_pct": 0.01
+  },
+  {
+   "deck": "Izzet Looting",
+   "modeled_pct": null,
+   "real_pct": 0.0
+  },
+  {
+   "deck": "Five-Color Rhythm",
+   "modeled_pct": 2.9,
+   "real_pct": 0
+  },
+  {
+   "deck": "Grixis Elementals",
+   "modeled_pct": 2.5,
+   "real_pct": 0
+  },
+  {
+   "deck": "Selesnya Landfall",
+   "modeled_pct": 4.8,
+   "real_pct": 0
+  },
+  {
+   "deck": "Mono Green Landfall",
+   "modeled_pct": 4.5,
+   "real_pct": 0
+  }
+ ],
+ "format": "standard",
+ "generated": "2026-09-29",
+ "headline": {
+  "all": {
+   "cells": 19,
+   "direction_agree": 0.571,
+   "direction_cells": 7,
+   "median_abs_delta_pp": 37.31,
+   "misses": 18,
+   "pearson_r": 0.301,
+   "real_matches": 4880,
+   "slope_real_on_sim": 0.054,
+   "spread_ratio": 5.65,
+   "spread_real_pp": 6.5,
+   "spread_sim_pp": 36.7,
+   "weighted_mae_pp": 35.85
+  },
+  "not_flagged": {
+   "cells": 16,
+   "direction_agree": 0.667,
+   "direction_cells": 6,
+   "median_abs_delta_pp": 34.65,
+   "misses": 15,
+   "pearson_r": 0.432,
+   "real_matches": 4370,
+   "slope_real_on_sim": 0.084,
+   "spread_ratio": 5.21,
+   "spread_real_pp": 6.71,
+   "spread_sim_pp": 34.96,
+   "weighted_mae_pp": 34.33
+  },
+  "trusted": {
+   "cells": 3,
+   "direction_agree": 1.0,
+   "direction_cells": 2,
+   "median_abs_delta_pp": 37.31,
+   "misses": 3,
+   "pearson_r": 0.999,
+   "real_matches": 1812,
+   "slope_real_on_sim": 0.135,
+   "spread_ratio": 5.67,
+   "spread_real_pp": 7.46,
+   "spread_sim_pp": 42.3,
+   "weighted_mae_pp": 38.01
+  }
+ },
+ "lists": {
+  "Azorius Aggro": {
+   "cosine": 0.395,
+   "missing_staples": [
+    "Aang, Swift Savior",
+    "Starting Town",
+    "Skycoach Conductor",
+    "Restless Anchorage",
+    "Aven Interrupter",
+    "Voice of Victory",
+    "High Noon",
+    "Avatar's Wrath",
+    "Multiversal Passage"
+   ],
+   "rare_in_real": [
+    "Cavern of Souls",
+    "Deepchannel Duelist",
+    "Deepway Navigator",
+    "Disruptor of Currents",
+    "Mindspring Merfolk",
+    "Silvergill Mentor",
+    "Sygg's Command",
+    "Three Steps Ahead",
+    "Tishana's Tidebinder",
+    "Wanderbrine Trapper"
+   ],
+   "real_decks": 77
+  },
+  "Azorius Blink": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Azorius Control": {
+   "cosine": 0.189,
+   "missing_staples": [
+    "Floodfarm Verge",
+    "Hallowed Fountain",
+    "Island",
+    "Meticulous Archive",
+    "Day of Judgment"
+   ],
+   "rare_in_real": [
+    "Cavern of Souls",
+    "Cosmogrand Zenith",
+    "Enduring Innocence",
+    "Novice Inspector",
+    "Nurturing Pixie",
+    "Shardmage's Rescue",
+    "Soulstone Sanctuary",
+    "Splitskin Doll",
+    "Starfield Shepherd",
+    "Voice of Victory",
+    "Zack Fair"
+   ],
+   "real_decks": 71
+  },
+  "Azorius Momo": {
+   "cosine": 0.628,
+   "missing_staples": [
+    "Daydream",
+    "Floodfarm Verge",
+    "Hallowed Fountain",
+    "Quantum Riddler",
+    "Practiced Offense",
+    "Erode",
+    "Multiversal Passage",
+    "Aang, Swift Savior",
+    "Gran-Gran"
+   ],
+   "rare_in_real": [
+    "Curious Farm Animals",
+    "Soulstone Sanctuary",
+    "Voice of Victory"
+   ],
+   "real_decks": 108
+  },
+  "Azorius Prison": {
+   "cosine": 0.832,
+   "missing_staples": [
+    "Abandoned Air Temple",
+    "Enduring Curiosity",
+    "Erode",
+    "Restless Anchorage"
+   ],
+   "rare_in_real": [],
+   "real_decks": 2
+  },
+  "Bant Airbending": {
+   "cosine": 0.919,
+   "missing_staples": [
+    "Michelangelo's Technique"
+   ],
+   "rare_in_real": [],
+   "real_decks": 21
+  },
+  "Bant Rhythm": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Boros Aggro": {
+   "cosine": 0.453,
+   "missing_staples": [
+    "Plains"
+   ],
+   "rare_in_real": [
+    "Burnout Bashtronaut",
+    "Cheeky House-Mouse",
+    "Full Bore",
+    "Honor",
+    "Leyline of Resonance",
+    "Might of the Meek",
+    "Turn Inside Out"
+   ],
+   "real_decks": 82
+  },
+  "Boros Discard": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Boros Dragons": {
+   "cosine": 0.865,
+   "missing_staples": [
+    "Smaug the Magnificent",
+    "Plains"
+   ],
+   "rare_in_real": [
+    "Lorehold, the Historian",
+    "Spectacular Tactics"
+   ],
+   "real_decks": 30
+  },
+  "Dimir Excruciator": {
+   "cosine": 0.95,
+   "missing_staples": [
+    "Multiversal Passage"
+   ],
+   "rare_in_real": [],
+   "real_decks": 9
+  },
+  "Dimir Midrange": {
+   "cosine": 0.586,
+   "missing_staples": [
+    "Duress",
+    "Undercity Sewers",
+    "Deceit",
+    "Day of Black Sun",
+    "Strategic Betrayal",
+    "Emeritus of Ideation",
+    "Superior Spider-Man"
+   ],
+   "rare_in_real": [
+    "Deep-Cavern Bat",
+    "Phantom Interference",
+    "Preacher of the Schism",
+    "Starting Town"
+   ],
+   "real_decks": 46
+  },
+  "Four-Color Control": {
+   "cosine": 0.773,
+   "missing_staples": [
+    "Tablet of Discovery",
+    "Sacred Foundry",
+    "Sear"
+   ],
+   "rare_in_real": [
+    "Resonating Lute",
+    "Spell Snare"
+   ],
+   "real_decks": 319
+  },
+  "Golgari Midrange": {
+   "cosine": 0.77,
+   "missing_staples": [
+    "Deathcap Glade",
+    "Ral Zarek, Guest Lecturer",
+    "Sentinel of the Nameless City"
+   ],
+   "rare_in_real": [
+    "Firdoch Core",
+    "Intimidation Tactics",
+    "Soulstone Sanctuary",
+    "Tragedy Feaster",
+    "Unholy Annex // Ritual Chamber"
+   ],
+   "real_decks": 4
+  },
+  "Izzet Control": {
+   "cosine": 0.809,
+   "missing_staples": [],
+   "rare_in_real": [
+    "Spectral Interference"
+   ],
+   "real_decks": 52
+  },
+  "Izzet Lessons": {
+   "cosine": 0.72,
+   "missing_staples": [
+    "Great Hall of the Biblioplex",
+    "Flashback",
+    "Hallowed Fountain",
+    "Improvisation Capstone",
+    "Jeskai Revelation",
+    "Mistrise Village",
+    "Stock Up",
+    "Sundown Pass",
+    "Tablet of Discovery"
+   ],
+   "rare_in_real": [
+    "Spell Pierce"
+   ],
+   "real_decks": 10
+  },
+  "Izzet Looting": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Izzet Prowess": {
+   "cosine": 0.861,
+   "missing_staples": [
+    "Spell Pierce",
+    "Vibrant Outburst"
+   ],
+   "rare_in_real": [
+    "Three Steps Ahead"
+   ],
+   "real_decks": 621
+  },
+  "Izzet Spellementals": {
+   "cosine": 0.905,
+   "missing_staples": [
+    "Get Out",
+    "Impractical Joke"
+   ],
+   "rare_in_real": [],
+   "real_decks": 417
+  },
+  "Jeskai Control": {
+   "cosine": 0.534,
+   "missing_staples": [
+    "Great Hall of the Biblioplex",
+    "Tablet of Discovery",
+    "Sundown Pass",
+    "Firebending Lesson",
+    "Flashback"
+   ],
+   "rare_in_real": [
+    "Lightning Helix",
+    "North Wind Avatar",
+    "Restless Anchorage",
+    "Seam Rip",
+    "Shiko, Paragon of the Way",
+    "Ultima",
+    "Wan Shi Tong, Librarian"
+   ],
+   "real_decks": 94
+  },
+  "Mardu Discard": {
+   "cosine": 0.844,
+   "missing_staples": [
+    "Carnage, Crimson Chaos",
+    "Requiting Hex",
+    "Inti, Seneschal of the Sun",
+    "Swamp"
+   ],
+   "rare_in_real": [
+    "Cecil, Dark Knight",
+    "Shardmage's Rescue"
+   ],
+   "real_decks": 8
+  },
+  "Mono Green Aggro": {
+   "cosine": 0.819,
+   "missing_staples": [
+    "Sapling Nursery"
+   ],
+   "rare_in_real": [
+    "Archdruid's Charm"
+   ],
+   "real_decks": 114
+  },
+  "Mono Green Landfall": {
+   "cosine": 0.893,
+   "missing_staples": [
+    "Demolition Field",
+    "Surrak, Elusive Hunter"
+   ],
+   "rare_in_real": [],
+   "real_decks": 323
+  },
+  "Rakdos Discard": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Selesnya Landfall": {
+   "cosine": 0.925,
+   "missing_staples": [
+    "Dyadrine, Synthesis Amalgam",
+    "Mossborn Hydra"
+   ],
+   "rare_in_real": [],
+   "real_decks": 102
+  },
+  "Selesnya Ouroboroid": {
+   "cosine": 0.651,
+   "missing_staples": [
+    "Ba Sing Se",
+    "Bedeck / Bedazzle",
+    "Leatherhead, Swamp Stalker",
+    "Multiversal Passage",
+    "Practiced Offense",
+    "Spider Manifestation",
+    "Surrak, Elusive Hunter",
+    "Voice of Victory"
+   ],
+   "rare_in_real": [
+    "Erode",
+    "Keen-Eyed Curator",
+    "Nurturing Pixie",
+    "Sage of the Skies",
+    "Starting Town"
+   ],
+   "real_decks": 1
+  },
+  "Selesnya Rhythm": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Simic Rhythm": {
+   "cosine": 0.739,
+   "missing_staples": [
+    "Mockingbird"
+   ],
+   "rare_in_real": [
+    "Frostcliff Siege",
+    "Great Divide Guide",
+    "Spider-Sense",
+    "Stomping Ground"
+   ],
+   "real_decks": 13
+  },
+  "Sultai Control": {
+   "cosine": 0.669,
+   "missing_staples": [
+    "Deadly Cover-Up",
+    "Professor Dellian Fel",
+    "Bitter Triumph",
+    "Great Hall of the Biblioplex"
+   ],
+   "rare_in_real": [
+    "Black Cat, Cunning Thief"
+   ],
+   "real_decks": 59
+  },
+  "Sultai Reanimator": {
+   "cosine": 0.285,
+   "missing_staples": [
+    "Ardyn, the Usurper",
+    "Awaken the Honored Dead",
+    "Bedeck / Bedazzle",
+    "Bitter Triumph",
+    "Breeding Pool",
+    "Cavern of Souls",
+    "Deceit",
+    "Formidable Speaker",
+    "Gloomlake Verge",
+    "Hedge Maze",
+    "Multiversal Passage",
+    "Oblivious Bookworm",
+    "Requiting Hex",
+    "Superior Spider-Man",
+    "Terror of the Peaks",
+    "Town Greeter",
+    "Undercity Sewers",
+    "Underground Mortuary",
+    "Willowrush Verge",
+    "Wistfulness"
+   ],
+   "rare_in_real": [
+    "Duress",
+    "Esper Origins",
+    "Faerie Dreamthief",
+    "Fatal Push",
+    "Feed the Cycle",
+    "Forest",
+    "Jadar, Ghoulcaller of Nephalia",
+    "Nowhere to Run",
+    "Soulstone Sanctuary",
+    "Witherbloom, the Balancer",
+    "Zagoth Triome"
+   ],
+   "real_decks": 1
+  },
+  "Temur Omniscience": {
+   "cosine": null,
+   "real_decks": 0
+  },
+  "Temur Prowess": {
+   "cosine": null,
+   "real_decks": 0
+  }
+ },
+ "min_real": 100,
+ "n_per_cell": 400,
+ "seed": 42,
+ "since": "2026-05-15",
+ "until": "2026-09-13"
+}

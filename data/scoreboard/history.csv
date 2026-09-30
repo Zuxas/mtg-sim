@@ -1,3 +1,5 @@
 commit,generated,format,since,cells,real_matches,weighted_mae_pp,misses,direction_agree,mapped_share,pearson_r,spread_ratio
 e439caa,2026-09-29,modern,2026-05-15,21,3250,21.43,18,0.75,0.349,0.276,3.43
 a98c6fb,2026-09-29,standard,2026-05-15,19,4880,35.85,18,0.571,0.447,0.301,5.65
+03e841e,2026-09-29,modern,2026-05-15,21,3250,21.57,18,0.75,0.349,0.274,3.46
+03e841e,2026-09-29,standard,2026-05-15,19,4880,35.85,18,0.571,0.447,0.301,5.65

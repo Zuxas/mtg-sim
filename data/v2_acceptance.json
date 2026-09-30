@@ -1,0 +1,40 @@
+{
+ "M2": {
+  "games": 10000,
+  "exceptions_or_invariant_violations": 0,
+  "first_errors": [],
+  "results": {
+   "win:life": 9756,
+   "draw:turn_limit": 244
+  },
+  "mean_actions": 932,
+  "max_turns": 50
+ },
+ "M3": {
+  "replayed": 10000,
+  "mismatches": 0,
+  "first_mismatches": [],
+  "reseeded_policy_replays_ok": 100
+ },
+ "M4": {
+  "games": 1000,
+  "errors": 0,
+  "first_errors": [],
+  "outcomes": {
+   "win:1:life": 897,
+   "win:0:life": 103
+  },
+  "mean_turns": 18.11
+ },
+ "M7": {
+  "games": 200,
+  "wall_seconds": 8.75,
+  "games_per_s_wall": 22.87,
+  "cpu_seconds": 8.62,
+  "games_per_s_cpu": 23.19,
+  "actions_per_s_cpu": 21387,
+  "mean_actions": 922,
+  "note": "single core, random policies, invariants off, card data pre-loaded; target 200, blocker < 20"
+ },
+ "wall_seconds": 422.8
+}

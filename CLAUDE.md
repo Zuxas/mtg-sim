@@ -208,6 +208,25 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### RULES ENGINE V2 -- milestone one (isolated `engine/v2/`) — 2026-09-30
+
+Spec `harness/specs/2026-09-30-rules-engine-v2-design.md` (rev 4, approved). Commits 45755d5, 64d56c5.
+One canonical two-player state machine; ONLY `engine/v2/reducer.py` mutates state (typed ops, atomic
+transitions, append-only event log with a lazily computed chained SHA-256). Policies get frozen
+`Observation`s + the COMPLETE `legal_actions()` list and return an action; `Game.apply` refuses anything else.
+Identity: CardInstanceId (persistent) / ObjectId (new per zone change, CR 400.7) / ProvisionalStackId
+(casting is an open transaction; CR 733 rollback restores the suspended ObjectId). Staged London mulligans,
+mana floating + emptying, priority, stack, resolution by type, combat incl. first strike + free damage
+division (510.1c), SBAs as one transition, deck-out loss, simultaneous loss / turn limit = draw.
+14 real cards only (`cards.SUPPORTED`); anything else raises before a game starts. Rules baseline = CR
+effective 2026-09-25 pinned in `data/rules_reference/RULES.json` (text gitignored); every "CR x" in engine/v2
+is checked verbatim against the parsed entry (`tests/v2/test_rule_citations.py`). Card data pinned by
+`definitions_hash` + installed oracle sha256 (SNAPSHOT.json). Replay: `engine.v2.record.make_record/replay`.
+Tests: `python tests/v2/test_m1_rules.py` (28), `test_m5_m6.py` (8), `test_rule_citations.py` (4); acceptance
+`python scripts/v2_acceptance.py` -> data/v2_acceptance.json (M2 10k fuzz 0 violations, M3 10k exact
+replays, M4 1k scripted, M7 23.2 games/s CPU vs target 200). NOT wired to the launcher; legacy engines
+unchanged and still labelled experimental. Next (post-M1): effect library growth, a real matchup, Bo3.
+
 ### Exact card identity + versioned Scryfall snapshot — 2026-09-30
 
 Spec `harness/specs/2026-09-30-card-identity-gate.md`, commits bd4b87e + the snapshot commit. `CardDB.get` is EXACT

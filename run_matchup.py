@@ -71,39 +71,50 @@ def _get_sb_premium(our_deck, opp_name, format_name):
     return 6.0
 
 
-def _run_combo(result, opp_name, format_name, n, seed):
-    """
-    Combo matchup:
-      G1: real DB data if available (preferred), else ComboKillSampler
-      G2/G3: G1 + our deck's sideboard_premium
-    """
-    from engine.combo_model import run_combo_matchup
+def _inverse_bo3(m: float) -> float:
+    """G1 rate p (0..1) whose no-sideboard Bo3 rate p^2(3-2p) equals m (0..1)."""
+    lo, hi = 0.0, 1.0
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        if mid * mid * (3 - 2 * mid) < m:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
 
-    our_deck = result.get("our_deck", "Legacy Humans")
 
-    # Try real DB data for G1 first — always preferred over kill-turn sampler
-    g1 = None
+def _real_match(result, our_deck, opp_name, format_name) -> bool:
+    """Fill `result` from the REAL match record (shrunk toward 50%) when there are
+    >= 20 decisive real matches in the format's window; return True if it did.
+    Spec harness/specs/2026-09-30-combo-routing-fix.md (A1/A2)."""
     try:
-        from meta_bridge import get_real_matchup
-        g1 = get_real_matchup(our_deck, opp_name, format_name, min_matches=20)
-        if g1 is not None:
-            result["g1_source"] = "db"
-    except Exception:
-        pass
+        from calibration.real_results import connect_ro, real_match_wr
+        rec = real_match_wr(connect_ro(), our_deck, opp_name, format_name)
+    except Exception as e:
+        print(f"  [real matchup lookup failed: {e}]")
+        return False
+    if rec is None:
+        return False
+    match = 100 * rec["shrunk"]
+    g1 = round(100 * _inverse_bo3(rec["shrunk"]), 1)
+    result.update({"g1": g1, "g2": g1, "g3": g1, "match": round(match, 1),
+                   "g1_source": "real", "sb_mode": "real_match",
+                   "real_decisive": rec["decisive"], "real_raw": round(100 * rec["raw"], 1)})
+    return True
 
-    # Fall back to combo kill-turn sampler
-    if g1 is None:
-        g1_data = run_combo_matchup(opp_name, n=n, game=1, seed=seed)
-        g1 = g1_data["win_pct"]
-        result["avg_turns"] = g1_data.get("avg_turns", 0)
-        result["hard_stop"] = g1_data.get("hard_stop_rate", 0)
-        result["g1_source"] = "com"
 
-    sb  = _get_sb_premium(our_deck, opp_name, format_name)
-    g2  = min(98.0, g1 + sb)
-    g3  = min(98.0, g1 + sb * 0.75)
-    result.update({"g1": g1, "g2": round(g2,1), "g3": round(g3,1),
-                   "match": bo3_win(g1, g2, g3)})
+def _run_combo(result, opp_name, format_name, n, seed, inner_workers=1):
+    """
+    Combo matchup (2026-09-29, spec 2026-09-30-combo-routing-fix): the real match
+    record vs this opponent (shrunk toward 50%) when it exists, else real engine
+    games like a fair matchup. The old engine.combo_model route ignored our deck
+    (hard-coded Legacy Humans) and is no longer used here.
+    """
+    our_deck = result.get("our_deck", "Legacy Humans")
+    if _real_match(result, our_deck, opp_name, format_name):
+        return
+    _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers)
+    result["combo_route"] = "engine"
 
 
 # 2026-09-29: the opponent-name "credibility cap" (match > 75 -> 70, G1 > 75 -> 65 when
@@ -208,24 +219,18 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
             print(f"  [Bo3 failed, falling back to heuristic: {e}]")
 
     # ── Path B: Fallback — G1 sim + sb_premium heuristic ──
-    # Try real DB data first
-    real_g1 = None
-    try:
-        from meta_bridge import get_real_matchup
-        real_g1 = get_real_matchup(our_deck, opp_name, format_name, min_matches=20)
-    except Exception:
-        pass
+    # Real match record first (shrunk toward 50%; replaces meta_bridge.get_real_matchup,
+    # which read a stale matchup_matrix and fed a real MATCH rate in as G1).
+    if _real_match(result, our_deck, opp_name, format_name):
+        return
 
-    if real_g1 is None:
-        from engine.match_runner import run_match_set
+    from engine.match_runner import run_match_set
 
-        r = run_match_set(our_apl, our_main, opp_apl, opp_main,
-                          n=n, seed=seed, mix_play_draw=True,
-                          n_workers=inner_workers)
-        real_g1 = r.win_pct()
-        result["g1_source"] = "sim"
-    else:
-        result["g1_source"] = "db"
+    r = run_match_set(our_apl, our_main, opp_apl, opp_main,
+                      n=n, seed=seed, mix_play_draw=True,
+                      n_workers=inner_workers)
+    real_g1 = r.win_pct()
+    result["g1_source"] = "sim"
 
     # Apply credibility caps to G1
     _apply_caps_g1(result, real_g1, our_deck, opp_name)
@@ -277,7 +282,7 @@ def main():
               "type": mtype, "n": n, "error": None}
     try:
         if mtype == "combo":
-            _run_combo(result, opp_name, format_name, n, seed)
+            _run_combo(result, opp_name, format_name, n, seed, inner_workers)
         else:
             _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers)
 

@@ -132,3 +132,63 @@ def real_list_profile(con, fmt: str, since: str, labels: list[str]) -> tuple[int
                     GROUP BY c.name""", (fmt, *labels, since)):
             prof[card] = k / n
     return n, prof
+
+
+# ---------------------------------------------------------------- real matchup for the launcher
+# Spec harness/specs/2026-09-30-combo-routing-fix.md (A1/A2). The window matches each
+# format's real field (format_config): Modern post-ban, Standard current meta.
+REAL_WINDOWS = {"modern": "2026-05-15", "standard": "2026-08-15"}
+SHRINK_K = 50        # pseudo-matches at 50%: 0.25 / 0.07^2 (real Modern spread ~7pp from 50%)
+MIN_DECISIVE = 20
+
+
+def _norm(s: str) -> str:
+    return s.lower().strip().replace(" ", "").replace("-", "").replace("'", "")
+
+
+def resolve_labels(key: str, name_map: dict) -> list[str] | None:
+    """DB labels for a launcher/field key: the name-map deck name, its `field_key`,
+    or its `apl` key (e.g. "Dimir Midrange Std" -> apl `dimirmidrangestd`)."""
+    for deck, spec in name_map.items():
+        if key == deck or key == spec.get("field_key"):
+            return spec["labels"]
+    for deck, spec in name_map.items():
+        if _norm(key) == _norm(spec.get("apl", "")):
+            return spec["labels"]
+    return None
+
+
+def real_match_wr(con, our_key: str, opp_key: str, fmt: str, name_map: dict | None = None,
+                  min_decisive: int = MIN_DECISIVE, k: int = SHRINK_K) -> dict | None:
+    """Real Bo3 MATCH result of our deck vs the opponent in the format's window.
+    Returns {"wins", "losses", "draws", "decisive", "raw", "shrunk"} (rates in 0..1) or
+    None when the format has no window, a key is unmapped, or decisive < min_decisive.
+    shrunk = (wins + k/2) / (decisive + k)."""
+    since = REAL_WINDOWS.get(fmt)
+    if since is None:
+        return None
+    if name_map is None:
+        name_map = load_name_map(fmt)
+    ours, theirs = resolve_labels(our_key, name_map), resolve_labels(opp_key, name_map)
+    if not ours or not theirs or set(ours) & set(theirs):
+        return None
+    ours, theirs = set(ours), set(theirs)
+    w = l = d = 0
+    for p1, p2, result in _rows(con, fmt, since, None):
+        if p1 in ours and p2 in theirs:
+            our_seat = "player1"
+        elif p2 in ours and p1 in theirs:
+            our_seat = "player2"
+        else:
+            continue
+        if result == our_seat:
+            w += 1
+        elif result in ("player1", "player2"):
+            l += 1
+        else:
+            d += 1
+    dec = w + l
+    if dec < min_decisive:
+        return None
+    return {"wins": w, "losses": l, "draws": d, "decisive": dec,
+            "raw": w / dec, "shrunk": (w + k / 2) / (dec + k)}

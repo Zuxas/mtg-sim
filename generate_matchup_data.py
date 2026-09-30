@@ -72,7 +72,7 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
         return deck
 
     # 1. Check unified APL registry
-    entry = get_apl_entry(deck_name)
+    entry = get_apl_entry(deck_name, format_name)
     if entry:
         mod_path, cls_name, stub_key = entry
         try:

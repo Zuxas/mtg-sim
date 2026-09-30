@@ -560,12 +560,25 @@ def _load_auto_registry():
     return _AUTO_REG_CACHE
 
 
-def get_apl(deck_name: str) -> BaseAPL | None:
+def _format_key(deck_name: str, format_name: str | None, registry: dict) -> str | None:
+    """Strict key + format suffix ('Izzet Prowess', 'standard' -> 'izzetprowessstandard')
+    when `registry` has it, else None. Lets a format-specific entry win over a same-named
+    entry from another format (2026-09-29: the Standard field key 'Izzet Prowess' used to
+    load the MODERN deck + MatchAPL). Spec harness/specs/2026-09-30-format-aware-registry.md."""
+    if not format_name:
+        return None
+    strict = deck_name.lower().strip().replace(" ", "").replace("-", "").replace("'", "")
+    key = strict + format_name.lower().strip()
+    return key if key in registry else None
+
+
+def get_apl(deck_name: str, format_name: str | None = None) -> BaseAPL | None:
     """
     Return a goldfish APL instance for a deck name.
     Returns None if no APL is registered (canonical or auto).
+    `format_name` prefers a '<key><format>' registry entry when one exists.
     """
-    entry = get_apl_entry(deck_name)
+    entry = get_apl_entry(deck_name, format_name)
     if not entry:
         return None
     mod_path, cls_name, _ = entry
@@ -577,13 +590,14 @@ def get_apl(deck_name: str) -> BaseAPL | None:
         return None
 
 
-def get_match_apl(deck_name: str):
+def get_match_apl(deck_name: str, format_name: str | None = None):
     """
     Return a MatchAPL instance for two-player games.
     Falls back to GoldfishAdapter wrapping the goldfish APL.
     Returns None if no APL exists at all (canonical or auto).
+    `format_name` prefers a '<key><format>' registry entry when one exists.
     """
-    key = _normalize_key(deck_name)
+    key = _format_key(deck_name, format_name, MATCH_APL_REGISTRY) or _normalize_key(deck_name)
 
     # Try match-specific APL first (canonical only; no auto MatchAPL path yet)
     entry = MATCH_APL_REGISTRY.get(key)
@@ -597,7 +611,7 @@ def get_match_apl(deck_name: str):
 
     # Fall back to GoldfishAdapter (now picks up auto-registered goldfish APLs
     # via get_apl -> get_apl_entry -> auto registry fallback)
-    goldfish = get_apl(deck_name)
+    goldfish = get_apl(deck_name, format_name)
     if goldfish:
         from apl.match_apl import GoldfishAdapter
         return GoldfishAdapter(goldfish)
@@ -605,7 +619,7 @@ def get_match_apl(deck_name: str):
     return None
 
 
-def get_apl_entry(deck_name: str) -> tuple | None:
+def get_apl_entry(deck_name: str, format_name: str | None = None) -> tuple | None:
     """Return the raw registry entry (module, class, stub_key) or None.
 
     Canonical APL_REGISTRY checked first; auto-registry sidecar
@@ -613,8 +627,9 @@ def get_apl_entry(deck_name: str) -> tuple | None:
     populated by auto_pipeline.py after passing the smoke gate (50-game
     goldfish without crash). Failed APLs stay on disk but never enter
     the auto registry, so they're never returned from this function.
+    `format_name` prefers a '<key><format>' APL_REGISTRY entry when one exists.
     """
-    key = _normalize_key(deck_name)
+    key = _format_key(deck_name, format_name, APL_REGISTRY) or _normalize_key(deck_name)
     entry = APL_REGISTRY.get(key)
     if entry:
         return entry

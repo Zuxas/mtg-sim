@@ -153,8 +153,8 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
     # yields a GoldfishAdapter). Wrapped failure-safe: if detection throws we fall
     # back to the old gate, so this change can never regress existing paths.
     try:
-        from apl import MATCH_APL_REGISTRY, _normalize_key
-        has_our_match_apl = _normalize_key(our_deck) in MATCH_APL_REGISTRY
+        from apl import MATCH_APL_REGISTRY, _normalize_key, _format_key
+        has_our_match_apl = bool(_format_key(our_deck, format_name, MATCH_APL_REGISTRY)) or _normalize_key(our_deck) in MATCH_APL_REGISTRY
     except Exception:
         has_our_match_apl = False
 
@@ -164,8 +164,8 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
             from apl import get_match_apl
             from engine.bo3_match import run_bo3_set, print_bo3_report
 
-            our_mapl = get_match_apl(our_deck)
-            opp_mapl = get_match_apl(opp_name)
+            our_mapl = get_match_apl(our_deck, format_name)
+            opp_mapl = get_match_apl(opp_name, format_name)
 
             if our_mapl and opp_mapl:
                 # Build sideboard dicts from loaded side cards

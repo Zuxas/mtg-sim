@@ -404,8 +404,8 @@ def mine(our_deck: str, fmt: str, games_per_opp: int, seed: int,
                 on_play = (i % 2 == 0)
                 gseed = seed + i
                 miner.new_game(opp, f"{our_deck}|{opp}|{gseed}", on_play)
-                r = mr.run_match(get_match_apl(our_deck), ours,
-                                 get_match_apl(opp), theirs,
+                r = mr.run_match(get_match_apl(our_deck, fmt), ours,
+                                 get_match_apl(opp, fmt), theirs,
                                  on_play=on_play, seed=gseed)
                 results.append((opp, gseed, r.won, r.kill_turn, r.loser_life))
     finally:

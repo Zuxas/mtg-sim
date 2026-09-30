@@ -216,9 +216,16 @@ dadf88a (scoreboard after lists), 9d9fa76 (field).
   entries `izzetprowess`/`prowess`/`esperblink`/`domainzoo`/`domain` now load their
   `decks/*_modern.txt` (were `data.stub_decks` keys) -> Izzet Prowess 9.0 + Esper Blink 5.4
   re-added: field = 14 decks, ~57% of real appearances. Grixis Reanimator stays out (registry
-  proxies it to the Goryo's list on purpose). Boros vs field 56.00 -> 56.46. STILL OPEN: the
-  Standard field key "Izzet Prowess" and Legacy "Dimir Tempo" resolve format-blind to another
-  format's deck (`izzetprowessstandard` exists but that key never reaches it).
+  proxies it to the Goryo's list on purpose). Boros vs field 56.00 -> 56.46.
+- **FORMAT-AWARE LOOKUP (6f71579; spec 2026-09-30-format-aware-registry):** `get_apl_entry` /
+  `get_apl` / `get_match_apl(name, format_name=None)` prefer a registered `<key><format>` entry
+  (per registry). `load_deck_and_apl`, `run_matchup`, the gauntlet miner pass the format; pass it
+  in new code too. Fixed: Standard field "Izzet Prowess" had been the MODERN list (Lightning
+  Bolt) + Modern MatchAPL since forever -> now izzet_prowess_standard.txt +
+  IzzetProwessStandardMatchAPL (Simic Rhythm vs it 82.0% -> 64.5%: every Standard gauntlet
+  number with Izzet Prowess in the field moves). Legacy "Dimir Tempo" now gets the Legacy stub
+  (54 cards, GenericAPL goldfish -- `dimirtempolegacy` has no deck file) instead of a Standard
+  list. Pioneer "Izzet Prowess" still resolves to the Modern deck (no pioneer entry exists).
 - `FORMATS["modern"]["field"]` = REAL match-appearance shares (mtg_meta.db `matches`,
   2026-05-15..09-13), 12 decks, ~42% of real appearances (before the update above). A key enters only if
   `load_deck_and_apl(key, "modern")` loads the name map's `deck_file` AND `get_match_apl(key)`

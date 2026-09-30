@@ -124,6 +124,9 @@ def rollback(s):
 # Events are immutable values; equal small-domain events (pending / priority / step
 # bookkeeping) share one object. Values and hashes are unchanged; it only keeps the
 # long-lived event log from allocating ~2k duplicate tuples per game (GC pressure).
+# Caveat: lookup is by tuple equality, and 1 == True in Python; only intern events whose
+# fields never carry a bool in one game and an int in another (true for every caller
+# below), or the repr-based transition hash would depend on process history.
 _INTERN: dict = {}
 
 

@@ -36,19 +36,22 @@ FORMATS = {
     #   harness/specs/2026-09-30-field-and-lists-refresh.md.
     # RULES: a key enters only if load_deck_and_apl(key) loads the same list as the
     #   name map's deck_file AND get_match_apl(key) is the mapped MatchAPL; decks
-    #   with 0 real appearances are left out. The field covers ~42% of real
+    #   with 0 real appearances are left out. The field covers ~57% of real
     #   appearances (launcher self-normalizes); the rest is unmodeled decks.
-    # LEFT OUT although real (registry points at a stub/other list, fix = registry
-    #   work): Izzet Prowess 9.0% (real #1), Esper Blink 5.4%, Grixis Reanimator
-    #   1.2%, Domain Zoo. Label gap: matches use colour-prefixed labels (Gruul
-    #   Eldrazi, Mono Blue/Tameshi Belcher) that the name map does not map, so
-    #   Eldrazi Ramp / Belcher / Neobrand show 0 appearances. 5C Humans 0.03% dropped.
+    # 2026-09-29 (spec 2026-09-30-field-registry-stub-fix): Izzet Prowess + Esper
+    #   Blink re-added after their registry entries were pointed at the real .txt.
+    # LEFT OUT although real: Grixis Reanimator 1.2% (registry intentionally proxies
+    #   it to the Goryo's list; no real-Grixis APL). Label gap: matches use
+    #   colour-prefixed labels (Gruul Eldrazi, Mono Blue/Tameshi Belcher, Gruul/
+    #   Temur Domain Zoo) that the name map does not map, so Eldrazi Ramp / Belcher /
+    #   Neobrand / Domain Zoo show 0 appearances. 5C Humans 0.03% dropped.
     #   Death and Taxes / Temur Crashcade: no real appearances (files + registry kept).
     "field": {
-        "Eldrazi Tron": 8.1,      "Affinity": 6.3,          "Mono Red Aggro": 6.1,
-        "Boros Energy": 4.7,      "Goryo's Vengeance": 4.4, "Dimir Midrange": 3.3,
-        "Amulet Titan": 2.8,      "Living End": 2.4,        "Gruul Broodscale": 1.6,
-        "Ruby Storm": 1.4,        "Golgari Yawgmoth": 0.9,  "Jeskai Blink": 0.4,
+        "Izzet Prowess": 9.0,     "Eldrazi Tron": 8.1,      "Affinity": 6.3,
+        "Mono Red Aggro": 6.1,    "Esper Blink": 5.4,       "Boros Energy": 4.7,
+        "Goryo's Vengeance": 4.4, "Dimir Midrange": 3.3,    "Amulet Titan": 2.8,
+        "Living End": 2.4,        "Gruul Broodscale": 1.6,  "Ruby Storm": 1.4,
+        "Golgari Yawgmoth": 0.9,  "Jeskai Blink": 0.4,
     },
     # SUPERSEDED 2026-09-29 (kept for reproducibility of older reports) -- the
     # 2026-06-30 documented estimate and its derivation:

@@ -208,7 +208,31 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
-### Post-ban Modern field refresh (data/coverage) — 2026-06-30
+### REAL Modern field + real decklists — 2026-09-29 (supersedes the 2026-06-30 estimate below)
+
+Spec `harness/specs/2026-09-30-field-and-lists-refresh.md`. Commits 228b3fc, 03e841e (lists),
+dadf88a (scoreboard after lists), 9d9fa76 (field).
+- `FORMATS["modern"]["field"]` = REAL match-appearance shares (mtg_meta.db `matches`,
+  2026-05-15..09-13), 12 decks, ~42% of real appearances. A key enters only if
+  `load_deck_and_apl(key, "modern")` loads the name map's `deck_file` AND `get_match_apl(key)`
+  is the mapped MatchAPL. **Izzet Prowess (real #1, 9.0%), Esper Blink 5.4%, Grixis Reanimator,
+  Domain Zoo are LEFT OUT: their registry key loads a stub/other list** (Grixis Reanimator even
+  loaded a different list inside the OLD field). Fix = registry work, then re-add.
+- Label gap: `matches` (mtgmelee) uses colour-prefixed labels (Gruul Eldrazi 165, Mono Blue
+  Belcher 204, Tameshi Belcher 179) while decklists (mtgtop8) say Eldrazi Ramp / Landless
+  Belcher -> those decks show 0 real appearances until name_map_modern.json maps them.
+- Real lists swapped in (medoid real decklist, provenance in the file header; old lists in
+  `decks/archive/*_pre-2026-09-29.txt`): Modern Dimir Midrange (cosine 0.70 -> 0.95), Standard
+  Izzet Control (0.59 -> 0.81). 9 other stale lists FAILED the pilot-compatibility check (the
+  APL has card-specific logic for cards the real list dropped): Mono Red Aggro, Eldrazi Ramp,
+  Living End; Standard Azorius Aggro, Boros Aggro, Jeskai Control, Dimir Midrange, Azorius
+  Momo, Sultai Control -> "needs APL work". Skipped as stub/curated: Grixis Reanimator, Belcher,
+  Azorius Control, Four-Color Control.
+- Effect: scoreboard Modern MAE 21.43 -> 21.57, Standard unchanged (no real cell for Izzet
+  Control). Boros Energy vs field 56.96% (old) -> 57.36% (lists) -> 56.00% (real field).
+  Overconfidence (sim 3.4x / 5.7x too one-sided) is still the dominant error.
+
+### Post-ban Modern field refresh (data/coverage) — 2026-06-30  (SUPERSEDED 2026-09-29, see above)
 
 The modeled Modern field in `format_config.py` was refreshed for the May-2026
 B&R (BANNED Phlage + Lotus Field; UNBANNED Umezawa's Jitte + Violent Outburst).

@@ -208,6 +208,18 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### Own pilots for the proxy decks — 2026-09-30
+
+Spec `harness/specs/2026-09-30-proxy-pilots.md`. New MatchAPLs: `four_color_control_standard_match`,
+`dimir_midrange_modern_match`, `boros_dragons_standard_match` (+ shared `apl/deck_pilot.py`; opt-in
+`AwareMatchAPL.EXTRA_COUNTER_VALIDITY` for counters missing from engine.counter_resolver). Counters only via the
+R1 priority window (WANTS_PRIORITY_STACK), never cast from main phase; `_face()` lowers life on BOTH engines.
+**The launcher Bo3 runs engine/match_engine.py; the scoreboard + miners run engine/match_runner.py** -- test
+pilots on both. On match_engine the old proxies never cast most of their deck (Dimir: only Preordain).
+Scoreboard: Standard MAE 35.85 -> 27.87 (r 0.30 -> 0.38; 4C cells now 14-68% vs real 38-57%); Modern 21.57 -> 22.23
+(Dimir cells moved away from real). Codex's architecture review (one rules engine, typed actions, no APL state
+mutation) is recorded in harness/reports/codex-review-mtg-sim-2026-09-29.md -- these pilots still mutate state.
+
 ### Sideboard plans validated (launcher G2/G3) — 2026-09-29
 
 Spec `harness/specs/2026-09-30-sideboard-plan-validation.md`. `sideboard_plans.choose_plan` picks our APL's

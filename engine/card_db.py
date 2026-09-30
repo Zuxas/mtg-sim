@@ -36,6 +36,20 @@ _RULES_DIR = Path(__file__).parent.parent / "data" / "rules_reference"
 _db_instance = None
 
 
+class UnknownCardError(KeyError):
+    """A deck names a card that is not in the oracle snapshot (exact match)."""
+
+    def __init__(self, names, suggestions=None):
+        self.names = list(names)
+        self.suggestions = suggestions or {}
+        hint = "; ".join(f"{n!r} (did you mean {self.suggestions.get(n)})" if self.suggestions.get(n) else repr(n)
+                         for n in self.names)
+        super().__init__(f"unknown card name(s), no substitution made: {hint}")
+
+    def __str__(self):
+        return self.args[0]
+
+
 class CardDB:
     """
     Local Scryfall card database — zero network calls.
@@ -133,17 +147,25 @@ class CardDB:
         return re.sub(r"[^a-z0-9]", "", name.lower())
 
     def get(self, card_name: str) -> Optional[dict]:
-        """Get full Scryfall card dict by name. Fuzzy matches."""
+        """Get the Scryfall card dict for an EXACT card (or card-face) name.
+
+        "Exact" = equal normalised keys (case, spaces and punctuation ignored), so
+        "Wear / Tear" == "Wear // Tear" and DFC/split faces resolve by their own name.
+        No substring / closest match: until 2026-09-30 a partial match returned the
+        first entry containing the name, e.g. "Thor, God of Thunder" -> "_____",
+        "Kinetic Hellion" -> "Hellion" (spec harness/specs/2026-09-30-card-identity-gate.md).
+        Use suggest() for "did you mean" text in error messages only."""
         if not self._loaded:
             return None
-        key = self._norm(card_name)
-        if key in self._by_name:
-            return self._by_name[key]
-        # Partial match
-        for norm_name, card in self._by_name.items():
-            if key in norm_name or norm_name in key:
-                return card
-        return None
+        return self._by_name.get(self._norm(card_name))
+
+    def suggest(self, card_name: str, n: int = 3) -> list:
+        """Close card names for ERROR MESSAGES only -- never substitute them."""
+        import difflib
+        if not self._loaded:
+            return []
+        keys = difflib.get_close_matches(self._norm(card_name), list(self._by_name), n=n, cutoff=0.6)
+        return [self._by_name[k].get("name", k) for k in keys]
 
     def oracle_text(self, card_name: str) -> str:
         card = self.get(card_name)

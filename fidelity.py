@@ -46,15 +46,9 @@ def is_vanilla(text: str) -> bool:
 
 
 def _resolves(db, name: str) -> bool:
-    """Exact match only: CardDB.get fuzzy-matches, so it returns *a* card for almost any
-    string. Accept the card's full name or the front face of a double-faced card."""
-    data = db.get(name)
-    if not data:
-        return False
-    full = (data.get("name") or "").lower()
-    low = name.lower()
-    # "Wear / Tear" is a common single-slash spelling of the split card "Wear // Tear".
-    return low in (full, full.split(" // ")[0]) or low.replace(" / ", " // ") == full
+    """CardDB.get is exact since 2026-09-30 (spec 2026-09-30-card-identity-gate):
+    a name resolves iff it is a card or card-face name up to case/punctuation."""
+    return db.get(name) is not None
 
 
 def card_tier(name: str) -> str:

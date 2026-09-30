@@ -62,11 +62,9 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                         colors=data.get("colors", []),
                     )
                 else:
-                    card = Card(
-                        name=card_name, mana_cost="{1}", cmc=1,
-                        type_line="Creature", oracle_text="",
-                        power="1", toughness="1", colors=[],
-                    )
+                    # No placeholder cards (spec 2026-09-30-card-identity-gate).
+                    from engine.card_db import UnknownCardError
+                    raise UnknownCardError([card_name], {card_name: _db.suggest(card_name)})
                 tag_keywords(card)
                 deck.append(card)
         return deck
@@ -93,6 +91,9 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
                     main = build_deck_from_dict(mb)
                     return main, [], apl
         except Exception as e:
+            from engine.card_db import UnknownCardError
+            if isinstance(e, UnknownCardError):
+                raise
             print(f"  [APL load failed for {deck_name}: {e}]")
 
     # 2. Real stub from DB
@@ -103,8 +104,10 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
             main = build_deck_from_dict(mb)
             apl = GenericAPL(deck_name)
             return main, [], apl
-    except Exception:
-        pass
+    except Exception as _e:
+        from engine.card_db import UnknownCardError
+        if isinstance(_e, UnknownCardError):
+            raise
 
     # 3. Playbook
     try:
@@ -118,8 +121,10 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
             if len(main) >= 40:
                 from apl.generic_apl import generic_from_playbook
                 return main, side, generic_from_playbook(pb)
-    except Exception:
-        pass
+    except Exception as _e:
+        from engine.card_db import UnknownCardError
+        if isinstance(_e, UnknownCardError):
+            raise
 
     # 4. Legacy stub
     try:
@@ -127,8 +132,10 @@ def load_deck_and_apl(deck_name: str, format_name: str = "legacy"):
         stub = get_stub_deck(deck_name)
         if stub and len(stub) >= 40:
             return stub, [], GenericAPL(deck_name)
-    except Exception:
-        pass
+    except Exception as _e:
+        from engine.card_db import UnknownCardError
+        if isinstance(_e, UnknownCardError):
+            raise
 
     print(f"  [No deck found for {deck_name}]")
     return None, None, None

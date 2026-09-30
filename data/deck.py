@@ -123,20 +123,18 @@ def _get_cards_local(names: list[str]) -> dict:
                 missing.append(name)
 
         if missing:
-            print(f"  [{len(missing)} cards not in local DB, fetching from Scryfall: {missing[:3]}...]")
-            from data.scryfall_client import get_cards_data
-            api_data = get_cards_data(missing)
-            result.update(api_data)
-        else:
-            print(f"  [{len(names)} cards loaded from local DB — no network calls]")
-
+            # Exact names only (spec 2026-09-30-card-identity-gate): no network
+            # fallback, no substitution -- fail with suggestions.
+            from engine.card_db import UnknownCardError
+            raise UnknownCardError(missing, {m: db.suggest(m) for m in missing})
+        print(f"  [{len(names)} cards loaded from local DB — no network calls]")
         return result
 
     except Exception as e:
-        # Full fallback to Scryfall API
-        print(f"  [CardDB unavailable ({e}), using Scryfall API]")
-        from scrapers.scryfall import get_cards_data
-        return get_cards_data(names)
+        from engine.card_db import UnknownCardError
+        if isinstance(e, UnknownCardError):
+            raise
+        raise RuntimeError(f"CardDB unavailable ({e}); no network fallback") from e
 
 
 def _build_cards(entries, scryfall_data: dict) -> list:

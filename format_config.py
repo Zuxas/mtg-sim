@@ -29,50 +29,73 @@ FORMATS = {
 },
 
 "modern": {
-    # ── POST-BAN field (May-2026 B&R: BANNED Phlage + Lotus Field;
-    #    UNBANNED Umezawa's Jitte + Violent Outburst). Refreshed 2026-06-30. ──
-    #
-    # !! OUT OF DATE 2026-09-29: real post-ban Modern data now exists (19k matches since
-    # !! 2026-05-09) and differs sharply -- see `python -m calibration.scoreboard` FIELD table.
-    # SOURCE / METHOD — DOCUMENTED ESTIMATE, *not* a live snapshot:
-    #   The meta-analyzer DB (mtg_meta.db) has NO post-ban Modern tournament
-    #   data: its most recent Modern event is 2026-04-24 (pre-ban), and the
-    #   untapped_* tables are MTG-Arena-only (no paper Modern). So a live
-    #   post-ban share table cannot be pulled. Per the field-refresh method,
-    #   these numbers are a best-estimate built from a transparent derivation
-    #   (NOT recalled, NOT a fabricated snapshot):
-    #     base   = pre-ban DB 30-day baseline (1591 decks, 2026-03-25..04-24),
-    #              with DB labels mapped to modeled names (Boros Aggro+Energy+
-    #              Ocelot -> Boros Energy; Izzet+Pinnacle Affinity -> Affinity;
-    #              Urzatron -> Eldrazi Tron; Instant Reanimator -> Goryo's;
-    #              Landless Belcher -> Belcher; Allosaurus Combo -> Neobrand).
-    #     deltas = per-card B&R impact applied only to affected decks; decks
-    #              untouched by the bans keep their baseline share:
-    #       - Phlage BAN  -> Boros Energy pivots to the post-Phlage Low-Curve
-    #         list (down from ~21% but still #1, partly offset by Jitte);
-    #         Jeskai Blink/Control leaned on 4x Phlage -> consolidated + cut
-    #         hard (Jeskai Blink 10.6 -> 3.0); Domain Zoo loses 3x top-end
-    #         Phlage but keeps its Zoo core (~flat).
-    #       - Lotus Field BAN -> minor hit to Amulet Titan (ran 2x) -> 5.2->4.8.
-    #       - Jitte UNBAN  -> fair white creature decks rise: Death and Taxes
-    #         (DB 2.9% pre-ban, textbook Jitte home) ADDED at 5.5; 5C Humans up.
-    #       - Violent Outburst UNBAN -> cascade rises: Living End gets a 2nd
-    #         instant-speed enabler (2.7 -> 6.5); NEW Temur Crashcade
-    #         (Crashing Footfalls) ADDED at 3.4.
-    #   Covers ~78% of the field; launcher self-normalizes. Shares are
-    #   estimates, not measured — re-pull from the DB once post-ban Modern
-    #   tournament data lands (see meta_bridge.py).
-    #   RETIRED from field (deck files + registry kept, just no longer a row):
-    #     Esper Blink (folded into the shrunken Jeskai Blink shell),
-    #     Jeskai Control (Phlage-dependent control fell out of the top-18).
+    # ── REAL post-ban field (May-2026 B&R). Refreshed 2026-09-29 from real data. ──
+    # SOURCE: mtg_meta.db `matches` (mtgmelee), format=modern, 2026-05-15..2026-09-13
+    #   (19,141 rows). Share = % of ALL real match appearances (both seats) of the
+    #   decks' DB labels (calibration/name_map_modern.json). Spec:
+    #   harness/specs/2026-09-30-field-and-lists-refresh.md.
+    # RULES: a key enters only if load_deck_and_apl(key) loads the same list as the
+    #   name map's deck_file AND get_match_apl(key) is the mapped MatchAPL; decks
+    #   with 0 real appearances are left out. The field covers ~42% of real
+    #   appearances (launcher self-normalizes); the rest is unmodeled decks.
+    # LEFT OUT although real (registry points at a stub/other list, fix = registry
+    #   work): Izzet Prowess 9.0% (real #1), Esper Blink 5.4%, Grixis Reanimator
+    #   1.2%, Domain Zoo. Label gap: matches use colour-prefixed labels (Gruul
+    #   Eldrazi, Mono Blue/Tameshi Belcher) that the name map does not map, so
+    #   Eldrazi Ramp / Belcher / Neobrand show 0 appearances. 5C Humans 0.03% dropped.
+    #   Death and Taxes / Temur Crashcade: no real appearances (files + registry kept).
     "field": {
-        "Boros Energy": 14.5, "Affinity": 9.0,      "Living End": 6.5,
-        "Death and Taxes": 5.5, "Amulet Titan": 4.8, "Ruby Storm": 4.1,
-        "Eldrazi Tron": 3.7,  "Belcher": 3.5,       "Goryo's Vengeance": 3.5,
-        "Temur Crashcade": 3.4, "Domain Zoo": 3.2,  "Jeskai Blink": 3.0,
-        "Dimir Midrange": 2.6, "5C Humans": 2.5,    "Grixis Reanimator": 2.4,
-        "Neobrand": 2.0,      "Eldrazi Ramp": 1.8,  "Izzet Prowess": 1.7,
+        "Eldrazi Tron": 8.1,      "Affinity": 6.3,          "Mono Red Aggro": 6.1,
+        "Boros Energy": 4.7,      "Goryo's Vengeance": 4.4, "Dimir Midrange": 3.3,
+        "Amulet Titan": 2.8,      "Living End": 2.4,        "Gruul Broodscale": 1.6,
+        "Ruby Storm": 1.4,        "Golgari Yawgmoth": 0.9,  "Jeskai Blink": 0.4,
     },
+    # SUPERSEDED 2026-09-29 (kept for reproducibility of older reports) -- the
+    # 2026-06-30 documented estimate and its derivation:
+    #  # ── POST-BAN field (May-2026 B&R: BANNED Phlage + Lotus Field;
+    #  #    UNBANNED Umezawa's Jitte + Violent Outburst). Refreshed 2026-06-30. ──
+    #  #
+    #  # !! OUT OF DATE 2026-09-29: real post-ban Modern data now exists (19k matches since
+    #  # !! 2026-05-09) and differs sharply -- see `python -m calibration.scoreboard` FIELD table.
+    #  # SOURCE / METHOD — DOCUMENTED ESTIMATE, *not* a live snapshot:
+    #  #   The meta-analyzer DB (mtg_meta.db) has NO post-ban Modern tournament
+    #  #   data: its most recent Modern event is 2026-04-24 (pre-ban), and the
+    #  #   untapped_* tables are MTG-Arena-only (no paper Modern). So a live
+    #  #   post-ban share table cannot be pulled. Per the field-refresh method,
+    #  #   these numbers are a best-estimate built from a transparent derivation
+    #  #   (NOT recalled, NOT a fabricated snapshot):
+    #  #     base   = pre-ban DB 30-day baseline (1591 decks, 2026-03-25..04-24),
+    #  #              with DB labels mapped to modeled names (Boros Aggro+Energy+
+    #  #              Ocelot -> Boros Energy; Izzet+Pinnacle Affinity -> Affinity;
+    #  #              Urzatron -> Eldrazi Tron; Instant Reanimator -> Goryo's;
+    #  #              Landless Belcher -> Belcher; Allosaurus Combo -> Neobrand).
+    #  #     deltas = per-card B&R impact applied only to affected decks; decks
+    #  #              untouched by the bans keep their baseline share:
+    #  #       - Phlage BAN  -> Boros Energy pivots to the post-Phlage Low-Curve
+    #  #         list (down from ~21% but still #1, partly offset by Jitte);
+    #  #         Jeskai Blink/Control leaned on 4x Phlage -> consolidated + cut
+    #  #         hard (Jeskai Blink 10.6 -> 3.0); Domain Zoo loses 3x top-end
+    #  #         Phlage but keeps its Zoo core (~flat).
+    #  #       - Lotus Field BAN -> minor hit to Amulet Titan (ran 2x) -> 5.2->4.8.
+    #  #       - Jitte UNBAN  -> fair white creature decks rise: Death and Taxes
+    #  #         (DB 2.9% pre-ban, textbook Jitte home) ADDED at 5.5; 5C Humans up.
+    #  #       - Violent Outburst UNBAN -> cascade rises: Living End gets a 2nd
+    #  #         instant-speed enabler (2.7 -> 6.5); NEW Temur Crashcade
+    #  #         (Crashing Footfalls) ADDED at 3.4.
+    #  #   Covers ~78% of the field; launcher self-normalizes. Shares are
+    #  #   estimates, not measured — re-pull from the DB once post-ban Modern
+    #  #   tournament data lands (see meta_bridge.py).
+    #  #   RETIRED from field (deck files + registry kept, just no longer a row):
+    #  #     Esper Blink (folded into the shrunken Jeskai Blink shell),
+    #  #     Jeskai Control (Phlage-dependent control fell out of the top-18).
+    #  "field": {
+    #  "Boros Energy": 14.5, "Affinity": 9.0,      "Living End": 6.5,
+    #  "Death and Taxes": 5.5, "Amulet Titan": 4.8, "Ruby Storm": 4.1,
+    #  "Eldrazi Tron": 3.7,  "Belcher": 3.5,       "Goryo's Vengeance": 3.5,
+    #  "Temur Crashcade": 3.4, "Domain Zoo": 3.2,  "Jeskai Blink": 3.0,
+    #  "Dimir Midrange": 2.6, "5C Humans": 2.5,    "Grixis Reanimator": 2.4,
+    #  "Neobrand": 2.0,      "Eldrazi Ramp": 1.8,  "Izzet Prowess": 1.7,
+    #  },
     "combo": {
         "amulet titan", "goryo's vengeance", "ruby storm", "living end",
         "belcher", "neobrand", "grixis reanimator",

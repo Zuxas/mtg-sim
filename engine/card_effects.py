@@ -590,6 +590,8 @@ def on_etb(gs, card):
     try:
         fn(gs, card)
     except Exception as e:
+        from engine.strict import reraise_if_strict
+        reraise_if_strict(e, f"ETB handler {card.name}")
         gs._log(f"  ETB effect {card.name} error: {e}")
 
 
@@ -795,6 +797,8 @@ def on_spell_resolve(gs, card):
     try:
         fn(gs, card)
     except Exception as e:
+        from engine.strict import reraise_if_strict
+        reraise_if_strict(e, f"spell handler {card.name}")
         gs._log(f"  Spell effect {card.name} error: {e}")
 
 

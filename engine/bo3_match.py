@@ -87,7 +87,9 @@ def _apply_sb(mainboard: list, sideboard: dict,
         return mainboard
     try:
         return apply_sideboard_plan(mainboard, sideboard, sb_in_raw, sb_out_raw)
-    except Exception:
+    except Exception as e:
+        from engine.strict import reraise_if_strict
+        reraise_if_strict(e, "sideboard application")
         return mainboard  # fallback to pre-board if sb fails
 
 

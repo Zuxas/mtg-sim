@@ -86,7 +86,11 @@ def _inverse_bo3(m: float) -> float:
 def _real_match(result, our_deck, opp_name, format_name) -> bool:
     """Fill `result` from the REAL match record (shrunk toward 50%) when there are
     >= 20 decisive real matches in the format's window; return True if it did.
-    Spec harness/specs/2026-09-30-combo-routing-fix.md (A1/A2)."""
+    Spec harness/specs/2026-09-30-combo-routing-fix.md (A1/A2).
+    Strict mode: never substitutes real data (results must be raw simulation)."""
+    from engine.strict import is_strict
+    if is_strict():
+        return False
     try:
         from calibration.real_results import connect_ro, real_match_wr
         rec = real_match_wr(connect_ro(), our_deck, opp_name, format_name)
@@ -214,9 +218,15 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
                 _apply_caps(result, our_deck, opp_name)
                 return
         except Exception as e:
+            from engine.strict import reraise_if_strict
+            reraise_if_strict(e, "Bo3 (no fallback in strict mode)")
             print(f"  [Bo3 failed, falling back to heuristic: {e}]")
 
     # ── Path B: Fallback — G1 sim + sb_premium heuristic ──
+    from engine.strict import is_strict, StrictModeError
+    if is_strict():
+        raise StrictModeError(f"no Bo3 match-APL path for {our_deck} vs {opp_name} "
+                              f"(strict mode forbids the heuristic fallback)")
     # Real match record first (shrunk toward 50%; replaces meta_bridge.get_real_matchup,
     # which read a stale matchup_matrix and fed a real MATCH rate in as G1).
     if _real_match(result, our_deck, opp_name, format_name):
@@ -242,7 +252,11 @@ def _run_fair(result, our_deck, opp_name, format_name, n, seed, inner_workers=1)
 
 
 def _apply_caps(result, our_deck, opp_name):
-    """Apply the aggro floor to Bo3 match results (the interactive cap was removed 2026-09-29)."""
+    """Apply the aggro floor to Bo3 match results (the interactive cap was removed 2026-09-29).
+    Strict mode: no floor (raw simulation only)."""
+    from engine.strict import is_strict
+    if is_strict():
+        return
     match_wr = result.get("match", 50.0)
     our_lower = our_deck.lower()
 
@@ -276,9 +290,16 @@ def main():
     out_path = ensure_parent(matchup_job_path(our_deck, opp_name))
 
     t0     = time.time()
+    from engine.strict import is_strict
+    strict = is_strict()
     result = {"opp": opp_name, "our_deck": our_deck, "field_pct": field_pct,
-              "type": mtype, "n": n, "error": None}
+              "type": mtype, "n": n, "error": None,
+              "engine": "legacy:match_engine (experimental)", "strict": strict}
     try:
+        if strict:
+            from fidelity import preflight
+            preflight(our_deck, format_name)
+            preflight(opp_name, format_name)
         if mtype == "combo":
             _run_combo(result, opp_name, format_name, n, seed, inner_workers)
         else:

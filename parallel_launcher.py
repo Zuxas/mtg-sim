@@ -132,6 +132,14 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     n_eff = n * sum(1 for r in done if not r.get("error"))
     fw_lo, fw_hi = wilson_bounds_pct(fw, n_eff)
     print(f"  Field-weighted match win%: {fw:.1f}% [{fw_lo:.1f}–{fw_hi:.1f}]")
+    # Spec harness/specs/2026-09-30-strict-mode.md: legacy engine output is experimental;
+    # coverage = share of the field that produced a result (errors are excluded above).
+    from engine.strict import is_strict
+    strict = is_strict()
+    field_total = sum(t["pct"] for t in tasks)
+    coverage = 100.0 * total_w / field_total if field_total else 0.0
+    print(f"  Engine: legacy match_engine (EXPERIMENTAL)  |  strict={strict}  |  "
+          f"coverage {coverage:.1f}% of field share ({sum(1 for r in done if r.get('error'))} errors)")
     print(f"  Total: {elapsed:.0f}s  |  {n * total:,} games  |  {n_cores} cores")
 
     # Save
@@ -145,9 +153,13 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
             "field_weighted_match_hi": round(fw_hi, 1),
             "elapsed_s": round(elapsed, 1),
             "n_per_matchup": n, "results": done,
+            "engine_status": "legacy-experimental", "strict": strict,
+            "coverage_pct": round(coverage, 1),
         }, f, indent=2)
     print(f"  Saved: {out}")
 
+    if strict:
+        return done       # strict runs are partial by design; keep the default matrix rows
     # Update matchup matrix (concurrency-safe RMW; see engine/atomic_json.py)
     from engine.atomic_json import atomic_rmw_json
     matrix_path = "data/sim_matchup_matrix.json"
@@ -172,7 +184,12 @@ if __name__ == "__main__":
     ap.add_argument("--seed",          type=int, default=42)
     ap.add_argument("--inner-workers", type=int, default=1,
                     help="Per-matchup parallel game workers (default 1 = sequential)")
+    ap.add_argument("--strict", action="store_true",
+                    help="Strict simulation mode (MTG_SIM_STRICT=1): no fallback, floor, real-data "
+                         "substitution or unsupported cards -- such cells error instead")
     args = ap.parse_args()
+    if args.strict:
+        os.environ["MTG_SIM_STRICT"] = "1"
 
     from format_config import get_field
     field = get_field(args.format, args.top_n)

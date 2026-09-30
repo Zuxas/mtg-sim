@@ -221,6 +221,7 @@ def run(fmt: str, since: str, n: int, seed: int, min_real: int, out_dir: str,
     report = {
         "format": fmt, "since": since, "until": until, "commit": _commit(),
         "generated": date.today().isoformat(), "n_per_cell": n, "seed": seed, "min_real": min_real,
+        "engine": "legacy match_runner (EXPERIMENTAL)",
         "coverage": {"real_rows": cov["rows"], "mapped_rows": cov["mapped_rows"],
                      "mapped_share": round(cov["mapped_rows"] / cov["rows"], 3) if cov["rows"] else 0,
                      "top_unmapped": dict(list(cov["unmapped_labels"].items())[:15]),
@@ -238,6 +239,7 @@ def run(fmt: str, since: str, n: int, seed: int, min_real: int, out_dir: str,
 def _markdown(r: dict) -> str:
     h = r["headline"]["all"]
     L = [f"# Sim vs real -- {r['format']} since {r['since']} (commit {r['commit']})", "",
+         f"Engine: **{r.get('engine', 'legacy match_runner (EXPERIMENTAL)')}** -- pre-rebuild numbers; see harness/specs/2026-09-30-strict-mode.md.", "",
          f"Covers **{100 * r['coverage']['mapped_share']:.0f}%** of {r['coverage']['real_rows']:,} real match rows. "
          f"{h.get('cells', 0)} cells, {h.get('real_matches', 0):,} decisive real matches, sim n={r['n_per_cell']}/cell.", "",
          "| Slice | Cells | Weighted mean abs delta | Median abs delta | Outside real CI | Same favourite | r (sim vs real) | Spread sim / real |",

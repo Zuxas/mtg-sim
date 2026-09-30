@@ -390,9 +390,14 @@ def run_effects(gs, ctx, effects: list):
     for name, kwargs in effects:
         fn = PRIMITIVES.get(name)
         if fn is None:
+            from engine.strict import is_strict, StrictModeError
+            if is_strict():
+                raise StrictModeError(f"unknown effect primitive: {name}")
             gs._log(f"    [WARN] unknown primitive: {name}")
             continue
         try:
             fn(gs, ctx, **(kwargs or {}))
         except Exception as e:
+            from engine.strict import reraise_if_strict
+            reraise_if_strict(e, f"effect primitive {name}")
             gs._log(f"    [ERR] {name}({kwargs}): {e}")

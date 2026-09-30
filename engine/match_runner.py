@@ -251,7 +251,8 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         try:
             match_apl.main_phase_match(view, opp_view)
         except Exception as e:
-            if os.environ.get("SIM_DEBUG"):
+            from engine.strict import is_strict
+            if os.environ.get("SIM_DEBUG") or is_strict():
                 raise
             print(
                 f"  [WARN _simple_play_turn APL exec failed for "
@@ -571,7 +572,8 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         elif hasattr(match_apl, 'main_phase2'):
             match_apl.main_phase2(view)
     except Exception as e:
-        if os.environ.get("SIM_DEBUG"):
+        from engine.strict import is_strict
+        if os.environ.get("SIM_DEBUG") or is_strict():
             raise
         print(
             f"  [WARN _run_post_combat_phase APL exec failed for "

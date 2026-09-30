@@ -221,8 +221,11 @@ Reanimator and Izzet Prowess have ~0 lists since 08-15 and left the field. Stale
 Azorius Control 0.19, Boros Aggro 0.40, Sultai Control 0.40, Azorius Aggro 0.42, Azorius Momo 0.54,
 Four-Color Control 0.64, Jeskai Control 0.66. Proxy pilots: Boros Dragons = AzoriusMomo MatchAPL,
 Four-Color Control = JeskaiControl MatchAPL. Launcher vs new field: Selesnya Landfall 61.9 -> 82.9,
-Izzet Lessons 17.3 -> 25.9. NOTE `run_matchup._apply_caps` caps match WR at 70% whenever the opponent
-NAME contains control/dimir/azorius/jeskai/bant/... -- several Standard cells are that cap, not a sim result.
+Izzet Lessons 17.3 -> 25.9. The opponent-name "credibility cap" in `run_matchup` (match > 75 -> 70,
+G1 > 75 -> 65 vs control/dimir/azorius/... names) was REMOVED (ef4a5de, spec
+2026-09-30-remove-credibility-cap): Landfall 82.9 -> 88.1 (only its 7 capped cells moved). The aggro floor
+(our aggro deck >= 25%) remains. Open issues from a Codex review (combo route ignores our deck, fictitious
+sideboarding, proxy pilots, counterspell misuse, Esper Blink crash): harness/reports/codex-review-mtg-sim-2026-09-29.md.
 
 ### REAL Modern field + real decklists — 2026-09-29 (supersedes the 2026-06-30 estimate below)
 

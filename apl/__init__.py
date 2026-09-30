@@ -367,7 +367,7 @@ MATCH_APL_REGISTRY = {
     "yawgmoth":        ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "golariyawgmoth":  ("apl.yawgmoth_match",        "YawgmothMatchAPL"),
     "uwcontrol":       ("apl.uw_control_modern_match","UWControlModernMatchAPL"),  # R1 priority-stack opt-in (real control APL)
-    "dimirmidrange":   ("apl.murktide_match",         "MurktideMatchAPL"),   # proxy: both Dimir tempo/control (MODERN key; Standard traffic uses "dimirmidrangestd")
+    "dimirmidrange":   ("apl.dimir_midrange_modern_match", "DimirMidrangeModernMatchAPL"),   # own pilot 2026-09-30 (was the Murktide proxy); MODERN key -- Standard uses "dimirmidrangestd"
     "dimir":           ("apl.murktide_match",         "MurktideMatchAPL"),
     # New 2026-04-29: real-meta gap decks
     "belcher":         ("apl.belcher_match",         "BelcherMatchAPL"),

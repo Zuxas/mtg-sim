@@ -115,29 +115,55 @@ FORMATS = {
 },
 
 "standard": {
-    # PT Lorwyn Eclipsed field (2026-05-04) — 306 players
-    # Source: PT Lorwyn Eclipsed official results + meta-analyzer DB cross-ref
-    # Major shift from PT SOS: Rhythm decks dominate (34.6% combined), Prowess fell.
-    # Known exact shares: Simic 15.7%, Bant 15.0%, Sultai Rean 10.1%,
-    #   Bant Airbending 6.5%, Spellementals 4.9%, Five-Color Rhythm 2.9%
-    # Remaining shares estimated from post-PT meta data.
+    # ── REAL current-meta field. Refreshed 2026-09-29 from real decklists. ──
+    # SOURCE: mtg_meta.db `decks` (mtgtop8), format=standard, 2026-08-15..2026-09-13
+    #   (1,025 decklists; the meta shifted in August). Share = % of decklists whose
+    #   label maps to the deck -> a TOP-FINISH share, not a match share (Standard
+    #   `matches` are too thin after May). Spec harness/specs/2026-09-30-standard-field-refresh.md.
+    # LABELS: calibration/name_map_standard.json + decklist-label aliases that pass a
+    #   list-cosine >= 0.80 test: Dimir Aggro -> Dimir Midrange Std (0.80, borderline),
+    #   Mardu Aggro -> Mardu Discard (0.83), Superior Doomsday -> Dimir Excruciator (0.97).
+    # RULES: every key loads the name-map deck_file + MatchAPL through the format-aware
+    #   lookup (load_deck_and_apl(key, 'standard') / get_match_apl(key, 'standard')).
+    #   "Dimir Midrange" alone resolves to the MODERN deck -> key "Dimir Midrange Std".
+    # Covers ~72% of real lists. Biggest UNMODELED: Jund Aggro 2.9, Orzhov Aggro 2.7,
+    #   Izzet Aggro 2.1, Jeskai Tablet 2.0, Mono Black Aggro 1.6, Superior Reanimator 1.4.
+    # STALE LISTS (cosine vs the window's real lists < 0.80): Azorius Control 0.19,
+    #   Boros Aggro 0.40, Sultai Control 0.40, Azorius Aggro 0.42, Azorius Momo 0.54,
+    #   Four-Color Control 0.64, Jeskai Control 0.66, Azorius Prison 0.71.
     "field": {
-        "Simic Rhythm":          15.7,  # 48/306 — dominant, Nature's Rhythm engine
-        "Bant Rhythm":           15.0,  # 46/306 — Seam Rip + Brightglass variant
-        "Sultai Reanimator":     10.1,  # 31/306 — Bringer + Superior Spider-Man combo
-        "Izzet Prowess":          9.5,  # ~29/306 — fell from 31.4% at SOS
-        "Bant Airbending":        6.5,  # 20/306 — Aang/Appa finishers
-        "Izzet Spellementals":    4.9,  # 15/306 — Sunderflock cost-reduction engine
-        "Selesnya Landfall":      4.8,  # ~15/306 — PT SOS best deck, slightly down
-        "Mono Green Landfall":    4.5,  # ~14/306 — Meltstrider + landfall chain
-        "Five-Color Rhythm":      2.9,  #  9/306 — 5C Nature's Rhythm splash
-        "Izzet Lessons":          3.5,  # ~11/306 — Zhang PT SOS winner, good matchup vs Rhythm
-        "Grixis Elementals":      2.5,  #  ~8/306 — Filipe Sousa EMT list; Ashling+Sunderflock
-        "Jeskai Control":         2.3,  #  ~7/306
-        "Dimir Excruciator":      2.0,  #  ~6/306
-        "Selesnya Ouroboroid":    1.8,  #  Nass PT SOS #2 seed
-        "Azorius Momo":           1.5,  #  smaller presence post-Lorwyn
+        "Izzet Spellementals": 12.4, "Mono Green Landfall": 11.1, "Dimir Midrange Std": 11.1,
+        "Four-Color Control":   6.2, "Boros Aggro":          5.5, "Mono Green Aggro":    5.2,
+        "Mardu Discard":        4.4, "Azorius Control":      3.4, "Dimir Excruciator":   2.7,
+        "Selesnya Landfall":    1.9, "Sultai Control":       1.8, "Azorius Momo":        1.4,
+        "Bant Airbending":      1.3, "Azorius Aggro":        1.1, "Jeskai Control":      1.0,
+        "Izzet Control":        0.7, "Boros Dragons":        0.4, "Azorius Prison":      0.1,
     },
+    # SUPERSEDED 2026-09-29 (kept for reproducibility of older reports) -- the PT Lorwyn
+    # Eclipsed estimate (2026-05-04):
+    #  # PT Lorwyn Eclipsed field (2026-05-04) — 306 players
+    #  # Source: PT Lorwyn Eclipsed official results + meta-analyzer DB cross-ref
+    #  # Major shift from PT SOS: Rhythm decks dominate (34.6% combined), Prowess fell.
+    #  # Known exact shares: Simic 15.7%, Bant 15.0%, Sultai Rean 10.1%,
+    #  #   Bant Airbending 6.5%, Spellementals 4.9%, Five-Color Rhythm 2.9%
+    #  # Remaining shares estimated from post-PT meta data.
+    #  "field": {
+    #  "Simic Rhythm":          15.7,  # 48/306 — dominant, Nature's Rhythm engine
+    #  "Bant Rhythm":           15.0,  # 46/306 — Seam Rip + Brightglass variant
+    #  "Sultai Reanimator":     10.1,  # 31/306 — Bringer + Superior Spider-Man combo
+    #  "Izzet Prowess":          9.5,  # ~29/306 — fell from 31.4% at SOS
+    #  "Bant Airbending":        6.5,  # 20/306 — Aang/Appa finishers
+    #  "Izzet Spellementals":    4.9,  # 15/306 — Sunderflock cost-reduction engine
+    #  "Selesnya Landfall":      4.8,  # ~15/306 — PT SOS best deck, slightly down
+    #  "Mono Green Landfall":    4.5,  # ~14/306 — Meltstrider + landfall chain
+    #  "Five-Color Rhythm":      2.9,  #  9/306 — 5C Nature's Rhythm splash
+    #  "Izzet Lessons":          3.5,  # ~11/306 — Zhang PT SOS winner, good matchup vs Rhythm
+    #  "Grixis Elementals":      2.5,  #  ~8/306 — Filipe Sousa EMT list; Ashling+Sunderflock
+    #  "Jeskai Control":         2.3,  #  ~7/306
+    #  "Dimir Excruciator":      2.0,  #  ~6/306
+    #  "Selesnya Ouroboroid":    1.8,  #  Nass PT SOS #2 seed
+    #  "Azorius Momo":           1.5,  #  smaller presence post-Lorwyn
+    #  },
     "combo": {
         "izzet cauldron", "jeskai oculus", "azorius omniscience",
         "sultai reanimator", "izzet lessons",

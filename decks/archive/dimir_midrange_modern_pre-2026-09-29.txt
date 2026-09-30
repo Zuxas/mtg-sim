@@ -1,0 +1,36 @@
+// audit:auto-generated:Dimir Midrange:2026-04-30
+// Source: meta-analyzer DB deck_id=132293, archetype=Dimir Midrange
+
+2 Cling to Dust
+4 Consult the Star Charts
+4 Counterspell
+4 Fatal Push
+4 Field of Ruin
+4 Flooded Strand
+1 Force of Negation
+1 Hallowed Fountain
+4 Island
+1 Kaito, Bane of Nightmares
+1 Meticulous Archive
+4 Orcish Bowmasters
+1 Pest Control
+4 Polluted Delta
+3 Sheoldred's Edict
+2 Snapcaster Mage
+3 Spell Snare
+1 Sphinx's Revelation
+3 Subtlety
+1 Swamp
+2 Undercity Sewers
+3 Wan Shi Tong, Librarian
+3 Watery Grave
+
+Sideboard
+3 Break the Ice
+1 Celestial Purge
+3 Consign to Memory
+1 Harbinger of the Seas
+2 High Noon
+3 Mystical Dispute
+1 Pest Control
+1 The Meathook Massacre

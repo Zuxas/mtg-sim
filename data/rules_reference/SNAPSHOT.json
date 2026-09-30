@@ -9,7 +9,8 @@
    "download_uri": "https://data.scryfall.io/oracle-cards/oracle-cards-20260930090154.jsonl.gz",
    "compressed_sha256": "7ff0258eede3a4469d4b4fb7764f4c01cc012fb3862bfe6ab6ad93ac5d81c221",
    "objects": 38690,
-   "installed_bytes": 212205933
+   "installed_bytes": 212205933,
+   "installed_sha256": "a2775051703d2b680ef1aad3dbc3bf01b855dc103ef04f7a0f0f9944b6560b16"
   },
   "scryfall_rulings.json": {
    "bulk_type": "rulings",
@@ -17,7 +18,8 @@
    "download_uri": "https://data.scryfall.io/rulings/rulings-20260930090035.jsonl.gz",
    "compressed_sha256": "ea4100c4015cea527b890183b289278716966e551bc9e48f19f98270f2afcb94",
    "objects": 79706,
-   "installed_bytes": 27307168
+   "installed_bytes": 27307168,
+   "installed_sha256": "b107f19d10aa81905d837d82636b1aa83a7a6c26d037a8add9a482585cd13c68"
   }
  }
 }

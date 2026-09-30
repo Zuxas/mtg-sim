@@ -1,0 +1,9 @@
+{
+ "file": "MagicCompRules-20260925.txt",
+ "effective_date": "2026-09-25",
+ "source_url": "https://media.wizards.com/2026/downloads/MagicCompRules%2020260925.txt",
+ "downloaded": "2026-09-30",
+ "bytes": 977752,
+ "sha256": "8d860e451f20f38865b725b42d82feb714c725373dd8f3b32b8652b3eeb070ca",
+ "note": "Pinned rules authority for engine v2 (spec harness/specs/2026-09-30-rules-engine-v2-design.md, M0)."
+}

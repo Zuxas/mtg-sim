@@ -36,6 +36,7 @@ logs/
 data/rules_reference/scryfall_oracle_cards.json
 data/rules_reference/scryfall_rulings.json
 data/rules_reference/scryfall_*.20*.json
+data/rules_reference/MagicCompRules-*.txt
 data/rules_reference/MagicCompRules.txt
 
 # Sim run artifacts — timestamped or batch-numbered outputs from gauntlets,

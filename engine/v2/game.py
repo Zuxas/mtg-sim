@@ -1,0 +1,485 @@
+"""The v2 game state machine (spec revision 4).
+
+Game.new(...) -> pending() / legal_actions() / observe(seat) / apply(action) / run(policies).
+Every state change goes through engine.v2.reducer.commit (atomic transitions).
+"""
+from __future__ import annotations
+
+import platform
+import random
+from itertools import combinations, permutations
+
+from engine.v2 import ENGINE_VERSION
+from engine.v2 import actions as A
+from engine.v2 import reducer
+from engine.v2.cards import definitions, definitions_hash, oracle_file_sha256, validate_deck
+from engine.v2.effects import EFFECTS, EffectContext
+from engine.v2.observation import observe as _observe
+from engine.v2.ops import op
+from engine.v2.rules import casting, combat, sba
+from engine.v2.rules.mana import land_color, payment_assignments, untapped_mana_sources
+from engine.v2.state import PLAYER_ZONES, GameState
+
+STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
+         "first_strike_damage", "combat_damage", "end_combat", "main2", "end", "cleanup")
+RNG_ALGORITHM = f"python-random-mt19937/{platform.python_version()}"
+
+
+class IllegalAction(ValueError):
+    pass
+
+
+class GameOver(RuntimeError):
+    pass
+
+
+def rules_meta() -> dict:
+    import json
+    import os
+    from engine.v2.cards import RR
+    return json.load(open(os.path.join(RR, "RULES.json"), encoding="utf-8"))
+
+
+class Game:
+    def __init__(self, state: GameState):
+        self.s = state
+        self.actions: list = []
+        self._legal_cache = (None, None)
+
+    # ================================================================ construction
+    @classmethod
+    def new(cls, deck_a, deck_b, seed: int, starting_mode: str = "explicit", starting_player: int = 0,
+            turn_limit: int = 50, check_invariants: bool = False) -> "Game":
+        validate_deck(deck_a)
+        validate_deck(deck_b)
+        defs = definitions()
+        rm = rules_meta()
+        config = {
+            "engine_version": ENGINE_VERSION, "rules_effective": rm["effective_date"], "rules_sha256": rm["sha256"],
+            "definitions_hash": definitions_hash(defs), "oracle_file_sha256": oracle_file_sha256(),
+            "rng_algorithm": RNG_ALGORITHM, "seed": seed, "starting_mode": starting_mode,
+            "starting_player": starting_player, "turn_limit": turn_limit,
+            "decks": [list(deck_a), list(deck_b)], "check_invariants": check_invariants,
+        }
+        s = GameState(config=config, rng=random.Random(seed))
+        for p in (0, 1):
+            for z in PLAYER_ZONES:
+                s.zones[(p, z)] = []
+        s.zones[("bf",)] = []
+        g = cls(s)
+        g._setup()
+        return g
+
+    def _commit(self, kind, ops):
+        reducer.commit(self.s, kind, ops)
+
+    def _setup(self):
+        s = self.s
+        ops = [op("create_card", p, name) for p, deck in enumerate(s.config["decks"]) for name in deck]
+        ops.append(op("starting_player", s.config["starting_mode"], s.config["starting_player"]))
+        self._commit("setup_cards", ops)
+        order = (s.starting_player, 1 - s.starting_player)
+        ops = [op("shuffle", p) for p in order]                         # CR 103.3
+        ops += [op("draw", p) for p in order for _ in range(7)]         # CR 103.5 (7 cards)
+        self._commit("setup_draw", ops)
+        self._mulligan_next()
+
+    def _order(self):
+        return (self.s.starting_player, 1 - self.s.starting_player)
+
+    # ================================================================ public API
+    def pending(self):
+        return self.s.pending
+
+    @property
+    def result(self):
+        return self.s.result
+
+    def observe(self, seat: int):
+        return _observe(self.s, seat)
+
+    def legal_actions(self) -> list:
+        key = len(self.s.log.transitions)
+        if self._legal_cache[0] == key:
+            return self._legal_cache[1]
+        acts = self._compute_legal()
+        self._legal_cache = (key, acts)
+        return acts
+
+    def apply(self, action) -> None:
+        if self.s.result is not None:
+            raise GameOver(self.s.result)
+        if action not in self.legal_actions():
+            raise IllegalAction(f"{action!r} is not a legal action now ({self.s.pending})")
+        self.actions.append(action)
+        getattr(self, "_do_" + type(action).__name__)(action)
+
+    def run(self, policies, max_actions: int = 200000):
+        n = 0
+        while self.s.result is None:
+            p = self.s.pending.player
+            a = policies[p].choose(self.observe(p), self.legal_actions())
+            self.apply(a)
+            n += 1
+            if n > max_actions:
+                raise RuntimeError("action budget exceeded")
+        return self.s.result
+
+    # ================================================================ legal actions
+    def _compute_legal(self) -> list:
+        s = self.s
+        pd = s.pending
+        if s.result is not None or pd is None:
+            return []
+        p, k = pd.player, pd.kind
+        out: list = []
+        if k == "mulligan_declare":
+            out = [A.DeclareKeep(p)] + ([A.DeclareMulligan(p)] if s.mull_count[p] < 7 else [])   # CR 103.5
+        elif k == "mulligan_bottom":
+            n = s.mull_count[p]
+            out = [A.BottomCards(p, perm) for perm in permutations(s.zones[(p, "hand")], n)]
+        elif k == "priority":
+            out = [A.PassPriority(p)]
+            out += [A.PlayLand(p, oid) for oid in s.zones[(p, "hand")] if casting.can_play_land(s, p, oid)]
+            out += [A.ActivateManaAbility(p, oid) for oid in untapped_mana_sources(s, p)]
+            out += [A.ProposeCast(p, oid) for oid in s.zones[(p, "hand")] if casting.can_propose_cast(s, p, oid)]
+        elif k == "cast_targets":
+            e = s.stack[-1]
+            key = s.definition(e.ciid, is_ciid=True).effect_key
+            out = [A.ChooseTargets(p, (t,)) for t in casting.target_options(s, key, exclude_sid=e.sid)]
+        elif k == "cast_mana":
+            e = s.stack[-1]
+            d = s.definition(e.ciid, is_ciid=True)
+            out = [A.ActivateManaAbility(p, oid) for oid in untapped_mana_sources(s, p)]
+            out += [A.PayCost(p, asg) for asg in payment_assignments(d.cost_symbols, s.pools[p])]
+        elif k == "declare_attack":
+            oid = pd.info[0]
+            out = [A.ChooseAttack(p, oid, True), A.ChooseAttack(p, oid, False)]
+        elif k == "declare_block":
+            b = pd.info[0]
+            out = [A.ChooseBlock(p, b, None)] + [A.ChooseBlock(p, b, a) for a in s.attackers
+                                                 if a in s.objects and combat.can_block(s, b, a)]
+        elif k == "assign_damage":
+            a, blockers, power = pd.info
+            out = [A.AssignCombatDamage(p, a, div) for div in combat.divisions(power, list(blockers))]
+        elif k == "discard":
+            n = pd.info[0]
+            out = [A.DiscardToHandSize(p, c) for c in combinations(sorted(s.zones[(p, "hand")]), n)]
+        out.append(A.Concede(p))                                          # always legal
+        return out
+
+    # ================================================================ mulligans (CR 103.5, staged)
+    def _mulligan_next(self):
+        s = self.s
+        for p in self._order():
+            if not s.kept[p] and p not in s.mull_declared:
+                self._commit("pending", [op("pending", "mulligan_declare", p)])
+                return
+        self._mulligan_execute()
+
+    def _do_DeclareKeep(self, a):
+        self._commit("mulligan_declare", [op("mull_declare", a.player, "keep"), op("keep", a.player)])
+        self._mulligan_next()
+
+    def _do_DeclareMulligan(self, a):
+        self._commit("mulligan_declare", [op("mull_declare", a.player, "mulligan")])
+        self._mulligan_next()
+
+    def _mulligan_execute(self):
+        s = self.s
+        muls = [p for p in self._order() if s.mull_declared.get(p) == "mulligan"]
+        if not muls:
+            self._start_game()
+            return
+        ops = []
+        for p in muls:                                                    # simultaneous (one transition)
+            ops += [op("move", oid, "library", "end") for oid in list(s.zones[(p, "hand")])]
+            ops.append(op("shuffle", p))
+            ops += [op("draw", p) for _ in range(7)]
+            ops.append(op("mull_count_inc", p))
+        ops.append(op("mull_round_reset"))
+        ops.append(op("set", "mull_stage", "bottom"))
+        ops.append(op("set", "mull_round", tuple(muls)))
+        self._commit("mulligan_execute", ops)
+        self._mulligan_bottom_next()
+
+    def _mulligan_bottom_next(self):
+        s = self.s
+        for p in s.mull_round:
+            if p not in s.mull_bottoms:
+                self._commit("pending", [op("pending", "mulligan_bottom", p, (s.mull_count[p],))])
+                return
+        ops = []
+        for p in s.mull_round:                                            # simultaneous commit
+            ops += [op("move", oid, "library", "end") for oid in s.mull_bottoms[p]]
+        ops += [op("clear_bottoms"), op("set", "mull_stage", "declare"), op("set", "mull_round", ())]
+        self._commit("mulligan_commit", ops)
+        if all(s.kept):
+            self._start_game()
+        else:
+            self._mulligan_next()
+
+    def _do_BottomCards(self, a):
+        self._commit("mulligan_bottom_choice", [op("store_bottom", a.player, a.cards)])
+        self._mulligan_bottom_next()
+
+    def _start_game(self):
+        self._commit("begin_game", [op("set", "mull_stage", "done"), op("begin_turn", 1, self.s.starting_player)])
+        self._enter_step("untap")
+
+    # ================================================================ turn structure
+    def _enter_step(self, step):
+        s = self.s
+        ops = [op("set", "step", step)]
+        if step == "untap":                                               # CR 502.3, no priority (117.3a)
+            ops.append(op("untap_all", s.active))
+            self._commit("step", ops)
+            self._leave_step()
+            return
+        if step == "draw":
+            if not (s.turn == 1 and s.active == s.starting_player):        # CR 103.8a
+                ops.append(op("draw", s.active))                           # CR 504.1
+            self._commit("step", ops)
+            self._give_priority(s.active)
+            return
+        if step == "declare_attackers":
+            self._commit("step", ops)
+            self._attack_next()
+            return
+        if step == "declare_blockers":
+            self._commit("step", ops)
+            self._block_next()
+            return
+        if step in ("first_strike_damage", "combat_damage"):
+            self._commit("step", ops)
+            self._combat_damage(first_step=(step == "first_strike_damage"))
+            return
+        if step == "cleanup":
+            self._commit("step", ops)
+            self._cleanup()
+            return
+        self._commit("step", ops)
+        self._give_priority(s.active)
+
+    def _leave_step(self):
+        s = self.s
+        ops = [op("empty_pools")]                                          # CR 500.5, 106.4
+        if s.step == "end_combat":
+            ops.append(op("clear_combat"))
+        self._commit("step_end", ops)
+        if s.result is not None:
+            return
+        nxt = self._next_step(s.step)
+        if nxt is None:
+            self._next_turn()
+        else:
+            self._enter_step(nxt)
+
+    def _next_step(self, step):
+        s = self.s
+        if step == "cleanup":
+            return None
+        if step == "declare_attackers" and not s.attackers:              # CR 508.8
+            return "end_combat"
+        if step == "declare_blockers":
+            return "first_strike_damage" if combat.any_first_strike(s) else "combat_damage"   # CR 510.4
+        if step == "first_strike_damage":
+            return "combat_damage"
+        return STEPS[STEPS.index(step) + 1]
+
+    def _next_turn(self):
+        s = self.s
+        if s.turn >= s.config["turn_limit"]:
+            self._commit("game_end", [op("end_game", ("draw", "turn_limit"))])
+            return
+        self._commit("turn", [op("begin_turn", s.turn + 1, 1 - s.active)])
+        self._enter_step("untap")
+
+    # ================================================================ priority (CR 117)
+    def _give_priority(self, player, passes=0):
+        self._run_sbas()                                                  # CR 117.5
+        if self.s.result is not None:
+            return
+        self._commit("priority", [op("priority", player, passes), op("pending", "priority", player)])
+
+    def _run_sbas(self):
+        s = self.s
+        while s.result is None:
+            ops, losers = sba.compute(s)
+            if not ops:
+                return
+            if losers:
+                lost = {p for p, _ in losers}
+                if len(lost) == 2:                                        # CR 104.4a
+                    ops.append(op("end_game", ("draw", "simultaneous_loss")))
+                else:
+                    (p, reason), = losers
+                    ops.append(op("end_game", ("win", 1 - p, reason)))
+            self._commit("sba", ops)
+
+    def _do_PassPriority(self, a):
+        s = self.s
+        passes = s.passes + 1
+        if passes >= 2:                                                   # CR 117.4
+            if s.stack:
+                self._resolve_top()
+                if s.result is None:
+                    self._give_priority(s.active)                         # CR 117.3b
+            else:
+                self._leave_step()
+        else:
+            self._give_priority(1 - a.player, passes)
+
+    def _do_Concede(self, a):
+        self._commit("concede", [op("lose", a.player, "concede"), op("end_game", ("win", 1 - a.player, "concede"))])
+
+    def _do_PlayLand(self, a):
+        self._commit("play_land", [op("move", a.oid, "battlefield", "end", a.player), op("land_played", a.player)])
+        self._give_priority(a.player)                                     # CR 117.3c
+
+    def _do_ActivateManaAbility(self, a):
+        s = self.s
+        color = land_color(s, a.oid)
+        ops = [op("tap", a.oid), op("add_mana", a.player, color, 1)]
+        if s.open_cast is not None:                                       # CR 601.2g, 605.3a
+            ops.append(op("record_activation", a.oid, color))
+            self._commit("mana_ability", ops)
+            return
+        self._commit("mana_ability", ops)
+        self._give_priority(a.player)
+
+    # ================================================================ casting (CR 601.2, open transaction)
+    def _do_ProposeCast(self, a):
+        s = self.s
+        key = s.definition(a.oid).effect_key
+        ops = [op("open_cast", a.oid, a.player)]                          # CR 601.2a
+        nxt = "cast_targets" if key in casting.TARGET_SPEC else "cast_mana"
+        ops.append(op("pending", nxt, a.player))
+        self._commit("cast_propose", ops)
+
+    def _do_ChooseTargets(self, a):
+        self._commit("cast_targets", [op("set_targets", self.s.stack[-1].sid, a.targets),
+                                      op("pending", "cast_mana", a.player)])          # CR 601.2c
+
+    def _do_PayCost(self, a):
+        s = self.s
+        d = s.definition(s.stack[-1].ciid, is_ciid=True)
+        ops = [op("spend_mana", a.player, c, n) for c, n in a.assignment]  # CR 601.2h
+        ops.append(op("commit_cast", d.cost_symbols))                     # CR 601.2i
+        self._commit("cast", ops)
+        self._give_priority(a.player)                                     # CR 117.3c
+
+    def rollback_open_cast(self, reason: str, reverse_mana: bool = True):
+        """CR 733.1 / 733.2: reverse an illegal or uncompletable proposal. Milestone one
+        offers ProposeCast only when completable, so this path is reached only through
+        fault injection. The player who had priority retains it (the reverted state
+        restores the pre-proposal pending decision)."""
+        self._commit("rollback", [op("note", "RollbackReason", reason), op("revert_cast", reverse_mana)])
+
+    # ================================================================ resolution (CR 608)
+    def _resolve_top(self):
+        s = self.s
+        e = s.stack[-1]
+        d = s.definition(e.ciid, is_ciid=True)
+        if d.is_permanent_spell:                                          # CR 608.3a, 110.2
+            ops = [op("remove_entry", e.sid), op("move", e.oid, "battlefield", "end", e.controller),
+                   op("note", "SpellResolved", e.sid)]
+            self._commit("resolve", ops)
+            return
+        legal = [t for t in e.targets if casting.target_still_legal(s, t, d.effect_key)]   # CR 608.2b
+        if e.targets and not legal:
+            self._commit("resolve", [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),
+                                     op("note", "SpellFizzled", e.sid)])
+            return
+        ctx_targets = tuple(t if t[0] != "stack" else ("stack", t[1], s.entry(t[1]).oid) for t in legal)
+        ops = EFFECTS[d.effect_key](EffectContext(e.controller, e.oid, ctx_targets))
+        ops += [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),     # CR 608.2n
+                op("note", "SpellResolved", e.sid)]
+        self._commit("resolve", ops)
+
+    # ================================================================ combat (CR 508-511)
+    def _attack_next(self):
+        s = self.s
+        for oid in combat.eligible_attackers(s):
+            if oid not in s.attack_choices:
+                self._commit("pending", [op("pending", "declare_attack", s.active, (oid,))])
+                return
+        chosen = tuple(sorted(o for o, yes in s.attack_choices.items() if yes))
+        self._commit("declare_attackers", [op("declare_attackers", chosen)])            # CR 508.1a, 508.1f
+        self._give_priority(s.active)
+
+    def _do_ChooseAttack(self, a):
+        self._commit("attack_choice", [op("attack_choice", a.oid, a.attacks)])
+        self._attack_next()
+
+    def _block_next(self):
+        s = self.s
+        for oid in combat.potential_blockers(s):
+            if oid not in s.block_choices:
+                self._commit("pending", [op("pending", "declare_block", 1 - s.active, (oid,))])
+                return
+        pairs = tuple(sorted((b, a) for b, a in s.block_choices.items() if a is not None))
+        self._commit("declare_blockers", [op("declare_blockers", pairs)])               # CR 509.1a
+        self._give_priority(s.active)
+
+    def _do_ChooseBlock(self, a):
+        self._commit("block_choice", [op("block_choice", a.blocker, a.attacker)])
+        self._block_next()
+
+    def _combat_damage(self, first_step: bool):
+        s = self.s
+        attackers = [x for x in s.attackers if x in s.objects and s.objects[x].zone == "battlefield"]
+        for att in attackers:                                             # CR 510.1c divisions first
+            if not combat.deals_damage_now(s, att, first_step) or att in s.divisions:
+                continue
+            bl = combat.living_blockers(s, att)
+            power = s.power(att)
+            if len(bl) >= 2 and power > 0:
+                self._commit("pending", [op("pending", "assign_damage", s.active, (att, tuple(bl), power))])
+                return
+        ops = []
+        defender = 1 - s.active
+        for att in attackers:
+            if not combat.deals_damage_now(s, att, first_step):
+                continue
+            power = s.power(att)
+            if power <= 0:
+                continue
+            if att not in s.blocked:
+                ops.append(op("damage_player", att, defender, power))
+                continue
+            bl = combat.living_blockers(s, att)
+            if len(bl) == 1:
+                ops.append(op("damage_creature", att, bl[0], power))
+            elif len(bl) >= 2:
+                ops += [op("damage_creature", att, b, n) for b, n in s.divisions[att] if n > 0]
+        for b, att in sorted(s.blocks.items()):
+            if b not in s.objects or s.objects[b].zone != "battlefield":
+                continue
+            if not combat.deals_damage_now(s, b, first_step):
+                continue
+            power = s.power(b)
+            if power > 0 and att in s.objects and s.objects[att].zone == "battlefield":
+                ops.append(op("damage_creature", b, att, power))
+        if first_step:
+            ops.append(op("set", "first_strike_done", True))
+        self._commit("combat_damage", ops)                                # CR 510.2 simultaneous
+        self._give_priority(s.active)
+
+    def _do_AssignCombatDamage(self, a):
+        self._commit("damage_division", [op("division", a.attacker, a.division)])
+        self._combat_damage(first_step=(self.s.step == "first_strike_damage"))
+
+    # ================================================================ cleanup (CR 514)
+    def _cleanup(self):
+        s = self.s
+        hand = s.zones[(s.active, "hand")]
+        if len(hand) > 7:                                                 # CR 514.1
+            self._commit("pending", [op("pending", "discard", s.active, (len(hand) - 7,))])
+            return
+        self._commit("cleanup", [op("cleanup_wear_off")])                 # CR 514.2
+        self._leave_step()
+
+    def _do_DiscardToHandSize(self, a):
+        self._commit("discard", [op("move", oid, "graveyard", "end") for oid in a.cards])
+        self._cleanup()

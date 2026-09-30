@@ -208,6 +208,22 @@ candidate via an independent re-played game (current batch: 24/24). Output `data
 PYTHONHASHSEED=0 python scripts/mine_gauntlet_puzzles.py --games-per-opp 300 --seed 42
 ```
 
+### REAL Standard field (current-meta decklists) — 2026-09-29
+
+Spec `harness/specs/2026-09-30-standard-field-refresh.md`, commit 4d06834. `FORMATS["standard"]["field"]`
+= share of real Standard DECKLISTS (mtgtop8, 2026-08-15..09-13, 1,025 lists; the meta shifted in
+August; Standard `matches` are too thin after May) -> a top-finish share, not a match share. 18 decks,
+~72% of lists: Izzet Spellementals 12.4, Mono Green Landfall 11.1, Dimir Midrange Std 11.1, Four-Color
+Control 6.2, Boros Aggro 5.5 ... Decklist-label aliases (list cosine >= 0.80): Dimir Aggro -> Dimir
+Midrange Std (0.80, borderline), Mardu Aggro -> Mardu Discard, Superior Doomsday -> Dimir Excruciator.
+Use key "Dimir Midrange Std" (plain "Dimir Midrange" resolves to the MODERN deck). Rhythm decks, Sultai
+Reanimator and Izzet Prowess have ~0 lists since 08-15 and left the field. Stale lists (cos < 0.80):
+Azorius Control 0.19, Boros Aggro 0.40, Sultai Control 0.40, Azorius Aggro 0.42, Azorius Momo 0.54,
+Four-Color Control 0.64, Jeskai Control 0.66. Proxy pilots: Boros Dragons = AzoriusMomo MatchAPL,
+Four-Color Control = JeskaiControl MatchAPL. Launcher vs new field: Selesnya Landfall 61.9 -> 82.9,
+Izzet Lessons 17.3 -> 25.9. NOTE `run_matchup._apply_caps` caps match WR at 70% whenever the opponent
+NAME contains control/dimir/azorius/jeskai/bant/... -- several Standard cells are that cap, not a sim result.
+
 ### REAL Modern field + real decklists — 2026-09-29 (supersedes the 2026-06-30 estimate below)
 
 Spec `harness/specs/2026-09-30-field-and-lists-refresh.md`. Commits 228b3fc, 03e841e (lists),

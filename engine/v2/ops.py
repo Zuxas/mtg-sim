@@ -2,16 +2,12 @@
 ops; engine.v2.reducer validates and applies them inside an atomic transition."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from typing import NamedTuple
 
 
-@dataclass(frozen=True)
-class Op:
+class Op(NamedTuple):                # immutable; NamedTuple for speed
     name: str
     args: tuple = ()
-
-    def __getitem__(self, i):
-        return self.args[i]
 
 
 def op(name: str, *args) -> Op:

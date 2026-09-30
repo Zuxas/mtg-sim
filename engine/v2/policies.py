@@ -11,12 +11,16 @@ class RandomLegalPolicy:
     """Uniform over legal actions except Concede (fuzzing). Symmetry reduction, if any,
     would live here -- the engine always offers the complete set."""
 
+    uses_observation = False       # uniform choice never reads the observation (skips building it)
+
     def __init__(self, seed: int):
         self.rng = random.Random(seed)
 
     def choose(self, obs, actions):
-        pool = [a for a in actions if not isinstance(a, A.Concede)] or actions
-        return pool[self.rng.randrange(len(pool))]
+        # The engine always appends Concede last; uniform over the rest (same choice as
+        # filtering it out, without rebuilding the list).
+        n = len(actions) - 1 if len(actions) > 1 and isinstance(actions[-1], A.Concede) else len(actions)
+        return actions[self.rng.randrange(n)]
 
 
 class BasicScriptedPolicy:

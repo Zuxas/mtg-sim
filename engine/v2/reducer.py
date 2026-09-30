@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from engine.v2.events import ev
 from engine.v2.objects import CardInstance, GameObject, StackEntry
+from engine.v2.state import Pending
 
 
 class EngineInvariantError(AssertionError):
@@ -72,6 +73,8 @@ def _h_create_card(s, evs, owner, name):
     ciid = s.next_ciid
     s.next_ciid += 1
     s.instances[ciid] = CardInstance(ciid, name, owner)
+    from engine.v2.cards import definitions
+    s.def_by_ciid[ciid] = definitions()[name]
     oid = _alloc_oid(s)
     s.objects[oid] = GameObject(oid=oid, ciid=ciid, owner=owner, controller=owner, zone="library")
     s.zones[(owner, "library")].append(oid)
@@ -153,7 +156,10 @@ def _h_begin_turn(s, evs, turn, active):
     evs.append(ev("TurnBegan", turn=turn, active=active))
 
 
-def _h_untap_all(s, evs, player):
+def _h_untap_all(s, evs, player=None):
+    """CR 502.3: the ACTIVE player untaps their permanents (resolved when the op applies,
+    after any begin_turn earlier in the same transition)."""
+    player = s.active if player is None else player
     for oid in s.zones[("bf",)]:
         o = s.objects[oid]
         if o.controller == player and o.tapped:
@@ -163,9 +169,11 @@ def _h_untap_all(s, evs, player):
 
 def _h_empty_pools(s, evs):
     for p in (0, 1):
-        lost = {c: n for c, n in s.pools[p].items() if n}
-        if lost:
-            evs.append(ev("ManaEmptied", player=p, mana=tuple(sorted(lost.items()))))
+        pool = s.pools[p]
+        if not any(pool.values()):                      # usually already empty: nothing to do
+            continue
+        lost = tuple(sorted((c, n) for c, n in pool.items() if n))
+        evs.append(ev("ManaEmptied", player=p, mana=lost))
         s.pools[p] = dict.fromkeys("WUBRGC", 0)
 
 
@@ -175,7 +183,6 @@ def _h_priority(s, evs, player, passes):
 
 
 def _h_pending(s, evs, kind, player, info=()):
-    from engine.v2.state import Pending
     s.pending = Pending(kind, player, tuple(info)) if kind else None
 
 
@@ -283,7 +290,6 @@ def _h_revert_cast(s, evs, reverse_mana):
             s.pools[oc["controller"]][color] -= 1
             s.objects[land].tapped = False
     s.priority, s.passes = oc["priority"], oc["passes"]
-    from engine.v2.state import Pending
     s.pending = Pending(*oc["pending"]) if oc["pending"] else None
     s.open_cast = None
     evs.append(ev("ProposalReverted", prov=oc["prov"], source=src.oid, reversed_mana=bool(reverse_mana)))
@@ -396,6 +402,6 @@ def commit(s, kind: str, ops) -> None:
         _need(h is not None, f"unknown op {o.name}")
         h(s, evs, *o.args)
     s.log.append(kind, evs)
-    if s.config.get("check_invariants"):
+    if s.config["check_invariants"]:
         from engine.v2.invariants import check
         check(s, kind)

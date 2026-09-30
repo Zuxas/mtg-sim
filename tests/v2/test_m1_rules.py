@@ -98,6 +98,20 @@ def test_starting_player_skips_first_draw():
     assert len(g.s.zones[(1, "hand")]) == 8
 
 
+def test_untap_step_untaps_only_the_active_players_permanents():
+    g = new_game()
+    advance(g, at("main1", turn=1))
+    m0 = put(g, 0, "Mountain", "battlefield")
+    i1 = put(g, 1, "Island", "battlefield")
+    act(g, A.ActivateManaAbility, player=0, oid=m0)
+    advance(g, at("main1", turn=1, player=1))
+    act(g, A.ActivateManaAbility, player=1, oid=i1)
+    advance(g, at("upkeep", turn=2))                                                 # CR 502.3
+    assert not g.s.objects[i1].tapped and g.s.objects[m0].tapped
+    advance(g, at("upkeep", turn=3))
+    assert not g.s.objects[m0].tapped
+
+
 def test_mana_floats_then_empties_between_steps():
     g = new_game()
     advance(g, at("main1", turn=1))

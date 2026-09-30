@@ -45,6 +45,7 @@ class Game:
         self.s = state
         self.actions: list = []
         self._legal_cache = (None, None)
+        self._sba_clean_at = -1          # log length at the last SBA check that found nothing
 
     # ================================================================ construction
     @classmethod
@@ -118,7 +119,9 @@ class Game:
         n = 0
         while self.s.result is None:
             p = self.s.pending.player
-            a = policies[p].choose(self.observe(p), self.legal_actions())
+            pol = policies[p]
+            obs = self.observe(p) if getattr(pol, "uses_observation", True) else None
+            a = pol.choose(obs, self.legal_actions())
             self.apply(a)
             n += 1
             if n > max_actions:
@@ -139,10 +142,19 @@ class Game:
             n = s.mull_count[p]
             out = [A.BottomCards(p, perm) for perm in permutations(s.zones[(p, "hand")], n)]
         elif k == "priority":
+            hand = s.zones[(p, "hand")]
+            timing = casting.sorcery_timing_ok(s, p)
+            sources = untapped_mana_sources(s, p)
+            avail = dict(s.pools[p])
+            for oid in sources:
+                c = land_color(s, oid)
+                avail[c] = avail.get(c, 0) + 1
             out = [A.PassPriority(p)]
-            out += [A.PlayLand(p, oid) for oid in s.zones[(p, "hand")] if casting.can_play_land(s, p, oid)]
-            out += [A.ActivateManaAbility(p, oid) for oid in untapped_mana_sources(s, p)]
-            out += [A.ProposeCast(p, oid) for oid in s.zones[(p, "hand")] if casting.can_propose_cast(s, p, oid)]
+            if timing and s.land_played[p] == 0:
+                out += [A.PlayLand(p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
+            out += [A.ActivateManaAbility(p, oid) for oid in sources]
+            tgt: dict = {}
+            out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
         elif k == "cast_targets":
             e = s.stack[-1]
             key = s.definition(e.ciid, is_ciid=True).effect_key
@@ -224,15 +236,16 @@ class Game:
         self._mulligan_bottom_next()
 
     def _start_game(self):
-        self._commit("begin_game", [op("set", "mull_stage", "done"), op("begin_turn", 1, self.s.starting_player)])
-        self._enter_step("untap")
+        self._enter_step("untap", [op("set", "mull_stage", "done"), op("begin_turn", 1, self.s.starting_player)])
 
     # ================================================================ turn structure
-    def _enter_step(self, step):
+    def _enter_step(self, step, carry=()):
+        """Begin `step`. `carry` = ops ending the previous step (pool emptying, CR 500.5) or
+        beginning the turn; they commit in the SAME atomic transition as the step's start."""
         s = self.s
-        ops = [op("set", "step", step)]
+        ops = list(carry) + [op("set", "step", step)]
         if step == "untap":                                               # CR 502.3, no priority (117.3a)
-            ops.append(op("untap_all", s.active))
+            ops.append(op("untap_all"))           # player read at APPLY time: carry may begin the turn
             self._commit("step", ops)
             self._leave_step()
             return
@@ -263,17 +276,14 @@ class Game:
 
     def _leave_step(self):
         s = self.s
-        ops = [op("empty_pools")]                                          # CR 500.5, 106.4
+        carry = [op("empty_pools")]                                        # CR 500.5, 106.4
         if s.step == "end_combat":
-            ops.append(op("clear_combat"))
-        self._commit("step_end", ops)
-        if s.result is not None:
-            return
+            carry.append(op("clear_combat"))
         nxt = self._next_step(s.step)
         if nxt is None:
-            self._next_turn()
+            self._next_turn(carry)
         else:
-            self._enter_step(nxt)
+            self._enter_step(nxt, carry)
 
     def _next_step(self, step):
         s = self.s
@@ -287,13 +297,12 @@ class Game:
             return "combat_damage"
         return STEPS[STEPS.index(step) + 1]
 
-    def _next_turn(self):
+    def _next_turn(self, carry=()):
         s = self.s
         if s.turn >= s.config["turn_limit"]:
-            self._commit("game_end", [op("end_game", ("draw", "turn_limit"))])
+            self._commit("game_end", list(carry) + [op("end_game", ("draw", "turn_limit"))])
             return
-        self._commit("turn", [op("begin_turn", s.turn + 1, 1 - s.active)])
-        self._enter_step("untap")
+        self._enter_step("untap", list(carry) + [op("begin_turn", s.turn + 1, 1 - s.active)])
 
     # ================================================================ priority (CR 117)
     def _give_priority(self, player, passes=0):
@@ -304,9 +313,15 @@ class Game:
 
     def _run_sbas(self):
         s = self.s
+        # CR 117.5 needs the check before every priority grant; if every transition since the
+        # last empty check only moved priority / a pending decision, the result cannot differ.
+        if self._sba_clean_at >= 0 and all(t.kind in ("priority", "pending")
+                                           for t in s.log.transitions[self._sba_clean_at:]):
+            return
         while s.result is None:
             ops, losers = sba.compute(s)
             if not ops:
+                self._sba_clean_at = len(s.log.transitions)
                 return
             if losers:
                 lost = {p for p, _ in losers}

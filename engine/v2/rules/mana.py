@@ -1,11 +1,13 @@
 """Mana (CR 106.4, 605.3a) and cost payment (CR 601.2g-h). Pure."""
 from __future__ import annotations
 
+from functools import lru_cache
+
 from engine.v2.cards import BASIC_LAND_COLOR
 
 
 def land_color(state, oid) -> str:
-    return BASIC_LAND_COLOR[state.instances[state.objects[oid].ciid].name]
+    return BASIC_LAND_COLOR[state.definition(oid).name]
 
 
 def untapped_mana_sources(state, player) -> list:
@@ -14,7 +16,14 @@ def untapped_mana_sources(state, player) -> list:
             and state.definition(oid).is_land]
 
 
-def _requirements(symbols):
+@lru_cache(maxsize=None)
+def _requirements(symbols: tuple):
+    """(coloured needs, generic) for a cost tuple; pure, cached. Callers must not mutate."""
+    need, generic = _requirements_uncached(symbols)
+    return need, generic
+
+
+def _requirements_uncached(symbols):
     need, generic = {}, 0
     for sym in symbols:
         if sym.isdigit():
@@ -31,12 +40,17 @@ def can_pay(symbols, available: dict) -> bool:
     return sum(available.values()) - sum(need.values()) >= generic
 
 
-def payable_with_sources(state, player, symbols) -> bool:
+def available_mana(state, player) -> dict:
+    """Pool plus what every untapped mana source could add (computed once per decision)."""
     avail = dict(state.pools[player])
     for oid in untapped_mana_sources(state, player):
         c = land_color(state, oid)
         avail[c] = avail.get(c, 0) + 1
-    return can_pay(symbols, avail)
+    return avail
+
+
+def payable_with_sources(state, player, symbols, avail=None) -> bool:
+    return can_pay(symbols, available_mana(state, player) if avail is None else avail)
 
 
 def payment_assignments(symbols, pool: dict) -> list:

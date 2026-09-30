@@ -49,7 +49,7 @@ def sorcery_timing_ok(state, player) -> bool:
     return player == state.active and state.step in MAIN_STEPS and not state.stack
 
 
-def can_propose_cast(state, player, oid) -> bool:
+def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=None) -> bool:
     """ProposeCast is legal only when a legal completion exists (spec 7.4)."""
     o = state.objects.get(oid)
     if o is None or o.zone != "hand" or o.owner != player:
@@ -57,11 +57,16 @@ def can_propose_cast(state, player, oid) -> bool:
     d = state.definition(oid)
     if d.is_land:
         return False
-    if not d.is_instant and not sorcery_timing_ok(state, player):
+    if not d.is_instant and not (sorcery_timing_ok(state, player) if timing is None else timing):
         return False
-    if d.effect_key in TARGET_SPEC and not target_options(state, d.effect_key):
-        return False
-    return payable_with_sources(state, player, d.cost_symbols)
+    if d.effect_key in TARGET_SPEC:
+        if targets_ok is None:
+            targets_ok = {}
+        if d.effect_key not in targets_ok:                  # per-decision cache (same answer per key)
+            targets_ok[d.effect_key] = bool(target_options(state, d.effect_key))
+        if not targets_ok[d.effect_key]:
+            return False
+    return payable_with_sources(state, player, d.cost_symbols, avail)
 
 
 def can_play_land(state, player, oid) -> bool:

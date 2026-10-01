@@ -1,0 +1,20 @@
+{
+ "matches": 500,
+ "errors": 0,
+ "first_errors": [],
+ "replayed_exactly": 500,
+ "results": {
+  "win:1": 173,
+  "win:0": 327
+ },
+ "games_per_match": {
+  "2": 325,
+  "3": 175
+ },
+ "matches_with_sideboard_swaps": 450,
+ "total_swaps": 1669,
+ "drawn_games": 0,
+ "repeat_identical": 50,
+ "repeat_compared": 50,
+ "wall_seconds": 45.6
+}

@@ -22,7 +22,6 @@ MANA_ABILITIES = {
 
 
 _OPTS: dict = {}                     # card name -> options (definitions are fixed per name)
-_COLSET: dict = {}                   # options tuple -> frozenset of colours
 
 
 def _options_for(definition) -> tuple:
@@ -87,16 +86,12 @@ def untapped_mana_sources(state, player) -> list:
     return [oid for oid, _o in sources_with_options(state, player)]
 
 
-def _colset(opts) -> frozenset:
-    cs = _COLSET.get(opts)
-    if cs is None:
-        cs = _COLSET[opts] = frozenset(c for c, _l in opts)
-    return cs
-
-
 class Avail(NamedTuple):
     pool: dict                       # colour -> mana already in the pool
-    sources: tuple                   # frozenset of colours per untapped mana source (each adds ONE mana)
+    sources: tuple                   # per untapped mana source: its ((colour, life_cost), ...) options;
+                                     # each source adds ONE mana
+    life: int = 0                    # life available for mana-ability life costs (CR 119.4: the total
+                                     # paid can't exceed it; paying down to exactly 0 is allowed)
 
 
 @lru_cache(maxsize=None)
@@ -117,7 +112,7 @@ def available_mana(state, player) -> Avail:
 
 
 def avail_from(state, player, srcs) -> Avail:
-    return Avail(dict(state.pools[player]), tuple(_colset(opts) for _oid, opts in srcs))
+    return Avail(dict(state.pools[player]), tuple(opts for _oid, opts in srcs), state.life[player])
 
 
 def can_pay(symbols, avail) -> bool:
@@ -137,15 +132,28 @@ def can_pay(symbols, avail) -> bool:
         return False
     spare_pool = sum(pool.values())
 
-    def match(i, used):
+    def generic_ok(used, budget) -> bool:
+        if generic <= spare_pool:
+            return True
+        n = spare_pool
+        for c in sorted(min(l for _c, l in srcs[j]) for j in range(len(srcs)) if j not in used):
+            if c <= budget:                                            # cheapest life costs first
+                n += 1
+                budget -= c
+        return n >= generic
+
+    def match(i, used, budget):
         if i == len(left):
-            return spare_pool + len(srcs) - len(used) >= generic
-        for j, cols in enumerate(srcs):
-            if j not in used and left[i] in cols:
-                if match(i + 1, used | {j}):
-                    return True
+            return generic_ok(used, budget)
+        want = left[i]
+        for j, opts in enumerate(srcs):
+            if j in used:
+                continue
+            cost = min((l for c, l in opts if c == want), default=None)
+            if cost is not None and cost <= budget and match(i + 1, used | {j}, budget - cost):
+                return True
         return False
-    return match(0, frozenset())
+    return match(0, frozenset(), avail.life)
 
 
 def payable_with_sources(state, player, symbols, avail=None) -> bool:

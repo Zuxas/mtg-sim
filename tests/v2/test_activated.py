@@ -146,6 +146,18 @@ def test_cast_time_mana_choices_keep_the_announced_cost_payable():      # CR 601
     assert offered == {(mountain, "R"), (canyon, "W")}                       # Canyon for R would strand {W}
 
 
+def test_pain_land_life_costs_share_one_life_budget():                  # CR 119.4
+    g = _setup()
+    a = put(g, 0, "Sunbaked Canyon", "battlefield")
+    b = put(g, 0, "Sunbaked Canyon", "battlefield")
+    helix = put(g, 0, "Lightning Helix", "hand")
+    arrange(g, [op("damage_player", 1, 0, 19)])                              # 1 life: only ONE pain activation
+    assert not casting.can_propose_cast(g.s, 0, helix)
+    assert not can_pay(("R", "W"), available_mana(g.s, 0))
+    arrange(g, [op("gain_life", 0, 1)])                                      # 2 life: both
+    assert casting.can_propose_cast(g.s, 0, helix)
+
+
 def test_randomized_activated_games_hold_invariants_and_replay():
     for seed in range(30):
         g = Game.new(ACTIVATED_TEST, ACTIVATED_TEST if seed % 2 else WU, 6200 + seed, starting_player=seed % 2,

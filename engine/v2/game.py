@@ -19,7 +19,7 @@ from engine.v2.effects import facts as effect_facts
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, replacement, sba
-from engine.v2.rules.mana import (Avail, _colset, activatable_mana_options, avail_from, can_pay,
+from engine.v2.rules.mana import (Avail, activatable_mana_options, avail_from, can_pay,
                                   payment_assignments, sources_with_options)
 from engine.v2.state import GameState
 
@@ -258,14 +258,14 @@ class Game:
         (CR 733), and the engine offers only actions with a legal completion (spec 7.4)."""
         s = self.s
         srcs = sources_with_options(s, p)
-        cols = [_colset(opts) for _oid, opts in srcs]
+        opts_all = [opts for _oid, opts in srcs]
         out = []
         for i, (oid, opts) in enumerate(srcs):
-            rest = tuple(cols[:i] + cols[i + 1:])
-            for c, _l in opts:
+            rest = tuple(opts_all[:i] + opts_all[i + 1:])
+            for c, life in opts:
                 pool = dict(s.pools[p])
                 pool[c] = pool.get(c, 0) + 1
-                if can_pay(cost, Avail(pool, rest)):
+                if can_pay(cost, Avail(pool, rest, s.life[p] - life)):    # life left after this activation
                     out.append(_act(A.ActivateManaAbility, p, oid, c))
         return out
 

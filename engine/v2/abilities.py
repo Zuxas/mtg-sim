@@ -137,6 +137,29 @@ def detect(state, occurrences) -> list:
     return out
 
 
+# ------------------------------------------------------------------ activated abilities (S2, CR 602)
+class ActivatedSpec(NamedTuple):
+    key: str
+    mana: tuple                       # mana cost symbols (paid from the pool)
+    tap: bool                         # {T} in the cost
+    life: int                         # "Pay N life" (CR 119.4)
+    sacrifice: bool                   # "Sacrifice this permanent"
+    targets: tuple = ()               # (none of the supported activated abilities target)
+    sorcery_speed: bool = False
+
+
+_CYCLE_DRAW = ActivatedSpec("land_draw", ("1",), True, 0, True)
+ACTIVATED = {                         # effect_key -> activated (non-mana) abilities, in printed order
+    "sunbaked_canyon": (_CYCLE_DRAW,),
+    "fiery_islet": (_CYCLE_DRAW,),
+}
+assert all(not a.targets for specs in ACTIVATED.values() for a in specs)    # no targeted activations yet
+
+# ability key -> (zone its source must be in, target kinds)
+ABILITY_META = {t.key: (t.zone, t.targets) for specs in TRIGGERS.values() for t in specs}
+ABILITY_META.update({a.key: ("battlefield", a.targets) for specs in ACTIVATED.values() for a in specs})
+
+
 # ------------------------------------------------------------------ resolution
 class AbilityContext(NamedTuple):
     controller: int
@@ -190,19 +213,28 @@ def _res_vortex_free_cast(ctx):
     return [op("damage_player", ctx.source, ctx.info[0], 5)]
 
 
+def _res_land_draw(ctx):
+    return [op("draw", ctx.controller)]
+
+
 RESOLVE = {
+    "land_draw": _res_land_draw,
     "prowess": _res_prowess,
     "goblin_guide_reveal": _res_goblin_guide,
     "vortex_upkeep": _res_vortex_upkeep,
     "vortex_free_cast": _res_vortex_free_cast,
 }
 
-ABILITY_NAMES = {"prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
+ABILITY_NAMES = {"land_draw": "Draw a card", "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
                  "vortex_upkeep": "Roiling Vortex upkeep damage", "vortex_free_cast": "Roiling Vortex free-spell damage"}
+
+
+def ability_targets(key) -> tuple:
+    return SPEC_BY_KEY[key].targets if key in SPEC_BY_KEY else ABILITY_META[key][1]
 
 
 def context(s, e) -> AbilityContext:
     o = s.objects.get(e.source)
-    alive = o is not None and o.zone == SPEC_BY_KEY[e.ability].zone if e.ability in SPEC_BY_KEY else o is not None
+    alive = o is not None and o.zone == ABILITY_META[e.ability][0]
     facts = FACTS[e.ability](s, e) if e.ability in FACTS else ()
     return AbilityContext(e.controller, e.source, alive, tuple(e.info), facts, tuple(e.targets))

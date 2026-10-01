@@ -34,6 +34,8 @@ SUPPORTED = {
     "Lightning Helix": ("lightning_helix", "1"),
     "Monastery Swiftspear": ("monastery_swiftspear", "1"),
     "Goblin Guide": ("goblin_guide", "1"),
+    "Sunbaked Canyon": ("sunbaked_canyon", "1"),
+    "Fiery Islet": ("fiery_islet", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
@@ -41,7 +43,8 @@ CARD_KEYWORDS = {
     "monastery_swiftspear": frozenset({"Prowess"}),                 # engine.v2.abilities prowess trigger
 }
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
-PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide"})
+PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",
+                            "sunbaked_canyon", "fiery_islet"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}
 COLORS = ("W", "U", "B", "R", "G", "C")
 

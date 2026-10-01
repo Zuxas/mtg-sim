@@ -221,7 +221,7 @@ TOUCHES = {
     "set_targets": ("stack",),
     "record_activation": ("open_cast",),
     "commit_cast": ("objects", "retired", "stack", "open_cast"),
-    "revert_cast": ("stack", "pools", "priority", "passes", "pending", "open_cast"),
+    "revert_cast": ("stack", "pools", "priority", "passes", "pending", "open_cast", "life"),
     "remove_entry": ("stack",),
     "attack_choice": ("attack_choices",),
     "block_choice": ("block_choices",),
@@ -230,7 +230,10 @@ TOUCHES = {
     "division": ("divisions",),
     "clear_combat": ("attackers", "blocks", "blocked", "divisions", "attack_choices", "block_choices",
                      "first_strike_done"),
-    "damage_player": ("life",),
+    "damage_player": ("life", "life_lost_turn"),
+    "pay_life": ("life", "life_lost_turn"),
+    "push_ability": ("next_ability", "stack"),
+    "sacrifice": (),
     "gain_life": ("life",),
     "clear_draw_failed": ("draw_failed",),
     "lose": ("lost",),
@@ -434,10 +437,10 @@ def _h_set_targets(s, evs, sid, targets):
     evs.append(ev("TargetsChosen", sid=sid, targets=tuple(targets)))
 
 
-def _h_record_activation(s, evs, land_oid, color):
+def _h_record_activation(s, evs, land_oid, color, life=0):
     _need(s.open_cast is not None, "activation record without a cast")
-    s.open_cast["activations"].append((land_oid, color))
-    evs.append(ev("ActivationRecorded", land=land_oid, color=color))
+    s.open_cast["activations"].append((land_oid, color, life))
+    evs.append(ev("ActivationRecorded", land=land_oid, color=color, life=life))
 
 
 def _h_commit_cast(s, evs, cost_symbols):
@@ -483,10 +486,12 @@ def _h_revert_cast(s, evs, reverse_mana):
     _zone(s, (src.owner, oc["from"])).insert(oc["index"], src.oid)
     s.stack = [e for e in s.stack if e.sid != oc["prov"]]
     if reverse_mana:
-        for land, color in reversed(oc["activations"]):
+        for land, color, life in reversed(oc["activations"]):
             _need(s.pools[oc["controller"]][color] >= 1, "reversed mana already spent")
             s.pools[oc["controller"]][color] -= 1
             _obj(s, land).tapped = False
+            if life:                                                        # the whole activation is reversed
+                s.life[oc["controller"]] += life
     s.priority, s.passes = oc["priority"], oc["passes"]
     s.pending = Pending(*oc["pending"]) if oc["pending"] else None
     s.open_cast = None
@@ -557,8 +562,36 @@ def _h_damage_creature(s, evs, source, oid, n):
 
 def _h_damage_player(s, evs, source, player, n):
     s.life[player] -= n
+    if n > 0:
+        s.life_lost_turn[player] = True                                   # CR 120.3a: damage -> life loss
     evs.append(ev("DamageDealt", source=source, target=("player", player), n=n))
     evs.append(ev("LifeChanged", player=player, life=s.life[player], delta=-n))
+
+
+def _h_pay_life(s, evs, player, n):
+    """CR 119.4: payable only with at least that much life; paying life is losing it."""
+    _need(n > 0 and s.life[player] >= n, "life payment not possible")
+    s.life[player] -= n
+    s.life_lost_turn[player] = True
+    evs.append(ev("LifePaid", player=player, n=n))
+    evs.append(ev("LifeChanged", player=player, life=s.life[player], delta=-n))
+
+
+def _h_push_ability(s, evs, controller, ciid, source, key, info, targets):
+    """An activated ability on the stack (CR 602.2a): an object that is not a card."""
+    sid = f"A{s.next_ability}"
+    s.next_ability += 1
+    s.stack.append(StackEntry(sid=sid, ciid=ciid, controller=controller, state="ability",
+                              targets=tuple(targets), ability=key, source=source, info=tuple(info)))
+    evs.append(ev("AbilityActivated", sid=sid, key=key, controller=controller, source=source,
+                  targets=tuple(targets)))
+
+
+def _h_sacrifice(s, evs, oid):
+    o = s.objects.get(oid)
+    _need(o is not None and o.zone == "battlefield", f"sacrifice of a non-permanent {oid}")
+    evs.append(ev("Sacrificed", oid=oid, controller=o.controller))
+    _move(s, oid, "graveyard", "end", None, evs)
 
 
 def _h_gain_life(s, evs, player, n):

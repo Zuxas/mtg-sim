@@ -40,8 +40,20 @@ class PlayLand:
 
 @dataclass(frozen=True)
 class ActivateManaAbility:
+    """CR 605.3b: resolves immediately (no stack). `color` = the mana chosen."""
     player: int
     oid: int
+    color: str
+
+
+@dataclass(frozen=True)
+class ActivateAbility:
+    """Activate a non-mana activated ability (CR 602.2). Offered only when the whole cost is
+    payable now (CR 118.3); `assignment` = the pool mana spent ((colour, n), ...)."""
+    player: int
+    oid: int
+    index: int
+    assignment: tuple
 
 
 @dataclass(frozen=True)
@@ -112,7 +124,7 @@ class Concede:
 ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCards, PassPriority, PlayLand,
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
                                         ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
-                                        ChooseTriggerTargets, Concede)}
+                                        ChooseTriggerTargets, ActivateAbility, Concede)}
 
 
 def to_record(a) -> list:

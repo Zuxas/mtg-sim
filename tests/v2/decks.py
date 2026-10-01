@@ -20,4 +20,9 @@ TRIGGER_TEST = _expand([("Mountain", 14), ("Plains", 4), ("Monastery Swiftspear"
                         ("Lightning Bolt", 4), ("Lava Spike", 4), ("Lightning Helix", 4), ("Raging Goblin", 2)])
 
 assert len(RG) == 40 and len(WU) == 40 and len(DECKOUT) == 10 and len(BURN_TEST) == 40
-assert len(TRIGGER_TEST) == 40
+# Test-only synthetic deck for activated abilities / pain lands (S2). Not a real list.
+ACTIVATED_TEST = _expand([("Mountain", 10), ("Plains", 4), ("Sunbaked Canyon", 4), ("Fiery Islet", 2),
+                          ("Monastery Swiftspear", 4), ("Goblin Guide", 4), ("Lightning Bolt", 4),
+                          ("Lava Spike", 4), ("Lightning Helix", 4)])
+
+assert len(TRIGGER_TEST) == 40 and len(ACTIVATED_TEST) == 40

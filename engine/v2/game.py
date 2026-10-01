@@ -18,7 +18,8 @@ from engine.v2.effects import EFFECTS, EffectContext
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, sba
-from engine.v2.rules.mana import land_color, payment_assignments, untapped_mana_sources
+from engine.v2.rules.mana import (activatable_mana_options, available_mana, payment_assignments,
+                                  untapped_mana_sources)
 from engine.v2.state import GameState
 
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
@@ -158,14 +159,12 @@ class Game:
             hand = s.zones[(p, "hand")]
             timing = casting.sorcery_timing_ok(s, p)
             sources = untapped_mana_sources(s, p)
-            avail = dict(s.pools[p])
-            for oid in sources:
-                c = land_color(s, oid)
-                avail[c] = avail.get(c, 0) + 1
+            avail = available_mana(s, p)
             out = [A.PassPriority(p)]
             if timing and s.land_played[p] == 0:
                 out += [A.PlayLand(p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
-            out += [A.ActivateManaAbility(p, oid) for oid in sources]
+            out += self._mana_actions(p, sources)
+            out += self._activation_actions(p, timing)
             tgt: dict = {}
             out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
         elif k == "cast_targets":
@@ -175,7 +174,7 @@ class Game:
         elif k == "cast_mana":
             e = s.stack[-1]
             d = s.definition(e.ciid, is_ciid=True)
-            out = [A.ActivateManaAbility(p, oid) for oid in untapped_mana_sources(s, p)]
+            out = self._mana_actions(p, untapped_mana_sources(s, p))
             out += [A.PayCost(p, asg) for asg in payment_assignments(d.cost_symbols, s.pools[p])]
         elif k == "declare_attack":
             oid = pd.info[0]
@@ -198,6 +197,25 @@ class Game:
             out = [A.ChooseTriggerTargets(p, tid, (tg,))
                    for tg in casting.options_for_kinds(s, AB.SPEC_BY_KEY[t.key].targets)]
         out.append(A.Concede(p))                                          # always legal
+        return out
+
+    def _mana_actions(self, p, sources) -> list:
+        s = self.s
+        return [A.ActivateManaAbility(p, oid, c) for oid in sources for c, _life in activatable_mana_options(s, p, oid)]
+
+    def _activation_actions(self, p, timing) -> list:
+        """Every completely payable activation (CR 602.2, 118.3): tap / life / sacrifice / pool mana."""
+        s = self.s
+        out = []
+        for oid in s.zones[("bf",)]:
+            o = s.objects[oid]
+            specs = AB.ACTIVATED.get(s.definition(oid).effect_key)
+            if not specs or o.controller != p:
+                continue
+            for i, spec in enumerate(specs):
+                if (spec.tap and o.tapped) or s.life[p] < spec.life or (spec.sorcery_speed and not timing):
+                    continue
+                out += [A.ActivateAbility(p, oid, i, asg) for asg in payment_assignments(spec.mana, s.pools[p])]
         return out
 
     # ================================================================ mulligans (CR 103.5, staged)
@@ -427,14 +445,34 @@ class Game:
 
     def _do_ActivateManaAbility(self, a):
         s = self.s
-        color = land_color(s, a.oid)
-        ops = [op("tap", a.oid), op("add_mana", a.player, color, 1)]
+        life = dict(activatable_mana_options(s, a.player, a.oid))[a.color]
+        ops = [op("tap", a.oid)]
+        if life:
+            ops.append(op("pay_life", a.player, life))                    # CR 119.4 (part of the cost)
+        ops.append(op("add_mana", a.player, a.color, 1))
         if s.open_cast is not None:                                       # CR 601.2g, 605.3a
-            ops.append(op("record_activation", a.oid, color))
+            ops.append(op("record_activation", a.oid, a.color, life))
             self._commit("mana_ability", ops)
             return
         self._commit("mana_ability", ops)
         self._give_priority(a.player)
+
+    def _do_ActivateAbility(self, a):
+        """CR 602.2: the ability goes on the stack and its whole cost is paid in ONE atomic
+        transition; a sacrificed source leaves the ability on the stack (CR 113.7a)."""
+        s = self.s
+        o = s.objects[a.oid]
+        spec = AB.ACTIVATED[s.definition(a.oid).effect_key][a.index]
+        ops = [op("push_ability", a.player, o.ciid, a.oid, spec.key, (), ())]
+        ops += [op("spend_mana", a.player, c, n) for c, n in a.assignment]
+        if spec.tap:
+            ops.append(op("tap", a.oid))
+        if spec.life:
+            ops.append(op("pay_life", a.player, spec.life))
+        if spec.sacrifice:
+            ops.append(op("sacrifice", a.oid))
+        self._commit("activate", ops)
+        self._give_priority(a.player)                                     # CR 117.3c
 
     # ================================================================ casting (CR 601.2, open transaction)
     def _do_ProposeCast(self, a):
@@ -471,7 +509,7 @@ class Game:
             self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityRemoved", e.sid)])
             return
         if e.targets:                                                     # CR 608.2b
-            kinds = AB.SPEC_BY_KEY[e.ability].targets
+            kinds = AB.ability_targets(e.ability)
             legal = [t for t in e.targets if casting.target_still_legal_kinds(s, t, kinds)]
             if not legal:
                 self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityFizzled", e.sid)])

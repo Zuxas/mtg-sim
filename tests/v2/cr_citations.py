@@ -81,4 +81,10 @@ CITATIONS = {
     "702.137a": ['Spectacle is a static ability that functions on the stack.'],
     "701.20b": ['Revealing a card doesn’t cause it to leave the zone it’s in.'],
     "702.108b": ['If a creature has multiple instances of prowess, each triggers separately.'],
+    "113.7a": ['Once activated or triggered, an ability exists on the stack independently of its source.'],
+    "118.3": ['A player can’t pay a cost without having the necessary resources to pay it fully.'],
+    "119.4": ['If a cost or effect allows a player to pay an amount of life greater than 0, the player may do so only if their life total is greater than or equal to the amoun'],
+    "305.6": ['The basic land types are Plains, Island, Swamp, Mountain, and Forest.'],
+    "602.2": ['To activate an ability is to put it onto the stack and pay its costs, so that it will eventually resolve and have its effect.'],
+    "605.3b": ['An activated mana ability doesn’t go on the stack, so it can’t be targeted, countered, or otherwise responded to.'],
 }

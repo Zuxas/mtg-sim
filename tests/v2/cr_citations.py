@@ -87,4 +87,6 @@ CITATIONS = {
     "305.6": ['The basic land types are Plains, Island, Swamp, Mountain, and Forest.'],
     "602.2": ['To activate an ability is to put it onto the stack and pay its costs, so that it will eventually resolve and have its effect.'],
     "605.3b": ['An activated mana ability doesn’t go on the stack, so it can’t be targeted, countered, or otherwise responded to.'],
+    "614.1c": ['Effects that read “[This permanent] enters with .'],
+    "614.1d": ['Continuous effects that read “[This permanent] enters .'],
 }

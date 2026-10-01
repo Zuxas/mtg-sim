@@ -162,7 +162,7 @@ def _remove_from_zone(s, o):
     return idx
 
 
-def _move(s, oid, dest, position, controller, evs):
+def _move(s, oid, dest, position, controller, evs, tapped=False):
     """Zone change (CR 400.7): retire oid, create a new object for the same card instance."""
     _need(oid in s.objects and oid not in s.retired, f"move of dead object {oid}")
     o = s.objects[oid]
@@ -176,7 +176,7 @@ def _move(s, oid, dest, position, controller, evs):
     new = _alloc_oid(s)
     ctrl = o.owner if controller is None else controller
     no = GameObject(oid=new, ciid=o.ciid, owner=o.owner, controller=ctrl if dest == "battlefield" else o.owner,
-                    zone=dest, controlled_since=s.turn)
+                    zone=dest, controlled_since=s.turn, tapped=bool(tapped and dest == "battlefield"))
     s.objects[new] = no
     if dest != "stack":
         lst = _zone(s, _zone_key(dest, o.owner))
@@ -187,6 +187,8 @@ def _move(s, oid, dest, position, controller, evs):
         else:
             lst.insert(int(position), new)
     evs.append(ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest))
+    if no.tapped:
+        evs.append(ev("EntersTapped", oid=new))
     if dest == "battlefield":
         is_land = s.def_by_ciid[o.ciid].is_land
         if is_land:
@@ -241,6 +243,7 @@ TOUCHES = {
     "stack_trigger": ("pending_triggers", "next_ability", "stack"),
     "drop_trigger": ("pending_triggers",),
     "priority_resume": ("priority_resume",),
+    "pending_entry": ("pending_entry",),
 }
 
 
@@ -283,8 +286,13 @@ def _h_draw(s, evs, player):
     evs.append(ev("Drew", player=player, oid=new))
 
 
-def _h_move(s, evs, oid, dest, position="end", controller=None):
-    _move(s, oid, dest, position, controller, evs)
+def _h_move(s, evs, oid, dest, position="end", controller=None, tapped=False):
+    _move(s, oid, dest, position, controller, evs, tapped)
+
+
+def _h_pending_entry(s, evs, value):
+    s.pending_entry = value
+    evs.append(ev("PendingEntry", value=value))
 
 
 def _h_set(s, evs, attr, value):

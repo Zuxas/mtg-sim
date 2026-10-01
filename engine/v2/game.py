@@ -17,7 +17,7 @@ from engine.v2.cards import definitions, definitions_hash, oracle_file_sha256, v
 from engine.v2.effects import EFFECTS, EffectContext
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
-from engine.v2.rules import casting, combat, sba
+from engine.v2.rules import casting, combat, replacement, sba
 from engine.v2.rules.mana import (activatable_mana_options, avail_from, payment_assignments,
                                   sources_with_options)
 from engine.v2.state import GameState
@@ -189,6 +189,11 @@ class Game:
         elif k == "discard":
             n = pd.info[0]
             out = [A.DiscardToHandSize(p, c) for c in combinations(sorted(s.zones[(p, "hand")]), n)]
+        elif k == "entry_payment":
+            oid = pd.info[0]
+            out = [A.ChooseEntryPayment(p, oid, False)]                  # the tapped result is always allowed
+            if replacement.can_pay_shock(s, p):
+                out.append(A.ChooseEntryPayment(p, oid, True))           # CR 119.4
         elif k == "order_triggers":
             out = [A.OrderTrigger(p, tid) for tid in pd.info]
         elif k == "trigger_targets":
@@ -439,8 +444,28 @@ class Game:
         self._commit("concede", [op("lose", a.player, "concede"), op("end_game", ("win", 1 - a.player, "concede"))])
 
     def _do_PlayLand(self, a):
-        self._commit("play_land", [op("move", a.oid, "battlefield", "end", a.player), op("land_played", a.player)])
+        if replacement.needs_entry_choice(self.s, a.oid):                # CR 614.12: choose before it enters
+            self._commit("entry_choice", [op("pending_entry", (a.oid, a.player, "play")),
+                                          op("pending", "entry_payment", a.player, (a.oid,))])
+            return
+        self._commit("play_land", self._land_entry_ops(a.oid, a.player, False) + [op("land_played", a.player)])
         self._give_priority(a.player)                                     # CR 117.3c
+
+    def _land_entry_ops(self, oid, controller, pay) -> list:
+        """The land's zone change with its replacement effects applied (one transition)."""
+        tapped = replacement.enters_tapped(self.s, oid, controller, pay)
+        ops = [op("pay_life", controller, replacement.SHOCK_LIFE)] if pay else []
+        return ops + [op("move", oid, "battlefield", "end", controller, tapped)]
+
+    def _do_ChooseEntryPayment(self, a):
+        s = self.s
+        oid, player, origin = s.pending_entry
+        ops = [op("pending_entry", None)] + self._land_entry_ops(oid, player, a.pay)
+        if origin == "play":
+            self._commit("play_land", ops + [op("land_played", player)])
+            self._give_priority(player)
+            return
+        self._continue_resolution(ops)                                    # S3: a fetched shock land
 
     def _do_ActivateManaAbility(self, a):
         s = self.s

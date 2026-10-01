@@ -36,6 +36,8 @@ SUPPORTED = {
     "Goblin Guide": ("goblin_guide", "1"),
     "Sunbaked Canyon": ("sunbaked_canyon", "1"),
     "Fiery Islet": ("fiery_islet", "1"),
+    "Inspiring Vantage": ("inspiring_vantage", "1"),
+    "Sacred Foundry": ("sacred_foundry", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
@@ -44,7 +46,7 @@ CARD_KEYWORDS = {
 }
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
 PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",
-                            "sunbaked_canyon", "fiery_islet"})
+                            "sunbaked_canyon", "fiery_islet", "inspiring_vantage", "sacred_foundry"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}
 COLORS = ("W", "U", "B", "R", "G", "C")
 

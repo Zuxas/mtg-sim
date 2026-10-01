@@ -224,8 +224,11 @@ def test_shadow_failing_commit_restores_state_in_every_real_context():
 def _shadow_scenarios():
     """Milestone-two card tests whose commits exercise the new ops (each re-run under shadow)."""
     from tests.v2 import test_activated as S2
+    from tests.v2 import test_replacement as S4
     from tests.v2 import test_triggers as T
-    return [S2.test_pain_land_mana_while_casting_is_recorded_with_its_life_cost,
+    return [S4.test_sacred_foundry_choice_happens_before_the_move_commits,
+            S4.test_inspiring_vantage_tapped_with_three_other_lands,
+            S2.test_pain_land_mana_while_casting_is_recorded_with_its_life_cost,
             S2.test_canyon_draw_needs_its_whole_cost_and_survives_its_sacrifice,
             S2.test_rollback_reverses_a_pain_land_activation_including_its_life,
             T.test_multiple_prowess_triggers_need_an_ordering_decision,

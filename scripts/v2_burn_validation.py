@@ -94,9 +94,7 @@ def render(g) -> str:
     for t in s.log.transitions:
         for e in t.events:
             d = dict(e.data)
-            if e.kind == "CardCreated":
-                ciid_of[d["oid"]] = d["ciid"]
-            if e.kind == "ZoneChanged":
+            if e.kind == "ZoneChanged" and "ciid" in d:                  # public moves only
                 ciid_of[d["new"]] = d["ciid"]
             if e.kind == "SpellCast":
                 ciid_of[d["oid"]] = d["ciid"]
@@ -121,7 +119,7 @@ def render(g) -> str:
             elif k == "Set" and d["attr"] == "step" and d["value"] in ("upkeep", "main1", "declare_attackers",
                                                                     "first_strike_damage", "combat_damage", "end"):
                 lines.append(f"  -- {d['value']}")
-            elif k == "ZoneChanged" and d["frm"] != "library" or (k == "ZoneChanged" and d["to"] == "battlefield"):
+            elif k == "ZoneChanged" and "ciid" in d and (d["frm"] != "library" or d["to"] == "battlefield"):
                 lines.append(f"  {name(d['ciid'])}: {d['frm']} -> {d['to']}")
             elif k == "Drew":
                 lines.append(f"  P{d['player']} draws")

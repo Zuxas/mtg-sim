@@ -143,6 +143,24 @@ def _iv(e):
     return got
 
 
+# ---------------------------------------------------------------- hidden information in the log
+_HIDDEN_ZONES = frozenset({"library", "hand"})
+_SECRETS: dict = {}
+
+
+def _hidden(s, payload) -> str:
+    """A commitment to hidden content: the transition hash covers it, the log does not reveal it
+    (keyed by a per-game secret derived from the game seed -- whoever holds the seed can replay the
+    whole game anyway)."""
+    seed = s.config["seed"]
+    key = _SECRETS.get(seed)
+    if key is None:
+        if len(_SECRETS) > 10000:
+            _SECRETS.clear()
+        key = _SECRETS[seed] = hashlib.sha256(f"v2-hidden:{seed}".encode()).hexdigest()
+    return hashlib.sha256(f"{key}|{payload!r}".encode()).hexdigest()[:16]
+
+
 # ---------------------------------------------------------------- helpers
 def _alloc_oid(s) -> int:
     _keep(s, "next_oid")
@@ -188,7 +206,10 @@ def _move(s, oid, dest, position, controller, evs, tapped=False):
             lst.append(new)
         else:
             lst.insert(int(position), new)
-    evs.append(ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest))
+    if src in _HIDDEN_ZONES and dest in _HIDDEN_ZONES:              # no card identity in the log
+        evs.append(ev("ZoneChanged", old=oid, new=new, frm=src, to=dest, commitment=_hidden(s, ("move", o.ciid, new))))
+    else:
+        evs.append(ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest))
     if no.tapped:
         evs.append(ev("EntersTapped", oid=new))
     if dest == "battlefield":
@@ -263,7 +284,7 @@ def _h_create_card(s, evs, owner, name):
     oid = _alloc_oid(s)
     s.objects[oid] = GameObject(oid=oid, ciid=ciid, owner=owner, controller=owner, zone="library")
     _zone(s, (owner, "library")).append(oid)
-    evs.append(ev("CardCreated", ciid=ciid, oid=oid, owner=owner, name=name))
+    evs.append(ev("CardCreated", ciid=ciid, owner=owner, name=name, commitment=_hidden(s, ("created", ciid, oid))))
 
 
 def _h_starting_player(s, evs, mode, player):

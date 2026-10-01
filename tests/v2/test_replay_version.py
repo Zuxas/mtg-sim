@@ -9,13 +9,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from engine.v2 import ENGINE_VERSION
 from engine.v2.game import Game
+from tests.v2.helpers import tgame
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import ReplayMismatch, ReplayVersionError, make_record, replay
 from tests.v2.decks import RG, WU
 
 
 def _record():
-    g = Game.new(RG, WU, 77, starting_player=1, turn_limit=8)
+    g = tgame(RG, WU, 77, starting_player=1, turn_limit=8)
     g.run([RandomLegalPolicy(5), RandomLegalPolicy(6)])
     return make_record(g)
 

@@ -13,7 +13,7 @@ from engine.v2.ops import op
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import TRIGGER_TEST, WU
-from tests.v2.helpers import act, advance, arrange, at, cast, events, find, new_game, put
+from tests.v2.helpers import tgame, act, advance, arrange, at, cast, events, find, new_game, put
 
 
 def _setup(lands=("Mountain", "Mountain", "Mountain", "Plains")):
@@ -169,7 +169,7 @@ def test_trigger_with_no_legal_targets_is_removed_from_the_stack():        # CR 
 
 def test_randomized_trigger_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(TRIGGER_TEST, TRIGGER_TEST if seed % 2 else WU, 5100 + seed, starting_player=seed % 2,
+        g = tgame(TRIGGER_TEST, TRIGGER_TEST if seed % 2 else WU, 5100 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 3)])
         replay(make_record(g))

@@ -12,7 +12,7 @@ from engine.v2.ops import op
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import WU, _expand
-from tests.v2.helpers import advance, arrange, at, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, events, find, new_game, put
 
 ALT_TEST = _expand([("Mountain", 12), ("Plains", 4), ("Roiling Vortex", 2), ("Rift Bolt", 4),
                     ("Skewer the Critics", 4), ("Monastery Swiftspear", 4), ("Goblin Guide", 4),
@@ -200,7 +200,7 @@ def test_suspended_card_that_cannot_be_cast_remains_exiled():           # CR 702
 
 def test_randomized_alt_cost_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(ALT_TEST, ALT_TEST if seed % 2 else WU, 11700 + seed, starting_player=seed % 2,
+        g = tgame(ALT_TEST, ALT_TEST if seed % 2 else WU, 11700 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 8)])
         replay(make_record(g))

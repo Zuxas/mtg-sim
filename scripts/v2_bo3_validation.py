@@ -28,7 +28,7 @@ class MatchRandom:
         self.rng = random.Random(seed)
         self.n = 0
 
-    def choose_match(self, m, acts):
+    def choose_match(self, obs, acts):
         from engine.v2.match import ChoosePlayDraw, DoneSideboarding, SideboardSwap
         if isinstance(acts[0], ChoosePlayDraw):
             self.n = 0

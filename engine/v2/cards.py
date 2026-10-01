@@ -76,6 +76,26 @@ class CardDataMismatch(RuntimeError):
     pass
 
 
+class DeckConstructionError(ValueError):
+    pass
+
+
+MIN_DECK, MAX_COPIES = 60, 4
+DECK_RULES = ("constructed", "test")
+
+
+def check_constructed(names) -> None:
+    """CR 100.2a: at least 60 cards; no more than four of any card other than basic lands."""
+    if len(names) < MIN_DECK:
+        raise DeckConstructionError(f"deck has {len(names)} cards (< {MIN_DECK}, CR 100.2a)")
+    counts = {}
+    for n in names:
+        counts[n] = counts.get(n, 0) + 1
+    over = sorted(n for n, k in counts.items() if n not in BASIC_LAND_COLOR and k > MAX_COPIES)
+    if over:
+        raise DeckConstructionError(f"more than {MAX_COPIES} copies (CR 100.2a): {over}")
+
+
 @dataclass(frozen=True)
 class CardDefinition:
     name: str

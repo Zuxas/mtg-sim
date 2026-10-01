@@ -14,8 +14,14 @@ from engine.v2.ops import op
 from tests.v2.decks import RG, WU
 
 
+def tgame(*args, **kw):
+    """Game.new for the synthetic 40-card test decks: the ONE explicit deck-construction exception
+    (deck_rules="test", recorded in the game config)."""
+    return Game.new(*args, deck_rules="test", **kw)
+
+
 def new_game(a=RG, b=WU, seed=0, starting=0, keep=True, **kw):
-    g = Game.new(a, b, seed, starting_player=starting, check_invariants=True, **kw)
+    g = tgame(a, b, seed, starting_player=starting, check_invariants=True, **kw)
     if keep:
         while g.pending().kind == "mulligan_declare":
             g.apply(A.DeclareKeep(g.pending().player))

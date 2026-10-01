@@ -41,7 +41,7 @@ class _MatchRandom:
         self.rng = random.Random(seed)
         self.swaps = 0
 
-    def choose_match(self, m, acts):
+    def choose_match(self, obs, acts):
         if isinstance(acts[0], ChoosePlayDraw):
             self.swaps = 0
             return self.rng.choice(acts)
@@ -125,6 +125,24 @@ def test_complete_matches_end_at_two_wins_and_replay_exactly():
         rec = make_match_record(m)
         import json
         replay_match(json.loads(json.dumps(rec)))
+
+
+def test_match_policies_get_a_frozen_observation_without_the_opponents_75():
+    import dataclasses
+    from engine.v2.match import MatchObservation
+    seen = []
+
+    class Spy(_MatchRandom):
+        def choose_match(self, obs, acts):
+            seen.append(obs)
+            return super().choose_match(obs, acts)
+    m = Match(_burn(), SIDE, _burn(), SIDE, 21)
+    m.run([SimpleAggroPolicy(1), SimpleAggroPolicy(2)], [Spy(1), Spy(2)])
+    assert seen and all(isinstance(o, MatchObservation) for o in seen)
+    o = seen[-1]
+    assert _raises(dataclasses.FrozenInstanceError, lambda: setattr(o, "wins", (9, 9)))
+    assert isinstance(o.my_main, tuple) and isinstance(o.my_side, tuple)
+    assert not any(isinstance(v, (Match, list, dict)) for v in vars(o).values())
 
 
 def test_tampered_match_record_is_rejected():

@@ -25,10 +25,23 @@ import json
 import random
 from dataclasses import dataclass, fields
 
-from engine.v2.cards import SUPPORTED, UnsupportedCardError, validate_deck
+from engine.v2.cards import BASIC_LAND_COLOR, MAX_COPIES, MIN_DECK, SUPPORTED, validate_deck
 
-MIN_DECK, MAX_SIDEBOARD, MAX_COPIES = 60, 15, 4
-BASIC = {"Plains", "Island", "Swamp", "Mountain", "Forest"}
+MAX_SIDEBOARD = 15
+BASIC = set(BASIC_LAND_COLOR)
+
+
+@dataclass(frozen=True)
+class MatchObservation:
+    """What a seat knows between games: public match state plus ONLY its own 75."""
+    seat: int
+    wins: tuple
+    games_played: int
+    game_results: tuple             # result of each finished game
+    starting: tuple                 # starting player of each game so far
+    pending: tuple                  # (kind, player)
+    my_main: tuple                  # this seat's current main deck (names)
+    my_side: tuple                  # this seat's current sideboard (names)
 
 
 @dataclass(frozen=True)
@@ -100,7 +113,15 @@ class Match:
         self.starting = []                            # starting player of each game
 
     # ------------------------------------------------------------------ decisions
-    def legal_actions(self) -> list:
+    def observe(self, seat) -> MatchObservation:
+        return MatchObservation(seat, tuple(self.wins), len(self.games), tuple(g.result for g in self.games),
+                                tuple(self.starting), tuple(self.pending) if self.pending else (),
+                                tuple(self.main[seat]), tuple(self.side[seat]))
+
+    def legal_actions(self) -> tuple:
+        return tuple(self._legal())
+
+    def _legal(self) -> list:
         if self.result is not None or self.pending is None:
             return []
         kind, p = self.pending
@@ -170,8 +191,9 @@ class Match:
 
     def run(self, game_policies, match_policies=None) -> tuple:
         """Play the whole match. game_policies: [p0, p1] for in-game decisions; match_policies
-        (default: the same objects) must offer `choose_match(match, actions)`; if absent, the
-        first legal match action is taken (play first; no sideboard changes)."""
+        (default: the same objects) may offer `choose_match(observation, actions)` -- they get a
+        frozen MatchObservation (never the Match); if absent, the first legal match action is
+        taken (play first; no sideboard changes)."""
         mp = match_policies or game_policies
         while self.result is None:
             if self.current is not None:
@@ -181,7 +203,7 @@ class Match:
             kind, p = self.pending
             acts = self.legal_actions()
             pick = getattr(mp[p], "choose_match", None)
-            self.apply(pick(self, acts) if pick else acts[0])
+            self.apply(pick(self.observe(p), acts) if pick else acts[0])
         return self.result
 
 

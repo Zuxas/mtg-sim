@@ -13,7 +13,7 @@ from engine.v2.ops import op
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import WU, _expand
-from tests.v2.helpers import advance, arrange, at, cast, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, cast, events, find, new_game, put
 
 DURATION_TEST = _expand([("Mountain", 10), ("Plains", 4), ("Sacred Foundry", 2), ("Roiling Vortex", 4),
                          ("Skullcrack", 4), ("Lightning Helix", 4), ("Lightning Bolt", 4),
@@ -137,7 +137,7 @@ def test_double_strike_second_step_uses_first_step_snapshot():
 
 def test_randomized_duration_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(DURATION_TEST, DURATION_TEST if seed % 2 else WU, 9500 + seed, starting_player=seed % 2,
+        g = tgame(DURATION_TEST, DURATION_TEST if seed % 2 else WU, 9500 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 4)])
         replay(make_record(g))

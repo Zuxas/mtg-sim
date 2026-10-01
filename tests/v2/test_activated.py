@@ -16,7 +16,7 @@ from engine.v2.reducer import EngineInvariantError
 from engine.v2.rules import casting
 from engine.v2.rules.mana import activatable_mana_options, available_mana, can_pay
 from tests.v2.decks import ACTIVATED_TEST, WU
-from tests.v2.helpers import advance, arrange, at, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, events, find, new_game, put
 
 
 def _setup():
@@ -160,7 +160,7 @@ def test_pain_land_life_costs_share_one_life_budget():                  # CR 119
 
 def test_randomized_activated_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(ACTIVATED_TEST, ACTIVATED_TEST if seed % 2 else WU, 6200 + seed, starting_player=seed % 2,
+        g = tgame(ACTIVATED_TEST, ACTIVATED_TEST if seed % 2 else WU, 6200 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 5)])
         replay(make_record(g))

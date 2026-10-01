@@ -6,4 +6,4 @@ change (only engine.v2.reducer mutates GameState); players are policies that cho
 among typed legal actions from immutable observations. Isolated from the legacy
 engine: the only legacy import is engine.card_db (printed card data, exact lookup).
 """
-ENGINE_VERSION = "v2-m2.0"
+ENGINE_VERSION = "v2-m2.1"

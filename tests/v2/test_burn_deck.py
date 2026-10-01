@@ -39,6 +39,43 @@ def test_one_unsupported_card_refuses_the_game():
     assert _raises(UnsupportedCardError, lambda: Game.new(deck[:-1] + ["Chalice of the Void"], deck, 0))
 
 
+def test_constructed_deck_rules_are_the_default_and_test_decks_are_explicit():   # CR 100.2a
+    from engine.v2.cards import DeckConstructionError
+    from engine.v2.record import make_record, replay
+    from tests.v2.decks import RG, WU
+    from tests.v2.helpers import tgame
+    assert _raises(DeckConstructionError, lambda: Game.new(RG, WU, 0))                 # 40 cards
+    deck = main_deck(BURN)
+    five = [c for c in deck if c != "Mountain"][:55] + ["Goblin Guide"] * 5
+    assert len(five) == 60 and _raises(DeckConstructionError, lambda: Game.new(five, deck, 0))
+    g = Game.new(deck, deck, 1)
+    assert g.s.config["deck_rules"] == "constructed"
+    t = tgame(RG, WU, 2, turn_limit=3)
+    assert t.s.config["deck_rules"] == "test"
+    t.run([RandomLegalPolicy(1), RandomLegalPolicy(2)])
+    replay(make_record(t))                                                           # replay honours it
+
+
+def test_a_policy_cannot_alter_the_legal_action_list():
+    from engine.v2 import actions as A
+    from engine.v2.game import IllegalAction
+    deck = main_deck(BURN)
+    g = Game.new(deck, deck, 3)
+    acts = g.legal_actions()
+    assert isinstance(acts, tuple)
+    fake = A.PlayLand(g.pending().player, 999_999)
+
+    class Cheater:
+        def choose(self, obs, actions):
+            try:
+                actions.append(fake)               # try to extend the list the engine checks against
+            except AttributeError:
+                pass                               # immutable: it can't
+            return fake
+    assert _raises(IllegalAction, lambda: g.apply(Cheater().choose(None, g.legal_actions())))
+    assert fake not in g.legal_actions()
+
+
 def test_scripted_complete_burn_mirror_games():
     deck = main_deck(BURN)
     for seed in range(6):

@@ -13,7 +13,8 @@ from engine.v2 import ENGINE_VERSION
 from engine.v2 import abilities as AB
 from engine.v2 import actions as A
 from engine.v2 import reducer
-from engine.v2.cards import definitions, definitions_hash, oracle_file_sha256, validate_deck
+from engine.v2.cards import (DECK_RULES, check_constructed, definitions, definitions_hash, oracle_file_sha256,
+                             validate_deck)
 from engine.v2.effects import EFFECTS, EffectContext
 from engine.v2.effects import facts as effect_facts
 from engine.v2.observation import observe as _observe
@@ -77,9 +78,16 @@ class Game:
     # ================================================================ construction
     @classmethod
     def new(cls, deck_a, deck_b, seed: int, starting_mode: str = "explicit", starting_player: int = 0,
-            turn_limit: int = 50, check_invariants: bool = False) -> "Game":
+            turn_limit: int = 50, check_invariants: bool = False, deck_rules: str = "constructed") -> "Game":
+        """deck_rules: "constructed" (default; CR 100.2a enforced) or "test" -- an explicit, recorded
+        exception for the synthetic test decks only."""
+        if deck_rules not in DECK_RULES:
+            raise ValueError(f"deck_rules must be one of {DECK_RULES}")
         validate_deck(deck_a)
         validate_deck(deck_b)
+        if deck_rules == "constructed":
+            check_constructed(deck_a)
+            check_constructed(deck_b)
         defs = definitions()
         rm = rules_meta()
         config = {
@@ -88,6 +96,7 @@ class Game:
             "rng_algorithm": RNG_ALGORITHM, "seed": seed, "starting_mode": starting_mode,
             "starting_player": starting_player, "turn_limit": turn_limit,
             "decks": [list(deck_a), list(deck_b)], "check_invariants": check_invariants,
+            "deck_rules": deck_rules,
         }
         s = GameState(config=config, rng=random.Random(seed))       # empty zones by construction
         g = cls(s)
@@ -126,7 +135,7 @@ class Game:
         key = len(self.s.log.transitions)
         if self._legal_cache[0] == key:
             return self._legal_cache[1]
-        acts = self._compute_legal()
+        acts = tuple(self._compute_legal())        # immutable: a policy can't alter what apply checks
         self._legal_cache = (key, acts)
         return acts
 

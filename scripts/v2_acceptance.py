@@ -26,7 +26,7 @@ def _fuzz_one(seed: int) -> dict:
     from tests.v2.decks import RG, WU
     out = {"seed": seed}
     try:
-        g = Game.new(RG, WU, seed, starting_player=seed % 2, check_invariants=True)
+        g = Game.new(RG, WU, seed, starting_player=seed % 2, check_invariants=True, deck_rules="test")
         ps = (10_000 + seed, 20_000 + seed)
         g.run([RandomLegalPolicy(ps[0]), RandomLegalPolicy(ps[1])])
         out.update(result=list(g.result), actions=len(g.actions), transitions=len(g.s.log.transitions),
@@ -52,7 +52,7 @@ def _scripted_one(seed: int) -> dict:
     from engine.v2.policies import BasicScriptedPolicy
     from tests.v2.decks import RG, WU
     try:
-        g = Game.new(RG, WU, seed, starting_player=seed % 2, check_invariants=True)
+        g = Game.new(RG, WU, seed, starting_player=seed % 2, check_invariants=True, deck_rules="test")
         g.run([BasicScriptedPolicy(seed), BasicScriptedPolicy(seed + 1)])
         return {"seed": seed, "result": list(g.result), "turns": g.s.turn, "actions": len(g.actions)}
     except Exception as e:                                  # noqa: BLE001
@@ -63,11 +63,11 @@ def _speed(n: int) -> dict:
     from engine.v2.game import Game
     from engine.v2.policies import RandomLegalPolicy
     from tests.v2.decks import RG, WU
-    Game.new(RG, WU, 0)                                     # warm-up: card data loaded once
+    Game.new(RG, WU, 0, deck_rules="test")                  # warm-up: card data loaded once
     t0, c0 = time.perf_counter(), time.process_time()
     actions = 0
     for seed in range(n):
-        g = Game.new(RG, WU, 50_000 + seed, starting_player=seed % 2, check_invariants=False)
+        g = Game.new(RG, WU, 50_000 + seed, starting_player=seed % 2, check_invariants=False, deck_rules="test")
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 7)])
         actions += len(g.actions)
     dt, dc = time.perf_counter() - t0, time.process_time() - c0

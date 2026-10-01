@@ -12,7 +12,7 @@ from engine.v2.ops import op
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import WU, _expand
-from tests.v2.helpers import advance, arrange, at, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, events, find, new_game, put
 
 FETCH_TEST = _expand([("Mountain", 8), ("Plains", 2), ("Sacred Foundry", 3), ("Arid Mesa", 4),
                       ("Bloodstained Mire", 3), ("Inspiring Vantage", 2), ("Monastery Swiftspear", 4),
@@ -134,7 +134,7 @@ def test_fetched_shock_land_asks_for_its_entry_payment():                  # CR 
 
 def test_randomized_fetch_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(FETCH_TEST, FETCH_TEST if seed % 2 else WU, 8400 + seed, starting_player=seed % 2,
+        g = tgame(FETCH_TEST, FETCH_TEST if seed % 2 else WU, 8400 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 2)])
         replay(make_record(g))

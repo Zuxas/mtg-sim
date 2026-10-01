@@ -12,7 +12,7 @@ from engine.v2.ops import op
 from engine.v2.policies import BasicScriptedPolicy, RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import BURN_TEST, WU
-from tests.v2.helpers import act, advance, arrange, at, cast, events, find, new_game, put
+from tests.v2.helpers import tgame, act, advance, arrange, at, cast, events, find, new_game, put
 
 
 def _resolve(g):
@@ -89,7 +89,7 @@ def test_no_supported_card_is_a_planeswalker():
 
 def test_randomized_burn_games_hold_invariants_and_replay_exactly():
     for seed in range(40):
-        g = Game.new(BURN_TEST, BURN_TEST if seed % 2 else WU, 4000 + seed, starting_player=seed % 2,
+        g = tgame(BURN_TEST, BURN_TEST if seed % 2 else WU, 4000 + seed, starting_player=seed % 2,
                      check_invariants=True)
         pols = [RandomLegalPolicy(seed), RandomLegalPolicy(seed + 9)] if seed % 3 else \
             [BasicScriptedPolicy(), BasicScriptedPolicy()]

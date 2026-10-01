@@ -11,7 +11,7 @@ from engine.v2.ops import op
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from tests.v2.decks import WU, _expand
-from tests.v2.helpers import advance, arrange, at, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, events, find, new_game, put
 
 LAND_TEST = _expand([("Mountain", 8), ("Inspiring Vantage", 4), ("Sacred Foundry", 4), ("Sunbaked Canyon", 2),
                      ("Monastery Swiftspear", 4), ("Goblin Guide", 4), ("Lightning Bolt", 4), ("Lava Spike", 4),
@@ -89,7 +89,7 @@ def test_sacred_foundry_unable_to_pay_must_enter_tapped():                 # CR 
 
 def test_randomized_land_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(LAND_TEST, LAND_TEST if seed % 2 else WU, 7300 + seed, starting_player=seed % 2,
+        g = tgame(LAND_TEST, LAND_TEST if seed % 2 else WU, 7300 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 1)])
         replay(make_record(g))

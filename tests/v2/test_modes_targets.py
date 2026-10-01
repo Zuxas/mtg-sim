@@ -14,7 +14,7 @@ from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
 from engine.v2.rules import casting
 from tests.v2.decks import WU, _expand
-from tests.v2.helpers import advance, arrange, at, events, find, new_game, put
+from tests.v2.helpers import tgame, advance, arrange, at, events, find, new_game, put
 
 MODAL_TEST = _expand([("Mountain", 10), ("Plains", 4), ("Sacred Foundry", 2), ("Boros Charm", 4),
                       ("Searing Blaze", 4), ("Monastery Swiftspear", 4), ("Goblin Guide", 4),
@@ -181,7 +181,7 @@ def test_searing_blaze_with_no_legal_targets_does_not_resolve():           # CR 
 
 def test_randomized_modal_games_hold_invariants_and_replay():
     for seed in range(30):
-        g = Game.new(MODAL_TEST, MODAL_TEST if seed % 2 else WU, 10600 + seed, starting_player=seed % 2,
+        g = tgame(MODAL_TEST, MODAL_TEST if seed % 2 else WU, 10600 + seed, starting_player=seed % 2,
                      check_invariants=True)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 6)])
         replay(make_record(g))

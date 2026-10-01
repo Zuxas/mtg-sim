@@ -12,6 +12,7 @@ from engine.card_db import UnknownCardError
 from engine.v2 import cards
 from engine.v2.cards import CardDataMismatch, UnsupportedCardError, definitions, definitions_hash
 from engine.v2.game import Game
+from tests.v2.helpers import tgame
 from engine.v2.observation import Observation
 from engine.v2.policies import RandomLegalPolicy
 from engine.v2.record import make_record, replay
@@ -27,8 +28,8 @@ def _raises(exc, fn):
 
 
 def test_unsupported_and_unknown_cards_refused_before_start():
-    assert _raises(UnsupportedCardError, lambda: Game.new(RG[:-1] + ["Llanowar Elves"], WU, 0))
-    assert _raises(UnknownCardError, lambda: Game.new(RG[:-1] + ["Grizly Bears"], WU, 0))
+    assert _raises(UnsupportedCardError, lambda: tgame(RG[:-1] + ["Llanowar Elves"], WU, 0))
+    assert _raises(UnknownCardError, lambda: tgame(RG[:-1] + ["Grizly Bears"], WU, 0))
 
 
 def test_definitions_hash_stable_across_processes():
@@ -46,7 +47,7 @@ def test_definitions_hash_changes_with_one_printed_field():
 
 
 def test_replay_refuses_other_card_data():
-    g = Game.new(RG, WU, 3, turn_limit=2)
+    g = tgame(RG, WU, 3, turn_limit=2)
     g.run([RandomLegalPolicy(1), RandomLegalPolicy(2)])
     rec = make_record(g)
     replay(rec)                                                     # identical data replays
@@ -60,12 +61,12 @@ def test_installed_oracle_file_mismatch_blocks_new_games():
         cards._sha256_file = lambda path: "not-the-pinned-hash"
         cards.oracle_file_sha256.cache_clear()
         cards.definitions.cache_clear()
-        assert _raises(CardDataMismatch, lambda: Game.new(RG, WU, 0))
+        assert _raises(CardDataMismatch, lambda: tgame(RG, WU, 0))
     finally:
         cards._sha256_file = orig
         cards.oracle_file_sha256.cache_clear()
         cards.definitions.cache_clear()
-    Game.new(RG, WU, 0)                                             # restored
+    tgame(RG, WU, 0)                                             # restored
 
 
 def test_engine_v2_imports_only_itself_card_db_and_stdlib():
@@ -93,7 +94,7 @@ def test_engine_v2_imports_only_itself_card_db_and_stdlib():
 
 
 def test_observations_are_frozen_plain_values():
-    g = Game.new(RG, WU, 1)
+    g = tgame(RG, WU, 1)
     obs = g.observe(0)
     assert _raises(dataclasses.FrozenInstanceError, lambda: setattr(obs, "turn", 99))
     from engine.v2.state import GameState

@@ -17,7 +17,7 @@ from engine.v2.policies import BasicScriptedPolicy, RandomLegalPolicy
 from engine.v2.record import ReplayMismatch, make_record, replay
 from engine.v2.reducer import EngineInvariantError
 from tests.v2.decks import BURN_TEST, DECKOUT, RG, WU
-from tests.v2.helpers import advance, arrange, at, find, new_game, put, tap_for
+from tests.v2.helpers import tgame, advance, arrange, at, find, new_game, put, tap_for
 
 
 def _raises(exc, fn):
@@ -49,7 +49,7 @@ def deep(g) -> str:
 
 
 def mid_game(seed, n=160, decks=(RG, WU)):
-    g = Game.new(decks[0], decks[1], seed, starting_player=seed % 2, check_invariants=True)
+    g = tgame(decks[0], decks[1], seed, starting_player=seed % 2, check_invariants=True)
     pols = [RandomLegalPolicy(seed), RandomLegalPolicy(seed + 1)]
     for _ in range(n):
         if g.result is not None:
@@ -115,7 +115,7 @@ def test_op_without_an_event_is_rejected_and_rolled_back():
 def _twins(seed, n):
     """Two identical games driven by the same action sequence."""
     g1, pols = mid_game(seed, n)
-    g2 = Game.new(RG, WU, seed, starting_player=seed % 2, check_invariants=True)
+    g2 = tgame(RG, WU, seed, starting_player=seed % 2, check_invariants=True)
     for a in g1.actions:
         g2.apply(a)
     assert deep_state(g1.s) == deep_state(g2.s)
@@ -197,14 +197,14 @@ def test_shadow_failing_commit_restores_state_in_every_real_context():
     reducer.commit = shadow
     try:
         for seed in range(3):
-            Game.new(RG, WU, 900 + seed, starting_player=seed % 2, check_invariants=True).run(
+            tgame(RG, WU, 900 + seed, starting_player=seed % 2, check_invariants=True).run(
                 [RandomLegalPolicy(seed), RandomLegalPolicy(seed + 50)])
-        Game.new(RG, WU, 950, check_invariants=True).run([BasicScriptedPolicy(), BasicScriptedPolicy()])
-        Game.new(RG, WU, 900, check_invariants=True).run(                  # includes a damage division
+        tgame(RG, WU, 950, check_invariants=True).run([BasicScriptedPolicy(), BasicScriptedPolicy()])
+        tgame(RG, WU, 900, check_invariants=True).run(                  # includes a damage division
             [RandomLegalPolicy(900), RandomLegalPolicy(950)])
-        Game.new(BURN_TEST, BURN_TEST, 970, check_invariants=True).run(     # life gain (Lightning Helix)
+        tgame(BURN_TEST, BURN_TEST, 970, check_invariants=True).run(     # life gain (Lightning Helix)
             [RandomLegalPolicy(3), RandomLegalPolicy(4)])
-        Game.new(DECKOUT, DECKOUT, 960, turn_limit=30, check_invariants=True).run(
+        tgame(DECKOUT, DECKOUT, 960, turn_limit=30, check_invariants=True).run(
             [RandomLegalPolicy(1), RandomLegalPolicy(2)])
         g = new_game()                                              # CR 733 revert path (fault injection)
         advance(g, at("main1", turn=1))
@@ -254,7 +254,7 @@ def _shadow_scenarios():
 
 # ------------------------------------------------------------------ P1: hashes cover every change
 def _head_after(ops, seed=5):
-    g = Game.new(RG, WU, seed)
+    g = tgame(RG, WU, seed)
     reducer.commit(g.s, "probe", ops)
     return g.s.log.head
 
@@ -284,7 +284,7 @@ def test_every_formerly_silent_op_changes_the_transition_hash():
 
 
 def test_replay_detects_a_divergent_pending_state():
-    g = Game.new(RG, WU, 31)
+    g = tgame(RG, WU, 31)
     g.run([RandomLegalPolicy(3), RandomLegalPolicy(4)])
     rec = make_record(g)
     replay(rec)

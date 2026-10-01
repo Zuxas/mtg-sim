@@ -76,7 +76,7 @@ def replay(record: dict):
         raise ReplayMismatch("record was produced under a different rules baseline")
     g = Game.new(cfg["decks"][0], cfg["decks"][1], cfg["seed"], starting_mode=cfg["starting_mode"],
                  starting_player=cfg["starting_player"], turn_limit=cfg["turn_limit"],
-                 check_invariants=cfg.get("check_invariants", False))
+                 check_invariants=cfg.get("check_invariants", False), deck_rules=cfg["deck_rules"])
     if g.s.starting_player != record.get("starting_player", g.s.starting_player):
         raise ReplayMismatch("starting player differs")
     idx = record.get("action_transition_index")

@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)
 
 from engine.v2.game import Game
+from tests.v2.helpers import tgame
 from engine.v2.policies import BasicScriptedPolicy, RandomLegalPolicy
 from engine.v2.record import make_record
 from tests.v2.decks import RG, WU
@@ -51,8 +52,8 @@ def test_guard_global_random_is_never_used():
         for n in names:
             setattr(random, n, boom)
         for seed in range(3):
-            Game.new(RG, WU, seed, starting_player=seed % 2).run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 1)])
-            Game.new(RG, WU, seed, starting_player=seed % 2).run([BasicScriptedPolicy(), BasicScriptedPolicy()])
+            tgame(RG, WU, seed, starting_player=seed % 2).run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 1)])
+            tgame(RG, WU, seed, starting_player=seed % 2).run([BasicScriptedPolicy(), BasicScriptedPolicy()])
     finally:
         for n, fn in saved.items():
             setattr(random, n, fn)
@@ -75,9 +76,9 @@ class _NoisyScripted:
 def test_policy_rng_cannot_perturb_game_rng_after_policy_decisions():
     post_decision_shuffles = 0
     for seed in range(20):
-        plain = Game.new(RG, WU, seed, starting_player=seed % 2)
+        plain = tgame(RG, WU, seed, starting_player=seed % 2)
         plain.run([BasicScriptedPolicy(), BasicScriptedPolicy()])
-        noisy = Game.new(RG, WU, seed, starting_player=seed % 2)
+        noisy = tgame(RG, WU, seed, starting_player=seed % 2)
         noisy.run([_NoisyScripted(seed * 11 + 1), _NoisyScripted(seed * 13 + 2)])
         assert plain.s.log.head == noisy.s.log.head
         assert plain.s.full_state_hash() == noisy.s.full_state_hash()        # includes the game RNG state
@@ -100,7 +101,7 @@ print("REPLAYED", len(recs))
 def _records(n):
     recs = []
     for seed in range(n):
-        g = Game.new(RG, WU, 700 + seed, starting_player=seed % 2, turn_limit=4 if seed % 7 == 0 else 50)
+        g = tgame(RG, WU, 700 + seed, starting_player=seed % 2, turn_limit=4 if seed % 7 == 0 else 50)
         g.run([RandomLegalPolicy(seed), RandomLegalPolicy(seed + 100)])
         recs.append(make_record(g, policy_seeds=[seed, seed + 100]))
     return recs

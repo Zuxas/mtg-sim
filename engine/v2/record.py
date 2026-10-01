@@ -1,17 +1,56 @@
 """GameRecord + exact replay (spec section 8)."""
 from __future__ import annotations
 
+import re
+
+from engine.v2 import ENGINE_VERSION
 from engine.v2 import actions as A
 from engine.v2.cards import CardDataMismatch, definitions_hash
 
+# Exact replay needs the engine that produced the record: v2-m1.1 changed every transition
+# hash (every op emits an event), so records from earlier engines cannot replay.
+REPLAY_VERSION = ENGINE_VERSION
+LEGACY_CUTOFF = "v2-m1.1"
+
 
 class ReplayMismatch(AssertionError):
-    pass
+    """A record that claims a compatible engine version but does not reproduce."""
+
+
+class ReplayVersionError(ValueError):
+    """The record was produced by an incompatible engine version (not corrupted data)."""
+
+
+def _vkey(v):
+    m = re.fullmatch(r"v(\d+)-m(\d+)\.(\d+)", str(v))
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+def check_version(record: dict) -> None:
+    """Refuse an incompatible record before any rules / card-data / log / state check.
+    A record without a record-level engine_version is legacy (pre-v2-m1.1). Never upgrades."""
+    found = record.get("engine_version")
+    if found == REPLAY_VERSION:
+        return
+    if found is None:
+        cfg = (record.get("config") or {}).get("engine_version")
+        shown = "none (no record-level engine_version field" + (f"; config says {cfg!r})" if cfg else ")")
+        legacy = True
+    else:
+        shown = repr(found)
+        k, cut = _vkey(found), _vkey(LEGACY_CUTOFF)
+        legacy = k is not None and k < cut
+    why = (f"the record predates {LEGACY_CUTOFF}, whose transition hashes differ from earlier engines"
+           if legacy else "the record was produced by a different engine version")
+    raise ReplayVersionError(
+        f"replay version incompatible: found {shown}, required {REPLAY_VERSION!r}; {why}. "
+        f"This is a compatibility problem, not corrupted game data; the record was not modified.")
 
 
 def make_record(game, policy_seeds=None) -> dict:
     s = game.s
     return {
+        "engine_version": s.config["engine_version"],              # replay format (checked first)
         "config": {k: v for k, v in s.config.items()},
         "policy_seeds": policy_seeds,
         "starting_player": s.starting_player,                      # resolved (mode is in config)
@@ -29,6 +68,7 @@ def replay(record: dict):
     """Re-run the game from its record WITHOUT consulting policies; must reproduce every
     transition hash and the final full state hash."""
     from engine.v2.game import Game, rules_meta
+    check_version(record)
     cfg = record["config"]
     if cfg["definitions_hash"] != definitions_hash():
         raise CardDataMismatch(f"record definitions_hash {cfg['definitions_hash']} != current {definitions_hash()}")

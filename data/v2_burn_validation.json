@@ -177,10 +177,10 @@
   "identical": 300
  },
  "wall_seconds": {
-  "smoke": 10.2,
-  "1k": 22.7,
-  "10k": 113.1
+  "smoke": 11.8,
+  "1k": 25.5,
+  "10k": 115.8
  },
- "throughput_games_per_s_wall_10k": 88.4,
- "single_core_games_per_s_cpu_invariants_off": 36.47
+ "throughput_games_per_s_wall_10k": 86.3,
+ "single_core_games_per_s_cpu_invariants_off": 40.89
 }

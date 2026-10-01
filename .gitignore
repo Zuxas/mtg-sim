@@ -100,3 +100,6 @@ docs/chapin_*_rules_reference.md
 
 # puzzle miner run artifacts (reproducible: seed 42, PYTHONHASHSEED=0)
 data/*_candidates.jsonl
+
+# engine v2 launcher run records (replayable; regenerate with --engine v2)
+data/v2_runs/

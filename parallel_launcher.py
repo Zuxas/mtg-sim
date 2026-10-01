@@ -174,7 +174,7 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     return done
 
 
-if __name__ == "__main__":
+def build_parser():
     ap = argparse.ArgumentParser()
     ap.add_argument("--deck",          default="Legacy Humans")
     ap.add_argument("--format",        default="legacy")
@@ -187,7 +187,36 @@ if __name__ == "__main__":
     ap.add_argument("--strict", action="store_true",
                     help="Strict simulation mode (MTG_SIM_STRICT=1): no fallback, floor, real-data "
                          "substitution or unsupported cards -- such cells error instead")
-    args = ap.parse_args()
+    # Engine selection (default unchanged: the legacy engines). v2 is EXPERIMENTAL and opt-in only.
+    ap.add_argument("--engine", choices=("legacy", "v2"), default="legacy",
+                    help="legacy (default) or v2 (EXPERIMENTAL rules engine; explicit decks, no field)")
+    v2 = ap.add_argument_group("engine v2 (only with --engine v2)")
+    v2.add_argument("--opponent", help="v2: opponent deck file stem (decks/<name>.txt)")
+    v2.add_argument("--mode", choices=("game", "bo3"), default="game", help="v2: single games or best-of-three")
+    v2.add_argument("--games", type=int, default=1, help="v2 game mode: number of games (seeds seed..seed+N-1)")
+    v2.add_argument("--matches", type=int, default=1, help="v2 bo3 mode: number of matches")
+    v2.add_argument("--pilot-a", choices=("random", "aggro", "scripted"), default="random",
+                    help="v2: player (pilot) for --deck -- independent of the engine choice")
+    v2.add_argument("--pilot-b", choices=("random", "aggro", "scripted"), default="random",
+                    help="v2: player (pilot) for --opponent")
+    v2.add_argument("--side-a", default="file", help="v2 bo3: sideboard of --deck: file | none | <deck stem>")
+    v2.add_argument("--side-b", default="file", help="v2 bo3: sideboard of --opponent: file | none | <deck stem>")
+    v2.add_argument("--turn-limit", type=int, default=50, help="v2: turn limit (a turn-limit draw is reported apart)")
+    v2.add_argument("--record-dir", default=None, help="v2: where to save records (default data/v2_runs/<run>)")
+    v2.add_argument("--replay", default=None, help="v2: replay a saved game/match record and verify it")
+    v2.add_argument("--no-invariants", dest="invariants", action="store_false",
+                    help="v2: skip per-transition invariant checks (on by default)")
+    return ap
+
+
+def main(argv=None):
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    args = build_parser().parse_args(raw_argv)
+    if args.engine == "v2":
+        # Explicit selection only; never a fallback in either direction.
+        args.deck_explicit = any(x == "--deck" or x.startswith("--deck=") for x in raw_argv)
+        import v2_launch
+        return v2_launch.run(args)
     if args.strict:
         os.environ["MTG_SIM_STRICT"] = "1"
 
@@ -195,3 +224,8 @@ if __name__ == "__main__":
     field = get_field(args.format, args.top_n)
     launch_all(args.deck, args.format, field, args.n, args.cores, args.seed,
                inner_workers=args.inner_workers)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

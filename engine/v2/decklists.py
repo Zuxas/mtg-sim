@@ -11,8 +11,9 @@ _LINE = re.compile(r"^\s*(\d+)\s+(.+?)\s*$")
 
 
 def main_deck(name: str) -> list:
-    """Card names of decks/<name>.txt's main deck, in file order, expanded by quantity."""
-    path = os.path.join(ROOT, "decks", f"{name}.txt")
+    """Card names of decks/<name>.txt's main deck (or of the deck file `name` when it is a path to an
+    existing .txt file), in file order, expanded by quantity."""
+    path = name if name.endswith(".txt") and os.path.isfile(name) else os.path.join(ROOT, "decks", f"{name}.txt")
     out = []
     for line in open(path, encoding="utf-8"):
         s = line.strip()

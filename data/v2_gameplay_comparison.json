@@ -1,0 +1,220 @@
+{
+ "fixtures": 2078,
+ "matches": 371,
+ "matches_with_burn_specific_events": 13,
+ "passed": 2067,
+ "with_substitutions": 416,
+ "coverage_by_mechanic": {
+  "boros_charm": {
+   "pass": 53
+  },
+  "fetch": {
+   "pass": 331
+  },
+  "goblin_guide_attack": {
+   "pass": 12
+  },
+  "mulligan": {
+   "pass": 480
+  },
+  "play_draw_choice": {
+   "pass": 469,
+   "not_reconstructable": 1
+  },
+  "prowess": {
+   "pass": 450
+  },
+  "prowess_creature_spell": {
+   "pass": 13,
+   "mismatch": 1
+  },
+  "roiling_vortex": {
+   "pass": 17
+  },
+  "searing_blaze": {
+   "pass": 7
+  },
+  "spectacle": {
+   "pass": 13
+  },
+  "suspend": {
+   "pass": 11
+  },
+  "target_lava_spike": {
+   "pass": 9
+  },
+  "target_lightning_bolt": {
+   "pass": 155,
+   "not_reconstructable": 8
+  },
+  "target_lightning_helix": {
+   "pass": 44,
+   "not_reconstructable": 1
+  },
+  "target_skullcrack": {
+   "pass": 3
+  }
+ },
+ "burn_coverage_by_mechanic": {
+  "boros_charm": {
+   "pass": 1
+  },
+  "fetch": {
+   "pass": 11
+  },
+  "goblin_guide_attack": {
+   "pass": 12
+  },
+  "mulligan": {
+   "pass": 14
+  },
+  "play_draw_choice": {
+   "pass": 19
+  },
+  "prowess": {
+   "pass": 29
+  },
+  "roiling_vortex": {
+   "pass": 17
+  },
+  "searing_blaze": {
+   "pass": 7
+  },
+  "spectacle": {
+   "pass": 13
+  },
+  "suspend": {
+   "pass": 11
+  },
+  "target_lava_spike": {
+   "pass": 9
+  },
+  "target_lightning_bolt": {
+   "pass": 16
+  },
+  "target_skullcrack": {
+   "pass": 2
+  }
+ },
+ "divergences": [
+  {
+   "id": "995f7ce8-g3-target_lightning_bolt-235",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting the token Orc Army Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerA casts [Lightning Bolt] targeting [Orc Army Token]."
+   ]
+  },
+  {
+   "id": "b590d87c-g2-target_lightning_bolt-102",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting the token Monk Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerA casts [Lightning Bolt] targeting [Monk Token]."
+   ]
+  },
+  {
+   "id": "9486fb3f-g3-target_lightning_bolt-234",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting the token Monk Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerA casts [Lightning Bolt] targeting [Monk Token]."
+   ]
+  },
+  {
+   "id": "9486fb3f-g3-target_lightning_bolt-235",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting the token Monk Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerA casts [Lightning Bolt] targeting [Monk Token]."
+   ]
+  },
+  {
+   "id": "7cb3ea62-g2-target_lightning_bolt-155",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting Karn, the Great Creator (Legendary/Planeswalker: unsupported)",
+   "observed": [
+    "PlayerB casts [Lightning Bolt] targeting [Karn, the Great Creator]."
+   ]
+  },
+  {
+   "id": "525ed4d3-g3-play_draw_choice-126",
+   "mechanic": "play_draw_choice",
+   "status": "not_reconstructable",
+   "classification": "parser_data_ambiguity",
+   "detail": "previous game result not determinable",
+   "observed": [
+    "PlayerA chooses to play first."
+   ]
+  },
+  {
+   "id": "9f1228e1-g3-prowess_creature_spell-248",
+   "mechanic": "prowess_creature_spell",
+   "status": "mismatch",
+   "classification": "parser_data_ambiguity",
+   "detail": "a prowess trigger follows the creature spell in the log; it belongs to another (noncreature) spell in the same chain",
+   "observed": [
+    "PlayerB puts a triggered ability from [Monastery Swiftspear] onto the stack (Prowess).",
+    "PlayerB casts [Slickshot Show-Off].",
+    "PlayerB casts [Assault Strobe] targeting [Slickshot Show-Off].",
+    "PlayerB puts a triggered ability from [Monastery Swiftspear] onto the stack (Prowess)."
+   ]
+  },
+  {
+   "id": "725f988d-g1-target_lightning_bolt-74",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting the token Orc Army Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerB casts [Lightning Bolt] targeting [Orc Army Token]."
+   ]
+  },
+  {
+   "id": "71ddc22f-g2-target_lightning_bolt-136",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting Ajani, Nacatl Avenger (Legendary/Planeswalker: unsupported)",
+   "observed": [
+    "PlayerB casts [Lightning Bolt] targeting [Ajani, Nacatl Avenger]."
+   ]
+  },
+  {
+   "id": "14d46bff-g1-target_lightning_helix-34",
+   "mechanic": "target_lightning_helix",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Helix targeting the token Goblin Shaman Token (tokens are not supported in v2)",
+   "observed": [
+    "PlayerB casts [Lightning Helix] targeting [Goblin Shaman Token]."
+   ]
+  },
+  {
+   "id": "0049b0cb-g1-target_lightning_bolt-73",
+   "mechanic": "target_lightning_bolt",
+   "status": "not_reconstructable",
+   "classification": "unsupported_mechanic",
+   "detail": "Lightning Bolt targeting Teferi, Time Raveler (Legendary/Planeswalker: unsupported)",
+   "observed": [
+    "PlayerA casts [Lightning Bolt] targeting [Teferi, Time Raveler]."
+   ]
+  }
+ ],
+ "divergence_classes": {
+  "unsupported_mechanic": 9,
+  "parser_data_ambiguity": 2
+ },
+ "unexplained_rules_divergences": 0,
+ "gate": "PASS"
+}

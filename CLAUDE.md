@@ -252,6 +252,29 @@ first to 2 wins, cap 5 games; MatchRecord + replay_match); `python scripts/v2_bo
 (refused). Tests: `python -m pytest -q tests/v2` (150). NOT wired to the launcher; legacy engines unchanged and still labelled experimental. Next: compare
 simulated decisions/outcomes with known gameplay, then a strict experimental v2 launcher option.
 
+### RULES ENGINE V2 -- milestone three: real-gameplay comparison + EXPERIMENTAL launcher option — 2026-10-01
+
+Phase 1 (commit e56b3b6): `calibration/v2_gameplay.py` parses the analyzer's MTGO game logs
+(`mtg-meta-analyzer/data/raw/mtgo/<snapshot>/Match_GameLog_*.dat`, local + gitignored) into observable
+rules episodes for supported mechanics; `calibration/v2_gameplay_exec.py` rebuilds each in engine v2 and
+compares. `python scripts/v2_gameplay_compare.py` (or `--from-fixtures`) -> `data/v2_gameplay_fixtures.json`
+(2,078 self-contained, traceable, normalized episode fixtures; account names are anonymized and raw
+match ids are hashed; these are not full-game replays) +
+`data/v2_gameplay_comparison.json` (coverage + every divergence,
+classified). Gate PASS: 0 engine-rules / card bugs; 11 explained non-passes (planeswalker / token targets,
+2 log ambiguities). 416 fixtures use recorded same-characteristic stand-ins. MTGO logs carry no life totals,
+damage, mana payments, searched cards or shock choices -- those are recorded as unobservable, never guessed.
+This is supported-mechanic episode conformance, not evidence of end-to-end real-game parity. Tests:
+`tests/v2/test_gameplay_comparison.py`.
+Phase 2 (commit ee0800f): `python parallel_launcher.py --engine v2 --deck <stem|path> --opponent <stem|path>
+[--mode game|bo3] [--games N|--matches N] [--seed S] [--pilot-a/--pilot-b random|aggro|scripted]
+[--side-a/--side-b file|none|<stem>] [--turn-limit T] [--record-dir D] [--no-invariants]`;
+`--engine v2 --replay <record.json>` verifies a saved record. Default engine stays legacy (same code path);
+v2 never falls back, refuses unsupported/unknown cards and sideboards before play with exact names (exit 2),
+reports P0 / P1 wins, draws, turn-limit draws and ENGINE ERRORS (exit 1) separately, saves replayable
+records under `data/v2_runs/` (gitignored), labels output EXPERIMENTAL. Only `mono_red_aggro_modern` is
+fully supported (its real sideboard is not). Tests: `tests/v2/test_launcher_v2.py`.
+
 ### Exact card identity + versioned Scryfall snapshot — 2026-09-30
 
 Spec `harness/specs/2026-09-30-card-identity-gate.md`, commits bd4b87e + the snapshot commit. `CardDB.get` is EXACT

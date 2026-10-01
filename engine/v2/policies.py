@@ -96,3 +96,75 @@ class BasicScriptedPolicy:
         if kind == "discard":
             return by(A.DiscardToHandSize)[0]
         return [a for a in actions if not isinstance(a, A.Concede)][0]
+
+
+class SimpleAggroPolicy:
+    """A simple, untuned, seeded legal player for validation logs (milestone two). It only ever
+    returns one of the offered actions and knows only public card types. Plays a land, casts
+    what it can (burn at the opponent's face, creatures, Boros Charm's damage mode), activates
+    fetch lands, attacks with everything, never blocks, pays for shock lands above 10 life,
+    always casts a suspended card, keeps 2-4-land hands. Not tuned for win rate."""
+
+    def __init__(self, seed: int = 0):
+        self.rng = random.Random(seed)
+        from engine.v2.cards import definitions
+        self.lands = {n for n, d in definitions().items() if d.is_land}
+
+    def choose(self, obs, actions):
+        kind = obs.pending[0] if obs.pending else ""
+        me, opp = obs.seat, 1 - obs.seat
+        by = lambda cls: [a for a in actions if isinstance(a, cls)]            # noqa: E731
+        names = dict(obs.hand)
+        if kind == "mulligan_declare":
+            n = sum(1 for _o, nm in obs.hand if nm in self.lands)
+            keep = 2 <= n <= 4 or obs.mull_counts[me] >= 2 or not by(A.DeclareMulligan)
+            return by(A.DeclareKeep)[0] if keep else by(A.DeclareMulligan)[0]
+        if kind == "mulligan_bottom":                                   # bottom spells, keep up to 3 lands
+            lands = {o for o, nm in obs.hand if nm in self.lands}
+            want_lands_kept = min(3, len(lands))
+            def score(a):
+                kept_lands = len(lands - set(a.cards))
+                return (abs(kept_lands - want_lands_kept), a.cards)
+            return min(by(A.BottomCards), key=score)
+        if kind == "priority":
+            mine_turn = obs.active == me and obs.step in ("main1", "main2")
+            if by(A.PlayLand):
+                return by(A.PlayLand)[0]
+            if mine_turn and not obs.stack:
+                fetch = [a for a in by(A.ActivateAbility) if obs.life[me] > 5]
+                casts = by(A.ProposeCast) + by(A.Suspend)
+                if casts:
+                    return self.rng.choice(casts)
+                if fetch:
+                    return fetch[0]
+            if obs.stack and obs.stack[-1].controller == opp:
+                burn = [a for a in by(A.ProposeCast) if names.get(a.oid) in ("Lightning Bolt", "Lightning Helix",
+                                                                          "Boros Charm", "Skullcrack")]
+                if burn and self.rng.random() < 0.5:
+                    return burn[0]
+            return by(A.PassPriority)[0]
+        if kind == "cast_mode":
+            modes = by(A.ChooseMode)
+            return next((a for a in modes if a.mode == 0), modes[0])
+        if kind == "cast_targets":
+            opts = by(A.ChooseTargets)
+            face = [a for a in opts if a.targets[0] == ("player", opp)]
+            foes = [a for a in opts if a.targets[0][0] == "obj" and a.targets[0][1] in
+                    {p.oid for p in obs.battlefield if p.controller == opp}]
+            return (face or foes or opts)[0]
+        if kind == "cast_mana":
+            pay = by(A.PayCost)
+            return pay[0] if pay else by(A.ActivateManaAbility)[0]
+        if kind == "declare_attack":
+            return next(a for a in by(A.ChooseAttack) if a.attacks)
+        if kind == "declare_block":
+            return next(a for a in by(A.ChooseBlock) if a.attacker is None)
+        if kind == "entry_payment":
+            pays = [a for a in by(A.ChooseEntryPayment) if a.pay]
+            return pays[0] if pays and obs.life[me] > 10 else by(A.ChooseEntryPayment)[0]
+        if kind == "search_choice":
+            found = [a for a in by(A.ChooseSearchResult) if a.oid is not None]
+            return found[0] if found else by(A.ChooseSearchResult)[0]
+        if kind == "suspend_cast_choice":
+            return next((a for a in by(A.ChooseSuspendCast) if a.cast), by(A.ChooseSuspendCast)[0])
+        return [a for a in actions if not isinstance(a, A.Concede)][0]

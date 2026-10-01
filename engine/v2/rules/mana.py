@@ -21,7 +21,10 @@ MANA_ABILITIES = {
 }
 
 
-@lru_cache(maxsize=None)
+_OPTS: dict = {}                     # card name -> options (definitions are fixed per name)
+_COLSET: dict = {}                   # options tuple -> frozenset of colours
+
+
 def _options_for(definition) -> tuple:
     opts = []
     for sub in definition.subtypes:                                     # CR 305.6 intrinsic abilities
@@ -39,23 +42,54 @@ def _options_for(definition) -> tuple:
     return tuple(out)
 
 
+def _opts_of(d) -> tuple:
+    opts = _OPTS.get(d.name)
+    if opts is None:
+        opts = _OPTS[d.name] = _options_for(d) if d.is_land else ()
+    return opts
+
+
 def mana_options(state, oid) -> tuple:
     """((colour, life_cost), ...) this permanent's mana abilities can produce."""
-    d = state.definition(oid)
-    return _options_for(d) if d.is_land else ()
+    return _opts_of(state.def_by_ciid[state.objects[oid].ciid])
+
+
+def _affordable(opts, life) -> tuple:
+    if all(l <= life for _c, l in opts):                               # common case: nothing filtered
+        return opts
+    return tuple((c, l) for c, l in opts if life >= l)
 
 
 def activatable_mana_options(state, player, oid) -> tuple:
-    return tuple((c, life) for c, life in mana_options(state, oid) if state.life[player] >= life)
+    return _affordable(mana_options(state, oid), state.life[player])
+
+
+def sources_with_options(state, player) -> list:
+    """[(oid, activatable options)] for the player's untapped mana sources (one pass)."""
+    life = state.life[player]
+    objs, defs = state.objects, state.def_by_ciid
+    out = []
+    for oid in state.zones[("bf",)]:
+        o = objs[oid]
+        if o.controller != player or o.tapped:
+            continue
+        opts = _opts_of(defs[o.ciid])
+        if opts:
+            opts = _affordable(opts, life)
+            if opts:
+                out.append((oid, opts))
+    return out
 
 
 def untapped_mana_sources(state, player) -> list:
-    out = []
-    for oid in state.battlefield():
-        o = state.objects[oid]
-        if o.controller == player and not o.tapped and activatable_mana_options(state, player, oid):
-            out.append(oid)
-    return out
+    return [oid for oid, _o in sources_with_options(state, player)]
+
+
+def _colset(opts) -> frozenset:
+    cs = _COLSET.get(opts)
+    if cs is None:
+        cs = _COLSET[opts] = frozenset(c for c, _l in opts)
+    return cs
 
 
 class Avail(NamedTuple):
@@ -77,9 +111,11 @@ def _requirements(symbols: tuple):
 
 def available_mana(state, player) -> Avail:
     """Pool plus what every untapped mana source could add (computed once per decision)."""
-    srcs = tuple(frozenset(c for c, _l in activatable_mana_options(state, player, oid))
-                 for oid in untapped_mana_sources(state, player))
-    return Avail(dict(state.pools[player]), srcs)
+    return avail_from(state, player, sources_with_options(state, player))
+
+
+def avail_from(state, player, srcs) -> Avail:
+    return Avail(dict(state.pools[player]), tuple(_colset(opts) for _oid, opts in srcs))
 
 
 def can_pay(symbols, avail) -> bool:

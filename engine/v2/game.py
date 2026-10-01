@@ -18,8 +18,8 @@ from engine.v2.effects import EFFECTS, EffectContext
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, sba
-from engine.v2.rules.mana import (activatable_mana_options, available_mana, payment_assignments,
-                                  untapped_mana_sources)
+from engine.v2.rules.mana import (activatable_mana_options, avail_from, payment_assignments,
+                                  sources_with_options)
 from engine.v2.state import GameState
 
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
@@ -158,12 +158,12 @@ class Game:
         elif k == "priority":
             hand = s.zones[(p, "hand")]
             timing = casting.sorcery_timing_ok(s, p)
-            sources = untapped_mana_sources(s, p)
-            avail = available_mana(s, p)
+            srcs = sources_with_options(s, p)
+            avail = avail_from(s, p, srcs)
             out = [A.PassPriority(p)]
             if timing and s.land_played[p] == 0:
                 out += [A.PlayLand(p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
-            out += self._mana_actions(p, sources)
+            out += [A.ActivateManaAbility(p, oid, c) for oid, opts in srcs for c, _l in opts]
             out += self._activation_actions(p, timing)
             tgt: dict = {}
             out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
@@ -174,7 +174,7 @@ class Game:
         elif k == "cast_mana":
             e = s.stack[-1]
             d = s.definition(e.ciid, is_ciid=True)
-            out = self._mana_actions(p, untapped_mana_sources(s, p))
+            out = [A.ActivateManaAbility(p, oid, c) for oid, opts in sources_with_options(s, p) for c, _l in opts]
             out += [A.PayCost(p, asg) for asg in payment_assignments(d.cost_symbols, s.pools[p])]
         elif k == "declare_attack":
             oid = pd.info[0]
@@ -199,18 +199,17 @@ class Game:
         out.append(A.Concede(p))                                          # always legal
         return out
 
-    def _mana_actions(self, p, sources) -> list:
-        s = self.s
-        return [A.ActivateManaAbility(p, oid, c) for oid in sources for c, _life in activatable_mana_options(s, p, oid)]
-
     def _activation_actions(self, p, timing) -> list:
         """Every completely payable activation (CR 602.2, 118.3): tap / life / sacrifice / pool mana."""
         s = self.s
         out = []
+        objs, defs, activated = s.objects, s.def_by_ciid, AB.ACTIVATED
         for oid in s.zones[("bf",)]:
-            o = s.objects[oid]
-            specs = AB.ACTIVATED.get(s.definition(oid).effect_key)
-            if not specs or o.controller != p:
+            o = objs[oid]
+            if o.controller != p:
+                continue
+            specs = activated.get(defs[o.ciid].effect_key)
+            if not specs:
                 continue
             for i, spec in enumerate(specs):
                 if (spec.tap and o.tapped) or s.life[p] < spec.life or (spec.sorcery_speed and not timing):

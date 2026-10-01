@@ -1,0 +1,135 @@
+Burn mirror, seed 400002, aggro_vs_aggro, result ('win', 1, 'life')
+  P0 declares keep
+  P1 declares keep
+
+=== Turn 1 (P0) ===
+  -- upkeep
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  P0 casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+    Revealed {'name': 'Lightning Bolt', 'oid': 85, 'player': 1}
+    AbilityResolved
+  blocks: []
+  -- combat_damage
+    P1 life 18 (-2)
+  -- end
+
+=== Turn 2 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P1 activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 17 (-1)
+    Sacrificed {'controller': 1, 'oid': 139}
+  Bloodstained Mire: battlefield -> graveyard
+  Mountain: library -> battlefield
+    AbilityResolved
+  P1 casts Lava Spike from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    P0 life 17 (-3)
+  Lava Spike: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P0 casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Goblin Guide')]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 16 (-1)
+    cast (2 mana spent)
+    P0 life 13 (-3)
+    Searing Blaze deals 3 to Goblin Guide
+  Searing Blaze: stack -> graveyard
+    SpellResolved
+    Destroyed {'data': (137,)}
+  Goblin Guide: battlefield -> graveyard
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 4 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P1 casts Lava Spike from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    P0 life 10 (-3)
+  Lava Spike: stack -> graveyard
+    SpellResolved
+  P1 activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 16 (-1)
+    Sacrificed {'controller': 1, 'oid': 150}
+  Arid Mesa: battlefield -> graveyard
+  Mountain: library -> battlefield
+    AbilityResolved
+  P1 casts Lightning Bolt from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    P0 life 7 (-3)
+  Lightning Bolt: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P0 casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved
+  P0 casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 6 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 5 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    P0 life 2 (-3)
+    Searing Blaze deals 3 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved
+    Destroyed {'data': (160,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+    LifePaid {'n': 2, 'player': 1}
+    P1 life 14 (-2)
+  Sacred Foundry: hand -> battlefield
+  P1 casts Lightning Bolt from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    P0 life -1 (-3)
+  Lightning Bolt: stack -> graveyard
+    SpellResolved
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

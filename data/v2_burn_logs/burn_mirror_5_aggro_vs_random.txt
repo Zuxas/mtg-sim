@@ -1,0 +1,201 @@
+Burn mirror, seed 400005, aggro_vs_random, result ('win', 0, 'life')
+  P1 declares keep
+  P0 declares keep
+
+=== Turn 1 (P1) ===
+  -- upkeep
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 2 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Fiery Islet: hand -> battlefield
+  P0 casts Monastery Swiftspear from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 19 (-1)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 19 (-1)
+  -- end
+
+=== Turn 3 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Searing Blaze: hand -> graveyard
+
+=== Turn 4 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P0 casts Lightning Helix from hand (normal cost)
+    targets [('player', 1)]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 18 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 17 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    P1 life 16 (-3)
+    P0 life 20 (+3)
+  Lightning Helix: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 14 (-2)
+  -- end
+
+=== Turn 5 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Boros Charm: hand -> graveyard
+
+=== Turn 6 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  P0 casts Boros Charm from hand (normal cost)
+    mode 0
+    targets [('player', 1)]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 19 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 18 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    P1 life 10 (-4)
+  Boros Charm: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 8 (-2)
+  -- end
+
+=== Turn 7 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Skewer the Critics: hand -> graveyard
+
+=== Turn 8 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  P0 casts Goblin Guide from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 17 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 16 (-1)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Goblin Guide']
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+    Revealed {'name': 'Lightning Helix', 'oid': 89, 'player': 1}
+    AbilityResolved
+  blocks: []
+  -- combat_damage
+    P1 life 7 (-1)
+    P1 life 5 (-2)
+  -- end
+
+=== Turn 9 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Lava Spike: hand -> graveyard
+
+=== Turn 10 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  P0 casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 15 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 14 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    P0 life 13 (-1)
+    Searing Blaze deals 1 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Goblin Guide']
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+    Revealed {'name': 'Rift Bolt', 'oid': 98, 'player': 1}
+    AbilityResolved
+  blocks: []
+  -- combat_damage
+    P1 life 3 (-2)
+    P1 life 1 (-2)
+  -- end
+
+=== Turn 11 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Roiling Vortex: hand -> graveyard
+
+=== Turn 12 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  P0 casts Goblin Guide from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 12 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 11 (-1)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Goblin Guide', 'Goblin Guide']
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+    Revealed {'name': 'Lava Spike', 'oid': 83, 'player': 1}
+    AbilityResolved
+    Revealed {'name': 'Lava Spike', 'oid': 83, 'player': 1}
+    AbilityResolved
+  blocks: []
+  -- combat_damage
+    P1 life 0 (-1)
+    P1 life -2 (-2)
+    P1 life -4 (-2)
+    PlayerLost {'player': 1, 'reason': 'life'}
+    GameEnded {'result': ('win', 0, 'life')}

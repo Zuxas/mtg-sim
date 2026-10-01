@@ -1,0 +1,186 @@
+{
+ "deck": "mono_red_aggro_modern",
+ "deck_cards": 60,
+ "unique_cards": [
+  "Arid Mesa",
+  "Bloodstained Mire",
+  "Boros Charm",
+  "Fiery Islet",
+  "Goblin Guide",
+  "Inspiring Vantage",
+  "Lava Spike",
+  "Lightning Bolt",
+  "Lightning Helix",
+  "Monastery Swiftspear",
+  "Mountain",
+  "Rift Bolt",
+  "Roiling Vortex",
+  "Sacred Foundry",
+  "Searing Blaze",
+  "Skewer the Critics",
+  "Skullcrack",
+  "Sunbaked Canyon"
+ ],
+ "altered_deck_refused": "cards not supported by engine v2 milestone one: ['Chalice of the Void']",
+ "smoke": {
+  "games": 100,
+  "errors": 0,
+  "first_errors": [],
+  "dead_ends": 0,
+  "illegal_accepted": 0,
+  "illegal_probes": 3804,
+  "replayed_exactly": 100,
+  "outcomes": {
+   "win/1/life": 46,
+   "win/0/life": 54
+  },
+  "turn_limit_draws": 0,
+  "by_pairing": {
+   "random_vs_random": {
+    "P1": 12,
+    "P0": 22
+   },
+   "aggro_vs_aggro": {
+    "P0": 15,
+    "P1": 18
+   },
+   "aggro_vs_random": {
+    "P1": 16,
+    "P0": 17
+   },
+   "aggro_vs_random_pilot_wins": {
+    "aggro": 32,
+    "random": 1
+   }
+  },
+  "mean_turns": 11.16,
+  "mean_actions": 280.8,
+  "event_totals": {
+   "SpellCast": 850,
+   "Triggered": 534,
+   "AbilityActivated": 237,
+   "Sacrificed": 218,
+   "Destroyed": 63,
+   "SpellFizzled": 0,
+   "Revealed": 157,
+   "Suspended": 20,
+   "LifeGainPrevented": 0,
+   "EntersTapped": 70,
+   "ModeChosen": 92,
+   "SearchFoundNothing": 24,
+   "MulliganTaken": 125,
+   "PlayerLost": 100
+  }
+ },
+ "run_1k": {
+  "games": 1000,
+  "errors": 0,
+  "first_errors": [],
+  "dead_ends": 0,
+  "illegal_accepted": 0,
+  "illegal_probes": 40199,
+  "replayed_exactly": 200,
+  "outcomes": {
+   "win/0/life": 504,
+   "win/1/life": 496
+  },
+  "turn_limit_draws": 0,
+  "by_pairing": {
+   "random_vs_random": {
+    "P1": 163,
+    "P0": 170
+   },
+   "aggro_vs_aggro": {
+    "P0": 168,
+    "P1": 166
+   },
+   "aggro_vs_random": {
+    "P0": 166,
+    "P1": 167
+   },
+   "aggro_vs_random_pilot_wins": {
+    "aggro": 326,
+    "random": 7
+   }
+  },
+  "mean_turns": 11.64,
+  "mean_actions": 295.1,
+  "event_totals": {
+   "SpellCast": 8825,
+   "Triggered": 5666,
+   "AbilityActivated": 2664,
+   "Sacrificed": 2437,
+   "Destroyed": 746,
+   "SpellFizzled": 3,
+   "Revealed": 1876,
+   "Suspended": 207,
+   "LifeGainPrevented": 1,
+   "EntersTapped": 775,
+   "ModeChosen": 972,
+   "SearchFoundNothing": 258,
+   "MulliganTaken": 1362,
+   "PlayerLost": 1000
+  }
+ },
+ "run_10k": {
+  "games": 10000,
+  "errors": 0,
+  "first_errors": [],
+  "dead_ends": 0,
+  "illegal_accepted": 0,
+  "illegal_probes": 395274,
+  "replayed_exactly": 1000,
+  "outcomes": {
+   "win/1/life": 4996,
+   "win/0/life": 5004
+  },
+  "turn_limit_draws": 0,
+  "by_pairing": {
+   "random_vs_random": {
+    "P0": 1678,
+    "P1": 1655
+   },
+   "aggro_vs_aggro": {
+    "P0": 1656,
+    "P1": 1677
+   },
+   "aggro_vs_random": {
+    "P1": 1664,
+    "P0": 1670
+   },
+   "aggro_vs_random_pilot_wins": {
+    "aggro": 3269,
+    "random": 65
+   }
+  },
+  "mean_turns": 11.45,
+  "mean_actions": 290.6,
+  "event_totals": {
+   "SpellCast": 87581,
+   "Triggered": 55281,
+   "AbilityActivated": 26137,
+   "Sacrificed": 24208,
+   "Destroyed": 6743,
+   "SpellFizzled": 13,
+   "Revealed": 18568,
+   "Suspended": 2032,
+   "LifeGainPrevented": 18,
+   "EntersTapped": 7608,
+   "ModeChosen": 9809,
+   "SearchFoundNothing": 2483,
+   "MulliganTaken": 13656,
+   "PlayerLost": 10000
+  }
+ },
+ "repeat_seeds": {
+  "compared": 300,
+  "identical": 300
+ },
+ "wall_seconds": {
+  "smoke": 10.7,
+  "1k": 21.7,
+  "10k": 100.8
+ },
+ "throughput_games_per_s_wall_10k": 99.2,
+ "single_core_games_per_s_cpu_invariants_off": 37.21
+}

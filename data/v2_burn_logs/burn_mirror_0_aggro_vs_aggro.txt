@@ -1,0 +1,198 @@
+Burn mirror, seed 400000, aggro_vs_aggro, result ('win', 1, 'life')
+  P0 declares mulligan
+  P1 declares mulligan
+    P0 draws a new 7 (mulligan 1; bottoms 1)
+    P1 draws a new 7 (mulligan 1; bottoms 1)
+  P0 declares mulligan
+  P1 declares keep
+    P0 draws a new 7 (mulligan 2; bottoms 2)
+  P0 declares keep
+
+=== Turn 1 (P0) ===
+  -- upkeep
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0 life 18 (-2)
+  Sacred Foundry: hand -> battlefield
+  P0 casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 19 (-1)
+  -- end
+
+=== Turn 2 (P1) ===
+  -- upkeep
+  P1 draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  P1 casts Lava Spike from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    P0 life 15 (-3)
+  Lava Spike: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P0 activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 14 (-1)
+    Sacrificed {'controller': 0, 'oid': 188}
+  Bloodstained Mire: battlefield -> graveyard
+  Mountain: library -> battlefield
+    AbilityResolved
+  P0 casts Roiling Vortex from hand (normal cost)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+  Roiling Vortex: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 17 (-2)
+  -- end
+
+=== Turn 4 (P1) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+    P1 life 16 (-1)
+    AbilityResolved
+  P1 draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P1 activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 15 (-1)
+    Sacrificed {'controller': 1, 'oid': 194}
+  Arid Mesa: battlefield -> graveyard
+  Mountain: library -> battlefield
+    AbilityResolved
+  P1 casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+    P0 life 11 (-3)
+    Searing Blaze deals 3 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved
+    Destroyed {'data': (182,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P0) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+    P0 life 10 (-1)
+    AbilityResolved
+  P0 draws
+  -- main1
+  Mountain: hand -> battlefield
+  P0 casts Skewer the Critics from hand (normal cost)
+    targets [('player', 1)]
+    cast (3 mana spent)
+    P1 life 12 (-3)
+  Skewer the Critics: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P1) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+    P1 life 11 (-1)
+    AbilityResolved
+  P1 draws
+  -- main1
+    LifePaid {'n': 2, 'player': 1}
+    P1 life 9 (-2)
+  Sacred Foundry: hand -> battlefield
+  P1 casts Roiling Vortex from hand (normal cost)
+    cast (2 mana spent)
+  Roiling Vortex: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 7 (P0) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+  trigger: vortex_upkeep (P1, from Roiling Vortex)
+    P0 life 9 (-1)
+    AbilityResolved
+    P0 life 8 (-1)
+    AbilityResolved
+  P0 draws
+  -- main1
+  P0 casts Roiling Vortex from hand (normal cost)
+    cast (2 mana spent)
+  Roiling Vortex: stack -> battlefield
+    SpellResolved
+  P0 casts Lava Spike from hand (normal cost)
+    targets [('player', 1)]
+    cast (1 mana spent)
+    P1 life 6 (-3)
+  Lava Spike: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P1) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+  trigger: vortex_upkeep (P1, from Roiling Vortex)
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+    P1 life 5 (-1)
+    AbilityResolved
+    P1 life 4 (-1)
+    AbilityResolved
+    P1 life 3 (-1)
+    AbilityResolved
+  P1 draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P1 casts Skewer the Critics from hand (normal cost)
+    targets [('player', 0)]
+    cast (3 mana spent)
+    P0 life 5 (-3)
+  Skewer the Critics: stack -> graveyard
+    SpellResolved
+  P1 casts Skewer the Critics from hand (spectacle cost)
+    targets [('player', 0)]
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 2 (-1)
+    cast (1 mana spent)
+    P0 life 2 (-3)
+  Skewer the Critics: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 9 (P0) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+  trigger: vortex_upkeep (P1, from Roiling Vortex)
+  trigger: vortex_upkeep (P0, from Roiling Vortex)
+    P0 life 1 (-1)
+    AbilityResolved
+    P0 life 0 (-1)
+    AbilityResolved
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

@@ -1,0 +1,167 @@
+Burn mirror, seed 400001, aggro_vs_random, result ('win', 0, 'life')
+  P1 declares keep
+  P0 declares keep
+
+=== Turn 1 (P1) ===
+  -- upkeep
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 19 (-1)
+    Suspended
+  Rift Bolt: hand -> exile
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 2 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P1) ===
+  -- upkeep
+  trigger: suspend_upkeep (P1, from Rift Bolt)
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 18 (-1)
+    CounterRemoved {'counter': 'time', 'n': 1, 'oid': 136}
+    AbilityResolved
+  trigger: suspend_cast (P1, from Rift Bolt)
+    SuspendDeclined
+    AbilityResolved
+  P1 draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 4 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0 life 18 (-2)
+  Sacred Foundry: hand -> battlefield
+  P0 casts Boros Charm from hand (normal cost)
+    mode 0
+    targets [('player', 1)]
+    cast (2 mana spent)
+    P1 life 14 (-4)
+  Boros Charm: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P1) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 13 (-1)
+  P1 draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P1 activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 12 (-1)
+    Sacrificed {'controller': 1, 'oid': 145}
+  Arid Mesa: battlefield -> graveyard
+    LifePaid {'n': 2, 'player': 1}
+    P1 life 10 (-2)
+  Sacred Foundry: library -> battlefield
+    AbilityResolved
+  P1 casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P0 casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved
+  P0 casts Skullcrack from hand (normal cost)
+    targets [('player', 1)]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 17 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    TurnEffectAdded {'a': 0, 'effect': 'no_lifegain'}
+    TurnEffectAdded {'a': 1, 'effect': 'no_lifegain'}
+    TurnEffectAdded {'a': None, 'effect': 'no_prevention'}
+    P1 life 7 (-3)
+  Skullcrack: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    P1 life 5 (-2)
+  -- end
+
+=== Turn 7 (P1) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1 life 4 (-1)
+  P1 casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+    P0 life 16 (-1)
+    Searing Blaze deals 1 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved
+  P1 draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P0) ===
+  -- upkeep
+  P0 draws
+  -- main1
+  Fiery Islet: hand -> battlefield
+  P0 casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved
+  P0 casts Rift Bolt from hand (normal cost)
+    targets [('player', 1)]
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 15 (-1)
+    LifePaid {'n': 1, 'player': 0}
+    P0 life 14 (-1)
+    cast (3 mana spent)
+  trigger: prowess (P0, from Monastery Swiftspear)
+    AbilityResolved
+    P1 life 1 (-3)
+  Rift Bolt: stack -> graveyard
+    SpellResolved
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Goblin Guide']
+  trigger: goblin_guide_reveal (P0, from Goblin Guide)
+    Revealed {'name': 'Roiling Vortex', 'oid': 104, 'player': 1}
+    AbilityResolved
+  blocks: [('Goblin Guide', 'Goblin Guide')]
+  -- combat_damage
+    P1 life -1 (-2)
+    Goblin Guide deals 2 to Goblin Guide
+    Goblin Guide deals 2 to Goblin Guide
+    Destroyed {'data': (149,)}
+  Goblin Guide: battlefield -> graveyard
+    Destroyed {'data': (163,)}
+  Goblin Guide: battlefield -> graveyard
+    PlayerLost {'player': 1, 'reason': 'life'}
+    GameEnded {'result': ('win', 0, 'life')}

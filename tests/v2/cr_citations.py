@@ -104,4 +104,7 @@ CITATIONS = {
     "608.2g": ['If an effect gives a player the option to pay mana, they may activate mana abilities before taking that action.'],
     "702.62a": ['Suspend is a keyword that represents three abilities.'],
     "702.62c": ['While determining if you could begin to cast a card with suspend, take into consideration any effects that would prohibit that card from being cast.'],
+    "100.2a": ['In constructed play (a way of playing in which each player creates their own deck ahead of time), each deck has a minimum deck size of 60 cards.'],
+    "100.4": ['Each player may also have a sideboard, which is a group of additional cards the player may use to modify their deck between games of a match.'],
+    "103.1": ['At the start of a game, the players determine which one of them will choose who takes the first turn.'],
 }

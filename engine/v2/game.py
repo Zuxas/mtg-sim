@@ -19,8 +19,8 @@ from engine.v2.effects import facts as effect_facts
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, replacement, sba
-from engine.v2.rules.mana import (activatable_mana_options, avail_from, payment_assignments,
-                                  sources_with_options)
+from engine.v2.rules.mana import (Avail, _colset, activatable_mana_options, avail_from, can_pay,
+                                  payment_assignments, sources_with_options)
 from engine.v2.state import GameState
 
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
@@ -186,7 +186,7 @@ class Game:
         elif k == "cast_mana":
             e = s.stack[-1]
             d = s.definition(e.ciid, is_ciid=True)
-            out = [A.ActivateManaAbility(p, oid, c) for oid, opts in sources_with_options(s, p) for c, _l in opts]
+            out = self._completing_mana_actions(p, s.open_cast["cost"])
             out += [A.PayCost(p, asg) for asg in payment_assignments(s.open_cast["cost"], s.pools[p])]
         elif k == "declare_attack":
             oid = pd.info[0]
@@ -224,6 +224,23 @@ class Game:
             out = [A.ChooseTriggerTargets(p, tid, (tg,))
                    for tg in casting.options_for_kinds(s, AB.SPEC_BY_KEY[t.key].targets)]
         out.append(A.Concede(p))                                          # always legal
+        return out
+
+    def _completing_mana_actions(self, p, cost) -> list:
+        """Mana abilities during 601.2g, limited to those after which the announced cost is still
+        payable: a choice that made it unpayable would make the cast illegal and be rewound
+        (CR 733), and the engine offers only actions with a legal completion (spec 7.4)."""
+        s = self.s
+        srcs = sources_with_options(s, p)
+        cols = [_colset(opts) for _oid, opts in srcs]
+        out = []
+        for i, (oid, opts) in enumerate(srcs):
+            rest = tuple(cols[:i] + cols[i + 1:])
+            for c, _l in opts:
+                pool = dict(s.pools[p])
+                pool[c] = pool.get(c, 0) + 1
+                if can_pay(cost, Avail(pool, rest)):
+                    out.append(A.ActivateManaAbility(p, oid, c))
         return out
 
     def _activation_actions(self, p, timing) -> list:

@@ -135,6 +135,17 @@ def test_rollback_reverses_a_pain_land_activation_including_its_life():   # CR 7
     assert g.s.life[0] == 20 and not g.s.objects[canyon].tapped and g.s.pools[0]["R"] == 0
 
 
+def test_cast_time_mana_choices_keep_the_announced_cost_payable():      # CR 601.2g, 733 (spec 7.4)
+    g = _setup()
+    mountain = put(g, 0, "Mountain", "battlefield")
+    canyon = put(g, 0, "Sunbaked Canyon", "battlefield")
+    helix = put(g, 0, "Lightning Helix", "hand")
+    g.apply(A.ProposeCast(0, helix))
+    g.apply(next(a for a in g.legal_actions() if isinstance(a, A.ChooseTargets)))
+    offered = {(a.oid, a.color) for a in g.legal_actions() if isinstance(a, A.ActivateManaAbility)}
+    assert offered == {(mountain, "R"), (canyon, "W")}                       # Canyon for R would strand {W}
+
+
 def test_randomized_activated_games_hold_invariants_and_replay():
     for seed in range(30):
         g = Game.new(ACTIVATED_TEST, ACTIVATED_TEST if seed % 2 else WU, 6200 + seed, starting_player=seed % 2,

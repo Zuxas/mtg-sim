@@ -173,13 +173,13 @@ Burn mirror, seed 400000, aggro_vs_aggro, result ('win', 1, 'life')
     P0 life 5 (-3)
   Skewer the Critics: stack -> graveyard
     SpellResolved
-  P1 casts Skewer the Critics from hand (spectacle cost)
+  P1 casts Lava Spike from hand (normal cost)
     targets [('player', 0)]
     LifePaid {'n': 1, 'player': 1}
     P1 life 2 (-1)
     cast (1 mana spent)
     P0 life 2 (-3)
-  Skewer the Critics: stack -> graveyard
+  Lava Spike: stack -> graveyard
     SpellResolved
   -- declare_attackers
   attackers: []

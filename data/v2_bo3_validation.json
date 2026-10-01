@@ -4,17 +4,17 @@
  "first_errors": [],
  "replayed_exactly": 500,
  "results": {
-  "win:1": 173,
-  "win:0": 327
+  "win:1": 174,
+  "win:0": 326
  },
  "games_per_match": {
-  "2": 325,
-  "3": 175
+  "2": 332,
+  "3": 168
  },
- "matches_with_sideboard_swaps": 450,
- "total_swaps": 1669,
+ "matches_with_sideboard_swaps": 448,
+ "total_swaps": 1657,
  "drawn_games": 0,
  "repeat_identical": 50,
  "repeat_compared": 50,
- "wall_seconds": 55.9
+ "wall_seconds": 58.7
 }

@@ -40,7 +40,7 @@ Burn mirror, seed 400003, aggro_vs_random, result ('win', 0, 'life')
   -- declare_attackers
   attackers: ['Goblin Guide']
   trigger: goblin_guide_reveal (P1, from Goblin Guide)
-    Revealed {'name': 'Skewer the Critics', 'oid': 54, 'player': 0}
+    Revealed {'ciid': 54, 'name': 'Skewer the Critics', 'player': 0, 'zone': 'library'}
     AbilityResolved
   blocks: []
   -- combat_damage
@@ -98,7 +98,7 @@ Burn mirror, seed 400003, aggro_vs_random, result ('win', 0, 'life')
   -- declare_attackers
   attackers: ['Goblin Guide']
   trigger: goblin_guide_reveal (P1, from Goblin Guide)
-    Revealed {'name': 'Rift Bolt', 'oid': 39, 'player': 0}
+    Revealed {'ciid': 39, 'name': 'Rift Bolt', 'player': 0, 'zone': 'library'}
     AbilityResolved
   blocks: []
   -- combat_damage
@@ -181,7 +181,7 @@ Burn mirror, seed 400003, aggro_vs_random, result ('win', 0, 'life')
   -- declare_attackers
   attackers: ['Goblin Guide']
   trigger: goblin_guide_reveal (P1, from Goblin Guide)
-    Revealed {'name': 'Lava Spike', 'oid': 21, 'player': 0}
+    Revealed {'ciid': 21, 'name': 'Lava Spike', 'player': 0, 'zone': 'library'}
     AbilityResolved
   blocks: []
   -- combat_damage

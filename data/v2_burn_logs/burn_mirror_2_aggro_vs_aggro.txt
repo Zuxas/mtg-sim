@@ -13,7 +13,7 @@ Burn mirror, seed 400002, aggro_vs_aggro, result ('win', 1, 'life')
   -- declare_attackers
   attackers: ['Goblin Guide']
   trigger: goblin_guide_reveal (P0, from Goblin Guide)
-    Revealed {'name': 'Lightning Bolt', 'oid': 85, 'player': 1}
+    Revealed {'ciid': 85, 'name': 'Lightning Bolt', 'player': 1, 'zone': 'library'}
     AbilityResolved
   blocks: []
   -- combat_damage

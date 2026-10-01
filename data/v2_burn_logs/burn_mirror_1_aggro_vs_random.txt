@@ -152,7 +152,7 @@ Burn mirror, seed 400001, aggro_vs_random, result ('win', 0, 'life')
   -- declare_attackers
   attackers: ['Monastery Swiftspear', 'Goblin Guide']
   trigger: goblin_guide_reveal (P0, from Goblin Guide)
-    Revealed {'name': 'Roiling Vortex', 'oid': 104, 'player': 1}
+    Revealed {'ciid': 104, 'name': 'Roiling Vortex', 'player': 1, 'zone': 'library'}
     AbilityResolved
   blocks: [('Goblin Guide', 'Goblin Guide')]
   -- combat_damage

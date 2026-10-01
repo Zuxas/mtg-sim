@@ -23,53 +23,53 @@
  ],
  "altered_deck_refused": "cards not supported by engine v2 milestone one: ['Chalice of the Void']",
  "smoke": {
-  "games": 100,
+  "games": 60,
   "errors": 0,
   "first_errors": [],
   "dead_ends": 0,
   "illegal_accepted": 0,
-  "illegal_probes": 3804,
-  "replayed_exactly": 100,
+  "illegal_probes": 2316,
+  "replayed_exactly": 60,
   "outcomes": {
-   "win/1/life": 46,
-   "win/0/life": 54
+   "win/1/life": 27,
+   "win/0/life": 33
   },
   "turn_limit_draws": 0,
   "by_pairing": {
    "random_vs_random": {
-    "P1": 12,
-    "P0": 22
+    "P1": 5,
+    "P0": 15
    },
    "aggro_vs_aggro": {
-    "P0": 15,
-    "P1": 18
+    "P0": 7,
+    "P1": 13
    },
    "aggro_vs_random": {
-    "P1": 16,
-    "P0": 17
+    "P1": 9,
+    "P0": 11
    },
    "aggro_vs_random_pilot_wins": {
-    "aggro": 32,
+    "aggro": 19,
     "random": 1
    }
   },
-  "mean_turns": 11.16,
-  "mean_actions": 280.8,
+  "mean_turns": 11.2,
+  "mean_actions": 284.5,
   "event_totals": {
-   "SpellCast": 850,
-   "Triggered": 534,
-   "AbilityActivated": 237,
-   "Sacrificed": 218,
-   "Destroyed": 63,
+   "SpellCast": 512,
+   "Triggered": 349,
+   "AbilityActivated": 150,
+   "Sacrificed": 128,
+   "Destroyed": 39,
    "SpellFizzled": 0,
-   "Revealed": 157,
-   "Suspended": 20,
+   "Revealed": 110,
+   "Suspended": 15,
    "LifeGainPrevented": 0,
-   "EntersTapped": 70,
-   "ModeChosen": 92,
-   "SearchFoundNothing": 24,
-   "MulliganTaken": 125,
-   "PlayerLost": 100
+   "EntersTapped": 37,
+   "ModeChosen": 58,
+   "SearchFoundNothing": 14,
+   "MulliganTaken": 76,
+   "PlayerLost": 60
   }
  },
  "run_1k": {
@@ -78,46 +78,46 @@
   "first_errors": [],
   "dead_ends": 0,
   "illegal_accepted": 0,
-  "illegal_probes": 40199,
+  "illegal_probes": 40326,
   "replayed_exactly": 200,
   "outcomes": {
-   "win/0/life": 504,
-   "win/1/life": 496
+   "win/0/life": 503,
+   "win/1/life": 497
   },
   "turn_limit_draws": 0,
   "by_pairing": {
    "random_vs_random": {
-    "P1": 163,
-    "P0": 170
+    "P1": 161,
+    "P0": 172
    },
    "aggro_vs_aggro": {
-    "P0": 168,
-    "P1": 166
+    "P0": 166,
+    "P1": 168
    },
    "aggro_vs_random": {
-    "P0": 166,
-    "P1": 167
+    "P0": 165,
+    "P1": 168
    },
    "aggro_vs_random_pilot_wins": {
-    "aggro": 326,
-    "random": 7
+    "aggro": 325,
+    "random": 8
    }
   },
-  "mean_turns": 11.64,
-  "mean_actions": 295.1,
+  "mean_turns": 11.67,
+  "mean_actions": 296.1,
   "event_totals": {
-   "SpellCast": 8825,
-   "Triggered": 5666,
-   "AbilityActivated": 2664,
-   "Sacrificed": 2437,
-   "Destroyed": 746,
+   "SpellCast": 8855,
+   "Triggered": 5691,
+   "AbilityActivated": 2690,
+   "Sacrificed": 2456,
+   "Destroyed": 751,
    "SpellFizzled": 3,
-   "Revealed": 1876,
-   "Suspended": 207,
+   "Revealed": 1897,
+   "Suspended": 208,
    "LifeGainPrevented": 1,
    "EntersTapped": 775,
-   "ModeChosen": 972,
-   "SearchFoundNothing": 258,
+   "ModeChosen": 970,
+   "SearchFoundNothing": 257,
    "MulliganTaken": 1362,
    "PlayerLost": 1000
   }
@@ -128,59 +128,59 @@
   "first_errors": [],
   "dead_ends": 0,
   "illegal_accepted": 0,
-  "illegal_probes": 395274,
+  "illegal_probes": 395233,
   "replayed_exactly": 1000,
   "outcomes": {
-   "win/1/life": 4996,
-   "win/0/life": 5004
+   "win/1/life": 5007,
+   "win/0/life": 4993
   },
   "turn_limit_draws": 0,
   "by_pairing": {
    "random_vs_random": {
-    "P0": 1678,
-    "P1": 1655
+    "P0": 1676,
+    "P1": 1657
    },
    "aggro_vs_aggro": {
-    "P0": 1656,
-    "P1": 1677
+    "P0": 1651,
+    "P1": 1682
    },
    "aggro_vs_random": {
-    "P1": 1664,
-    "P0": 1670
+    "P1": 1668,
+    "P0": 1666
    },
    "aggro_vs_random_pilot_wins": {
-    "aggro": 3269,
-    "random": 65
+    "aggro": 3267,
+    "random": 67
    }
   },
   "mean_turns": 11.45,
   "mean_actions": 290.6,
   "event_totals": {
-   "SpellCast": 87581,
-   "Triggered": 55281,
-   "AbilityActivated": 26137,
-   "Sacrificed": 24208,
-   "Destroyed": 6743,
+   "SpellCast": 87509,
+   "Triggered": 55256,
+   "AbilityActivated": 26117,
+   "Sacrificed": 24193,
+   "Destroyed": 6709,
    "SpellFizzled": 13,
-   "Revealed": 18568,
-   "Suspended": 2032,
-   "LifeGainPrevented": 18,
-   "EntersTapped": 7608,
-   "ModeChosen": 9809,
-   "SearchFoundNothing": 2483,
+   "Revealed": 18531,
+   "Suspended": 2029,
+   "LifeGainPrevented": 17,
+   "EntersTapped": 7620,
+   "ModeChosen": 9795,
+   "SearchFoundNothing": 2484,
    "MulliganTaken": 13656,
    "PlayerLost": 10000
   }
  },
  "repeat_seeds": {
-  "compared": 300,
-  "identical": 300
+  "compared": 200,
+  "identical": 200
  },
  "wall_seconds": {
-  "smoke": 11.8,
-  "1k": 25.5,
-  "10k": 115.8
+  "smoke": 11.6,
+  "1k": 28.3,
+  "10k": 126.9
  },
- "throughput_games_per_s_wall_10k": 86.3,
- "single_core_games_per_s_cpu_invariants_off": 40.89
+ "throughput_games_per_s_wall_10k": 78.8,
+ "single_core_games_per_s_cpu_invariants_off": 31.68
 }

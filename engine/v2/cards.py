@@ -32,8 +32,16 @@ SUPPORTED = {
     "Divination": ("divination", "1"),
     "Lava Spike": ("lava_spike", "1"),
     "Lightning Helix": ("lightning_helix", "1"),
+    "Monastery Swiftspear": ("monastery_swiftspear", "1"),
+    "Goblin Guide": ("goblin_guide", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
+# Keywords implemented only by specific cards' behaviour (never accepted on any other card).
+CARD_KEYWORDS = {
+    "monastery_swiftspear": frozenset({"Prowess"}),                 # engine.v2.abilities prowess trigger
+}
+# effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
+PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}
 COLORS = ("W", "U", "B", "R", "G", "C")
 
@@ -140,9 +148,9 @@ def build_definition(name: str) -> CardDefinition:
         raise UnknownCardError([name], {name: _carddb().suggest(name)})
     supers, types, subs = _split_type_line(data.get("type_line", ""))
     kws = tuple(sorted(data.get("keywords") or ()))
-    if not set(kws) <= SUPPORTED_KEYWORDS:
-        raise UnsupportedCardError([name])
     effect_key, version = SUPPORTED[name]
+    if not set(kws) <= SUPPORTED_KEYWORDS | CARD_KEYWORDS.get(effect_key, frozenset()):
+        raise UnsupportedCardError([name])
     return CardDefinition(
         name=data["name"], mana_cost=data.get("mana_cost", "") or "", cost_symbols=parse_cost(data.get("mana_cost", "")),
         mana_value=int(float(data.get("cmc", 0) or 0)), colors=tuple(data.get("colors") or ()),

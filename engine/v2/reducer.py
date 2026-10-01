@@ -16,6 +16,7 @@ outside an action opens its own.
 """
 from __future__ import annotations
 
+from engine.v2 import abilities as AB
 from engine.v2.events import Event, ev
 from engine.v2.objects import CardInstance, GameObject, StackEntry
 from engine.v2.state import Pending
@@ -50,6 +51,7 @@ _COPY = {
     "attack_choices": dict, "block_choices": dict, "blocks": dict, "divisions": dict,
     "retired": set,
     "life": list, "land_played": list, "draw_failed": list, "mull_count": list, "kept": list, "lost": list,
+    "life_lost_turn": list, "lands_entered_turn": list,
 }
 
 
@@ -185,6 +187,12 @@ def _move(s, oid, dest, position, controller, evs):
         else:
             lst.insert(int(position), new)
     evs.append(ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest))
+    if dest == "battlefield":
+        is_land = s.def_by_ciid[o.ciid].is_land
+        if is_land:
+            _keep(s, "lands_entered_turn")
+            s.lands_entered_turn[no.controller] += 1                       # landfall record (this turn)
+        s.occ.append(AB.EnterOcc(new, no.controller, is_land))
     return new
 
 
@@ -202,7 +210,7 @@ TOUCHES = {
     "keep": ("kept",),
     "store_bottom": ("mull_bottoms",),
     "clear_bottoms": ("mull_bottoms",),
-    "begin_turn": ("turn", "active", "land_played"),
+    "begin_turn": ("turn", "active", "land_played", "life_lost_turn", "lands_entered_turn"),
     "empty_pools": ("pools",),
     "priority": ("priority", "passes"),
     "pending": ("pending",),
@@ -227,6 +235,9 @@ TOUCHES = {
     "clear_draw_failed": ("draw_failed",),
     "lose": ("lost",),
     "end_game": ("result", "pending"),
+    "stack_trigger": ("pending_triggers", "next_ability", "stack"),
+    "drop_trigger": ("pending_triggers",),
+    "priority_resume": ("priority_resume",),
 }
 
 
@@ -279,6 +290,8 @@ def _h_set(s, evs, attr, value):
     _keep(s, attr)
     setattr(s, attr, value)
     evs.append(_iv(ev("Set", attr=attr, value=value)))
+    if attr == "step":
+        s.occ.append(AB.StepOcc(value, s.active))
 
 
 _SETTABLE = {"mull_stage", "mull_round", "step", "first_strike_done", "attackers", "blocked"}
@@ -321,6 +334,8 @@ def _h_clear_bottoms(s, evs):
 def _h_begin_turn(s, evs, turn, active):
     s.turn, s.active = turn, active
     s.land_played = [0, 0]
+    s.life_lost_turn = [False, False]
+    s.lands_entered_turn = [0, 0]
     evs.append(ev("TurnBegan", turn=turn, active=active))
 
 
@@ -437,8 +452,11 @@ def _h_commit_cast(s, evs, cost_symbols):
                                 zone="stack", controlled_since=s.turn)
     e = s.entry(oc["prov"])
     e.sid, e.state, e.oid = f"O{new}", "cast", new
+    e.mana_spent = sum(oc["paid"].values())                               # recorded for "no mana spent" checks
     s.open_cast = None
-    evs.append(ev("SpellCast", sid=e.sid, oid=new, retired=oc["source"], ciid=src.ciid, controller=e.controller))
+    evs.append(ev("SpellCast", sid=e.sid, oid=new, retired=oc["source"], ciid=src.ciid, controller=e.controller,
+                  mana_spent=e.mana_spent))
+    s.occ.append(AB.CastOcc(e.controller, e.sid, src.ciid, s.def_by_ciid[src.ciid].is_creature, e.mana_spent))
 
 
 def _covers(symbols, paid) -> bool:
@@ -502,6 +520,8 @@ def _h_declare_attackers(s, evs, attackers):
     s.attackers = tuple(attackers)
     s.attack_choices = {}
     evs.append(ev("AttackersDeclared", attackers=tuple(attackers)))
+    for a in attackers:
+        s.occ.append(AB.AttackOcc(a, s.active, 1 - s.active))
 
 
 def _h_declare_blockers(s, evs, blocks):
@@ -582,6 +602,49 @@ def _h_end_game(s, evs, result):
     evs.append(ev("GameEnded", result=tuple(result)))
 
 
+def _h_stack_trigger(s, evs, tid, targets=()):
+    """Put a pending triggered ability on the stack (CR 603.3): an object that is not a card."""
+    t = next((x for x in s.pending_triggers if x.tid == tid), None)
+    _need(t is not None, f"stack of unknown trigger {tid}")
+    s.pending_triggers = tuple(x for x in s.pending_triggers if x.tid != tid)
+    sid = f"A{s.next_ability}"
+    s.next_ability += 1
+    s.stack.append(StackEntry(sid=sid, ciid=t.ciid, controller=t.controller, state="ability",
+                              targets=tuple(targets), ability=t.key, source=t.source, info=t.info))
+    evs.append(ev("TriggerStacked", tid=tid, sid=sid, key=t.key, controller=t.controller, source=t.source,
+                  targets=tuple(targets)))
+
+
+def _h_drop_trigger(s, evs, tid, reason):
+    """CR 603.3d: a trigger with no legal choice is removed instead of being put on the stack."""
+    _need(any(x.tid == tid for x in s.pending_triggers), f"drop of unknown trigger {tid}")
+    s.pending_triggers = tuple(x for x in s.pending_triggers if x.tid != tid)
+    evs.append(ev("TriggerRemoved", tid=tid, reason=reason))
+
+
+def _h_priority_resume(s, evs, value):
+    s.priority_resume = value
+    evs.append(_iv(ev("PriorityResume", value=value)))
+
+
+def _h_reveal(s, evs, player, oid):
+    """CR 701.20a/b: show a card to all players; it stays in its zone."""
+    o = s.objects[oid]
+    evs.append(ev("Revealed", player=player, oid=oid, name=s.instances[o.ciid].name))
+
+
+def _add_triggers(s, evs, found):
+    _keep(s, "pending_triggers")
+    _keep(s, "next_tid")
+    new = []
+    for ctrl, src, ciid, key, info in found:
+        tid = s.next_tid
+        s.next_tid += 1
+        new.append(AB.TriggerInstance(tid, ctrl, src, ciid, key, info))
+        evs.append(ev("Triggered", tid=tid, key=key, controller=ctrl, source=src, info=info))
+    s.pending_triggers = s.pending_triggers + tuple(new)
+
+
 def _h_note(s, evs, kind, *data):
     evs.append(ev(kind, data=tuple(data)))
 
@@ -611,11 +674,17 @@ def commit(s, kind: str, ops) -> None:
             d[0](s, evs, *args)
             if len(evs) == n:
                 raise EngineInvariantError(f"op {name} produced no event")          # spec section 8
+        if s.occ:                                                     # CR 603.2: triggers of this batch
+            found = AB.detect(s, s.occ)
+            s.occ.clear()
+            if found:
+                _add_triggers(s, evs, found)
         s.log.append(kind, evs)
         if s.config["check_invariants"]:
             from engine.v2.invariants import check
             check(s, kind)
     except BaseException:
+        s.occ.clear()
         if own:
             rollback(s)
         raise

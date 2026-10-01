@@ -10,6 +10,7 @@ import random
 from itertools import combinations, permutations
 
 from engine.v2 import ENGINE_VERSION
+from engine.v2 import abilities as AB
 from engine.v2 import actions as A
 from engine.v2 import reducer
 from engine.v2.cards import definitions, definitions_hash, oracle_file_sha256, validate_deck
@@ -189,6 +190,13 @@ class Game:
         elif k == "discard":
             n = pd.info[0]
             out = [A.DiscardToHandSize(p, c) for c in combinations(sorted(s.zones[(p, "hand")]), n)]
+        elif k == "order_triggers":
+            out = [A.OrderTrigger(p, tid) for tid in pd.info]
+        elif k == "trigger_targets":
+            tid = pd.info[0]
+            t = next(x for x in s.pending_triggers if x.tid == tid)
+            out = [A.ChooseTriggerTargets(p, tid, (tg,))
+                   for tg in casting.options_for_kinds(s, AB.SPEC_BY_KEY[t.key].targets)]
         out.append(A.Concede(p))                                          # always legal
         return out
 
@@ -318,16 +326,69 @@ class Game:
 
     # ================================================================ priority (CR 117)
     def _give_priority(self, player, passes=0):
-        self._run_sbas()                                                  # CR 117.5
-        if self.s.result is not None:
+        """CR 117.5: state-based actions, then triggered abilities go on the stack (603.3b),
+        repeated until neither happens; then `player` receives priority."""
+        s = self.s
+        while True:
+            self._run_sbas()
+            if s.result is not None:
+                return
+            if not s.pending_triggers:
+                break
+            if not self._stack_triggers(player):
+                return                                                    # waiting for a stacking decision
+            passes = 0                                                    # the stack changed (CR 117.4)
+        ops = [op("priority", player, passes), op("pending", "priority", player)]
+        if s.priority_resume is not None:
+            ops.append(op("priority_resume", None))
+        self._commit("priority", ops)
+
+    def _stack_triggers(self, player) -> bool:
+        """Put every pending trigger on the stack, active player's first (APNAP, CR 603.3b).
+        Returns False when a player must decide (order or targets); the decision resumes here."""
+        s = self.s
+        for p in (s.active, 1 - s.active):
+            while True:
+                mine = [t for t in s.pending_triggers if t.controller == p]
+                if not mine:
+                    break
+                if len(mine) >= 2:
+                    self._commit("pending", [op("priority_resume", (player,)),
+                                             op("pending", "order_triggers", p, tuple(t.tid for t in mine))])
+                    return False
+                if not self._stack_one(mine[0], player):
+                    return False
+        return True
+
+    def _stack_one(self, t, player) -> bool:
+        spec = AB.SPEC_BY_KEY[t.key]
+        if spec.targets:                                                   # CR 603.3d
+            if not casting.options_for_kinds(self.s, spec.targets):
+                self._commit("trigger_stack", [op("drop_trigger", t.tid, "no_legal_targets")])
+                return True
+            self._commit("pending", [op("priority_resume", (player,)),
+                                     op("pending", "trigger_targets", t.controller, (t.tid,))])
+            return False
+        self._commit("trigger_stack", [op("stack_trigger", t.tid)])
+        return True
+
+    def _do_OrderTrigger(self, a):
+        s = self.s
+        t = next(x for x in s.pending_triggers if x.tid == a.tid)
+        if not self._stack_one(t, s.priority_resume[0]):
             return
-        self._commit("priority", [op("priority", player, passes), op("pending", "priority", player)])
+        self._give_priority(s.priority_resume[0])
+
+    def _do_ChooseTriggerTargets(self, a):
+        s = self.s
+        self._commit("trigger_stack", [op("stack_trigger", a.tid, a.targets)])
+        self._give_priority(s.priority_resume[0])
 
     def _run_sbas(self):
         s = self.s
         # CR 117.5 needs the check before every priority grant; if every transition since the
         # last empty check only moved priority / a pending decision, the result cannot differ.
-        if self._sba_clean_at >= 0 and all(t.kind in ("priority", "pending")
+        if self._sba_clean_at >= 0 and all(t.kind in ("priority", "pending", "trigger_stack")
                                            for t in s.log.transitions[self._sba_clean_at:]):
             return
         while s.result is None:
@@ -404,9 +465,27 @@ class Game:
         self._commit("rollback", [op("note", "RollbackReason", reason), op("revert_cast", reverse_mana)])
 
     # ================================================================ resolution (CR 608)
+    def _resolve_ability(self, e):
+        s = self.s
+        if not AB.still_true(s, e):                                       # CR 603.4
+            self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityRemoved", e.sid)])
+            return
+        if e.targets:                                                     # CR 608.2b
+            kinds = AB.SPEC_BY_KEY[e.ability].targets
+            legal = [t for t in e.targets if casting.target_still_legal_kinds(s, t, kinds)]
+            if not legal:
+                self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityFizzled", e.sid)])
+                return
+        ops = AB.RESOLVE[e.ability](AB.context(s, e))
+        ops += [op("remove_entry", e.sid), op("note", "AbilityResolved", e.sid)]
+        self._commit("resolve", ops)
+
     def _resolve_top(self):
         s = self.s
         e = s.stack[-1]
+        if e.state == "ability":
+            self._resolve_ability(e)
+            return
         d = s.definition(e.ciid, is_ciid=True)
         if d.is_permanent_spell:                                          # CR 608.3a, 110.2
             ops = [op("remove_entry", e.sid), op("move", e.oid, "battlefield", "end", e.controller),

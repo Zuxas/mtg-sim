@@ -90,13 +90,29 @@ class DiscardToHandSize:
 
 
 @dataclass(frozen=True)
+class OrderTrigger:
+    """Put this pending triggered ability on the stack next (CR 603.3b: the controller orders
+    their own simultaneous triggers; staged one at a time so every order is reachable)."""
+    player: int
+    tid: int
+
+
+@dataclass(frozen=True)
+class ChooseTriggerTargets:
+    player: int
+    tid: int
+    targets: tuple
+
+
+@dataclass(frozen=True)
 class Concede:
     player: int
 
 
 ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCards, PassPriority, PlayLand,
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
-                                        ChooseBlock, AssignCombatDamage, DiscardToHandSize, Concede)}
+                                        ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
+                                        ChooseTriggerTargets, Concede)}
 
 
 def to_record(a) -> list:

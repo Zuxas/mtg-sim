@@ -52,6 +52,7 @@ class Observation:
     kept: tuple
     attackers: tuple
     blocks: tuple
+    pending_triggers: tuple         # ((tid, controller, ability key, source card name), ...) -- public
     my_attack_choices: tuple        # ((oid, attacks), ...) staged by this seat (active player only)
     my_block_choices: tuple         # ((blocker, attacker or None), ...) staged by this seat (defender only)
     my_divisions: tuple             # ((attacker, ((blocker, dmg), ...)), ...) staged by this seat (active only)
@@ -70,7 +71,10 @@ def observe(state, seat: int) -> Observation:
                                 state.power(oid) if d.is_creature else None,
                                 state.toughness(oid) if d.is_creature else None,
                                 oid in can_attack))
-    stack = tuple(StackView(e.sid, state.instances[e.ciid].name, e.controller, e.state, tuple(e.targets))
+    from engine.v2.abilities import ABILITY_NAMES
+    stack = tuple(StackView(e.sid, state.instances[e.ciid].name if e.state != "ability"
+                            else f"{ABILITY_NAMES[e.ability]} ({state.instances[e.ciid].name})",
+                            e.controller, e.state, tuple(e.targets))
                   for e in state.stack)
     opp = 1 - seat
     attacking, defending = seat == state.active, seat != state.active
@@ -87,6 +91,8 @@ def observe(state, seat: int) -> Observation:
         pending=state.pending.view() if state.pending else (),
         mull_counts=tuple(state.mull_count), kept=tuple(state.kept),
         attackers=tuple(state.attackers), blocks=tuple(sorted(state.blocks.items())),
+        pending_triggers=tuple((t.tid, t.controller, t.key, state.instances[t.ciid].name)
+                               for t in state.pending_triggers),
         my_attack_choices=tuple(sorted(state.attack_choices.items())) if attacking else (),
         my_block_choices=tuple(sorted(state.block_choices.items(), key=lambda kv: kv[0])) if defending else (),
         my_divisions=tuple(sorted(state.divisions.items())) if attacking else (),

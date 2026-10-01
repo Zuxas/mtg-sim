@@ -19,7 +19,11 @@ def creatures_on_battlefield(state) -> list:
 
 def target_options(state, effect_key, exclude_sid=None) -> list:
     """Legal target choices for a spell with `effect_key` (single-target spells only)."""
-    spec = TARGET_SPEC.get(effect_key)
+    return options_for_kinds(state, TARGET_SPEC.get(effect_key), exclude_sid)
+
+
+def options_for_kinds(state, spec, exclude_sid=None) -> list:
+    """Legal single targets of the given kinds (creature / player / spell)."""
     if not spec:
         return []
     out = []
@@ -44,6 +48,15 @@ def target_still_legal(state, target, effect_key) -> bool:
         e = state.entry(target[1])
         return e is not None and e.state == "cast"
     return False
+
+
+def target_still_legal_kinds(state, target, kinds) -> bool:
+    """CR 608.2b for an ability whose targets are of the given kinds."""
+    if target[0] == "obj" and "creature" not in kinds:
+        return False
+    if target[0] == "player" and "player" not in kinds:
+        return False
+    return target_still_legal(state, target, None)
 
 
 def sorcery_timing_ok(state, player) -> bool:

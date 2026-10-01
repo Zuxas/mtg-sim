@@ -46,6 +46,8 @@ def check(s, kind: str) -> None:
     for e in s.stack:
         if e.state == "proposed" and not str(e.sid).startswith("P"):
             _fail("I2 provisional id is not a ProvisionalStackId")
+        if e.state == "ability" and (e.oid is not None or not str(e.sid).startswith("A") or e.ability is None):
+            _fail("I2 ability stack entry must be a non-card object (A<n>, no ObjectId)")
     per_ciid = Counter(o.ciid for o in s.objects.values())
     if any(n != 1 for n in per_ciid.values()):
         _fail("I2 card instance with more than one live/suspended object")

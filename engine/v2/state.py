@@ -70,14 +70,24 @@ class GameState:
     first_strike_done: bool = False
     open_cast: object = None                               # dict while a casting transaction is open
     lost: list = field(default_factory=lambda: [None, None])
+    pending_triggers: tuple = ()                           # TriggerInstance records awaiting the stack (CR 603.3)
+    priority_resume: object = None                         # (player, passes) while triggers are being stacked
+    turn_effects: tuple = ()                               # TurnEffect records ending at cleanup (CR 514.2)
+    life_lost_turn: list = field(default_factory=lambda: [False, False])   # spectacle (CR 702.137a)
+    lands_entered_turn: list = field(default_factory=lambda: [0, 0])       # landfall (Searing Blaze)
+    continuation: object = None                            # paused resolution (typed, hashed)
+    pending_entry: object = None                           # land awaiting an "as it enters" choice (CR 614.12)
     result: object = None                                  # ("win", p, reason) | ("draw", reason)
     next_ciid: int = 1
     next_oid: int = 1
     next_prov: int = 1
+    next_tid: int = 1                                      # triggered-ability instance ids
+    next_ability: int = 1                                  # ability stack ids "A<n>"
     log: EventLog = field(default_factory=EventLog)
     def_by_ciid: dict = field(default_factory=dict)       # derived cache: ciid -> CardDefinition (not hashed)
     txn: dict = field(default_factory=dict)                # reducer transaction journal (not hashed)
     txn_open: bool = False
+    occ: list = field(default_factory=list)                # occurrences of the transition being committed
 
     # ------------------------------------------------------------ zone helpers (read-only)
     def zone(self, player, name) -> list:
@@ -118,12 +128,18 @@ class GameState:
             "blocked": list(self.blocked), "first_strike_done": self.first_strike_done,
             "draw_failed": list(self.draw_failed), "lost": list(self.lost), "result": self.result,
             "starting_player": self.starting_player,
+            "pending_triggers": [tuple(t) for t in self.pending_triggers],
+            "turn_effects": [tuple(t) for t in self.turn_effects],
+            "life_lost_turn": list(self.life_lost_turn), "lands_entered_turn": list(self.lands_entered_turn),
+            "continuation": tuple(self.continuation) if self.continuation else None,
+            "pending_entry": self.pending_entry,
         }
 
     def full_view(self) -> dict:
         v = self.rules_view()
         v["internals"] = {
             "next_ciid": self.next_ciid, "next_oid": self.next_oid, "next_prov": self.next_prov,
+            "next_tid": self.next_tid, "next_ability": self.next_ability, "priority_resume": self.priority_resume,
             "rng": hashlib.sha256(repr(self.rng.getstate()).encode()).hexdigest(),
             "open_cast": _canon(self.open_cast), "mull_bottoms": sorted(self.mull_bottoms.items()),
             "attack_choices": sorted(self.attack_choices.items()),

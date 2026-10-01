@@ -15,4 +15,9 @@ DECKOUT = _expand([("Island", 6), ("Divination", 4)])
 BURN_TEST = _expand([("Mountain", 12), ("Plains", 6), ("Lightning Bolt", 4), ("Lava Spike", 4),
                      ("Lightning Helix", 4), ("Raging Goblin", 4), ("Youthful Knight", 4), ("Hill Giant", 2)])
 
+# Test-only synthetic deck for triggered abilities (S1). Not a real list.
+TRIGGER_TEST = _expand([("Mountain", 14), ("Plains", 4), ("Monastery Swiftspear", 4), ("Goblin Guide", 4),
+                        ("Lightning Bolt", 4), ("Lava Spike", 4), ("Lightning Helix", 4), ("Raging Goblin", 2)])
+
 assert len(RG) == 40 and len(WU) == 40 and len(DECKOUT) == 10 and len(BURN_TEST) == 40
+assert len(TRIGGER_TEST) == 40

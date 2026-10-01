@@ -66,9 +66,8 @@ EFFECTS = {
 
 def check_registry():
     """Every SUPPORTED non-permanent card has an effect implementation (import-time)."""
-    from engine.v2.cards import SUPPORTED
-    missing = [n for n, (k, _v) in SUPPORTED.items()
-               if k not in EFFECTS and k not in ("basic_land", "vanilla_creature")]
+    from engine.v2.cards import PERMANENT_KEYS, SUPPORTED
+    missing = [n for n, (k, _v) in SUPPORTED.items() if k not in EFFECTS and k not in PERMANENT_KEYS]
     if missing:
         raise RuntimeError(f"SUPPORTED cards without an effect implementation: {missing}")
 

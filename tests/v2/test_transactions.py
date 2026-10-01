@@ -213,10 +213,21 @@ def test_shadow_failing_commit_restores_state_in_every_real_context():
         g.apply(next(a for a in g.legal_actions() if isinstance(a, A.ProposeCast) and a.oid == bears))
         tap_for(g, 0, "Forest")
         g.rollback_open_cast("fault injection")
+        for scenario in _shadow_scenarios():                        # card-level tests, re-run under shadow
+            scenario()
     finally:
         reducer.commit = real
     never = set(reducer.HANDLERS) - set(covered)
     assert never <= {"untap"}, sorted(never)                        # "untap" has no milestone-one caller
+
+
+def _shadow_scenarios():
+    """Milestone-two card tests whose commits exercise the new ops (each re-run under shadow)."""
+    from tests.v2 import test_triggers as T
+    return [T.test_multiple_prowess_triggers_need_an_ordering_decision,
+            T.test_goblin_guide_reveals_and_moves_a_land_to_hand,
+            T.test_targeted_trigger_chooses_targets_when_it_is_put_on_the_stack,
+            T.test_trigger_with_no_legal_targets_is_removed_from_the_stack]
 
 
 # ------------------------------------------------------------------ P1: hashes cover every change

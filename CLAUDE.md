@@ -224,7 +224,7 @@ is checked verbatim against the parsed entry (`tests/v2/test_rule_citations.py`)
 `definitions_hash` + installed oracle sha256 (SNAPSHOT.json). Replay: `engine.v2.record.make_record/replay`.
 Tests: `python tests/v2/test_m1_rules.py` (28), `test_m5_m6.py` (8), `test_rule_citations.py` (4); acceptance
 `python scripts/v2_acceptance.py` -> data/v2_acceptance.json (M2 10k fuzz 0 violations, M3 10k exact
-replays + fresh-process JSON replay, M4 1k scripted, M7 20.55 games/s CPU in the acceptance process / ~26 standalone vs target 200; determinism lint + guard in tests/v2/test_determinism.py; transactional commits + actions, every op emits an event, staged combat choices in observations: tests/v2/test_transactions.py). NOT wired to the launcher; legacy engines
+replays + fresh-process JSON replay, M4 1k scripted, M7 20.55 games/s CPU in the acceptance process / ~26 standalone vs target 200; determinism lint + guard in tests/v2/test_determinism.py; transactional commits + actions, every op emits an event, staged combat choices in observations: tests/v2/test_transactions.py; replay refuses pre-v2-m1.1 records with ReplayVersionError; registry 16 cards incl. Lava Spike + Lightning Helix (tests/v2/test_effects_burn.py); milestone two (Burn mirror) needs subsystems S1-S7 PROPOSED in harness/specs/2026-09-30-v2-m2-burn-mirror-proposal.md, awaiting approval). NOT wired to the launcher; legacy engines
 unchanged and still labelled experimental. Next (post-M1): effect library growth, a real matchup, Bo3.
 
 ### Exact card identity + versioned Scryfall snapshot — 2026-09-30

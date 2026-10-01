@@ -21,12 +21,24 @@ def compute(state) -> tuple:
         d = defs[o.ciid]
         if not d.is_creature:
             continue
-        t = (d.toughness or 0) + o.eot_toughness
+        t = state.toughness(oid)                                      # after continuous effects (CR 613.1)
         if t <= 0:                                                    # CR 704.5f
             ops.append(op("move", oid, "graveyard", "end"))
         elif o.damage >= t and not state.has_effect("indestructible", oid):   # 704.5g, 702.12b
             ops.append(op("note", "Destroyed", oid))
             ops.append(op("move", oid, "graveyard", "end"))
+    for eq, c in sorted(state.attachments.items()):                   # CR 704.5n
+        co = objs.get(c)
+        if co is None or co.zone != "battlefield" or not defs[co.ciid].is_creature:
+            ops.append(op("unattach", eq))
+    inst = state.instances
+    if len(inst) > len(state.config["decks"][0]) + len(state.config["decks"][1]):    # any token was created
+        for key, lst in state.zones.items():                          # CR 704.5d
+            if key == ("bf",):
+                continue
+            for oid in lst:
+                if inst[objs[oid].ciid].token:
+                    ops.append(op("cease_to_exist", oid))
     for p, reason in losers:
         ops.append(op("lose", p, reason))
     for p in (0, 1):

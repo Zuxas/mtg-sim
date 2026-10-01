@@ -86,6 +86,28 @@ def divination(ctx):
     return [op("draw", ctx.controller), op("draw", ctx.controller)]
 
 
+def mutagenic_growth(ctx):
+    # "Target creature gets +2/+2 until end of turn." ({G/P}: paid as announced, CR 107.4f)
+    return [op("eot_mod", t[1], 2, 2) for t in ctx.legal_targets if t[0] == "obj"]
+
+
+def violent_urge(ctx):
+    # "Target creature gets +1/+0 and gains first strike until end of turn. Delirium -- If there are four or
+    # more card types among cards in your graveyard, that creature gains double strike until end of turn."
+    # The delirium condition is read as the spell resolves (facts), while Violent Urge is still on the stack.
+    out = []
+    for t in ctx.legal_targets:
+        if t[0] == "obj":
+            out += [op("eot_mod", t[1], 1, 0), op("add_turn_effect", "first_strike", t[1])]
+            if ctx.facts[0]:
+                out.append(op("add_turn_effect", "double_strike", t[1]))
+    return out
+
+
+def lava_dart(ctx):
+    return [_damage(ctx, t, 1) for t in ctx.legal_targets]              # "1 damage to any target"
+
+
 EFFECTS = {
     "lightning_bolt": lightning_bolt,
     "giant_growth": giant_growth,
@@ -98,6 +120,9 @@ EFFECTS = {
     "searing_blaze": searing_blaze,
     "rift_bolt": rift_bolt,
     "skewer_the_critics": skewer_the_critics,
+    "mutagenic_growth": mutagenic_growth,
+    "violent_urge": violent_urge,
+    "lava_dart": lava_dart,
 }
 
 
@@ -105,6 +130,9 @@ def facts(state, key, entry) -> tuple:
     """Read-only facts an effect needs, taken at resolution."""
     if key == "searing_blaze":
         return (state.lands_entered_turn[entry.controller] > 0,)
+    if key == "violent_urge":
+        from engine.v2.rules.statics import delirium
+        return (delirium(state, entry.controller),)
     if key == "boros_charm" and entry.mode == 1:
         return (tuple(sorted(o for o in state.zones[("bf",)] if state.objects[o].controller == entry.controller)),)
     return ()
@@ -113,7 +141,9 @@ def facts(state, key, entry) -> tuple:
 def check_registry():
     """Every SUPPORTED non-permanent card has an effect implementation (import-time)."""
     from engine.v2.cards import PERMANENT_KEYS, SUPPORTED
-    missing = [n for n, (k, _v) in SUPPORTED.items() if k not in EFFECTS and k not in PERMANENT_KEYS]
+    from engine.v2.rules.library import LIBRARY            # spells whose resolution pauses for a library choice
+    missing = [n for n, (k, _v) in SUPPORTED.items() if k not in EFFECTS and k not in PERMANENT_KEYS
+               and k not in LIBRARY]
     if missing:
         raise RuntimeError(f"SUPPORTED cards without an effect implementation: {missing}")
 

@@ -25,6 +25,7 @@ class CastOcc(NamedTuple):            # a spell became cast (CR 601.2i)
     ciid: int
     creature: bool
     mana_spent: int
+    nth: int = 1                      # spells that player has cast this turn, this one included (flurry)
 
 
 class AttackOcc(NamedTuple):          # a creature was declared as an attacker (CR 508.1)
@@ -106,8 +107,29 @@ def _vortex_free_cast(s, src, occ):
     return None
 
 
+def _second_spell(s, src, occ):
+    # Flurry -- "Whenever you cast your second spell each turn" (spells cast before this permanent
+    # entered count too: card ruling)
+    if isinstance(occ, CastOcc) and occ.nth == 2 and occ.player == s.objects[src].controller:
+        return (occ.sid,)
+    return None
+
+
+def _self_enters(s, src, occ):
+    if isinstance(occ, EnterOcc) and occ.oid == src:                   # "When this land enters"
+        return ()
+    return None
+
+
+_PROWESS = TriggerSpec("prowess", "battlefield", _prowess, (CastOcc,))
 TRIGGERS = {                          # effect_key -> TriggerSpecs of that card
-    "monastery_swiftspear": (TriggerSpec("prowess", "battlefield", _prowess, (CastOcc,)),),
+    "monastery_swiftspear": (_PROWESS,),
+    "monk_token": (_PROWESS,),                                          # "creature token with prowess"
+    # "Whenever you cast a noncreature spell, surveil 1." / "...this creature gets +2/+0 until end of turn."
+    "dragons_rage_channeler": (TriggerSpec("drc_surveil", "battlefield", _prowess, (CastOcc,)),),
+    "slickshot_show_off": (TriggerSpec("slickshot_pump", "battlefield", _prowess, (CastOcc,)),),
+    "cori_steel_cutter": (TriggerSpec("flurry", "battlefield", _second_spell, (CastOcc,)),),
+    "thundering_falls": (TriggerSpec("falls_surveil", "battlefield", _self_enters, (EnterOcc,)),),
     "goblin_guide": (TriggerSpec("goblin_guide_reveal", "battlefield", _goblin_guide, (AttackOcc,)),),
     "roiling_vortex": (TriggerSpec("vortex_upkeep", "battlefield", _vortex_upkeep, (StepOcc,), ("upkeep",)),
                        TriggerSpec("vortex_free_cast", "battlefield", _vortex_free_cast, (CastOcc,))),
@@ -124,6 +146,34 @@ _STEPS = frozenset(st for specs in TRIGGERS.values() for t in specs for st in t.
 
 def _relevant(o) -> bool:
     return type(o) in _WANTED and (type(o) is not StepOcc or o.step in _STEPS)
+
+
+# ------------------------------------------------------------------ delayed triggered abilities (CR 603.7)
+class DelayedTrigger(NamedTuple):
+    did: int
+    controller: int                   # CR 603.7e: the controller of the ability that created it
+    source: int                       # CR 603.7e: same source as the creating ability (may be gone)
+    ciid: int
+    key: str
+    turn: int                         # "the next turn's upkeep": the turn number whose upkeep it waits for
+
+
+DELAYED_STEP = {"bauble_draw": "upkeep"}                               # delayed key -> the step it waits for
+
+
+def detect_delayed(state, occurrences) -> list:
+    """[(did, (controller, source, ciid, key, info))] for delayed triggers whose event occurred;
+    each triggers only once (CR 603.7b) -- the reducer removes it."""
+    if not state.delayed:
+        return []
+    out = []
+    for occ in occurrences:
+        if type(occ) is not StepOcc:
+            continue
+        for d in state.delayed:
+            if DELAYED_STEP[d.key] == occ.step and d.turn == state.turn and all(d.did != x for x, _t in out):
+                out.append((d.did, (d.controller, d.source, d.ciid, d.key, ())))
+    return out
 
 
 def detect(state, occurrences) -> list:
@@ -161,8 +211,8 @@ class ActivatedSpec(NamedTuple):
     tap: bool                         # {T} in the cost
     life: int                         # "Pay N life" (CR 119.4)
     sacrifice: bool                   # "Sacrifice this permanent"
-    targets: tuple = ()               # (none of the supported activated abilities target)
-    sorcery_speed: bool = False
+    targets: tuple = ()               # target kinds: "own_creature" (equip), "player"
+    sorcery_speed: bool = False       # "Activate only as a sorcery" (CR 602.5d)
 
 
 _CYCLE_DRAW = ActivatedSpec("land_draw", ("1",), True, 0, True)
@@ -174,9 +224,18 @@ ACTIVATED = {                         # effect_key -> activated (non-mana) abili
     "arid_mesa": (ActivatedSpec("fetch_mountain_plains", (), True, 1, True),),
     "bloodstained_mire": (ActivatedSpec("fetch_swamp_mountain", (), True, 1, True),),
     "roiling_vortex": (ActivatedSpec("vortex_no_lifegain", ("R",), False, 0, False),),   # {R}: ...
+    "scalding_tarn": (ActivatedSpec("fetch_island_mountain", (), True, 1, True),),
+    "wooded_foothills": (ActivatedSpec("fetch_mountain_forest", (), True, 1, True),),
+    # "Equip {1}{R}" = "{1}{R}: Attach this permanent to target creature you control. Activate only as a
+    # sorcery." (CR 702.6a)
+    "cori_steel_cutter": (ActivatedSpec("equip", ("1", "R"), False, 0, False, ("own_creature",), True),),
+    # "{T}, Sacrifice this artifact: Look at the top card of target player's library. Draw a card at the
+    # beginning of the next turn's upkeep."
+    "mishras_bauble": (ActivatedSpec("bauble_look", (), True, 0, True, ("player",)),),
 }
 # fetch ability key -> the land subtypes it searches for (CR 701.23a: "a Mountain or Plains card")
-FETCH_TYPES = {"fetch_mountain_plains": ("Mountain", "Plains"), "fetch_swamp_mountain": ("Swamp", "Mountain")}
+FETCH_TYPES = {"fetch_mountain_plains": ("Mountain", "Plains"), "fetch_swamp_mountain": ("Swamp", "Mountain"),
+               "fetch_island_mountain": ("Island", "Mountain"), "fetch_mountain_forest": ("Mountain", "Forest")}
 
 
 def fetch_matches(state, key, oid) -> bool:
@@ -205,11 +264,11 @@ def check_continuation(c) -> None:
     good = continuation(c.kind, c.sid, c.stage, c.data).digest
     if c.digest != good:
         raise RuntimeError(f"corrupted continuation {c}")
-assert all(not a.targets for specs in ACTIVATED.values() for a in specs)    # no targeted activations yet
 
 # ability key -> (zone its source must be in, target kinds)
 ABILITY_META = {t.key: (t.zone, t.targets) for specs in TRIGGERS.values() for t in specs}
 ABILITY_META.update({a.key: ("battlefield", a.targets) for specs in ACTIVATED.values() for a in specs})
+ABILITY_META.update({k: (None, ()) for k in DELAYED_STEP})              # no source zone: never "the same object"
 
 
 # ------------------------------------------------------------------ resolution
@@ -231,7 +290,15 @@ def _facts_goblin_guide(s, e):
     return (top, s.definition(top).is_land)
 
 
-FACTS = {"goblin_guide_reveal": _facts_goblin_guide}
+def _facts_equip(s, e):
+    return (s.attachments.get(e.source),)                              # what the Equipment is attached to now
+
+
+def _facts_bauble(s, e):
+    return (s.turn, e.ciid)
+
+
+FACTS = {"goblin_guide_reveal": _facts_goblin_guide, "equip": _facts_equip, "bauble_look": _facts_bauble}
 
 
 def still_true(s, e) -> bool:
@@ -283,7 +350,40 @@ def _res_vortex_no_lifegain(ctx):
     return [op("add_turn_effect", "no_lifegain", 1 - ctx.controller)]   # "Your opponents can't gain life this turn."
 
 
+def _res_slickshot_pump(ctx):
+    if not ctx.source_alive:
+        return [op("note", "PumpNoTarget", ctx.source)]
+    return [op("eot_mod", ctx.source, 2, 0)]
+
+
+def _res_equip(ctx):
+    """CR 702.6a / 701.3b: attach to the (still legal) target; nothing if the Equipment left the
+    battlefield, and nothing if it is already attached to that creature."""
+    (tgt,) = [t[1] for t in ctx.targets]
+    if not ctx.source_alive:
+        return [op("note", "EquipSourceGone", ctx.source)]
+    if ctx.facts[0] == tgt:
+        return [op("note", "AttachNoChange", ctx.source, tgt)]
+    return [op("attach", ctx.source, tgt)]
+
+
+def _res_bauble_look(ctx):
+    """Look at the top card of target player's library (privately), then create the delayed
+    trigger "Draw a card at the beginning of the next turn's upkeep." (CR 603.7a, 603.7e)."""
+    turn, ciid = ctx.facts
+    (p,) = [t[1] for t in ctx.targets]
+    return [op("look", ctx.controller, p), op("create_delayed", "bauble_draw", ctx.controller, ctx.source, ciid, turn + 1)]
+
+
+def _res_bauble_draw(ctx):
+    return [op("draw", ctx.controller)]
+
+
 RESOLVE = {
+    "slickshot_pump": _res_slickshot_pump,
+    "equip": _res_equip,
+    "bauble_look": _res_bauble_look,
+    "bauble_draw": _res_bauble_draw,
     "land_draw": _res_land_draw,
     "vortex_no_lifegain": _res_vortex_no_lifegain,
     "prowess": _res_prowess,
@@ -293,7 +393,13 @@ RESOLVE = {
     "vortex_free_cast": _res_vortex_free_cast,
 }
 
-ABILITY_NAMES = {"fetch_mountain_plains": "Search for a Mountain or Plains card",
+ABILITY_NAMES = {"fetch_island_mountain": "Search for an Island or Mountain card",
+                 "fetch_mountain_forest": "Search for a Mountain or Forest card",
+                 "equip": "Equip", "bauble_look": "Look at the top card of target player's library",
+                 "bauble_draw": "Draw a card (delayed)", "flurry": "Flurry: create a Monk token",
+                 "drc_surveil": "Surveil 1", "falls_surveil": "Surveil 1",
+                 "slickshot_pump": "Slickshot Show-Off +2/+0",
+                 "fetch_mountain_plains": "Search for a Mountain or Plains card",
                  "fetch_swamp_mountain": "Search for a Swamp or Mountain card",
                  "land_draw": "Draw a card", "vortex_no_lifegain": "Opponents can't gain life",
                  "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",

@@ -52,9 +52,10 @@ def check(s, kind: str) -> None:
     if any(n != 1 for n in per_ciid.values()):
         _fail("I2 card instance with more than one live/suspended object")
     # I1 conservation: exact CardInstanceId set per player, definitions and owners unchanged
+    # (tokens are not cards: they exist only until they cease to exist, CR 111.7)
     for p in (0, 1):
-        present = sorted(o.ciid for o in s.objects.values() if o.owner == p)
-        deck = sorted(c for c, inst in s.instances.items() if inst.owner == p)
+        present = sorted(o.ciid for o in s.objects.values() if o.owner == p and not s.instances[o.ciid].token)
+        deck = sorted(c for c, inst in s.instances.items() if inst.owner == p and not inst.token)
         if present != deck:
             _fail(f"I1 card conservation broken for player {p}")
     for i, name in enumerate(n for deck in s.config["decks"] for n in deck):
@@ -72,8 +73,18 @@ def check(s, kind: str) -> None:
     # I6 attackers tapped unless vigilance
     if kind == "declare_attackers":
         for a in s.attackers:
-            if not s.objects[a].tapped and not s.definition(a).has("Vigilance"):
+            if not s.objects[a].tapped and not s.has_kw(a, "Vigilance"):
                 _fail("I6 attacker not tapped")
+    # I8 an Equipment is attached only while it is on the battlefield; no token outside the battlefield
+    # when a player receives priority (state-based actions ran first, CR 117.5)
+    for eq in s.attachments:
+        o = s.objects.get(eq)
+        if o is None or o.zone != "battlefield":
+            _fail(f"I8 attachment of an Equipment not on the battlefield {eq}")
+    if kind == "priority":
+        for key, lst in s.zones.items():
+            if key != ("bf",) and any(s.instances[s.objects[x].ciid].token for x in lst):
+                _fail("I8 token outside the battlefield after state-based actions")
     # I7 hand size after cleanup
     if kind == "cleanup" and len(s.zones[(s.active, "hand")]) > 7:
         _fail("I7 hand larger than 7 after cleanup")

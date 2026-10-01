@@ -17,7 +17,9 @@ from typing import NamedTuple
 class TurnEffect(NamedTuple):
     """A typed duration-scoped effect ending at cleanup (CR 514.2). Kinds:
     no_lifegain (a = player, CR 119.7), no_prevention (a = None, CR 615.12),
-    indestructible (a = ObjectId, CR 702.12b), double_strike (a = ObjectId, CR 702.4b)."""
+    indestructible (a = ObjectId, CR 702.12b), double_strike (a = ObjectId, CR 702.4b),
+    first_strike (a = ObjectId, CR 702.7b), may_play (a = (player, ObjectId of an exiled card):
+    "You may play the exiled card this turn" -- Expressive Iteration)."""
     kind: str
     a: object = None
 
@@ -27,6 +29,7 @@ class CardInstance:
     ciid: int
     name: str
     owner: int
+    token: bool = False             # a token is not a card (CR 111.1); it is not part of card conservation
 
 
 @dataclass
@@ -42,10 +45,12 @@ class GameObject:
     eot_toughness: int = 0
     controlled_since: int = 0       # turn number when it came under its controller's control
     counters: tuple = ()            # ((kind, n), ...) sorted, e.g. (("time", 1),) on a suspended card
+    flashback: bool = False         # a spell cast with flashback: exiled whenever it would leave the stack (CR 702.34a)
 
     def rules_view(self) -> tuple:
         return (self.oid, self.ciid, self.owner, self.controller, self.zone, self.tapped,
-                self.damage, self.eot_power, self.eot_toughness, self.controlled_since, self.counters)
+                self.damage, self.eot_power, self.eot_toughness, self.controlled_since, self.counters,
+                self.flashback)
 
     def counter(self, kind: str) -> int:
         return dict(self.counters).get(kind, 0)

@@ -79,6 +79,13 @@ class GameState:
     lands_entered_turn: list = field(default_factory=lambda: [0, 0])       # landfall (Searing Blaze)
     continuation: object = None                            # paused resolution (typed, hashed)
     pending_entry: object = None                           # land awaiting an "as it enters" choice (CR 614.12)
+    spells_cast_turn: list = field(default_factory=lambda: [0, 0])         # spells each player cast this turn (flurry)
+    attachments: dict = field(default_factory=dict)        # Equipment ObjectId -> equipped creature ObjectId (CR 301.5a)
+    delayed: tuple = ()                                    # DelayedTrigger records awaiting their event (CR 603.7)
+    plotted: tuple = ()                                    # ((ObjectId in exile, turn it became plotted), ...) (CR 702.170)
+    known: tuple = ()                                      # ((viewer, library ObjectId), ...) cards a player looked at and
+                                                           # still knows (until the card leaves or the library is shuffled)
+    next_delayed: int = 1
     result: object = None                                  # ("win", p, reason) | ("draw", reason)
     next_ciid: int = 1
     next_oid: int = 1
@@ -87,7 +94,6 @@ class GameState:
     next_ability: int = 1                                  # ability stack ids "A<n>"
     log: EventLog = field(default_factory=EventLog)
     def_by_ciid: dict = field(default_factory=dict)       # derived cache: ciid -> CardDefinition (not hashed)
-    mana_by_ciid: dict = field(default_factory=dict)      # derived cache: ciid -> mana options (not hashed)
     mana_by_ciid: dict = field(default_factory=dict)      # derived cache: ciid -> mana options (not hashed)
     txn: dict = field(default_factory=dict)                # reducer transaction journal (not hashed)
     txn_open: bool = False
@@ -106,12 +112,15 @@ class GameState:
         return self.def_by_ciid[oid_or_ciid if is_ciid else self.objects[oid_or_ciid].ciid]
 
     def power(self, oid) -> int:
-        o = self.objects[oid]
-        return (self.definition(oid).power or 0) + o.eot_power
+        return _st.power(self, oid)
 
     def toughness(self, oid) -> int:
-        o = self.objects[oid]
-        return (self.definition(oid).toughness or 0) + o.eot_toughness
+        return _st.toughness(self, oid)
+
+    def has_kw(self, oid, keyword) -> bool:
+        """The object's keyword abilities right now: printed, granted by Equipment or a static ability
+        (delirium), or gained until end of turn (CR 611.3a, 613.1)."""
+        return _st.has_kw(self, oid, keyword)
 
     def has_effect(self, kind, a=None) -> bool:
         return any(e.kind == kind and e.a == a for e in self.turn_effects)
@@ -143,6 +152,8 @@ class GameState:
             "life_lost_turn": list(self.life_lost_turn), "lands_entered_turn": list(self.lands_entered_turn),
             "continuation": tuple(self.continuation) if self.continuation else None,
             "pending_entry": self.pending_entry,
+            "spells_cast_turn": list(self.spells_cast_turn), "attachments": sorted(self.attachments.items()),
+            "delayed": [tuple(d) for d in self.delayed], "plotted": list(self.plotted), "known": list(self.known),
         }
 
     def full_view(self) -> dict:
@@ -150,6 +161,7 @@ class GameState:
         v["internals"] = {
             "next_ciid": self.next_ciid, "next_oid": self.next_oid, "next_prov": self.next_prov,
             "next_tid": self.next_tid, "next_ability": self.next_ability, "priority_resume": self.priority_resume,
+            "next_delayed": self.next_delayed,
             "rng": hashlib.sha256(repr(self.rng.getstate()).encode()).hexdigest(),
             "open_cast": _canon(self.open_cast), "mull_bottoms": sorted(self.mull_bottoms.items()),
             "attack_choices": sorted(self.attack_choices.items()),
@@ -178,3 +190,6 @@ def _canon(x):
 def _hash(obj) -> str:
     return hashlib.sha256(json.dumps(_canon(obj), sort_keys=True, separators=(",", ":"), default=str)
                           .encode("utf-8")).hexdigest()
+
+
+from engine.v2.rules import statics as _st                    # noqa: E402 (pure; no import cycle)

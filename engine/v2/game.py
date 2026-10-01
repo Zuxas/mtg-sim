@@ -19,7 +19,8 @@ from engine.v2.effects import EFFECTS, EffectContext
 from engine.v2.effects import facts as effect_facts
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
-from engine.v2.rules import casting, combat, replacement, sba
+from engine.v2.rules import casting, combat, replacement, sba, statics
+from engine.v2.rules.library import LIBRARY, placements
 from engine.v2.rules.mana import (Avail, activatable_mana_options, avail_from, can_pay,
                                   payment_assignments, sources_with_options)
 from engine.v2.state import GameState
@@ -27,7 +28,7 @@ from engine.v2.state import GameState
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
          "first_strike_damage", "combat_damage", "end_combat", "main2", "end", "cleanup")
 RNG_ALGORITHM = f"python-random-mt19937/{platform.python_version()}"
-_ALT_KEYS = frozenset(AB.SPECTACLE) | frozenset(AB.SUSPEND)
+_SPECIAL_KEYS = frozenset(AB.SUSPEND) | frozenset(casting.PLOT)   # hand cards with a special action
 _ACTS: dict = {}
 _PRIO_OPS: dict = {}
 
@@ -196,20 +197,22 @@ class Game:
             out = [_act(A.PassPriority, p)]
             if timing and s.land_played[p] == 0:
                 out += [_act(A.PlayLand, p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
+                if s.turn_effects:                                        # a land exiled with a play permission
+                    out += [_act(A.PlayLand, p, oid) for oid in s.zones[(p, "exile")]
+                            if casting.can_play_land(s, p, oid)]
             out += [_act(A.ActivateManaAbility, p, oid, c) for oid, opts in srcs for c, _l in opts]
             out += self._activation_actions(p, timing)
             tgt: dict = {}
-            out += [_act(A.ProposeCast, p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
+            out += [_act(A.ProposeCast, p, oid, name) for oid, name in casting.cast_proposals(s, p, avail, timing, tgt)]
             defs, objs = s.def_by_ciid, s.objects
             for oid in hand:
                 key = defs[objs[oid].ciid].effect_key
-                if key not in _ALT_KEYS:
+                if key not in _SPECIAL_KEYS:
                     continue
-                if key in AB.SPECTACLE and casting.spectacle_ok(s, p) and \
-                        casting.can_propose_cast(s, p, oid, avail, timing, tgt, AB.SPECTACLE[key]):
-                    out.append(A.ProposeCast(p, oid, "spectacle"))                       # CR 702.137a
                 if key in AB.SUSPEND and casting.can_suspend(s, p, oid, timing):
                     out += [A.Suspend(p, oid, asg) for asg in payment_assignments(AB.SUSPEND[key][1], s.pools[p])]
+                if key in casting.PLOT and casting.can_plot(s, p, oid, timing):                # CR 702.170a
+                    out += [A.Plot(p, oid, asg) for asg in payment_assignments(casting.PLOT[key], s.pools[p])]
         elif k == "cast_mode":
             e = s.stack[-1]
             key = s.definition(e.ciid, is_ciid=True).effect_key
@@ -219,20 +222,27 @@ class Game:
             key = s.definition(e.ciid, is_ciid=True).effect_key
             out = [A.ChooseTargets(p, t) for t in casting.target_choices(s, key, e.mode, exclude_sid=e.sid)]
         elif k == "cast_mana":
-            e = s.stack[-1]
-            d = s.definition(e.ciid, is_ciid=True)
-            out = self._completing_mana_actions(p, s.open_cast["cost"])
-            out += [A.PayCost(p, asg) for asg in payment_assignments(s.open_cast["cost"], s.pools[p])]
+            oc = s.open_cast
+            out = self._completing_mana_actions(p, oc["cost"], oc["life_cost"])
+            if s.life[p] >= oc["life_cost"]:                              # CR 119.4
+                asgs = payment_assignments(oc["cost"], s.pools[p])
+                if oc["sac_cost"]:
+                    out += [A.PayCost(p, asg, (x,)) for asg in asgs
+                            for x in casting.sacrifice_options(s, p, oc["sac_cost"])]
+                else:
+                    out += [A.PayCost(p, asg) for asg in asgs]
         elif k == "declare_attack":
             oid = pd.info[0]
-            out = [_act(A.ChooseAttack, p, oid, True), _act(A.ChooseAttack, p, oid, False)]
+            out = [_act(A.ChooseAttack, p, oid, True)]
+            if not statics.must_attack(s, oid):                           # CR 508.1d: "attacks each combat if able"
+                out.append(_act(A.ChooseAttack, p, oid, False))
         elif k == "declare_block":
             b = pd.info[0]
             out = [A.ChooseBlock(p, b, None)] + [A.ChooseBlock(p, b, a) for a in s.attackers
                                                  if a in s.objects and combat.can_block(s, b, a)]
         elif k == "assign_damage":
-            a, blockers, power = pd.info
-            out = [A.AssignCombatDamage(p, a, div) for div in combat.divisions(power, list(blockers))]
+            a, blockers, power, lethal = pd.info
+            out = [A.AssignCombatDamage(p, a, div) for div in combat.divisions(power, list(blockers), lethal)]
         elif k == "discard":
             n = pd.info[0]
             out = [A.DiscardToHandSize(p, c) for c in combinations(sorted(s.zones[(p, "hand")]), n)]
@@ -251,17 +261,23 @@ class Game:
             out = [A.ChooseEntryPayment(p, oid, False)]                  # the tapped result is always allowed
             if replacement.can_pay_shock(s, p):
                 out.append(A.ChooseEntryPayment(p, oid, True))           # CR 119.4
+        elif k == "arrange":
+            c = s.continuation
+            kind = LIBRARY[c.data[0]][1]
+            out = [A.ArrangeCards(p, *pl) for pl in placements(kind, c.data[1:])]
+        elif k == "attach_choice":
+            out = [A.ChooseAttach(p, True), A.ChooseAttach(p, False)]
         elif k == "order_triggers":
             out = [A.OrderTrigger(p, tid) for tid in pd.info]
         elif k == "trigger_targets":
             tid = pd.info[0]
             t = next(x for x in s.pending_triggers if x.tid == tid)
             out = [A.ChooseTriggerTargets(p, tid, (tg,))
-                   for tg in casting.options_for_kinds(s, AB.SPEC_BY_KEY[t.key].targets)]
+                   for tg in casting.options_for_kinds(s, AB.ability_targets(t.key))]
         out.append(_act(A.Concede, p))                                    # always legal
         return out
 
-    def _completing_mana_actions(self, p, cost) -> list:
+    def _completing_mana_actions(self, p, cost, life_cost=0) -> list:
         """Mana abilities during 601.2g, limited to those after which the announced cost is still
         payable: a choice that made it unpayable would make the cast illegal and be rewound
         (CR 733), and the engine offers only actions with a legal completion (spec 7.4)."""
@@ -277,9 +293,12 @@ class Game:
                 continue
             rest = tuple(opts_all[:i] + opts_all[i + 1:])
             for c, life in opts:
+                left = s.life[p] - life - life_cost                       # life left after this activation
+                if left < 0:                                              # and the spell's own life payment
+                    continue
                 pool = dict(s.pools[p])
                 pool[c] = pool.get(c, 0) + 1
-                if can_pay(cost, Avail(pool, rest, s.life[p] - life)):    # life left after this activation
+                if can_pay(cost, Avail(pool, rest, left)):
                     out.append(_act(A.ActivateManaAbility, p, oid, c))
         return out
 
@@ -298,7 +317,12 @@ class Game:
             for i, spec in enumerate(specs):
                 if (spec.tap and o.tapped) or s.life[p] < spec.life or (spec.sorcery_speed and not timing):
                     continue
-                out += [A.ActivateAbility(p, oid, i, asg) for asg in payment_assignments(spec.mana, s.pools[p])]
+                asgs = payment_assignments(spec.mana, s.pools[p])
+                if not spec.targets:
+                    out += [A.ActivateAbility(p, oid, i, asg) for asg in asgs]
+                    continue
+                tgts = casting.activation_target_options(s, p, spec.targets)               # CR 602.2b, 601.2c
+                out += [A.ActivateAbility(p, oid, i, asg, (t,)) for asg in asgs for t in tgts]
         return out
 
     # ================================================================ mulligans (CR 103.5, staged)
@@ -462,9 +486,9 @@ class Game:
         return True
 
     def _stack_one(self, t, player) -> bool:
-        spec = AB.SPEC_BY_KEY[t.key]
-        if spec.targets:                                                   # CR 603.3d
-            if not casting.options_for_kinds(self.s, spec.targets):
+        kinds = AB.ability_targets(t.key)                                  # delayed triggers have no spec
+        if kinds:                                                          # CR 603.3d
+            if not casting.options_for_kinds(self.s, kinds):
                 self._commit("trigger_stack", [op("drop_trigger", t.tid, "no_legal_targets")])
                 return True
             self._commit("pending", [op("priority_resume", (player,)),
@@ -569,7 +593,7 @@ class Game:
         s = self.s
         o = s.objects[a.oid]
         spec = AB.ACTIVATED[s.definition(a.oid).effect_key][a.index]
-        ops = [op("push_ability", a.player, o.ciid, a.oid, spec.key, (), ())]
+        ops = [op("push_ability", a.player, o.ciid, a.oid, spec.key, (), a.targets)]
         ops += [op("spend_mana", a.player, c, n) for c, n in a.assignment]
         if spec.tap:
             ops.append(op("tap", a.oid))
@@ -584,8 +608,8 @@ class Game:
     def _do_ProposeCast(self, a):
         s = self.s
         key = s.definition(a.oid).effect_key
-        cost = AB.SPECTACLE[key] if a.cost == "spectacle" else None
-        ops = [op("open_cast", a.oid, a.player, a.cost, cost)]            # CR 601.2a-b
+        v = casting.variant(s, a.player, a.oid, a.cost)                   # the announced total cost (601.2b, f)
+        ops = [op("open_cast", a.oid, a.player, v.name, v.mana, v.life, v.sacrifice)]   # CR 601.2a-b
         nxt = "cast_mode" if key in casting.MODAL else ("cast_targets" if casting.target_slots(key) else "cast_mana")
         ops.append(op("pending", nxt, a.player))
         self._commit("cast_propose", ops)
@@ -604,6 +628,9 @@ class Game:
     def _do_PayCost(self, a):
         s = self.s
         ops = [op("spend_mana", a.player, c, n) for c, n in a.assignment]  # CR 601.2h
+        if s.open_cast["life_cost"]:
+            ops.append(op("pay_cost_life", a.player, s.open_cast["life_cost"]))
+        ops += [op("sacrifice_cost", a.player, x) for x in a.sacrifice]
         ops.append(op("commit_cast"))                                     # CR 601.2i
         c = s.continuation
         if c is not None and c.kind == "suspend":                         # cast during resolution (CR 608.2g):
@@ -624,6 +651,13 @@ class Game:
         n, _cost = AB.SUSPEND[s.definition(a.oid).effect_key]
         ops = [op("spend_mana", a.player, c, k) for c, k in a.assignment]
         ops += [op("note", "Suspended", ("ciid", s.objects[a.oid].ciid)), op("exile_with_counters", a.oid, "time", n)]
+        self._commit("special_action", ops)
+        self._give_priority(a.player)
+
+    def _do_Plot(self, a):
+        """CR 116.2k / 702.170a-b: pay the plot cost, exile the card; no stack; priority stays."""
+        ops = [op("spend_mana", a.player, c, k) for c, k in a.assignment]
+        ops.append(op("plot", a.oid))
         self._commit("special_action", ops)
         self._give_priority(a.player)
 
@@ -657,7 +691,7 @@ class Game:
             return True
         if e.targets:                                                     # CR 608.2b
             kinds = AB.ability_targets(e.ability)
-            legal = [t for t in e.targets if casting.target_still_legal_kinds(s, t, kinds)]
+            legal = [t for t in e.targets if casting.ability_target_still_legal(s, e.controller, t, kinds)]
             if not legal:
                 self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityFizzled", e.sid)])
                 return True
@@ -666,6 +700,10 @@ class Game:
                 op("set_continuation", AB.continuation("suspend", e.sid, "choose", (e.source,))),
                 op("pending", "suspend_cast_choice", e.controller, (e.source,))])
             return False
+        if e.ability in LIBRARY:                                          # paused: a private library choice
+            return self._start_library(e, e.ability)
+        if e.ability == "flurry":
+            return self._resolve_flurry(e)
         if e.ability in AB.FETCH_TYPES:                                   # paused: the searcher chooses
             self._commit("resolve_pause", [
                 op("set_continuation", AB.continuation("fetch", e.sid, "search", (e.ability,))),
@@ -706,6 +744,82 @@ class Game:
         if s.result is None:
             self._give_priority(s.active)
 
+    # ---------------------------------------------------------------- library decisions (S3)
+    def _start_library(self, e, lib_key) -> bool:
+        """Begin a resolution with a private library choice: ops before it (Serum Visions draws first),
+        then look at the top N cards (as many as there are, CR 609.3); with none, nothing is looked at
+        (CR 701.22b / 701.25c) and the resolution finishes."""
+        s = self.s
+        pre, kind, n, post = LIBRARY[lib_key]
+        if pre:
+            self._commit("resolve_step", [op(x, e.controller) for x in pre])
+        cards = tuple(s.zones[(e.controller, "library")][:n])
+        if not cards:
+            self._commit("resolve", [op(x, e.controller) for x in post] + self._resolution_tail(e))
+            return True
+        self._commit("resolve_pause", [
+            op("set_continuation", AB.continuation("library", e.sid, kind, (lib_key,) + cards)),
+            op("pending", "arrange", e.controller, (kind, len(cards)))])
+        return False
+
+    def _resolution_tail(self, e) -> list:
+        """The end of a resolution: an ability leaves the stack; an instant or sorcery is put into its
+        owner's graveyard (CR 608.2n) -- exiled instead after flashback (the reducer's replacement)."""
+        if e.state == "ability":
+            return [op("remove_entry", e.sid), op("note", "AbilityResolved", e.sid)]
+        return [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"), op("note", "SpellResolved", e.sid)]
+
+    def _finish_paused(self, ops):
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        e = s.entry(c.sid)
+        self._commit("resolve", list(ops) + [op("set_continuation", None)] + self._resolution_tail(e))
+        if s.result is None:
+            self._give_priority(s.active)
+
+    def _do_ArrangeCards(self, a):
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        lib_key = c.data[0]
+        post = LIBRARY[lib_key][3]
+        p = a.player
+        ops = [op("move", x, "graveyard", "end") for x in a.graveyard]        # surveil (CR 701.25a)
+        ops += [op("move", x, "hand", "end") for x in a.hand]                 # Expressive Iteration
+        ops += [op("exile_playable", x, p) for x in a.exile]
+        if a.top or a.bottom:
+            ops.append(op("arrange_library", p, a.top, a.bottom))
+        ops += [op(x, p) for x in post]                                      # Preordain: "then draw a card"
+        self._finish_paused(ops)
+
+    # ---------------------------------------------------------------- flurry (S5)
+    def _resolve_flurry(self, e) -> bool:
+        """"create a 1/1 white Monk creature token with prowess. You may attach this Equipment to it."
+        The choice follows immediately, with no player action in between (card ruling)."""
+        s = self.s
+        token = s.next_oid                                                # the token's ObjectId (allocated first)
+        ops = [op("create_token", e.controller, "Monk Token")]
+        o = s.objects.get(e.source)
+        if o is None or o.zone != "battlefield":                          # the Equipment is gone: can't attach
+            self._commit("resolve", ops + self._resolution_tail(e))
+            return True
+        self._commit("resolve_pause", ops + [
+            op("set_continuation", AB.continuation("flurry", e.sid, "attach", (token,))),
+            op("pending", "attach_choice", e.controller, (token,))])
+        if s.zones[("bf",)][-1] != token:
+            raise reducer.EngineInvariantError("flurry token id prediction failed")
+        return False
+
+    def _do_ChooseAttach(self, a):
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        e = s.entry(c.sid)
+        token = c.data[0]
+        ops = [op("attach", e.source, token)] if a.attach else [op("note", "AttachDeclined", e.source, token)]
+        self._finish_paused(ops)
+
     def _resolve_top(self) -> bool:
         """Resolve the top object; False if it paused for a player's choice."""
         s = self.s
@@ -724,6 +838,8 @@ class Game:
             self._commit("resolve", [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),
                                      op("note", "SpellFizzled", e.sid)])
             return True
+        if d.effect_key in LIBRARY:                                       # Preordain / Serum Visions / EI
+            return self._start_library(e, d.effect_key)
         ctx_targets = tuple(t if t[0] != "stack" else ("stack", t[1], s.entry(t[1]).oid) for t in legal)
         slots = tuple(t if good else None for t, good in zip(e.targets, ok))
         ops = EFFECTS[d.effect_key](EffectContext(e.controller, e.oid, ctx_targets, e.mode, slots,
@@ -766,12 +882,14 @@ class Game:
         s = self.s
         attackers = [x for x in s.attackers if x in s.objects and s.objects[x].zone == "battlefield"]
         for att in attackers:                                             # CR 510.1c divisions first
-            if not combat.deals_damage_now(s, att, first_step) or att in s.divisions:
+            if not combat.deals_damage_now(s, att, first_step) or att in s.divisions or att not in s.blocked:
                 continue
             bl = combat.living_blockers(s, att)
             power = s.power(att)
-            if len(bl) >= 2 and power > 0:
-                self._commit("pending", [op("pending", "assign_damage", s.active, (att, tuple(bl), power))])
+            trample = combat.has_trample(s, att)
+            if power > 0 and (len(bl) >= 2 or (trample and bl)):          # CR 702.19b: a choice even for one
+                lethal = tuple(combat.lethal_damage(s, b) for b in bl) if trample else None
+                self._commit("pending", [op("pending", "assign_damage", s.active, (att, tuple(bl), power, lethal))])
                 return
         ops = []
         defender = 1 - s.active
@@ -785,10 +903,17 @@ class Game:
                 ops.append(op("damage_player", att, defender, power))
                 continue
             bl = combat.living_blockers(s, att)
-            if len(bl) == 1:
+            if not bl:
+                if combat.has_trample(s, att):                            # CR 702.19d
+                    ops.append(op("damage_player", att, defender, power))
+                continue
+            if att not in s.divisions:                                    # exactly one blocker, no trample
                 ops.append(op("damage_creature", att, bl[0], power))
-            elif len(bl) >= 2:
-                ops += [op("damage_creature", att, b, n) for b, n in s.divisions[att] if n > 0]
+                continue
+            for b, n in s.divisions[att]:
+                if n > 0:
+                    ops.append(op("damage_player", att, defender, n) if b == "player"
+                               else op("damage_creature", att, b, n))
         for b, att in sorted(s.blocks.items()):
             if b not in s.objects or s.objects[b].zone != "battlefield":
                 continue

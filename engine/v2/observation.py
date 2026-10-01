@@ -19,6 +19,7 @@ class PermanentView:
     power: object
     toughness: object
     can_attack: bool                # CR 508.1a: eligible to be declared as an attacker right now
+    keywords: tuple = ()            # current combat keywords (printed, granted by Equipment / delirium / effects)
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,11 @@ class Observation:
     my_block_choices: tuple         # ((blocker, attacker or None), ...) staged by this seat (defender only)
     my_divisions: tuple             # ((attacker, ((blocker, dmg), ...)), ...) staged by this seat (active only)
     result: object
+    my_look: tuple = ()             # ((oid, name), ...) cards this seat is looking at for its library decision
+    my_known: tuple = ()            # ((library owner, position, oid, name), ...) library cards this seat knows
+    attachments: tuple = ()         # ((Equipment oid, equipped creature oid), ...) -- public
+    plotted: tuple = ()             # ((exiled oid, turn it became plotted), ...) -- public
+    spells_cast_turn: tuple = ()    # spells each player has cast this turn -- public
 
 
 def _search_view(state, seat) -> tuple:
@@ -71,6 +77,27 @@ def _search_view(state, seat) -> tuple:
     key = state.continuation.data[0]
     return tuple((oid, state.instances[state.objects[oid].ciid].name)
                  for oid in sorted(state.zones[(seat, "library")]) if fetch_matches(state, key, oid))
+
+
+def _look_view(state, seat) -> tuple:
+    pd = state.pending
+    if pd is None or pd.kind != "arrange" or pd.player != seat:
+        return ()
+    return tuple((oid, state.instances[state.objects[oid].ciid].name) for oid in state.continuation.data[1:])
+
+
+def _known_view(state, seat) -> tuple:
+    out = []
+    for viewer, oid in state.known:
+        o = state.objects.get(oid)
+        if viewer != seat or o is None or o.zone != "library":
+            continue
+        lib = state.zones[(o.owner, "library")]
+        out.append((o.owner, lib.index(oid), oid, state.instances[o.ciid].name))
+    return tuple(sorted(out))
+
+
+_KWS = ("Flying", "Haste", "Trample", "First strike", "Double strike", "Vigilance", "Prowess")
 
 
 def observe(state, seat: int) -> Observation:
@@ -84,7 +111,8 @@ def observe(state, seat: int) -> Observation:
         bf.append(PermanentView(oid, d.name, o.owner, o.controller, o.tapped, o.damage,
                                 state.power(oid) if d.is_creature else None,
                                 state.toughness(oid) if d.is_creature else None,
-                                oid in can_attack))
+                                oid in can_attack,
+                                tuple(k for k in _KWS if state.has_kw(oid, k)) if d.is_creature else ()))
     from engine.v2.abilities import ABILITY_NAMES
     stack = tuple(StackView(e.sid, state.instances[e.ciid].name if e.state != "ability"
                             else f"{ABILITY_NAMES[e.ability]} ({state.instances[e.ciid].name})",
@@ -113,4 +141,7 @@ def observe(state, seat: int) -> Observation:
         my_attack_choices=tuple(sorted(state.attack_choices.items())) if attacking else (),
         my_block_choices=tuple(sorted(state.block_choices.items(), key=lambda kv: kv[0])) if defending else (),
         my_divisions=tuple(sorted(state.divisions.items())) if attacking else (),
-        result=state.result)
+        result=state.result,
+        my_look=_look_view(state, seat), my_known=_known_view(state, seat) if state.known else (),
+        attachments=tuple(sorted(state.attachments.items())), plotted=tuple(state.plotted),
+        spells_cast_turn=tuple(state.spells_cast_turn))

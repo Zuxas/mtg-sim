@@ -163,8 +163,49 @@ def can_pay(symbols, avail) -> bool:
     return match(0, frozenset(), avail.life)
 
 
-def payable_with_sources(state, player, symbols, avail=None) -> bool:
-    return can_pay(symbols, available_mana(state, player) if avail is None else avail)
+def payable_with_sources(state, player, symbols, avail=None, life=0) -> bool:
+    """Can `symbols` be paid from the pool plus untapped sources while also paying `life` (a life
+    component of the announced cost, e.g. Phyrexian mana paid with life)? CR 119.4 / 118.3: the
+    life must be there when it is paid, and mana abilities with life costs share the same budget."""
+    avail = available_mana(state, player) if avail is None else avail
+    if life:
+        if isinstance(avail, dict):                                    # no life-cost sources in this case
+            if state.life[player] < life:
+                return False
+        else:
+            if avail.life < life:
+                return False
+            avail = avail._replace(life=avail.life - life)
+    return can_pay(symbols, avail)
+
+
+PHYREXIAN_LIFE = 2                                                     # CR 107.4f
+
+
+@lru_cache(maxsize=None)
+def mana_variants(symbols: tuple) -> tuple:
+    """The ways to announce a mana cost (CR 107.4f, 601.2b/f): each Phyrexian symbol "{X/P}" is paid
+    either with one X or with 2 life, chosen when the cost is determined. Returns
+    ((name, mana symbols, life), ...): "normal" pays every Phyrexian symbol with mana;
+    "phyrexian:<colours>" pays the listed Phyrexian symbols with life."""
+    plain = tuple(x for x in symbols if not x.endswith("/P"))
+    phy = sorted(x[:-2] for x in symbols if x.endswith("/P"))
+    if not phy:
+        return (("normal", tuple(symbols), 0),)
+    out, seen = [], set()
+    from itertools import combinations
+    for k in range(len(phy) + 1):
+        for idx in combinations(range(len(phy)), k):
+            life_cols = tuple(phy[i] for i in idx)
+            if life_cols in seen:
+                continue
+            seen.add(life_cols)
+            rest = list(phy)
+            for c in life_cols:
+                rest.remove(c)
+            name = "normal" if not life_cols else "phyrexian:" + "".join(life_cols)
+            out.append((name, plain + tuple(rest), PHYREXIAN_LIFE * len(life_cols)))
+    return tuple(out)
 
 
 def payment_assignments(symbols, pool: dict) -> list:

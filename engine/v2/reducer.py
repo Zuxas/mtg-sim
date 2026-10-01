@@ -53,7 +53,7 @@ _COPY = {
     "attack_choices": dict, "block_choices": dict, "blocks": dict, "divisions": dict,
     "retired": set,
     "life": list, "land_played": list, "draw_failed": list, "mull_count": list, "kept": list, "lost": list,
-    "life_lost_turn": list, "lands_entered_turn": list,
+    "life_lost_turn": list, "lands_entered_turn": list, "spells_cast_turn": list, "attachments": dict,
 }
 
 
@@ -203,7 +203,19 @@ def _move(s, oid, dest, position, controller, evs, tapped=False):
     o = s.objects[oid]
     src = o.zone
     _need(src != "suspended", f"move of suspended object {oid}")
+    if src == "stack" and o.flashback and dest != "exile":              # CR 702.34a: exile instead
+        evs.append(ev("ReplacedByExile", oid=oid, instead_of=dest))
+        dest, position = "exile", "end"
     _remove_from_zone(s, o)
+    if oid in s.attachments:                                            # the Equipment left: unattached
+        _keep(s, "attachments")
+        evs.append(ev("Unattached", equipment=oid, creature=s.attachments.pop(oid)))
+    if src == "library" and s.known:
+        _keep(s, "known")
+        s.known = tuple(k for k in s.known if k[1] != oid)
+    if src == "exile" and s.plotted:
+        _keep(s, "plotted")
+        s.plotted = tuple(x for x in s.plotted if x[0] != oid)
     _keep(s, "objects")
     _keep(s, "retired")
     del s.objects[oid]
@@ -247,7 +259,7 @@ TOUCHES = {
     "keep": ("kept",),
     "store_bottom": ("mull_bottoms",),
     "clear_bottoms": ("mull_bottoms",),
-    "begin_turn": ("turn", "active", "land_played", "life_lost_turn", "lands_entered_turn"),
+    "begin_turn": ("turn", "active", "land_played", "life_lost_turn", "lands_entered_turn", "spells_cast_turn"),
     "empty_pools": ("pools",),
     "priority": ("priority", "passes"),
     "pending": ("pending",),
@@ -258,7 +270,7 @@ TOUCHES = {
     "set_targets": ("stack",),
     "set_mode": ("stack",),
     "record_activation": ("open_cast",),
-    "commit_cast": ("objects", "retired", "stack", "open_cast"),
+    "commit_cast": ("objects", "retired", "stack", "open_cast", "spells_cast_turn"),
     "revert_cast": ("stack", "pools", "priority", "passes", "pending", "open_cast", "life"),
     "remove_entry": ("stack",),
     "attack_choice": ("attack_choices",),
@@ -284,6 +296,17 @@ TOUCHES = {
     "priority_resume": ("priority_resume",),
     "pending_entry": ("pending_entry",),
     "set_continuation": ("continuation",),
+    "create_token": ("next_ciid", "instances", "def_by_ciid", "objects"),
+    "cease_to_exist": ("objects", "retired"),
+    "attach": ("attachments",),
+    "unattach": ("attachments",),
+    "look": ("known",),
+    "arrange_library": ("known",),
+    "create_delayed": ("delayed", "next_delayed"),
+    "plot": ("plotted",),
+    "exile_playable": ("turn_effects",),
+    "pay_cost_life": ("life", "life_lost_turn", "open_cast"),
+    "sacrifice_cost": ("open_cast",),
 }
 
 
@@ -313,6 +336,10 @@ def _h_shuffle(s, evs, player):
     _keep_rng(s)
     lib = _zone(s, (player, "library"))
     s.rng.shuffle(lib)
+    if s.known:                                                         # a shuffled pile is unknown again
+        _keep(s, "known")
+        gone = set(lib)
+        s.known = tuple(k for k in s.known if k[1] not in gone)
     # The new order is hidden information: the event carries a digest keyed by the (secret) game
     # RNG state, so the transition hash still commits to the order without revealing it.
     commitment = hashlib.sha256((repr(tuple(lib)) + repr(s.rng.getstate())).encode()).hexdigest()[:24]
@@ -418,6 +445,7 @@ def _h_begin_turn(s, evs, turn, active):
     s.land_played = [0, 0]
     s.life_lost_turn = [False, False]
     s.lands_entered_turn = [0, 0]
+    s.spells_cast_turn = [0, 0]
     evs.append(ev("TurnBegan", turn=turn, active=active))
 
 
@@ -508,12 +536,15 @@ def _h_spend_mana(s, evs, player, color, n):
     evs.append(ev("ManaSpent", player=player, color=color, n=n))
 
 
-def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbols=None):
+def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbols=None, life=0, sacrifice=None):
     """CR 601.2a-b: the card moves to the stack as a proposed spell; the announced cost (its mana
-    cost, an alternative cost, or "free") is fixed for the whole casting transaction."""
+    cost, an alternative cost, or "free") is fixed for the whole casting transaction, including a
+    life component (Phyrexian mana paid with life, CR 107.4f) and a sacrifice component (a flashback
+    cost "Sacrifice a <subtype>", CR 702.34a)."""
     _need(s.open_cast is None, "nested casting transaction")
     o = s.objects[source_oid]
-    _need(o.zone in ("hand", "exile") and o.owner == controller, "cast from outside the caster's hand/exile")
+    _need(o.zone in ("hand", "exile", "graveyard") and o.owner == controller,
+          "cast from outside the caster's hand/exile/graveyard")
     if cost_symbols is None:
         cost_symbols = s.def_by_ciid[o.ciid].cost_symbols
     frm = o.zone
@@ -524,7 +555,8 @@ def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbol
     s.stack.append(StackEntry(sid=prov, ciid=o.ciid, controller=controller, state="proposed", cost=cost_name))
     s.open_cast = {"prov": prov, "source": source_oid, "from": frm, "index": idx, "controller": controller,
                    "activations": [], "paid": {}, "priority": s.priority, "passes": s.passes,
-                   "pending": s.pending.view() if s.pending else None, "cost": tuple(cost_symbols)}
+                   "pending": s.pending.view() if s.pending else None, "cost": tuple(cost_symbols),
+                   "cost_name": cost_name, "life_cost": life, "life_paid": 0, "sac_cost": sacrifice, "sacrificed": ()}
     evs.append(ev("CastProposed", prov=prov, ciid=o.ciid, controller=controller, frm=frm, cost=cost_name,
                   **({} if frm in _HIDDEN_ZONES else {"source": source_oid})))
 
@@ -554,19 +586,23 @@ def _h_commit_cast(s, evs):
     _need(oc is not None, "commit without an open cast")
     cost_symbols = oc["cost"]                                             # the announced cost (CR 601.2f)
     _need(_covers(cost_symbols, oc["paid"]), f"payment {oc['paid']} does not match cost {cost_symbols}")  # CR 601.2h
+    _need(oc["life_paid"] == oc["life_cost"], "life component of the cost not paid")
+    _need(len(oc["sacrificed"]) == (1 if oc["sac_cost"] else 0), "sacrifice component of the cost not paid")
     src = s.objects[oc["source"]]
     del s.objects[oc["source"]]
     s.retired.add(oc["source"])
     new = _alloc_oid(s)
     s.objects[new] = GameObject(oid=new, ciid=src.ciid, owner=src.owner, controller=oc["controller"],
-                                zone="stack", controlled_since=s.turn)
+                                zone="stack", controlled_since=s.turn, flashback=oc["cost_name"] == "flashback")
     e = s.entry(oc["prov"])
     e.sid, e.state, e.oid = f"O{new}", "cast", new
     e.mana_spent = sum(oc["paid"].values())                               # recorded for "no mana spent" checks
     s.open_cast = None
     evs.append(ev("SpellCast", sid=e.sid, oid=new, ciid=src.ciid, controller=e.controller, mana_spent=e.mana_spent,
                   frm=oc["from"], **({} if oc["from"] in _HIDDEN_ZONES else {"retired": oc["source"]})))
-    s.occ.append(AB.CastOcc(e.controller, e.sid, src.ciid, s.def_by_ciid[src.ciid].is_creature, e.mana_spent))
+    s.spells_cast_turn[e.controller] += 1
+    s.occ.append(AB.CastOcc(e.controller, e.sid, src.ciid, s.def_by_ciid[src.ciid].is_creature, e.mana_spent,
+                            s.spells_cast_turn[e.controller]))
 
 
 def _covers(symbols, paid) -> bool:
@@ -587,7 +623,7 @@ def _h_revert_cast(s, evs, reverse_mana):
     """CR 733.1 rollback of an open casting transaction: restore the suspended ObjectId."""
     oc = s.open_cast
     _need(oc is not None, "revert without an open cast")
-    _need(not oc["paid"], "revert after payment")
+    _need(not oc["paid"] and not oc["life_paid"] and not oc["sacrificed"], "revert after payment")
     src = _obj(s, oc["source"])
     src.zone = oc["from"]
     _zone(s, (src.owner, oc["from"])).insert(oc["index"], src.oid)
@@ -627,7 +663,7 @@ def _h_declare_attackers(s, evs, attackers):
     for a in attackers:
         o = s.objects[a]
         _need(o.zone == "battlefield" and o.controller == s.active and not o.tapped, "illegal attacker")
-        if not s.definition(a).has("Vigilance"):          # CR 508.1f, 702.20b
+        if not s.has_kw(a, "Vigilance"):                  # CR 508.1f, 702.20b
             _obj(s, a).tapped = True
             evs.append(ev("Tapped", oid=a))
     s.attackers = tuple(attackers)
@@ -642,8 +678,8 @@ def _h_declare_blockers(s, evs, blocks):
         o = s.objects[b]
         _need(o.zone == "battlefield" and not o.tapped and o.controller != s.active, "illegal blocker")
         _need(a in s.attackers, "block of a non-attacker")
-        if s.definition(a).has("Flying"):                 # CR 702.9b
-            _need(s.definition(b).has("Flying"), "non-flyer blocks a flyer")
+        if s.has_kw(a, "Flying"):                         # CR 702.9b
+            _need(s.has_kw(b, "Flying"), "non-flyer blocks a flyer")
     s.blocks = dict(blocks)
     s.blocked = tuple(sorted({a for _b, a in blocks}))
     s.block_choices = {}
@@ -713,7 +749,8 @@ def _h_gain_life(s, evs, player, n):
 
 
 def _h_add_turn_effect(s, evs, kind, a=None):
-    _need(kind in ("no_lifegain", "no_prevention", "indestructible", "double_strike"), f"turn effect {kind}")
+    _need(kind in ("no_lifegain", "no_prevention", "indestructible", "double_strike", "first_strike", "may_play"),
+          f"turn effect {kind}")
     eff = TurnEffect(kind, a)
     if eff not in s.turn_effects:
         s.turn_effects = s.turn_effects + (eff,)
@@ -792,6 +829,122 @@ def _h_reveal(s, evs, player, oid):
     evs.append(ev("Revealed", player=player, ciid=o.ciid, zone=o.zone, name=s.instances[o.ciid].name))
 
 
+def _h_create_token(s, evs, controller, name):
+    """CR 111.1 / 111.10: a predefined token enters the battlefield (a new card-less instance)."""
+    from engine.v2.cards import definitions
+    ciid = s.next_ciid
+    s.next_ciid += 1
+    s.instances[ciid] = CardInstance(ciid, name, controller, token=True)
+    s.def_by_ciid[ciid] = definitions()[name]
+    oid = _alloc_oid(s)
+    s.objects[oid] = GameObject(oid=oid, ciid=ciid, owner=controller, controller=controller, zone="battlefield",
+                                controlled_since=s.turn)
+    _zone(s, ("bf",)).append(oid)
+    evs.append(ev("TokenCreated", ciid=ciid, name=name, controller=controller, oid=oid))
+    s.occ.append(AB.EnterOcc(oid, controller, False))
+
+
+def _h_cease_to_exist(s, evs, oid):
+    """CR 704.5d / 111.7: a token in a zone other than the battlefield ceases to exist."""
+    o = s.objects.get(oid)
+    _need(o is not None and s.instances[o.ciid].token and o.zone not in ("battlefield", "stack", "suspended"),
+          f"cease_to_exist of {oid}")
+    _remove_from_zone(s, o)
+    del s.objects[oid]
+    s.retired.add(oid)
+    evs.append(ev("TokenCeasedToExist", oid=oid, ciid=o.ciid))
+
+
+def _h_attach(s, evs, equipment, creature):
+    """CR 701.3a: attach the Equipment to the creature (moving it from anything else, CR 301.5c)."""
+    e, c = s.objects.get(equipment), s.objects.get(creature)
+    _need(e is not None and e.zone == "battlefield" and "Equipment" in s.def_by_ciid[e.ciid].subtypes, "attach of a non-Equipment")
+    _need(c is not None and c.zone == "battlefield" and s.def_by_ciid[c.ciid].is_creature, "attach to a non-creature")
+    prev = s.attachments.get(equipment)
+    s.attachments[equipment] = creature
+    evs.append(ev("Attached", equipment=equipment, creature=creature, previous=prev))
+
+
+def _h_unattach(s, evs, equipment):
+    """CR 704.5n: an Equipment attached to an illegal permanent becomes unattached; it stays."""
+    _need(equipment in s.attachments, f"unattach of {equipment}")
+    evs.append(ev("Unattached", equipment=equipment, creature=s.attachments.pop(equipment)))
+
+
+def _h_look(s, evs, viewer, library_owner):
+    """Look at the top card of a library: only the viewer learns it (it joins the viewer's known
+    cards); the log keeps a commitment, never the card."""
+    lib = s.zones[(library_owner, "library")]
+    if not lib:
+        evs.append(ev("LookedAt", player=viewer, library=library_owner, n=0))
+        return
+    top = lib[0]
+    if (viewer, top) not in s.known:
+        s.known = s.known + ((viewer, top),)
+    evs.append(ev("LookedAt", player=viewer, library=library_owner, n=1,
+                  commitment=_hidden(s, ("look", viewer, top, s.objects[top].ciid))))
+
+
+def _h_arrange_library(s, evs, player, top, bottom):
+    """Scry / Expressive Iteration: the chosen cards go on top (top[0] = new top card) and on the
+    bottom (in order) of the player's library -- the same objects (no zone change). The player
+    knows where they went; the log carries counts (public) and a commitment (the cards are hidden)."""
+    lib = _zone(s, (player, "library"))
+    moved = list(top) + list(bottom)
+    _need(len(set(moved)) == len(moved) and all(x in lib for x in moved), "arrange of cards not in the library")
+    rest = [x for x in lib if x not in moved]
+    lib[:] = list(top) + rest + list(bottom)
+    new_known = tuple((player, x) for x in moved if (player, x) not in s.known)
+    if new_known:
+        s.known = s.known + new_known
+    evs.append(ev("LibraryArranged", player=player, top=len(top), bottom=len(bottom),
+                  commitment=_hidden(s, ("arrange", tuple(top), tuple(bottom)))))
+
+
+def _h_create_delayed(s, evs, key, controller, source, ciid, turn):
+    """CR 603.7a: a delayed triggered ability created during resolution; it triggers once (603.7b)."""
+    did = s.next_delayed
+    s.next_delayed += 1
+    s.delayed = s.delayed + (AB.DelayedTrigger(did, controller, source, ciid, key, turn),)
+    evs.append(ev("DelayedTriggerCreated", did=did, key=key, controller=controller, turn=turn))
+
+
+def _h_exile_playable(s, evs, oid, player):
+    """Expressive Iteration: exile the card (face up, public); "You may play the exiled card this turn"
+    -- a permission for that new object, ending with the turn (CR 514.2)."""
+    new = _move(s, oid, "exile", "end", None, evs)
+    eff = TurnEffect("may_play", (player, new))
+    s.turn_effects = s.turn_effects + (eff,)
+    evs.append(ev("TurnEffectAdded", effect="may_play", a=(player, new)))
+
+
+def _h_plot(s, evs, oid):
+    """CR 702.170a-b: exile the card from hand; it becomes a plotted card (this turn recorded)."""
+    _need(s.objects[oid].zone == "hand", "plot from outside the hand")
+    new = _move(s, oid, "exile", "end", None, evs)
+    s.plotted = s.plotted + ((new, s.turn),)
+    evs.append(ev("Plotted", oid=new, turn=s.turn))
+
+
+def _h_pay_cost_life(s, evs, player, n):
+    """The life component of a spell's announced total cost (CR 107.4f, 601.2h, 119.4)."""
+    oc = s.open_cast
+    _need(oc is not None and oc["controller"] == player and oc["life_paid"] + n <= oc["life_cost"], "life cost")
+    _h_pay_life(s, evs, player, n)
+    s.open_cast = {**oc, "life_paid": oc["life_paid"] + n}
+
+
+def _h_sacrifice_cost(s, evs, player, oid):
+    """The sacrifice component of a spell's announced cost (flashback "Sacrifice a Mountain")."""
+    oc = s.open_cast
+    o = s.objects.get(oid)
+    _need(oc is not None and oc["sac_cost"] and not oc["sacrificed"], "sacrifice cost not owed")
+    _need(o is not None and o.zone == "battlefield" and o.controller == player
+          and oc["sac_cost"] in s.def_by_ciid[o.ciid].subtypes, "sacrifice of a permanent that does not pay the cost")
+    _h_sacrifice(s, evs, oid)
+    s.open_cast = {**oc, "sacrificed": (oid,)}
+
+
 def _add_triggers(s, evs, found):
     _keep(s, "pending_triggers")
     _keep(s, "next_tid")
@@ -812,7 +965,11 @@ HANDLERS = {n[3:]: f for n, f in globals().items() if n.startswith("_h_")}
 # ops that can create a state-based-action condition (CR 704.5a/b/f/g): life, damage, draws,
 # zone changes, P/T changes, cleanup, player loss. Every other op leaves SBA results unchanged.
 _SBA_OPS = frozenset({"damage_player", "damage_creature", "pay_life", "draw", "move", "sacrifice",
-                      "exile_with_counters", "eot_mod", "cleanup_wear_off", "lose", "revert_cast"})
+                      "exile_with_counters", "eot_mod", "cleanup_wear_off", "lose", "revert_cast",
+                      # milestone four: graveyard contents (delirium), attachments (Equipment P/T, 704.5n),
+                      # tokens (704.5d), life paid as a cost
+                      "open_cast", "commit_cast", "create_token", "cease_to_exist", "attach", "unattach",
+                      "plot", "pay_cost_life", "sacrifice_cost", "add_turn_effect", "exile_playable"})
 assert _SBA_OPS <= set(HANDLERS), _SBA_OPS - set(HANDLERS)
 # op name -> (handler, ((attr, copier), ...)): one lookup per op on the hot path
 _DISPATCH = {n: (h, tuple((a, _COPY.get(a, _same)) for a in TOUCHES.get(n, ()))) for n, h in HANDLERS.items()}
@@ -840,7 +997,13 @@ def commit(s, kind: str, ops) -> None:
                 raise EngineInvariantError(f"op {name} produced no event")          # spec section 8
         if s.occ:                                                     # CR 603.2: triggers of this batch
             found = AB.detect(s, s.occ)
+            fired = AB.detect_delayed(s, s.occ)
             s.occ.clear()
+            if fired:                                                 # CR 603.7b: each triggers only once
+                _keep(s, "delayed")
+                done = {did for did, _t in fired}
+                s.delayed = tuple(d for d in s.delayed if d.did not in done)
+                found = found + [t for _did, t in fired]
             if found:
                 _add_triggers(s, evs, found)
         if not _SBA_OPS.isdisjoint(o.name for o in ops):

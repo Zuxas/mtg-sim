@@ -13,14 +13,14 @@ def eligible_attackers(state) -> list:
         d = state.definition(oid)
         if not d.is_creature or o.controller != state.active or o.tapped:
             continue
-        if o.controlled_since < state.turn or d.has("Haste"):
+        if o.controlled_since < state.turn or state.has_kw(oid, "Haste"):
             out.append(oid)
     return sorted(out)
 
 
 def can_block(state, blocker, attacker) -> bool:
     """CR 509.1a untapped; CR 702.9b flying."""
-    if state.definition(attacker).has("Flying") and not state.definition(blocker).has("Flying"):
+    if state.has_kw(attacker, "Flying") and not state.has_kw(blocker, "Flying"):
         return False
     return True
 
@@ -37,11 +37,11 @@ def potential_blockers(state) -> list:
 
 
 def has_first_strike(state, oid) -> bool:
-    return state.definition(oid).has("First strike")
+    return state.has_kw(oid, "First strike")                          # printed or gained (CR 702.7b)
 
 
 def has_double_strike(state, oid) -> bool:
-    return state.definition(oid).has("Double strike") or state.has_effect("double_strike", oid)
+    return state.has_kw(oid, "Double strike")
 
 
 def strikes_first(state, oid) -> bool:
@@ -74,11 +74,32 @@ def living_blockers(state, attacker) -> list:
                   if a == attacker and b in state.objects and state.objects[b].zone == "battlefield")
 
 
-def divisions(power: int, blockers: list) -> list:
-    """Every division of `power` among `blockers` (CR 510.1c: as its controller chooses)."""
+def divisions(power: int, blockers: list, lethal=None) -> list:
+    """Every division of `power` among `blockers` (CR 510.1c: as its controller chooses). With
+    trample (`lethal` = lethal damage per blocker, given), the division may also assign damage to the
+    defending player -- the ("player", n) entry -- but only once every blocker is assigned lethal
+    damage (CR 702.19b)."""
     k = len(blockers)
     out = []
-    for parts in product(range(power + 1), repeat=k):
-        if sum(parts) == power:
-            out.append(tuple(zip(blockers, parts)))
+    if lethal is None:
+        for parts in product(range(power + 1), repeat=k):
+            if sum(parts) == power:
+                out.append(tuple(zip(blockers, parts)))
+        return out
+    for parts in product(range(power + 1), repeat=k + 1):
+        if sum(parts) != power:
+            continue
+        to_player = parts[-1]
+        if to_player and any(parts[i] < lethal[i] for i in range(k)):
+            continue
+        out.append(tuple(zip(blockers, parts[:k])) + (("player", to_player),))
     return out
+
+
+def has_trample(state, oid) -> bool:
+    return state.has_kw(oid, "Trample")
+
+
+def lethal_damage(state, oid) -> int:
+    """Damage that is lethal now, counting damage already marked (CR 702.19b, 120.6)."""
+    return max(0, state.toughness(oid) - state.objects[oid].damage)

@@ -103,12 +103,17 @@ class SimpleAggroPolicy:
     returns one of the offered actions and knows only public card types. Plays a land, casts
     what it can (burn at the opponent's face, creatures, Boros Charm's damage mode), activates
     fetch lands, attacks with everything, never blocks, pays for shock lands above 10 life,
-    always casts a suspended card, keeps 2-4-land hands. Not tuned for win rate."""
+    always casts a suspended card, keeps 2-4-land hands. Milestone four (generic, untuned): plots like
+    it suspends, floats mana to equip an unattached Equipment, pumps its own creatures, attaches the
+    flurry token, makes library decisions at random (seeded). Not tuned for win rate."""
 
     def __init__(self, seed: int = 0):
         self.rng = random.Random(seed)
         from engine.v2.cards import definitions
-        self.lands = {n for n, d in definitions().items() if d.is_land}
+        defs = definitions()
+        self.lands = {n for n, d in defs.items() if d.is_land}
+        self.equipment = {n for n, d in defs.items() if "Equipment" in d.subtypes}
+        self.pumps = {n for n, d in defs.items() if d.effect_key in ("giant_growth", "mutagenic_growth", "violent_urge")}
 
     def choose(self, obs, actions):
         kind = obs.pending[0] if obs.pending else ""
@@ -132,11 +137,14 @@ class SimpleAggroPolicy:
                 return by(A.PlayLand)[0]
             if mine_turn and not obs.stack:
                 fetch = [a for a in by(A.ActivateAbility) if obs.life[me] > 5]
-                casts = by(A.ProposeCast) + by(A.Suspend)
+                casts = by(A.ProposeCast) + by(A.Suspend) + by(A.Plot)
                 if casts:
                     return self.rng.choice(casts)
                 if fetch:
                     return fetch[0]
+                float_ = self._float_for_equip(obs, by(A.ActivateManaAbility))
+                if float_ is not None:
+                    return float_
             if obs.stack and obs.stack[-1].controller == opp:
                 burn = [a for a in by(A.ProposeCast) if names.get(a.oid) in ("Lightning Bolt", "Lightning Helix",
                                                                           "Boros Charm", "Skullcrack")]
@@ -148,6 +156,11 @@ class SimpleAggroPolicy:
             return next((a for a in modes if a.mode == 0), modes[0])
         if kind == "cast_targets":
             opts = by(A.ChooseTargets)
+            if obs.stack and obs.stack[-1].name in self.pumps:              # pump spells: own creatures
+                mine = [a for a in opts if a.targets[0][0] == "obj" and a.targets[0][1] in
+                        {p.oid for p in obs.battlefield if p.controller == me}]
+                if mine:
+                    return self.rng.choice(mine)
             face = [a for a in opts if a.targets[0] == ("player", opp)]
             foes = [a for a in opts if a.targets[0][0] == "obj" and a.targets[0][1] in
                     {p.oid for p in obs.battlefield if p.controller == opp}]
@@ -167,4 +180,22 @@ class SimpleAggroPolicy:
             return found[0] if found else by(A.ChooseSearchResult)[0]
         if kind == "suspend_cast_choice":
             return next((a for a in by(A.ChooseSuspendCast) if a.cast), by(A.ChooseSuspendCast)[0])
+        if kind == "arrange":
+            return self.rng.choice(by(A.ArrangeCards))
+        if kind == "attach_choice":
+            return next(a for a in by(A.ChooseAttach) if a.attach)
         return [a for a in actions if not isinstance(a, A.Concede)][0]
+
+    def _float_for_equip(self, obs, mana_acts):
+        """Float {1}{R} for an equip when an Equipment is unattached and a creature could carry it."""
+        me = obs.seat
+        attached = {e for e, _c in obs.attachments}
+        free_eq = [p for p in obs.battlefield if p.controller == me and p.name in self.equipment and p.oid not in attached]
+        creatures = [p for p in obs.battlefield if p.controller == me and p.power is not None]
+        pool = dict(obs.my_pool)
+        if not free_eq or not creatures or sum(pool.values()) >= 2 or len(mana_acts) < 2 - sum(pool.values()):
+            return None
+        red = [a for a in mana_acts if a.color == "R"]
+        if not pool.get("R") and red:
+            return red[0]
+        return mana_acts[0] if pool.get("R") else None

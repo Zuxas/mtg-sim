@@ -49,11 +49,13 @@ class ActivateManaAbility:
 @dataclass(frozen=True)
 class ActivateAbility:
     """Activate a non-mana activated ability (CR 602.2). Offered only when the whole cost is
-    payable now (CR 118.3); `assignment` = the pool mana spent ((colour, n), ...)."""
+    payable now (CR 118.3); `assignment` = the pool mana spent ((colour, n), ...); `targets` =
+    the chosen targets (CR 602.2b, 601.2c) -- equip's creature you control, Bauble's player."""
     player: int
     oid: int
     index: int
     assignment: tuple
+    targets: tuple = ()
 
 
 @dataclass(frozen=True)
@@ -72,6 +74,34 @@ class Suspend:
     player: int
     oid: int
     assignment: tuple
+
+
+@dataclass(frozen=True)
+class Plot:
+    """Special action (CR 116.2k, 702.170a-b): pay the plot cost from the pool and exile the card from
+    hand; it becomes plotted. Doesn't use the stack."""
+    player: int
+    oid: int
+    assignment: tuple
+
+
+@dataclass(frozen=True)
+class ArrangeCards:
+    """A private library decision (scry / surveil / Expressive Iteration): where each looked-at card
+    goes. top[0] becomes the top card; bottom / graveyard in the order they are put there."""
+    player: int
+    top: tuple = ()
+    bottom: tuple = ()
+    graveyard: tuple = ()
+    hand: tuple = ()
+    exile: tuple = ()
+
+
+@dataclass(frozen=True)
+class ChooseAttach:
+    """Cori-Steel Cutter's flurry: "You may attach this Equipment to it." (the new Monk token)."""
+    player: int
+    attach: bool
 
 
 @dataclass(frozen=True)
@@ -96,8 +126,12 @@ class ChooseTargets:
 
 @dataclass(frozen=True)
 class PayCost:
+    """CR 601.2h: pay the announced total cost. `assignment` = mana from the pool; any life
+    component (Phyrexian mana announced as life) is paid with it; `sacrifice` = the permanent
+    sacrificed for a "Sacrifice a <subtype>" cost (flashback)."""
     player: int
     assignment: tuple               # ((colour, amount), ...) sorted
+    sacrifice: tuple = ()
 
 
 @dataclass(frozen=True)
@@ -166,7 +200,8 @@ ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCard
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
                                         ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
                                         ChooseTriggerTargets, ActivateAbility, ChooseEntryPayment, ChooseSearchResult,
-                                        ChooseMode, Suspend, ChooseSuspendCast, Concede)}
+                                        ChooseMode, Suspend, ChooseSuspendCast, Plot, ArrangeCards, ChooseAttach,
+                                        Concede)}
 
 
 def to_record(a) -> list:

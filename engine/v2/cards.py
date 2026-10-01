@@ -46,6 +46,21 @@ SUPPORTED = {
     "Searing Blaze": ("searing_blaze", "1"),
     "Rift Bolt": ("rift_bolt", "1"),
     "Skewer the Critics": ("skewer_the_critics", "1"),
+    # milestone four: Izzet Prowess (decks/auto/izzet_prowess_modern.txt)
+    "Scalding Tarn": ("scalding_tarn", "1"),
+    "Wooded Foothills": ("wooded_foothills", "1"),
+    "Steam Vents": ("steam_vents", "1"),
+    "Thundering Falls": ("thundering_falls", "1"),
+    "Mutagenic Growth": ("mutagenic_growth", "1"),
+    "Preordain": ("preordain", "1"),
+    "Serum Visions": ("serum_visions", "1"),
+    "Dragon's Rage Channeler": ("dragons_rage_channeler", "1"),
+    "Violent Urge": ("violent_urge", "1"),
+    "Cori-Steel Cutter": ("cori_steel_cutter", "1"),
+    "Expressive Iteration": ("expressive_iteration", "1"),
+    "Lava Dart": ("lava_dart", "1"),
+    "Mishra's Bauble": ("mishras_bauble", "1"),
+    "Slickshot Show-Off": ("slickshot_show_off", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
@@ -54,11 +69,22 @@ CARD_KEYWORDS = {
     "searing_blaze": frozenset({"Landfall"}),                       # ability word; effects.searing_blaze
     "rift_bolt": frozenset({"Suspend"}),                            # Suspend action + abilities.rift_bolt triggers
     "skewer_the_critics": frozenset({"Spectacle"}),                 # abilities.SPECTACLE alternative cost
+    "thundering_falls": frozenset({"Surveil"}),                     # ETB trigger -> rules.library surveil
+    "preordain": frozenset({"Scry"}),                               # rules.library scry
+    "serum_visions": frozenset({"Scry"}),
+    "dragons_rage_channeler": frozenset({"Delirium", "Surveil"}),   # rules.statics delirium + surveil trigger
+    "violent_urge": frozenset({"Delirium"}),                        # effects.violent_urge
+    "cori_steel_cutter": frozenset({"Flurry", "Equip"}),            # abilities flurry trigger + equip ability
+    "lava_dart": frozenset({"Flashback"}),                          # casting.FLASHBACK alternative cost
+    "slickshot_show_off": frozenset({"Plot"}),                      # Plot special action + plotted cast
+    "monk_token": frozenset({"Prowess"}),                           # the Cori-Steel Cutter Monk token
 }
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
 PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",
                             "sunbaked_canyon", "fiery_islet", "inspiring_vantage", "sacred_foundry",
-                            "arid_mesa", "bloodstained_mire", "roiling_vortex"})
+                            "arid_mesa", "bloodstained_mire", "roiling_vortex", "scalding_tarn",
+                            "wooded_foothills", "steam_vents", "thundering_falls", "dragons_rage_channeler",
+                            "cori_steel_cutter", "mishras_bauble", "slickshot_show_off", "monk_token"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}
 COLORS = ("W", "U", "B", "R", "G", "C")
 
@@ -196,10 +222,26 @@ def build_definition(name: str) -> CardDefinition:
         keywords=kws, effect_key=effect_key, impl_version=version)
 
 
+def _token(name, colors, subtypes, power, toughness, keywords, effect_key) -> CardDefinition:
+    """A predefined token's characteristics, set by the effect that creates it (CR 111.1, 111.4: its
+    name is its subtypes plus the word "Token")."""
+    return CardDefinition(name=name, mana_cost="", cost_symbols=(), mana_value=0, colors=colors, supertypes=(),
+                          types=("Creature",), subtypes=subtypes, power=power, toughness=toughness,
+                          keywords=keywords, effect_key=effect_key, impl_version="1")
+
+
+# Cori-Steel Cutter: "create a 1/1 white Monk creature token with prowess"
+TOKENS = {"Monk Token": _token("Monk Token", ("W",), ("Monk",), 1, 1, ("Prowess",), "monk_token")}
+
+
 @lru_cache(maxsize=1)
 def definitions() -> dict:
+    """Card definitions of every SUPPORTED card plus the token definitions (never deck-legal: a token
+    is not a card, so validate_deck refuses its name)."""
     oracle_file_sha256()                      # refuse to build from an unexpected installed file
-    return {n: build_definition(n) for n in sorted(SUPPORTED)}
+    out = {n: build_definition(n) for n in sorted(SUPPORTED)}
+    out.update(TOKENS)
+    return out
 
 
 def definitions_hash(defs: dict | None = None) -> str:

@@ -16,14 +16,25 @@ class EffectContext:
     legal_targets: tuple            # (("obj", oid) | ("player", p) | ("stack", sid, oid), ...)
 
 
+def _damage(ctx, t, n):
+    """n damage from the resolving spell to one legal target (CR 120.3)."""
+    if t[0] == "obj":
+        return op("damage_creature", ctx.source_oid, t[1], n)
+    return op("damage_player", ctx.source_oid, t[1], n)
+
+
 def lightning_bolt(ctx):
-    out = []
-    for t in ctx.legal_targets:
-        if t[0] == "obj":
-            out.append(op("damage_creature", ctx.source_oid, t[1], 3))
-        elif t[0] == "player":
-            out.append(op("damage_player", ctx.source_oid, t[1], 3))
-    return out
+    return [_damage(ctx, t, 3) for t in ctx.legal_targets]
+
+
+def lava_spike(ctx):
+    # "target player or planeswalker": no planeswalker is supported, so targets are players
+    return [_damage(ctx, t, 3) for t in ctx.legal_targets if t[0] == "player"]
+
+
+def lightning_helix(ctx):
+    # Reached only with a legal target: with none the spell doesn't resolve (CR 608.2b), so no life
+    return [_damage(ctx, t, 3) for t in ctx.legal_targets] + [op("gain_life", ctx.controller, 3)]
 
 
 def giant_growth(ctx):
@@ -48,6 +59,8 @@ EFFECTS = {
     "giant_growth": giant_growth,
     "counterspell": counterspell,
     "divination": divination,
+    "lava_spike": lava_spike,
+    "lightning_helix": lightning_helix,
 }
 
 

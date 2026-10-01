@@ -16,7 +16,7 @@ from engine.v2.ops import op
 from engine.v2.policies import BasicScriptedPolicy, RandomLegalPolicy
 from engine.v2.record import ReplayMismatch, make_record, replay
 from engine.v2.reducer import EngineInvariantError
-from tests.v2.decks import DECKOUT, RG, WU
+from tests.v2.decks import BURN_TEST, DECKOUT, RG, WU
 from tests.v2.helpers import advance, arrange, at, find, new_game, put, tap_for
 
 
@@ -202,6 +202,8 @@ def test_shadow_failing_commit_restores_state_in_every_real_context():
         Game.new(RG, WU, 950, check_invariants=True).run([BasicScriptedPolicy(), BasicScriptedPolicy()])
         Game.new(RG, WU, 900, check_invariants=True).run(                  # includes a damage division
             [RandomLegalPolicy(900), RandomLegalPolicy(950)])
+        Game.new(BURN_TEST, BURN_TEST, 970, check_invariants=True).run(     # life gain (Lightning Helix)
+            [RandomLegalPolicy(3), RandomLegalPolicy(4)])
         Game.new(DECKOUT, DECKOUT, 960, turn_limit=30, check_invariants=True).run(
             [RandomLegalPolicy(1), RandomLegalPolicy(2)])
         g = new_game()                                              # CR 733 revert path (fault injection)

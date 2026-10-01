@@ -223,6 +223,7 @@ TOUCHES = {
     "clear_combat": ("attackers", "blocks", "blocked", "divisions", "attack_choices", "block_choices",
                      "first_strike_done"),
     "damage_player": ("life",),
+    "gain_life": ("life",),
     "clear_draw_failed": ("draw_failed",),
     "lose": ("lost",),
     "end_game": ("result", "pending"),
@@ -538,6 +539,12 @@ def _h_damage_player(s, evs, source, player, n):
     s.life[player] -= n
     evs.append(ev("DamageDealt", source=source, target=("player", player), n=n))
     evs.append(ev("LifeChanged", player=player, life=s.life[player], delta=-n))
+
+
+def _h_gain_life(s, evs, player, n):
+    _need(n > 0, "life gain of a non-positive amount")
+    s.life[player] += n                                                    # CR 119.3
+    evs.append(ev("LifeChanged", player=player, life=s.life[player], delta=n))
 
 
 def _h_eot_mod(s, evs, oid, p, t):

@@ -11,4 +11,8 @@ WU = _expand([("Plains", 10), ("Island", 10), ("Youthful Knight", 4), ("Wind Dra
               ("Counterspell", 4), ("Divination", 4)])
 DECKOUT = _expand([("Island", 6), ("Divination", 4)])
 
-assert len(RG) == 40 and len(WU) == 40 and len(DECKOUT) == 10
+# Test-only synthetic deck exercising the burn primitives (Lava Spike, Lightning Helix). Not a real list.
+BURN_TEST = _expand([("Mountain", 12), ("Plains", 6), ("Lightning Bolt", 4), ("Lava Spike", 4),
+                     ("Lightning Helix", 4), ("Raging Goblin", 4), ("Youthful Knight", 4), ("Hill Giant", 2)])
+
+assert len(RG) == 40 and len(WU) == 40 and len(DECKOUT) == 10 and len(BURN_TEST) == 40

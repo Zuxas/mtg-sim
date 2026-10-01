@@ -30,6 +30,8 @@ SUPPORTED = {
     "Giant Growth": ("giant_growth", "1"),
     "Counterspell": ("counterspell", "1"),
     "Divination": ("divination", "1"),
+    "Lava Spike": ("lava_spike", "1"),
+    "Lightning Helix": ("lightning_helix", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}

@@ -58,4 +58,9 @@ CITATIONS = {
               "If the action was casting a spell, the spell returns to the zone it came from.",
               "Each player may also reverse any legal mana abilities that player activated while making the illegal play"],
     "733.2": ["the player who had priority retains it"],
+    "119.3": ["If an effect causes a player to gain life or lose life, that player’s life total is adjusted accordingly."],
+    "115.1": ["Some spells and abilities require their controller to choose one or more targets for them."],
+    "120.3": ["Damage may have one or more of the following results"],
+    "120.3a": ["Damage dealt to a player by a source without infect causes that player to lose that much life."],
+    "205.3k": ["The spell types are Adventure, Arcane, Lesson, Omen, and Trap."],
 }

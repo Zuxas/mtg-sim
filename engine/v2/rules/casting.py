@@ -8,6 +8,8 @@ TARGET_SPEC = {                     # effect_key -> what it may target
     "lightning_bolt": ("creature", "player"),
     "giant_growth": ("creature",),
     "counterspell": ("spell",),
+    "lava_spike": ("player",),
+    "lightning_helix": ("creature", "player"),
 }
 
 

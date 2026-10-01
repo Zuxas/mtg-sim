@@ -249,7 +249,25 @@ def _shadow_scenarios():
             T.test_multiple_prowess_triggers_need_an_ordering_decision,
             T.test_goblin_guide_reveals_and_moves_a_land_to_hand,
             T.test_targeted_trigger_chooses_targets_when_it_is_put_on_the_stack,
-            T.test_trigger_with_no_legal_targets_is_removed_from_the_stack]
+            T.test_trigger_with_no_legal_targets_is_removed_from_the_stack] + _m4_scenarios()
+
+
+def _m4_scenarios():
+    """Milestone-four card tests: tokens, attachments, looks, library arrangements, delayed
+    triggers, plot, Phyrexian life and flashback sacrifice costs, play-from-exile."""
+    from tests.v2 import test_m4_prowess as M4
+    return [M4.test_thundering_falls_enters_tapped_and_surveils_one,
+            M4.test_mutagenic_growth_is_announced_with_mana_or_with_two_life,
+            M4.test_preordain_scry_two_is_private_then_draws,
+            M4.test_expressive_iteration_hand_bottom_exile_and_play_the_land_this_turn,
+            M4.test_drc_with_damage_dies_when_delirium_is_lost,
+            M4.test_violent_urge_first_strike_and_double_strike_only_with_delirium,
+            M4.test_equip_is_sorcery_speed_targets_your_creature_and_grants_the_bonus,
+            M4.test_monk_token_has_prowess_ceases_to_exist_and_the_equipment_stays,
+            M4.test_trample_assigns_lethal_to_the_blocker_before_the_player,
+            M4.test_lava_dart_flashback_sacrifices_a_mountain_and_is_exiled,
+            M4.test_bauble_look_is_private_and_the_draw_waits_for_the_next_upkeep,
+            M4.test_plot_is_a_main_phase_special_action_and_the_free_cast_waits_a_turn]
 
 
 # ------------------------------------------------------------------ P1: hashes cover every change
@@ -296,7 +314,7 @@ def test_replay_detects_a_divergent_pending_state():
         if seen[0] == 40 and kind == "priority":
             info = tuple(info) + (99,)                   # same decision kind + player, different state
         return real[0](s, evs, kind, player, info)
-    reducer._DISPATCH["pending"] = (divergent, real[1])
+    reducer._DISPATCH["pending"] = (divergent,) + real[1:]
     try:
         assert _raises(ReplayMismatch, lambda: replay(rec))
     finally:

@@ -798,17 +798,16 @@ class Game:
         """"create a 1/1 white Monk creature token with prowess. You may attach this Equipment to it."
         The choice follows immediately, with no player action in between (card ruling)."""
         s = self.s
-        token = s.next_oid                                                # the token's ObjectId (allocated first)
         ops = [op("create_token", e.controller, "Monk Token")]
         o = s.objects.get(e.source)
         if o is None or o.zone != "battlefield":                          # the Equipment is gone: can't attach
             self._commit("resolve", ops + self._resolution_tail(e))
             return True
-        self._commit("resolve_pause", ops + [
+        self._commit("resolve_step", ops)
+        token = s.zones[("bf",)][-1]                                      # the token just created
+        self._commit("resolve_pause", [
             op("set_continuation", AB.continuation("flurry", e.sid, "attach", (token,))),
             op("pending", "attach_choice", e.controller, (token,))])
-        if s.zones[("bf",)][-1] != token:
-            raise reducer.EngineInvariantError("flurry token id prediction failed")
         return False
 
     def _do_ChooseAttach(self, a):

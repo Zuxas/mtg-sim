@@ -20,11 +20,14 @@ HIDDEN = ("library", "hand")
 OFFSET = 10 ** 6
 
 
-def _game(seed=3, deck="mono_red_aggro_modern"):
+PROWESS = "decks/auto/izzet_prowess_modern.txt"
+
+
+def _game(seed=3, deck="mono_red_aggro_modern", opp=None, pols=None):
     """A full game; returns (game, every ObjectId that ever existed in a library or hand)."""
     b = main_deck(deck)
-    g = Game.new(b, b, seed, starting_player=0)
-    pols = [SimpleAggroPolicy(1), RandomLegalPolicy(2)]
+    g = Game.new(b, main_deck(opp) if opp else b, seed, starting_player=0)
+    pols = pols or [SimpleAggroPolicy(1), RandomLegalPolicy(2)]
     hidden = set()
 
     def note():
@@ -84,8 +87,15 @@ def test_no_object_id_of_a_hidden_card_ever_appears_in_the_log():
     reducer._alloc_oid = lambda s: orig(s) + OFFSET
     try:
         games = [_game(seed) for seed in (3, 8, 21)]
+        # milestone four: scry / surveil / Expressive Iteration / Bauble looks / fetches in both seats
+        games += [_game(seed, PROWESS, "mono_red_aggro_modern", [SimpleAggroPolicy(seed), SimpleAggroPolicy(seed + 1)])
+                  for seed in range(4, 16)]
+        games += [_game(seed, "mono_red_aggro_modern", PROWESS, [RandomLegalPolicy(seed), SimpleAggroPolicy(seed + 1)])
+                  for seed in range(4, 10)]
     finally:
         reducer._alloc_oid = orig
+    kinds = {e.kind for g, _h in games for t in g.s.log.transitions for e in t.events}
+    assert {"LibraryArranged", "LookedAt", "TokenCreated"} <= kinds, kinds
     for g, hidden in games:
         assert len(hidden) > 60 and min(hidden) > OFFSET
         leaks = [(t.index, e.kind, k) for t in g.s.log.transitions for e in t.events for k, v in e.data

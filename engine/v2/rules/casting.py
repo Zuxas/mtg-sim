@@ -169,6 +169,16 @@ class CostVariant(tuple):
     sacrifice = property(lambda self: self[3])
 
 
+_BASE: dict = {}                      # card name -> its mana-cost CostVariants (definitions are fixed per name)
+
+
+def _base_variants(d) -> tuple:
+    got = _BASE.get(d.name)
+    if got is None:
+        got = _BASE[d.name] = tuple(CostVariant(n, m, l) for n, m, l in mana_variants(d.cost_symbols))
+    return got
+
+
 def may_play(state, player, oid) -> bool:
     """Expressive Iteration's "You may play the exiled card this turn" for this object."""
     return any(e.kind == "may_play" and e.a == (player, oid) for e in state.turn_effects)
@@ -197,7 +207,7 @@ def cost_variants(state, player, oid, timing=None) -> list:
     out = []
     if zone == "hand" or (zone == "exile" and state.turn_effects and may_play(state, player, oid)):
         if normal_timing:
-            out += [CostVariant(n, m, l) for n, m, l in mana_variants(d.cost_symbols)]
+            out += _base_variants(d)
             if zone == "hand" and key in _spectacle() and spectacle_ok(state, player):
                 out.append(CostVariant("spectacle", _spectacle()[key]))
     if zone == "exile" and state.plotted and timing:
@@ -222,15 +232,30 @@ def sacrifice_options(state, player, subtype) -> list:
 def can_propose(state, player, oid, v, avail=None, targets_ok=None) -> bool:
     """ProposeCast with this cost variant is legal only when a legal completion exists (spec 7.4):
     legal targets / modes, the mana payable together with any life, a permanent to sacrifice."""
-    d = state.def_by_ciid[state.objects[oid].ciid]
-    if targets_ok is None:
-        targets_ok = {}
+    return _castable_memo(state, player, state.def_by_ciid[state.objects[oid].ciid], v, avail,
+                          {} if targets_ok is None else targets_ok)
+
+
+def _castable_memo(state, player, d, v, avail, targets_ok) -> bool:
     memo = ("castable", d.name, v)                          # per decision: same card + cost -> same answer
-    if memo in targets_ok:
-        return targets_ok[memo]
-    ok = _castable(state, player, d, avail, targets_ok, v)
-    targets_ok[memo] = ok
-    return ok
+    got = targets_ok.get(memo)
+    if got is None:
+        got = targets_ok[memo] = _castable(state, player, d, avail, targets_ok, v)
+    return got
+
+
+_FB: dict = {}
+
+
+def _any_flashback(state) -> bool:
+    """Does any card in this game have flashback? (derived from the fixed deck lists)"""
+    key = id(state.config)
+    got = _FB.get(key)
+    if got is None or got[0] is not state.config:
+        if len(_FB) > 1000:
+            _FB.clear()
+        got = _FB[key] = (state.config, any(d.effect_key in FLASHBACK for d in state.def_by_ciid.values()))
+    return got[1]
 
 
 def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=None, cost=None) -> bool:
@@ -252,14 +277,33 @@ def cast_proposals(state, player, avail, timing, targets_ok) -> list:
     (flashback)."""
     out = []
     zones = state.zones
+    defs, objs = state.def_by_ciid, state.objects
+    spectacle = None
     for oid in zones[(player, "hand")]:
-        out += [(oid, v.name) for v in cost_variants(state, player, oid, timing)
-                if can_propose(state, player, oid, v, avail, targets_ok)]
+        d = defs[objs[oid].ciid]
+        if d.is_land:
+            continue
+        names = targets_ok.get(d.name)                            # per decision: same card -> same answer
+        if names is None:
+            if d.is_instant or timing:
+                vs = _base_variants(d)
+                if d.effect_key in _spectacle():
+                    if spectacle is None:
+                        spectacle = spectacle_ok(state, player)
+                    if spectacle:
+                        vs = vs + (CostVariant("spectacle", _spectacle()[d.effect_key]),)
+                names = tuple(v.name for v in vs if _castable_memo(state, player, d, v, avail, targets_ok))
+            else:
+                names = ()
+            targets_ok[d.name] = names
+        for n in names:
+            out.append((oid, n))
     if state.plotted or state.turn_effects:
         for oid in zones[(player, "exile")]:
             out += [(oid, v.name) for v in cost_variants(state, player, oid, timing)
                     if can_propose(state, player, oid, v, avail, targets_ok)]
-    defs, objs = state.def_by_ciid, state.objects
+    if not _any_flashback(state):
+        return out
     for oid in zones[(player, "graveyard")]:
         if defs[objs[oid].ciid].effect_key in FLASHBACK:
             out += [(oid, v.name) for v in cost_variants(state, player, oid, timing)
@@ -290,9 +334,14 @@ def can_plot(state, player, oid, timing=None) -> bool:
     return sorcery_timing_ok(state, player) if timing is None else timing
 
 
+_SPECTACLE: dict = {}
+
+
 def _spectacle():
-    from engine.v2.abilities import SPECTACLE
-    return SPECTACLE
+    if not _SPECTACLE:
+        from engine.v2.abilities import SPECTACLE
+        _SPECTACLE.update(SPECTACLE)
+    return _SPECTACLE
 
 
 def spectacle_ok(state, player) -> bool:

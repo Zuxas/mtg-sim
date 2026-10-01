@@ -550,6 +550,8 @@ def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbol
     frm = o.zone
     idx = _remove_from_zone(s, o)
     _obj(s, source_oid).zone = "suspended"
+    if frm == "graveyard":                                                # graveyard contents changed (delirium)
+        s.sba_dirty_at = len(s.log.transitions)
     prov = f"P{s.next_prov}"
     s.next_prov += 1
     s.stack.append(StackEntry(sid=prov, ciid=o.ciid, controller=controller, state="proposed", cost=cost_name))
@@ -968,11 +970,13 @@ _SBA_OPS = frozenset({"damage_player", "damage_creature", "pay_life", "draw", "m
                       "exile_with_counters", "eot_mod", "cleanup_wear_off", "lose", "revert_cast",
                       # milestone four: graveyard contents (delirium), attachments (Equipment P/T, 704.5n),
                       # tokens (704.5d), life paid as a cost
-                      "open_cast", "commit_cast", "create_token", "cease_to_exist", "attach", "unattach",
-                      "plot", "pay_cost_life", "sacrifice_cost", "add_turn_effect", "exile_playable"})
+                      "create_token", "cease_to_exist", "attach", "unattach", "plot", "pay_cost_life",
+                      "sacrifice_cost", "exile_playable"})
+# (open_cast from a graveyard -- flashback -- marks the state dirty itself: it changes graveyard contents)
 assert _SBA_OPS <= set(HANDLERS), _SBA_OPS - set(HANDLERS)
-# op name -> (handler, ((attr, copier), ...)): one lookup per op on the hot path
-_DISPATCH = {n: (h, tuple((a, _COPY.get(a, _same)) for a in TOUCHES.get(n, ()))) for n, h in HANDLERS.items()}
+# op name -> (handler, ((attr, copier), ...), can create an SBA condition): one lookup per op on the hot path
+_DISPATCH = {n: (h, tuple((a, _COPY.get(a, _same)) for a in TOUCHES.get(n, ())), n in _SBA_OPS)
+             for n, h in HANDLERS.items()}
 assert set(TOUCHES) <= set(HANDLERS), set(TOUCHES) - set(HANDLERS)
 
 
@@ -984,6 +988,7 @@ def commit(s, kind: str, ops) -> None:
         t[_LOG] = len(s.log.transitions)
     try:
         evs: list = []
+        dirty = False
         for name, args in ops:
             d = _DISPATCH.get(name)
             if d is None:
@@ -995,6 +1000,8 @@ def commit(s, kind: str, ops) -> None:
             d[0](s, evs, *args)
             if len(evs) == n:
                 raise EngineInvariantError(f"op {name} produced no event")          # spec section 8
+            if d[2]:
+                dirty = True
         if s.occ:                                                     # CR 603.2: triggers of this batch
             found = AB.detect(s, s.occ)
             fired = AB.detect_delayed(s, s.occ)
@@ -1006,7 +1013,7 @@ def commit(s, kind: str, ops) -> None:
                 found = found + [t for _did, t in fired]
             if found:
                 _add_triggers(s, evs, found)
-        if not _SBA_OPS.isdisjoint(o.name for o in ops):
+        if dirty:
             s.sba_dirty_at = len(s.log.transitions)                       # this transition's index
         s.log.append(kind, evs)
         if s.config["check_invariants"]:

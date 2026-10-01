@@ -4,13 +4,15 @@ Pure. Applied by the game inside the SAME transition as the zone change.
 - Inspiring Vantage: "This land enters tapped unless you control two or fewer other lands."
   (CR 614.1d) -- counted from the battlefield BEFORE it enters, so every land counted is an
   "other" land.
-- Sacred Foundry: "As this land enters, you may pay 2 life. If you don't, it enters tapped."
-  (CR 614.1c) -- the controller chooses before the move commits; paying is possible only with
-  at least 2 life (CR 119.4).
+- Sacred Foundry / Steam Vents: "As this land enters, you may pay 2 life. If you don't, it enters
+  tapped." (CR 614.1c) -- the controller chooses before the move commits; paying is possible only
+  with at least 2 life (CR 119.4).
+- Thundering Falls: "This land enters tapped." (CR 614.1c) -- unconditional.
 """
 from __future__ import annotations
 
-ENTRY = {"inspiring_vantage": "fastland", "sacred_foundry": "shockland"}
+ENTRY = {"inspiring_vantage": "fastland", "sacred_foundry": "shockland", "steam_vents": "shockland",
+         "thundering_falls": "tapped"}
 SHOCK_LIFE = 2
 
 
@@ -37,4 +39,4 @@ def enters_tapped(state, oid, controller, pay) -> bool:
         return other_lands(state, controller) > 2
     if kind == "shockland":
         return not pay
-    return False
+    return kind == "tapped"

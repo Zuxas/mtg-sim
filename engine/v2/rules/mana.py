@@ -111,7 +111,14 @@ def available_mana(state, player) -> Avail:
     return avail_from(state, player, sources_with_options(state, player))
 
 
-def avail_from(state, player, srcs) -> Avail:
+def avail_from(state, player, srcs):
+    """Avail for can_pay. When every source has exactly one free option (basic lands), the
+    matching problem reduces to counting, so a plain colour->amount dict is returned (same answer)."""
+    if all(len(opts) == 1 and opts[0][1] == 0 for _oid, opts in srcs):
+        avail = dict(state.pools[player])
+        for _oid, ((c, _l),) in srcs:
+            avail[c] = avail.get(c, 0) + 1
+        return avail
     return Avail(dict(state.pools[player]), tuple(opts for _oid, opts in srcs), state.life[player])
 
 

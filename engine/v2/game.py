@@ -261,6 +261,11 @@ class Game:
         opts_all = [opts for _oid, opts in srcs]
         out = []
         for i, (oid, opts) in enumerate(srcs):
+            if len(opts) == 1 and opts[0][1] == 0:
+                # one free colour: tapping it only moves one mana from a source to the pool,
+                # so a payable cost stays payable -- no check needed
+                out.append(_act(A.ActivateManaAbility, p, oid, opts[0][0]))
+                continue
             rest = tuple(opts_all[:i] + opts_all[i + 1:])
             for c, life in opts:
                 pool = dict(s.pools[p])
@@ -473,10 +478,13 @@ class Game:
 
     def _run_sbas(self):
         s = self.s
-        # CR 117.5 needs the check before every priority grant; if every transition since the
-        # last empty check only moved priority / a pending decision, the result cannot differ.
-        if self._sba_clean_at >= 0 and all(t.kind in ("priority", "pending", "trigger_stack")
-                                           for t in s.log.transitions[self._sba_clean_at:]):
+        # CR 117.5 needs the check before every priority grant; if no transition since the last
+        # empty check contained an op that can create an SBA condition, the result cannot differ.
+        if self._sba_clean_at >= 0 and s.sba_dirty_at < self._sba_clean_at:
+            if s.config["check_invariants"]:                              # verify the skip is sound
+                ops, _l = sba.compute(s)
+                if ops:
+                    raise reducer.EngineInvariantError(f"skipped SBA check would have applied {ops}")
             return
         while s.result is None:
             ops, losers = sba.compute(s)

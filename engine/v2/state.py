@@ -92,6 +92,8 @@ class GameState:
     txn: dict = field(default_factory=dict)                # reducer transaction journal (not hashed)
     txn_open: bool = False
     occ: list = field(default_factory=list)                # occurrences of the transition being committed
+    sba_dirty_at: int = 0                                  # last transition index with an op that can create a
+                                                           # state-based-action condition (derived, not hashed)
 
     # ------------------------------------------------------------ zone helpers (read-only)
     def zone(self, player, name) -> list:

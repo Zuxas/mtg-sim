@@ -773,6 +773,11 @@ def _h_note(s, evs, kind, *data):
 
 
 HANDLERS = {n[3:]: f for n, f in globals().items() if n.startswith("_h_")}
+# ops that can create a state-based-action condition (CR 704.5a/b/f/g): life, damage, draws,
+# zone changes, P/T changes, cleanup, player loss. Every other op leaves SBA results unchanged.
+_SBA_OPS = frozenset({"damage_player", "damage_creature", "pay_life", "draw", "move", "sacrifice",
+                      "exile_with_counters", "eot_mod", "cleanup_wear_off", "lose", "revert_cast"})
+assert _SBA_OPS <= set(HANDLERS), _SBA_OPS - set(HANDLERS)
 # op name -> (handler, ((attr, copier), ...)): one lookup per op on the hot path
 _DISPATCH = {n: (h, tuple((a, _COPY.get(a, _same)) for a in TOUCHES.get(n, ()))) for n, h in HANDLERS.items()}
 assert set(TOUCHES) <= set(HANDLERS), set(TOUCHES) - set(HANDLERS)
@@ -802,6 +807,8 @@ def commit(s, kind: str, ops) -> None:
             s.occ.clear()
             if found:
                 _add_triggers(s, evs, found)
+        if not _SBA_OPS.isdisjoint(o.name for o in ops):
+            s.sba_dirty_at = len(s.log.transitions)                       # this transition's index
         s.log.append(kind, evs)
         if s.config["check_invariants"]:
             from engine.v2.invariants import check

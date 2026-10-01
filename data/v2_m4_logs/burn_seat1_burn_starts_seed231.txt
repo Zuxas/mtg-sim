@@ -1,0 +1,609 @@
+Burn (seat 1) vs Izzet Prowess, cell burn_seat1_burn_starts, seed 3000231, random_vs_random, result ('win', 1, 'life') (winner: Burn)
+coverage: ['Plotted', 'ReplacedByExile', 'flashback', 'other_activation', 'phyrexian_life', 'plotted_cast', 'shock_choice', 'slickshot_pump', 'steam_vents', 'violent_urge', 'wooded_foothills']
+  P1(Burn) declares mulligan
+  P0(Prowess) declares keep
+    Kept {'player': 0}
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) hand -> library
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    MulliganTaken {'count': 1, 'player': 1}
+  (hidden) P1(Burn) hand -> library
+  P1(Burn) declares keep
+    Kept {'player': 1}
+
+=== Turn 1 (P1(Burn)) ===
+  -- upkeep
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 19 (-1)
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 2 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Mountain: hand -> battlefield
+  P0(Prowess) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O153',)}
+  -- declare_attackers
+  attackers: []
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 18 (-2)
+    cast (0 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A1',)}
+    Monastery Swiftspear gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O155',)}
+  -- end
+
+=== Turn 3 (P1(Burn)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 18 (-1)
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 4 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 17 (-1)
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Mountain: hand -> battlefield
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to Monastery Swiftspear
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O161',)}
+    Destroyed {'data': (154,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  -- end
+
+=== Turn 6 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Wooded Foothills: hand -> battlefield
+  P0(Prowess) activates fetch_mountain_forest of Wooded Foothills
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 17 (-1)
+    Sacrificed {'controller': 0, 'oid': 165}
+  Wooded Foothills: battlefield -> graveyard
+    SearchFoundNothing {'data': ('A2',)}
+    AbilityResolved {'data': ('A2',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 7 (P1(Burn)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 16 (-1)
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 9 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 15 (-1)
+  -- main1
+  P1(Burn) casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved {'data': ('O170',)}
+  -- declare_attackers
+  attackers: []
+  Inspiring Vantage: hand -> battlefield
+  -- end
+
+=== Turn 10 (P0(Prowess)) ===
+  -- upkeep
+  P0(Prowess) casts Violent Urge from hand (normal cost)
+    targets [('obj', 'Goblin Guide')]
+    cast (1 mana spent)
+    Goblin Guide gets +1/+0
+    effect first_strike on Goblin Guide
+  Violent Urge: stack -> graveyard
+    SpellResolved {'data': ('O173',)}
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Goblin Guide')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 15 (-2)
+    cast (0 mana spent)
+    Goblin Guide gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O176',)}
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 11 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 1), ('obj', 'Goblin Guide')]
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 14 (-1)
+    cast (2 mana spent)
+    Searing Blaze deals 1 to P1(Burn)
+    P1(Burn) life 13 (-1)
+    Searing Blaze deals 1 to Goblin Guide
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O178',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 12 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Mountain: hand -> battlefield
+  P0(Prowess) casts Dragon's Rage Channeler from hand (normal cost)
+    cast (1 mana spent)
+  Dragon's Rage Channeler: stack -> battlefield
+    SpellResolved {'data': ('O183',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 13 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) activates land_draw of Sunbaked Canyon
+    Sacrificed {'controller': 1, 'oid': 150}
+  Sunbaked Canyon: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    AbilityResolved {'data': ('A3',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P1(Burn) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 12 (-1)
+    Sacrificed {'controller': 1, 'oid': 188}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A4', ('ciid', 106))}
+    LifePaid {'n': 2, 'player': 1}
+    P1(Burn) life 10 (-2)
+  Sacred Foundry: library -> battlefield
+    AbilityResolved {'data': ('A4',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 5, 'name': 'Bloodstained Mire', 'player': 0, 'zone': 'library'}
+  (hidden) P0(Prowess) library -> hand
+    AbilityResolved {'data': ('A5',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 13 (-2)
+  -- end
+
+=== Turn 14 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  -- declare_attackers
+  attackers: ["Dragon's Rage Channeler"]
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 12 (-1)
+    Sacrificed {'controller': 0, 'oid': 193}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A6', ('ciid', 36))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A6',)}
+  blocks: []
+  -- combat_damage
+    Dragon's Rage Channeler deals 1 to P1(Burn)
+    P1(Burn) life 9 (-1)
+  -- end
+
+=== Turn 15 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Boros Charm from hand (normal cost)
+    targets [('obj', "Dragon's Rage Channeler")]
+    cast (2 mana spent)
+    effect double_strike on Dragon's Rage Channeler
+  Boros Charm: stack -> graveyard
+    SpellResolved {'data': ('O196',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 33, 'name': 'Monastery Swiftspear', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A7',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 10 (-2)
+  Sunbaked Canyon: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 8 (-1)
+  -- end
+
+=== Turn 16 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Slickshot Show-Off: hand -> exile
+    plotted (turn 16)
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 17 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Boros Charm from hand (normal cost)
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 7 (-1)
+    cast (2 mana spent)
+    effect indestructible on Mountain
+    effect indestructible on Goblin Guide
+    effect indestructible on Inspiring Vantage
+    effect indestructible on Sacred Foundry
+    effect indestructible on Sunbaked Canyon
+  Boros Charm: stack -> graveyard
+    SpellResolved {'data': ('O202',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+    EntersTapped {'oid': 205}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 18 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  P0(Prowess) casts Slickshot Show-Off from exile (plot cost)
+    cast (0 mana spent)
+  Slickshot Show-Off: stack -> battlefield
+    SpellResolved {'data': ('O207',)}
+  -- end
+
+=== Turn 19 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) activates land_draw of Sunbaked Canyon
+    Sacrificed {'controller': 1, 'oid': 199}
+  Sunbaked Canyon: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    AbilityResolved {'data': ('A8',)}
+  P1(Burn) casts Lightning Helix from hand (normal cost)
+    targets [('player', 0)]
+    cast (2 mana spent)
+    Lightning Helix deals 3 to P0(Prowess)
+    P0(Prowess) life 7 (-3)
+    P1(Burn) life 10 (+3)
+  Lightning Helix: stack -> graveyard
+    SpellResolved {'data': ('O211',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 20 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Steam Vents: hand -> battlefield
+    EntersTapped {'oid': 215}
+  -- declare_attackers
+  attackers: ["Dragon's Rage Channeler"]
+  blocks: []
+  -- combat_damage
+    Dragon's Rage Channeler deals 1 to P1(Burn)
+    P1(Burn) life 9 (-1)
+  -- end
+
+=== Turn 21 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('obj', 'Goblin Guide')]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to Goblin Guide
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O217',)}
+    Destroyed {'data': (171,)}
+  Goblin Guide: battlefield -> graveyard
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 22 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: ["Dragon's Rage Channeler"]
+  blocks: []
+  -- combat_damage
+    Dragon's Rage Channeler deals 1 to P1(Burn)
+    P1(Burn) life 8 (-1)
+  -- end
+  Monastery Swiftspear: hand -> graveyard
+
+=== Turn 23 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  P1(Burn) casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved {'data': ('O223',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 24 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Slickshot Show-Off']
+  blocks: []
+  -- combat_damage
+    Slickshot Show-Off deals 1 to P1(Burn)
+    P1(Burn) life 7 (-1)
+  -- end
+  Bloodstained Mire: hand -> graveyard
+
+=== Turn 25 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Lightning Helix from hand (normal cost)
+    targets [('obj', "Dragon's Rage Channeler")]
+    cast (2 mana spent)
+    Lightning Helix deals 3 to Dragon's Rage Channeler
+    P1(Burn) life 10 (+3)
+  Lightning Helix: stack -> graveyard
+    SpellResolved {'data': ('O227',)}
+    Destroyed {'data': (184,)}
+  Dragon's Rage Channeler: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Fiery Islet: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 9 (-1)
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 19, 'name': 'Lava Dart', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A9',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 5 (-2)
+  -- end
+
+=== Turn 26 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  P0(Prowess) casts Lava Dart from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+  trigger: slickshot_pump (P0(Prowess), from Slickshot Show-Off)
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A10',)}
+    Lava Dart deals 1 to P0(Prowess)
+    P0(Prowess) life 4 (-1)
+  Lava Dart: stack -> graveyard
+    SpellResolved {'data': ('O233',)}
+  P0(Prowess) casts Lava Dart from graveyard (flashback cost)
+    targets [('player', 0)]
+    Sacrificed {'controller': 0, 'oid': 152}
+  Mountain: battlefield -> graveyard
+    cast (0 mana spent)
+  trigger: slickshot_pump (P0(Prowess), from Slickshot Show-Off)
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A11',)}
+    Lava Dart deals 1 to P0(Prowess)
+    P0(Prowess) life 3 (-1)
+    flashback: exiled instead of -> graveyard
+  Lava Dart: stack -> exile
+    SpellResolved {'data': ('O236',)}
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 27 (P1(Burn)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 8 (-1)
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 52, 'name': 'Slickshot Show-Off', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A12',)}
+  blocks: [('Slickshot Show-Off', 'Goblin Guide')]
+  -- combat_damage
+    Goblin Guide deals 2 to Slickshot Show-Off
+    Slickshot Show-Off deals 1 to Goblin Guide
+    Destroyed {'data': (208,)}
+  Slickshot Show-Off: battlefield -> graveyard
+  -- end
+
+=== Turn 28 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Preordain: hand -> graveyard
+
+=== Turn 29 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) activates land_draw of Fiery Islet
+    Sacrificed {'controller': 1, 'oid': 231}
+  Fiery Islet: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    AbilityResolved {'data': ('A13',)}
+  P1(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 1), ('obj', 'Goblin Guide')]
+    cast (2 mana spent)
+    Searing Blaze deals 1 to P1(Burn)
+    P1(Burn) life 7 (-1)
+    Searing Blaze deals 1 to Goblin Guide
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O244',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 30 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Cori-Steel Cutter: hand -> graveyard
+
+=== Turn 31 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Mountain: hand -> battlefield
+  P1(Burn) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O251',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 6, 'name': 'Cori-Steel Cutter', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A14',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 1 (-2)
+  -- end
+
+=== Turn 32 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Expressive Iteration: hand -> graveyard
+
+=== Turn 33 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 41, 'name': 'Mutagenic Growth', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A15',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life -1 (-2)
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

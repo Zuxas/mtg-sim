@@ -1,0 +1,383 @@
+Burn (seat 1) vs Izzet Prowess, cell burn_seat1_burn_starts, seed 3000120, random_vs_random, result ('win', 1, 'life') (winner: Burn)
+coverage: ['ReplacedByExile', 'card_put_on_bottom', 'falls_enters_tapped', 'falls_surveil', 'flashback', 'other_activation', 'phyrexian_life', 'scry_preordain', 'scry_serum', 'shock_choice', 'steam_vents', 'surveil_to_graveyard', 'thundering_falls', 'violent_urge', 'violent_urge_double_strike_delirium', 'wooded_foothills']
+  P1(Burn) declares keep
+    Kept {'player': 1}
+  P0(Prowess) declares keep
+    Kept {'player': 0}
+
+=== Turn 1 (P1(Burn)) ===
+  -- upkeep
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+  P1(Burn) casts Monastery Swiftspear from hand (normal cost)
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 19 (-1)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O136',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 1 to P0(Prowess)
+    P0(Prowess) life 19 (-1)
+  -- end
+
+=== Turn 2 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Wooded Foothills: hand -> battlefield
+  P0(Prowess) activates fetch_mountain_forest of Wooded Foothills
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 18 (-1)
+    Sacrificed {'controller': 0, 'oid': 139}
+  Wooded Foothills: battlefield -> graveyard
+    SearchFound {'data': ('A1', ('ciid', 36))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A1',)}
+  -- declare_attackers
+  attackers: []
+  P0(Prowess) casts Lava Dart from hand (normal cost)
+    targets [('player', 1)]
+    cast (1 mana spent)
+    Lava Dart deals 1 to P1(Burn)
+    P1(Burn) life 18 (-1)
+  Lava Dart: stack -> graveyard
+    SpellResolved {'data': ('O142',)}
+  -- end
+
+=== Turn 3 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 17 (-1)
+    cast (1 mana spent)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+  P0(Prowess) casts Lava Dart from graveyard (flashback cost)
+    targets [('player', 0)]
+    Sacrificed {'controller': 0, 'oid': 141}
+  Mountain: battlefield -> graveyard
+    cast (0 mana spent)
+    Lava Dart deals 1 to P0(Prowess)
+    P0(Prowess) life 17 (-1)
+    flashback: exiled instead of -> graveyard
+  Lava Dart: stack -> exile
+    SpellResolved {'data': ('O146',)}
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A2',)}
+    Lightning Bolt deals 3 to Monastery Swiftspear
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O144',)}
+    Destroyed {'data': (137,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 4 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 15 (-2)
+  Steam Vents: hand -> battlefield
+  P0(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+    P0(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O154',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 16 (-1)
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Thundering Falls: hand -> battlefield
+    EntersTapped {'oid': 160}
+  trigger: falls_surveil (P0(Prowess), from Thundering Falls)
+  Monastery Swiftspear: library -> graveyard
+    AbilityResolved {'data': ('A3',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 7 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 15 (-1)
+  -- main1
+  Sacred Foundry: hand -> battlefield
+    EntersTapped {'oid': 163}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P0(Prowess)) ===
+  -- upkeep
+  P0(Prowess) casts Lava Dart from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    Lava Dart deals 1 to P0(Prowess)
+    P0(Prowess) life 14 (-1)
+  Lava Dart: stack -> graveyard
+    SpellResolved {'data': ('O164',)}
+  P0(Prowess) casts Lava Dart from graveyard (flashback cost)
+    targets [('player', 0)]
+    Sacrificed {'controller': 0, 'oid': 160}
+  Thundering Falls: battlefield -> graveyard
+    cast (0 mana spent)
+    Lava Dart deals 1 to P0(Prowess)
+    P0(Prowess) life 13 (-1)
+    flashback: exiled instead of -> graveyard
+  Lava Dart: stack -> exile
+    SpellResolved {'data': ('O167',)}
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P0(Prowess) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 12 (-1)
+    Sacrificed {'controller': 0, 'oid': 170}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A4', ('ciid', 55))}
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 10 (-2)
+  Steam Vents: library -> battlefield
+    AbilityResolved {'data': ('A4',)}
+  P0(Prowess) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O173',)}
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 8 (-2)
+    cast (0 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A5',)}
+    Monastery Swiftspear gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O175',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 9 (P1(Burn)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 14 (-1)
+  P1(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+    Searing Blaze deals 1 to P0(Prowess)
+    P0(Prowess) life 7 (-1)
+    Searing Blaze deals 1 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O177',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 13 (-1)
+  P1(Burn) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O181',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 10 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  P0(Prowess) casts Serum Visions from hand (normal cost)
+    cast (1 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A6',)}
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    P0(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  Serum Visions: stack -> graveyard
+    SpellResolved {'data': ('O184',)}
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 5 (-2)
+    cast (0 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A7',)}
+    Monastery Swiftspear gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O187',)}
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 4 (-1)
+    Sacrificed {'controller': 0, 'oid': 189}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A8', ('ciid', 35))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A8',)}
+  P0(Prowess) casts Violent Urge from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    cast (1 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A9',)}
+    Monastery Swiftspear gets +1/+0
+    effect first_strike on Monastery Swiftspear
+    effect double_strike on Monastery Swiftspear
+  Violent Urge: stack -> graveyard
+    SpellResolved {'data': ('O192',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 11 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) activates land_draw of Sunbaked Canyon
+    Sacrificed {'controller': 1, 'oid': 135}
+  Sunbaked Canyon: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    AbilityResolved {'data': ('A10',)}
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 12 (-1)
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Arid Mesa: hand -> battlefield
+  P1(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 11 (-1)
+    Sacrificed {'controller': 1, 'oid': 197}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A11', ('ciid', 95))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A11',)}
+  P1(Burn) casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved {'data': ('O200',)}
+  -- end
+
+=== Turn 12 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: [('Monastery Swiftspear', 'Monastery Swiftspear')]
+  -- combat_damage
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+  -- end
+
+=== Turn 13 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  P1(Burn) activates land_draw of Sunbaked Canyon
+    Sacrificed {'controller': 1, 'oid': 180}
+  Sunbaked Canyon: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+    AbilityResolved {'data': ('A12',)}
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 45, 'name': 'Preordain', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A13',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 2 (-2)
+  Arid Mesa: hand -> battlefield
+  -- end
+  P1(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 10 (-1)
+    Sacrificed {'controller': 1, 'oid': 206}
+  Arid Mesa: battlefield -> graveyard
+    SearchFoundNothing {'data': ('A14',)}
+    AbilityResolved {'data': ('A14',)}
+
+=== Turn 14 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  P0(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A15',)}
+    P0(Prowess) arranges library: 2 on top, 0 on bottom (cards hidden)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O209',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: [('Monastery Swiftspear', 'Monastery Swiftspear')]
+  -- combat_damage
+    Monastery Swiftspear deals 2 to Monastery Swiftspear
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+    Destroyed {'data': (182,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  -- end
+
+=== Turn 15 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 30, 'name': "Mishra's Bauble", 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A16',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 0 (-2)
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

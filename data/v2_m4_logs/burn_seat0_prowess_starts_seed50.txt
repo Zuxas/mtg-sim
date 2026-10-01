@@ -1,0 +1,341 @@
+Burn (seat 0) vs Izzet Prowess, cell burn_seat0_prowess_starts, seed 2000050, aggro_vs_random, result ('win', 1, 'life') (winner: Prowess)
+coverage: ['Attached', 'Attached_flurry_token', 'Plotted', 'ReplacedByExile', 'TokenCreated', 'card_put_on_bottom', 'drc_delirium_on_battlefield', 'drc_must_attack_decision', 'drc_surveil', 'equip', 'flashback', 'flurry', 'monk_token_prowess', 'other_activation', 'phyrexian_life', 'scalding_tarn', 'scry_preordain', 'scry_serum', 'shock_choice', 'slickshot_pump', 'steam_vents', 'surveil_to_graveyard', 'wooded_foothills']
+  P1(Prowess) declares keep
+    Kept {'player': 1}
+  P0(Burn) declares mulligan
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+    MulliganTaken {'count': 1, 'player': 0}
+  (hidden) P0(Burn) hand -> library
+  P0(Burn) declares mulligan
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+    MulliganTaken {'count': 2, 'player': 0}
+  (hidden) P0(Burn) hand -> library
+  (hidden) P0(Burn) hand -> library
+  P0(Burn) declares keep
+    Kept {'player': 0}
+
+=== Turn 1 (P1(Prowess)) ===
+  -- upkeep
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P1(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 1}
+    P1(Prowess) life 19 (-1)
+    Sacrificed {'controller': 1, 'oid': 165}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A1', ('ciid', 95))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A1',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 2 (P0(Burn)) ===
+  -- upkeep
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Sunbaked Canyon: hand -> battlefield
+  -- end
+
+=== Turn 3 (P1(Prowess)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 19 (-1)
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  Wooded Foothills: hand -> battlefield
+  P1(Prowess) activates fetch_mountain_forest of Wooded Foothills
+    LifePaid {'n': 1, 'player': 1}
+    P1(Prowess) life 18 (-1)
+    Sacrificed {'controller': 1, 'oid': 171}
+  Wooded Foothills: battlefield -> graveyard
+    SearchFound {'data': ('A2', ('ciid', 96))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A2',)}
+  P1(Prowess) casts Slickshot Show-Off from hand (normal cost)
+    cast (2 mana spent)
+  Slickshot Show-Off: stack -> battlefield
+    SpellResolved {'data': ('O174',)}
+  -- declare_attackers
+  attackers: ['Slickshot Show-Off']
+  blocks: []
+  -- combat_damage
+    Slickshot Show-Off deals 1 to P0(Burn)
+    P0(Burn) life 18 (-1)
+  -- end
+
+=== Turn 4 (P0(Burn)) ===
+  -- upkeep
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 17 (-1)
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Mountain: hand -> battlefield
+    Suspended {'data': (('ciid', 38),)}
+  Rift Bolt: hand -> exile
+  -- end
+
+=== Turn 5 (P1(Prowess)) ===
+  -- upkeep
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P1(Prowess) casts Cori-Steel Cutter from hand (normal cost)
+    cast (2 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A3',)}
+  Cori-Steel Cutter: stack -> battlefield
+    SpellResolved {'data': ('O181',)}
+  P1(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 1}
+    P1(Prowess) life 17 (-1)
+    Sacrificed {'controller': 1, 'oid': 180}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A4', ('ciid', 97))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A4',)}
+  -- declare_attackers
+  attackers: ['Slickshot Show-Off']
+  blocks: []
+  -- combat_damage
+    Slickshot Show-Off deals 3 to P0(Burn)
+    P0(Burn) life 14 (-3)
+  -- end
+
+=== Turn 6 (P0(Burn)) ===
+  -- upkeep
+  trigger: suspend_upkeep (P0(Burn), from Rift Bolt)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 13 (-1)
+    AbilityResolved {'data': ('A5',)}
+  trigger: suspend_cast (P0(Burn), from Rift Bolt)
+    AbilityResolved {'data': ('A6',)}
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P0(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 12 (-1)
+    Sacrificed {'controller': 0, 'oid': 186}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A7', ('ciid', 46))}
+    LifePaid {'n': 2, 'player': 0}
+    P0(Burn) life 10 (-2)
+  Sacred Foundry: library -> battlefield
+    AbilityResolved {'data': ('A7',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 7 (P1(Prowess)) ===
+  -- upkeep
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  Scalding Tarn: hand -> battlefield
+  P1(Prowess) casts Dragon's Rage Channeler from hand (normal cost)
+    cast (1 mana spent)
+  Dragon's Rage Channeler: stack -> battlefield
+    SpellResolved {'data': ('O191',)}
+  P1(Prowess) activates fetch_island_mountain of Scalding Tarn
+    LifePaid {'n': 1, 'player': 1}
+    P1(Prowess) life 16 (-1)
+    Sacrificed {'controller': 1, 'oid': 190}
+  Scalding Tarn: battlefield -> graveyard
+    SearchFound {'data': ('A8', ('ciid', 114))}
+    LifePaid {'n': 2, 'player': 1}
+    P1(Prowess) life 14 (-2)
+  Steam Vents: library -> battlefield
+    AbilityResolved {'data': ('A8',)}
+  P1(Prowess) casts Serum Visions from hand (normal cost)
+    cast (1 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+  trigger: flurry (P1(Prowess), from Cori-Steel Cutter)
+  trigger: drc_surveil (P1(Prowess), from Dragon's Rage Channeler)
+  Mutagenic Growth: library -> graveyard
+    AbilityResolved {'data': ('A11',)}
+    Monk Token created for P1(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A10',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A9',)}
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+    P1(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  Serum Visions: stack -> graveyard
+    SpellResolved {'data': ('O195',)}
+  P1(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Monk Token')]
+    LifePaid {'n': 2, 'player': 1}
+    P1(Prowess) life 12 (-2)
+    cast (0 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+  trigger: drc_surveil (P1(Prowess), from Dragon's Rage Channeler)
+  trigger: prowess (P1(Prowess), from Monk Token)
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A14',)}
+  Mutagenic Growth: library -> graveyard
+    AbilityResolved {'data': ('A13',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A12',)}
+    Monk Token gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O200',)}
+  P1(Prowess) activates equip of Cori-Steel Cutter -> [('obj', 'Slickshot Show-Off')]
+    Cori-Steel Cutter attached to Slickshot Show-Off
+    AbilityResolved {'data': ('A15',)}
+  -- declare_attackers
+  attackers: ['Slickshot Show-Off']
+  blocks: []
+  -- combat_damage
+    Slickshot Show-Off deals 6 to P0(Burn)
+    P0(Burn) life 4 (-6)
+  -- end
+
+=== Turn 8 (P0(Burn)) ===
+  -- upkeep
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 3 (-1)
+  P0(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 1), ('obj', 'Slickshot Show-Off')]
+    cast (2 mana spent)
+    Searing Blaze deals 1 to P1(Prowess)
+    P1(Prowess) life 11 (-1)
+    Searing Blaze deals 1 to Slickshot Show-Off
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O204',)}
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 9 (P1(Prowess)) ===
+  -- upkeep
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  P1(Prowess) casts Lava Dart from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+  trigger: drc_surveil (P1(Prowess), from Dragon's Rage Channeler)
+  trigger: prowess (P1(Prowess), from Monk Token)
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A18',)}
+  Monastery Swiftspear: library -> graveyard
+    AbilityResolved {'data': ('A17',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A16',)}
+    Lava Dart deals 1 to P0(Burn)
+    P0(Burn) life 2 (-1)
+  Lava Dart: stack -> graveyard
+    SpellResolved {'data': ('O207',)}
+  P1(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+  trigger: flurry (P1(Prowess), from Cori-Steel Cutter)
+  trigger: drc_surveil (P1(Prowess), from Dragon's Rage Channeler)
+  trigger: prowess (P1(Prowess), from Monk Token)
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A22',)}
+  Mishra's Bauble: library -> graveyard
+    AbilityResolved {'data': ('A21',)}
+    Monk Token created for P1(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A20',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A19',)}
+    P1(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O210',)}
+  Slickshot Show-Off: hand -> exile
+    plotted (turn 9)
+  P1(Prowess) casts Lava Dart from graveyard (flashback cost)
+    targets [('player', 0)]
+    Sacrificed {'controller': 1, 'oid': 167}
+  Mountain: battlefield -> graveyard
+    cast (0 mana spent)
+  trigger: slickshot_pump (P1(Prowess), from Slickshot Show-Off)
+  trigger: drc_surveil (P1(Prowess), from Dragon's Rage Channeler)
+  trigger: prowess (P1(Prowess), from Monk Token)
+  trigger: prowess (P1(Prowess), from Monk Token)
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A26',)}
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A25',)}
+    P1(Prowess) arranges library: 1 on top, 0 on bottom (cards hidden)
+    AbilityResolved {'data': ('A24',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A23',)}
+    Lava Dart deals 1 to P0(Burn)
+    P0(Burn) life 1 (-1)
+    flashback: exiled instead of -> graveyard
+  Lava Dart: stack -> exile
+    SpellResolved {'data': ('O217',)}
+  -- declare_attackers
+  attackers: ['Slickshot Show-Off', "Dragon's Rage Channeler", 'Monk Token', 'Monk Token']
+  blocks: []
+  -- combat_damage
+    Slickshot Show-Off deals 7 to P0(Burn)
+    P0(Burn) life -6 (-7)
+    Dragon's Rage Channeler deals 3 to P0(Burn)
+    P0(Burn) life -9 (-3)
+    Monk Token deals 4 to P0(Burn)
+    P0(Burn) life -13 (-4)
+    Monk Token deals 3 to P0(Burn)
+    P0(Burn) life -16 (-3)
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

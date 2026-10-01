@@ -140,6 +140,9 @@ class SimpleAggroPolicy:
                 casts = by(A.ProposeCast) + by(A.Suspend) + by(A.Plot)
                 if casts:
                     return self.rng.choice(casts)
+                equips = [a for a in by(A.ActivateAbility) if a.targets and a.targets[0][0] == "obj"]
+                if equips:                                                  # mana was floated for it
+                    return equips[0]
                 if fetch:
                     return fetch[0]
                 float_ = self._float_for_equip(obs, by(A.ActivateManaAbility))

@@ -1,0 +1,288 @@
+Burn (seat 1) vs Izzet Prowess, cell burn_seat1_prowess_starts, seed 4000381, random_vs_random, result ('win', 1, 'life') (winner: Burn)
+coverage: ['Plotted', 'falls_enters_tapped', 'falls_surveil', 'other_activation', 'phyrexian_life', 'plotted_cast', 'scalding_tarn', 'scry_serum', 'shock_choice', 'slickshot_pump', 'steam_vents', 'thundering_falls']
+  P0(Prowess) declares mulligan
+  P1(Burn) declares keep
+    Kept {'player': 1}
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    MulliganTaken {'count': 1, 'player': 0}
+  (hidden) P0(Prowess) hand -> library
+  P0(Prowess) declares keep
+    Kept {'player': 0}
+
+=== Turn 1 (P0(Prowess)) ===
+  -- upkeep
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 19 (-1)
+    Sacrificed {'controller': 0, 'oid': 150}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A1', ('ciid', 37))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A1',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 2 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Roiling Vortex: hand -> graveyard
+
+=== Turn 3 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 17 (-2)
+  Steam Vents: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 4 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Rift Bolt: hand -> graveyard
+
+=== Turn 5 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  P0(Prowess) casts Lightning Bolt from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to P0(Prowess)
+    P0(Prowess) life 14 (-3)
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O160',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to P0(Prowess)
+    P0(Prowess) life 11 (-3)
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O164',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 7 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 9 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Scalding Tarn: hand -> battlefield
+  -- end
+
+=== Turn 10 (P1(Burn)) ===
+  -- upkeep
+  P0(Prowess) activates fetch_island_mountain of Scalding Tarn
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 10 (-1)
+    Sacrificed {'controller': 0, 'oid': 169}
+  Scalding Tarn: battlefield -> graveyard
+    SearchFound {'data': ('A2', ('ciid', 57))}
+  Thundering Falls: library -> battlefield
+    EntersTapped {'oid': 171}
+    AbilityResolved {'data': ('A2',)}
+  trigger: falls_surveil (P0(Prowess), from Thundering Falls)
+    P0(Prowess) arranges library: 1 on top, 0 on bottom (cards hidden)
+    AbilityResolved {'data': ('A3',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Bloodstained Mire: hand -> battlefield
+  -- end
+  P1(Burn) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 19 (-1)
+    Sacrificed {'controller': 1, 'oid': 173}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A4', ('ciid', 96))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A4',)}
+
+=== Turn 11 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Mountain: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 12 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Skullcrack from hand (normal cost)
+    targets [('player', 0)]
+    cast (2 mana spent)
+    effect no_lifegain on #0
+    effect no_lifegain on #1
+    effect no_prevention on None
+    Skullcrack deals 3 to P0(Prowess)
+    P0(Prowess) life 7 (-3)
+  Skullcrack: stack -> graveyard
+    SpellResolved {'data': ('O178',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 13 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Scalding Tarn: hand -> battlefield
+  P0(Prowess) casts Serum Visions from hand (normal cost)
+    cast (1 mana spent)
+  P0(Prowess) activates fetch_island_mountain of Scalding Tarn
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 6 (-1)
+    Sacrificed {'controller': 0, 'oid': 182}
+  Scalding Tarn: battlefield -> graveyard
+    SearchFoundNothing {'data': ('A5',)}
+    AbilityResolved {'data': ('A5',)}
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    P0(Prowess) arranges library: 2 on top, 0 on bottom (cards hidden)
+  Serum Visions: stack -> graveyard
+    SpellResolved {'data': ('O183',)}
+  Slickshot Show-Off: hand -> exile
+    plotted (turn 13)
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 14 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+  Searing Blaze: hand -> graveyard
+
+=== Turn 15 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 16 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('player', 0)]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to P0(Prowess)
+    P0(Prowess) life 3 (-3)
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O192',)}
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 17 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  P0(Prowess) casts Slickshot Show-Off from exile (plot cost)
+    cast (0 mana spent)
+  Slickshot Show-Off: stack -> battlefield
+    SpellResolved {'data': ('O195',)}
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Slickshot Show-Off')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 1 (-2)
+    cast (0 mana spent)
+  trigger: slickshot_pump (P0(Prowess), from Slickshot Show-Off)
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A6',)}
+    Slickshot Show-Off gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O197',)}
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 0 (-1)
+    Sacrificed {'controller': 0, 'oid': 199}
+  Bloodstained Mire: battlefield -> graveyard
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

@@ -1,0 +1,226 @@
+Burn (seat 0) vs Izzet Prowess, cell burn_seat0_burn_starts, seed 1000097, aggro_vs_aggro, result ('win', 0, 'life') (winner: Burn)
+coverage: ['Attached_flurry_token', 'DelayedTriggerCreated', 'LookedAt', 'TokenCeasedToExist', 'TokenCreated', 'Unattached', 'bauble_activate', 'bauble_draw', 'card_put_on_bottom', 'flurry', 'other_activation', 'scry_preordain', 'shock_choice', 'steam_vents', 'violent_urge']
+  P0(Burn) declares keep
+    Kept {'player': 0}
+  P1(Prowess) declares keep
+    Kept {'player': 1}
+
+=== Turn 1 (P0(Burn)) ===
+  -- upkeep
+  -- main1
+  Inspiring Vantage: hand -> battlefield
+  P0(Burn) casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved {'data': ('O136',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P0(Burn), from Goblin Guide)
+    Revealed {'ciid': 67, 'name': 'Cori-Steel Cutter', 'player': 1, 'zone': 'library'}
+    AbilityResolved {'data': ('A1',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P1(Prowess)
+    P1(Prowess) life 18 (-2)
+  -- end
+
+=== Turn 2 (P1(Prowess)) ===
+  -- upkeep
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  Mountain: hand -> battlefield
+  P1(Prowess) casts Violent Urge from hand (normal cost)
+    targets [('obj', 'Goblin Guide')]
+    cast (1 mana spent)
+    Goblin Guide gets +1/+0
+    effect first_strike on Goblin Guide
+  Violent Urge: stack -> graveyard
+    SpellResolved {'data': ('O140',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P0(Burn)) ===
+  -- upkeep
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P0(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 19 (-1)
+    Sacrificed {'controller': 0, 'oid': 143}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A2', ('ciid', 34))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A2',)}
+  P0(Burn) casts Roiling Vortex from hand (normal cost)
+    cast (2 mana spent)
+  Roiling Vortex: stack -> battlefield
+    SpellResolved {'data': ('O146',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P0(Burn), from Goblin Guide)
+    Revealed {'ciid': 90, 'name': "Mishra's Bauble", 'player': 1, 'zone': 'library'}
+    AbilityResolved {'data': ('A3',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P1(Prowess)
+    P1(Prowess) life 16 (-2)
+  -- end
+
+=== Turn 4 (P1(Prowess)) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0(Burn), from Roiling Vortex)
+    Roiling Vortex deals 1 to P1(Prowess)
+    P1(Prowess) life 15 (-1)
+    AbilityResolved {'data': ('A4',)}
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+    LifePaid {'n': 2, 'player': 1}
+    P1(Prowess) life 13 (-2)
+  Steam Vents: hand -> battlefield
+  P1(Prowess) casts Cori-Steel Cutter from hand (normal cost)
+    cast (2 mana spent)
+  Cori-Steel Cutter: stack -> battlefield
+    SpellResolved {'data': ('O150',)}
+  P1(Prowess) casts Mishra's Bauble from hand (normal cost)
+    cast (0 mana spent)
+  trigger: vortex_free_cast (P0(Burn), from Roiling Vortex)
+  trigger: flurry (P1(Prowess), from Cori-Steel Cutter)
+    Roiling Vortex deals 5 to P1(Prowess)
+    P1(Prowess) life 8 (-5)
+    AbilityResolved {'data': ('A6',)}
+    Monk Token created for P1(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A5',)}
+  Mishra's Bauble: stack -> battlefield
+    SpellResolved {'data': ('O152',)}
+  P1(Prowess) activates bauble_look of Mishra's Bauble -> [('player', 0)]
+    Sacrificed {'controller': 1, 'oid': 154}
+  Mishra's Bauble: battlefield -> graveyard
+    P1(Prowess) looks at the top card of P0(Burn)'s library (private)
+    delayed trigger bauble_draw for turn 5
+    AbilityResolved {'data': ('A7',)}
+  -- declare_attackers
+  attackers: ['Monk Token']
+  blocks: []
+  -- combat_damage
+    Monk Token deals 2 to P0(Burn)
+    P0(Burn) life 17 (-2)
+  -- end
+
+=== Turn 5 (P0(Burn)) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0(Burn), from Roiling Vortex)
+  trigger: bauble_draw (P1(Prowess), from Mishra's Bauble)
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+    AbilityResolved {'data': ('A9',)}
+    Roiling Vortex deals 1 to P0(Burn)
+    P0(Burn) life 16 (-1)
+    AbilityResolved {'data': ('A8',)}
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P0(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 1), ('obj', 'Monk Token')]
+    cast (2 mana spent)
+    Searing Blaze deals 3 to P1(Prowess)
+    P1(Prowess) life 5 (-3)
+    Searing Blaze deals 3 to Monk Token
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O159',)}
+    Destroyed {'data': (153,)}
+  Monk Token: battlefield -> graveyard
+    Cori-Steel Cutter unattached
+    TokenCeasedToExist {'ciid': 121, 'oid': 161}
+  P0(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 15 (-1)
+    Sacrificed {'controller': 0, 'oid': 158}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A10', ('ciid', 35))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A10',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P0(Burn), from Goblin Guide)
+    Revealed {'ciid': 82, 'name': 'Lava Dart', 'player': 1, 'zone': 'library'}
+    AbilityResolved {'data': ('A11',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P1(Prowess)
+    P1(Prowess) life 3 (-2)
+  -- end
+
+=== Turn 6 (P1(Prowess)) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0(Burn), from Roiling Vortex)
+    Roiling Vortex deals 1 to P1(Prowess)
+    P1(Prowess) life 2 (-1)
+    AbilityResolved {'data': ('A12',)}
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  -- main1
+  P1(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+    P1(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  (hidden) P1(Prowess) library -> hand
+  P1(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O165',)}
+  P1(Prowess) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  trigger: flurry (P1(Prowess), from Cori-Steel Cutter)
+    Monk Token created for P1(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A13',)}
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O168',)}
+  -- declare_attackers
+  attackers: ['Monk Token', 'Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monk Token deals 2 to P0(Burn)
+    P0(Burn) life 13 (-2)
+    Monastery Swiftspear deals 1 to P0(Burn)
+    P0(Burn) life 12 (-1)
+  -- end
+
+=== Turn 7 (P0(Burn)) ===
+  -- upkeep
+  trigger: vortex_upkeep (P0(Burn), from Roiling Vortex)
+    Roiling Vortex deals 1 to P0(Burn)
+    P0(Burn) life 11 (-1)
+    AbilityResolved {'data': ('A14',)}
+  (hidden) P0(Burn) library -> hand
+  P0(Burn) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P0(Burn) casts Roiling Vortex from hand (normal cost)
+    cast (2 mana spent)
+  Roiling Vortex: stack -> battlefield
+    SpellResolved {'data': ('O173',)}
+  P0(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 0}
+    P0(Burn) life 10 (-1)
+    Sacrificed {'controller': 0, 'oid': 172}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A15', ('ciid', 36))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A15',)}
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P0(Burn), from Goblin Guide)
+    Revealed {'ciid': 85, 'name': 'Lightning Bolt', 'player': 1, 'zone': 'library'}
+    AbilityResolved {'data': ('A16',)}
+  blocks: []
+  -- combat_damage
+    Goblin Guide deals 2 to P1(Prowess)
+    P1(Prowess) life 0 (-2)
+    PlayerLost {'player': 1, 'reason': 'life'}
+    GameEnded {'result': ('win', 0, 'life')}

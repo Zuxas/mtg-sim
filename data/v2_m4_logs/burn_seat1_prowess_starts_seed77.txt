@@ -1,0 +1,330 @@
+Burn (seat 1) vs Izzet Prowess, cell burn_seat1_prowess_starts, seed 4000077, aggro_vs_random, result ('win', 1, 'life') (winner: Burn)
+coverage: ['DelayedTriggerCreated', 'LookedAt', 'bauble_activate', 'bauble_draw', 'card_put_on_bottom', 'cast_from_exile_permission', 'expressive_iteration', 'falls_enters_tapped', 'falls_surveil', 'other_activation', 'phyrexian_life', 'scalding_tarn', 'scry_preordain', 'shock_choice', 'steam_vents', 'thundering_falls', 'violent_urge', 'violent_urge_double_strike_delirium', 'wooded_foothills']
+  P0(Prowess) declares mulligan
+  P1(Burn) declares keep
+    Kept {'player': 1}
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    MulliganTaken {'count': 1, 'player': 0}
+  (hidden) P0(Prowess) hand -> library
+  P0(Prowess) declares keep
+    Kept {'player': 0}
+
+=== Turn 1 (P0(Prowess)) ===
+  -- upkeep
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 18 (-2)
+  Steam Vents: hand -> battlefield
+  P0(Prowess) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O151',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 1 to P1(Burn)
+    P1(Burn) life 19 (-1)
+  -- end
+
+=== Turn 2 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Arid Mesa: hand -> battlefield
+  P1(Burn) activates fetch_mountain_plains of Arid Mesa
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 18 (-1)
+    Sacrificed {'controller': 1, 'oid': 154}
+  Arid Mesa: battlefield -> graveyard
+    SearchFound {'data': ('A1', ('ciid', 105))}
+  Sacred Foundry: library -> battlefield
+    EntersTapped {'oid': 156}
+    AbilityResolved {'data': ('A1',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Scalding Tarn: hand -> battlefield
+  P0(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A2',)}
+    P0(Prowess) arranges library: 2 on top, 0 on bottom (cards hidden)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O159',)}
+  P0(Prowess) activates fetch_island_mountain of Scalding Tarn
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 17 (-1)
+    Sacrificed {'controller': 0, 'oid': 158}
+  Scalding Tarn: battlefield -> graveyard
+    SearchFound {'data': ('A3', ('ciid', 35))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A3',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 2 to P1(Burn)
+    P1(Burn) life 16 (-2)
+  -- end
+
+=== Turn 4 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Lightning Bolt from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    cast (1 mana spent)
+    Lightning Bolt deals 3 to Monastery Swiftspear
+  Lightning Bolt: stack -> graveyard
+    SpellResolved {'data': ('O164',)}
+    Destroyed {'data': (152,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 5 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) casts Expressive Iteration from hand (normal cost)
+    cast (2 mana spent)
+  (hidden) P0(Prowess) library -> hand
+  Mishra's Bauble: library -> exile
+    effect may_play on (0, 172)
+    P0(Prowess) arranges library: 0 on top, 1 on bottom (cards hidden)
+  Expressive Iteration: stack -> graveyard
+    SpellResolved {'data': ('O170',)}
+  P0(Prowess) casts Mishra's Bauble from exile (normal cost)
+    cast (0 mana spent)
+  Mishra's Bauble: stack -> battlefield
+    SpellResolved {'data': ('O174',)}
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 16 (-1)
+    Sacrificed {'controller': 0, 'oid': 169}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A4', ('ciid', 54))}
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 14 (-2)
+  Steam Vents: library -> battlefield
+    AbilityResolved {'data': ('A4',)}
+  P0(Prowess) activates bauble_look of Mishra's Bauble -> [('player', 0)]
+    Sacrificed {'controller': 0, 'oid': 175}
+  Mishra's Bauble: battlefield -> graveyard
+    P0(Prowess) looks at the top card of P0(Prowess)'s library (private)
+    delayed trigger bauble_draw for turn 6
+    AbilityResolved {'data': ('A5',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 6 (P1(Burn)) ===
+  -- upkeep
+  trigger: bauble_draw (P0(Prowess), from Mishra's Bauble)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    AbilityResolved {'data': ('A6',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Mountain: hand -> battlefield
+  P1(Burn) casts Goblin Guide from hand (normal cost)
+    cast (1 mana spent)
+  Goblin Guide: stack -> battlefield
+    SpellResolved {'data': ('O182',)}
+  -- end
+
+=== Turn 7 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Wooded Foothills: hand -> battlefield
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Goblin Guide')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 12 (-2)
+    cast (0 mana spent)
+    Goblin Guide gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O186',)}
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Goblin Guide')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 10 (-2)
+    cast (0 mana spent)
+    Goblin Guide gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O188',)}
+  P0(Prowess) casts Cori-Steel Cutter from hand (normal cost)
+    cast (2 mana spent)
+  Cori-Steel Cutter: stack -> battlefield
+    SpellResolved {'data': ('O190',)}
+  P0(Prowess) activates fetch_mountain_forest of Wooded Foothills
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 9 (-1)
+    Sacrificed {'controller': 0, 'oid': 185}
+  Wooded Foothills: battlefield -> graveyard
+    SearchFound {'data': ('A7', ('ciid', 55))}
+  Steam Vents: library -> battlefield
+    EntersTapped {'oid': 193}
+    AbilityResolved {'data': ('A7',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 8 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Boros Charm from hand (normal cost)
+    targets [('obj', 'Goblin Guide')]
+    cast (2 mana spent)
+    effect double_strike on Goblin Guide
+  Boros Charm: stack -> graveyard
+    SpellResolved {'data': ('O194',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Goblin Guide']
+  trigger: goblin_guide_reveal (P1(Burn), from Goblin Guide)
+    Revealed {'ciid': 41, 'name': 'Mutagenic Growth', 'player': 0, 'zone': 'library'}
+    AbilityResolved {'data': ('A8',)}
+  blocks: []
+  -- first_strike_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 7 (-2)
+  -- combat_damage
+    Goblin Guide deals 2 to P0(Prowess)
+    P0(Prowess) life 5 (-2)
+  -- end
+
+=== Turn 9 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Mountain: hand -> battlefield
+  P0(Prowess) casts Mutagenic Growth from hand (phyrexian:G cost)
+    targets [('obj', 'Goblin Guide')]
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 3 (-2)
+    cast (0 mana spent)
+    Goblin Guide gets +2/+2
+  Mutagenic Growth: stack -> graveyard
+    SpellResolved {'data': ('O199',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 10 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Sacred Foundry: hand -> battlefield
+    EntersTapped {'oid': 202}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 11 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Thundering Falls: hand -> battlefield
+    EntersTapped {'oid': 204}
+  trigger: falls_surveil (P0(Prowess), from Thundering Falls)
+    P0(Prowess) arranges library: 1 on top, 0 on bottom (cards hidden)
+    AbilityResolved {'data': ('A9',)}
+  P0(Prowess) casts Violent Urge from hand (normal cost)
+    targets [('obj', 'Goblin Guide')]
+    cast (1 mana spent)
+    Goblin Guide gets +1/+0
+    effect first_strike on Goblin Guide
+    effect double_strike on Goblin Guide
+  Violent Urge: stack -> graveyard
+    SpellResolved {'data': ('O205',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 12 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Sunbaked Canyon: hand -> battlefield
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 15 (-1)
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 13 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  P0(Prowess) casts Preordain from hand (normal cost)
+    cast (1 mana spent)
+    P0(Prowess) arranges library: 1 on top, 1 on bottom (cards hidden)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O210',)}
+  Fiery Islet: hand -> battlefield
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 14 (P1(Burn)) ===
+  -- upkeep
+    LifePaid {'n': 1, 'player': 1}
+    P1(Burn) life 14 (-1)
+  P1(Burn) casts Boros Charm from hand (normal cost)
+    targets [('player', 0)]
+    cast (2 mana spent)
+    Boros Charm deals 4 to P0(Prowess)
+    P0(Prowess) life -1 (-4)
+  Boros Charm: stack -> graveyard
+    SpellResolved {'data': ('O214',)}
+    PlayerLost {'player': 0, 'reason': 'life'}
+    GameEnded {'result': ('win', 1, 'life')}

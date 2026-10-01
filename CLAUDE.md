@@ -275,6 +275,36 @@ reports P0 / P1 wins, draws, turn-limit draws and ENGINE ERRORS (exit 1) separat
 records under `data/v2_runs/` (gitignored), labels output EXPERIMENTAL. Only `mono_red_aggro_modern` is
 fully supported (its real sideboard is not). Tests: `tests/v2/test_launcher_v2.py`.
 
+### RULES ENGINE V2 -- milestone four: Burn vs Izzet Prowess (asymmetric) — 2026-10-01
+
+Spec `harness/specs/2026-10-01-v2-m4-matchup-survey.md` (approved as one block, SHIPPED). ENGINE_VERSION v2-m4.0
+(records from v2-m2.1 refuse to replay). Registry +14 cards: all 20 unique cards of
+`decks/auto/izzet_prowess_modern.txt` (main 60; its sideboard is still refused) + the Monk Token definition.
+New machinery: Tarn/Foothills fetches (fail-to-find always legal), Steam Vents shock, Thundering Falls enters
+tapped + surveil 1; Phyrexian mana announced as cost variants (`ProposeCast cost="normal"|"phyrexian:G"`, card
+ruling: chosen on announce; life paid with PayCost); private library decisions (`ArrangeCards`: scry / surveil /
+Expressive Iteration, every placement + order enumerated, `Observation.my_look` for the decider only,
+`my_known` per viewer); `rules/statics.py` (power / toughness / keywords on demand: Equipment, delirium -- cards
+only, multi-type counts each type -- gained first/double strike); DRC must attack (CR 508.1d) but can block;
+Cori-Steel Cutter (tokens = `CardInstance(token=True)`, 704.5d; `state.attachments`, equip = targeted
+sorcery-speed `ActivateAbility(targets=...)`, 701.3b, 704.5n; flurry via `spells_cast_turn` with an optional
+attach decision; trample divisions with `("player", n)` only after lethal, 702.19d); play-from-exile permission
+(TurnEffect may_play; land drop + timing still apply; expires at cleanup); Lava Dart flashback (`cost="flashback"`
+from the graveyard, `PayCost(sacrifice=(mountain,))`, stack object `flashback=True` -> exiled whenever it leaves
+the stack); Mishra's Bauble (targeted activation, private look, delayed trigger `state.delayed` firing at the
+next turn's upkeep after the Bauble is gone); Slickshot (pump trigger, `Plot` special action, `cost="plot"` cast
+from exile on a later own main phase, free, optional). Hidden information: NO ObjectId of a library/hand card
+appears anywhere in the event log (hidden moves, draws, mulligan bottoms, continuations, looks, arrangements log
+commitments; instrumented test checks every integer of every event).
+Validation `python scripts/v2_matchup_validation.py` -> data/v2_m4_validation.json + data/v2_m4_logs/ (29 logs,
+every mechanic, wins by both decks in every cell): 10,000 games as four 2,500-game cells (Burn seat 0/1 x Burn /
+Prowess starts), invariants on: 0 crashes / violations / dead ends / illegal accepted (428,817 stale-action
+probes), 1,252 exact JSON replays, 400/400 repeated seeds identical, 0 turn-limit draws. Diagnostic only (untuned
+pilots): Burn 6,221 - Prowess 3,779. Throughput 57.8 g/s wall (20 workers, invariants on), 39.5 g/s single-core
+matchup (invariants off), M7 20.7-23.3 g/s (equal to the pre-M4 engine measured side by side; floor 20 met).
+Tests `python -m pytest -q tests/v2` (199; focused `tests/v2/test_m4_prowess.py`). Full suite 366 passed, same
+3 failures / 4 collection errors. Legacy engines unchanged.
+
 ### Exact card identity + versioned Scryfall snapshot — 2026-09-30
 
 Spec `harness/specs/2026-09-30-card-identity-gate.md`, commits bd4b87e + the snapshot commit. `CardDB.get` is EXACT

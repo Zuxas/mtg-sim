@@ -1,0 +1,378 @@
+Burn (seat 1) vs Izzet Prowess, cell burn_seat1_burn_starts, seed 3000293, aggro_vs_random, result ('win', 0, 'life') (winner: Prowess)
+coverage: ['Attached', 'Attached_flurry_token', 'DelayedTriggerCreated', 'LookedAt', 'TokenCreated', 'bauble_activate', 'bauble_draw', 'card_put_on_bottom', 'equip', 'expressive_iteration', 'flurry', 'monk_token_prowess', 'other_activation', 'scry_preordain', 'shock_choice', 'slickshot_pump', 'steam_vents', 'trample_excess_to_player']
+  P1(Burn) declares keep
+    Kept {'player': 1}
+  P0(Prowess) declares mulligan
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) hand -> library
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    MulliganTaken {'count': 1, 'player': 0}
+  (hidden) P0(Prowess) hand -> library
+  P0(Prowess) declares keep
+    Kept {'player': 0}
+
+=== Turn 1 (P1(Burn)) ===
+  -- upkeep
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Inspiring Vantage: hand -> battlefield
+  P1(Burn) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O151',)}
+  -- end
+
+=== Turn 2 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) casts Mishra's Bauble from hand (normal cost)
+    cast (0 mana spent)
+  Mishra's Bauble: stack -> battlefield
+    SpellResolved {'data': ('O155',)}
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 19 (-1)
+    Sacrificed {'controller': 0, 'oid': 154}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A1', ('ciid', 35))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A1',)}
+  P0(Prowess) activates bauble_look of Mishra's Bauble -> [('player', 0)]
+    Sacrificed {'controller': 0, 'oid': 156}
+  Mishra's Bauble: battlefield -> graveyard
+    P0(Prowess) looks at the top card of P0(Prowess)'s library (private)
+    delayed trigger bauble_draw for turn 3
+    AbilityResolved {'data': ('A2',)}
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 3 (P1(Burn)) ===
+  -- upkeep
+  trigger: bauble_draw (P0(Prowess), from Mishra's Bauble)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+    AbilityResolved {'data': ('A3',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: []
+  Mountain: hand -> battlefield
+  -- end
+
+=== Turn 4 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Fiery Islet: hand -> battlefield
+  P0(Prowess) casts Preordain from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 18 (-1)
+    cast (1 mana spent)
+    P0(Prowess) arranges library: 2 on top, 0 on bottom (cards hidden)
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  Preordain: stack -> graveyard
+    SpellResolved {'data': ('O165',)}
+  P0(Prowess) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O168',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: [('Monastery Swiftspear', 'Monastery Swiftspear')]
+  -- combat_damage
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+  -- end
+
+=== Turn 5 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  P1(Burn) casts Monastery Swiftspear from hand (normal cost)
+    cast (1 mana spent)
+  Monastery Swiftspear: stack -> battlefield
+    SpellResolved {'data': ('O171',)}
+  Sacred Foundry: hand -> battlefield
+    EntersTapped {'oid': 173}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 1 to P0(Prowess)
+    P0(Prowess) life 17 (-1)
+  -- end
+
+=== Turn 6 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Bloodstained Mire: hand -> battlefield
+  P0(Prowess) casts Cori-Steel Cutter from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 16 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A4',)}
+  Cori-Steel Cutter: stack -> battlefield
+    SpellResolved {'data': ('O176',)}
+  P0(Prowess) activates fetch_swamp_mountain of Bloodstained Mire
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 15 (-1)
+    Sacrificed {'controller': 0, 'oid': 175}
+  Bloodstained Mire: battlefield -> graveyard
+    SearchFound {'data': ('A5', ('ciid', 36))}
+  Mountain: library -> battlefield
+    AbilityResolved {'data': ('A5',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 2 to P1(Burn)
+    P1(Burn) life 18 (-2)
+  -- end
+
+=== Turn 7 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Lightning Helix from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A7',)}
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A6',)}
+    Lightning Helix deals 3 to Monastery Swiftspear
+    P1(Burn) life 21 (+3)
+  Lightning Helix: stack -> graveyard
+    SpellResolved {'data': ('O180',)}
+    Destroyed {'data': (172,)}
+  Monastery Swiftspear: battlefield -> graveyard
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  Mountain: hand -> battlefield
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 2 to P0(Prowess)
+    P0(Prowess) life 13 (-2)
+  -- end
+
+=== Turn 8 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+    LifePaid {'n': 2, 'player': 0}
+    P0(Prowess) life 11 (-2)
+  Steam Vents: hand -> battlefield
+  P0(Prowess) casts Expressive Iteration from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 10 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A8',)}
+  (hidden) P0(Prowess) library -> hand
+  Fiery Islet: library -> exile
+    effect may_play on (0, 189)
+    P0(Prowess) arranges library: 0 on top, 1 on bottom (cards hidden)
+  Expressive Iteration: stack -> graveyard
+    SpellResolved {'data': ('O187',)}
+  P0(Prowess) casts Expressive Iteration from hand (normal cost)
+    cast (2 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+  trigger: flurry (P0(Prowess), from Cori-Steel Cutter)
+    Monk Token created for P0(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A10',)}
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A9',)}
+  (hidden) P0(Prowess) library -> hand
+  Dragon's Rage Channeler: library -> exile
+    effect may_play on (0, 194)
+    P0(Prowess) arranges library: 0 on top, 1 on bottom (cards hidden)
+  Expressive Iteration: stack -> graveyard
+    SpellResolved {'data': ('O191',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Monk Token']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 3 to P1(Burn)
+    P1(Burn) life 18 (-3)
+    Monk Token deals 2 to P1(Burn)
+    P1(Burn) life 16 (-2)
+  -- end
+
+=== Turn 9 (P1(Burn)) ===
+  -- upkeep
+  P1(Burn) casts Boros Charm from hand (normal cost)
+    targets [('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A11',)}
+  P1(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 1), ('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A12',)}
+    Searing Blaze deals 1 to P1(Burn)
+    P1(Burn) life 15 (-1)
+    Searing Blaze deals 1 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O197',)}
+    effect double_strike on Monastery Swiftspear
+  Boros Charm: stack -> graveyard
+    SpellResolved {'data': ('O196',)}
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  -- main1
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 3 to P0(Prowess)
+    P0(Prowess) life 7 (-3)
+  -- end
+
+=== Turn 10 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Steam Vents: hand -> battlefield
+    EntersTapped {'oid': 202}
+  P0(Prowess) casts Slickshot Show-Off from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 6 (-1)
+    cast (2 mana spent)
+  Slickshot Show-Off: stack -> battlefield
+    SpellResolved {'data': ('O203',)}
+  P0(Prowess) casts Slickshot Show-Off from hand (normal cost)
+    cast (2 mana spent)
+  trigger: flurry (P0(Prowess), from Cori-Steel Cutter)
+    Monk Token created for P0(Prowess)
+    Cori-Steel Cutter attached to Monk Token
+    AbilityResolved {'data': ('A13',)}
+  Slickshot Show-Off: stack -> battlefield
+    SpellResolved {'data': ('O205',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Monk Token', 'Slickshot Show-Off', 'Monk Token', 'Slickshot Show-Off']
+  blocks: []
+  -- combat_damage
+    Monastery Swiftspear deals 1 to P1(Burn)
+    P1(Burn) life 14 (-1)
+    Monk Token deals 1 to P1(Burn)
+    P1(Burn) life 13 (-1)
+    Slickshot Show-Off deals 1 to P1(Burn)
+    P1(Burn) life 12 (-1)
+    Monk Token deals 2 to P1(Burn)
+    P1(Burn) life 10 (-2)
+    Slickshot Show-Off deals 1 to P1(Burn)
+    P1(Burn) life 9 (-1)
+  -- end
+
+=== Turn 11 (P1(Burn)) ===
+  -- upkeep
+  (hidden) P1(Burn) library -> hand
+  P1(Burn) draws
+  P1(Burn) casts Searing Blaze from hand (normal cost)
+    targets [('player', 0), ('obj', 'Monastery Swiftspear')]
+    cast (2 mana spent)
+  trigger: prowess (P1(Burn), from Monastery Swiftspear)
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A14',)}
+    Searing Blaze deals 1 to P0(Prowess)
+    P0(Prowess) life 5 (-1)
+    Searing Blaze deals 1 to Monastery Swiftspear
+  Searing Blaze: stack -> graveyard
+    SpellResolved {'data': ('O209',)}
+  -- main1
+  -- declare_attackers
+  attackers: []
+  -- end
+
+=== Turn 12 (P0(Prowess)) ===
+  -- upkeep
+  (hidden) P0(Prowess) library -> hand
+  P0(Prowess) draws
+  -- main1
+  Wooded Foothills: hand -> battlefield
+  P0(Prowess) casts Cori-Steel Cutter from hand (normal cost)
+    LifePaid {'n': 1, 'player': 0}
+    P0(Prowess) life 4 (-1)
+    cast (2 mana spent)
+  trigger: prowess (P0(Prowess), from Monastery Swiftspear)
+  trigger: prowess (P0(Prowess), from Monk Token)
+  trigger: slickshot_pump (P0(Prowess), from Slickshot Show-Off)
+  trigger: prowess (P0(Prowess), from Monk Token)
+  trigger: slickshot_pump (P0(Prowess), from Slickshot Show-Off)
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A19',)}
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A18',)}
+    Slickshot Show-Off gets +2/+0
+    AbilityResolved {'data': ('A17',)}
+    Monk Token gets +1/+1
+    AbilityResolved {'data': ('A16',)}
+    Monastery Swiftspear gets +1/+1
+    AbilityResolved {'data': ('A15',)}
+  Cori-Steel Cutter: stack -> battlefield
+    SpellResolved {'data': ('O213',)}
+  P0(Prowess) activates equip of Cori-Steel Cutter -> [('obj', 'Monastery Swiftspear')]
+    Cori-Steel Cutter attached to Monastery Swiftspear
+    AbilityResolved {'data': ('A20',)}
+  -- declare_attackers
+  attackers: ['Monastery Swiftspear', 'Monk Token', 'Slickshot Show-Off', 'Monk Token', 'Slickshot Show-Off']
+  blocks: [('Monastery Swiftspear', 'Monastery Swiftspear')]
+  -- combat_damage
+  damage division for Monastery Swiftspear: [('Monastery Swiftspear', 2), ('player', 1)]
+    Monastery Swiftspear deals 2 to Monastery Swiftspear
+    Monastery Swiftspear deals 1 to P1(Burn)
+    P1(Burn) life 8 (-1)
+    Monk Token deals 2 to P1(Burn)
+    P1(Burn) life 6 (-2)
+    Slickshot Show-Off deals 3 to P1(Burn)
+    P1(Burn) life 3 (-3)
+    Monk Token deals 2 to P1(Burn)
+    P1(Burn) life 1 (-2)
+    Slickshot Show-Off deals 3 to P1(Burn)
+    P1(Burn) life -2 (-3)
+    Monastery Swiftspear deals 1 to Monastery Swiftspear
+    Destroyed {'data': (152,)}
+  Monastery Swiftspear: battlefield -> graveyard
+    PlayerLost {'player': 1, 'reason': 'life'}
+    GameEnded {'result': ('win', 0, 'life')}

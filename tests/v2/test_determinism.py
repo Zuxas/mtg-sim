@@ -123,6 +123,41 @@ def test_stored_json_records_replay_in_fresh_processes_with_other_hash_seeds():
             assert f"REPLAYED {len(recs)}" in out.stdout, (hashseed, out.stdout[-500:], out.stderr[-2000:])
 
 
+def test_burn_mirror_games_and_matches_replay_in_fresh_processes_with_other_hash_seeds():
+    """Milestone two: the real Burn list (triggers, search, shuffles, continuations) and Bo3
+    match records replay exactly under other PYTHONHASHSEED values."""
+    from engine.v2.decklists import main_deck
+    from engine.v2.match import Match, make_match_record
+    from engine.v2.policies import SimpleAggroPolicy
+    burn = main_deck("mono_red_aggro_modern")
+    games = []
+    for seed in range(9):
+        pols = [RandomLegalPolicy(seed), SimpleAggroPolicy(seed + 1)] if seed % 2 else             [SimpleAggroPolicy(seed), SimpleAggroPolicy(seed + 1)]
+        g = Game.new(burn, burn, 5_000 + seed, starting_player=seed % 2)
+        g.run(pols)
+        games.append(make_record(g))
+    side = ["Lightning Helix", "Lightning Helix", "Skullcrack", "Skullcrack"]
+    matches = []
+    for seed in range(2):
+        m = Match(burn, side, burn, side, 6_000 + seed)
+        m.run([SimpleAggroPolicy(seed), RandomLegalPolicy(seed + 1)])
+        matches.append(make_match_record(m))
+    code = ("import json,sys; sys.path.insert(0,%r); from engine.v2.record import replay;"
+            "from engine.v2.match import replay_match; g=json.load(open(%r)); m=json.load(open(%r));"
+            "[replay(r) for r in g]; [replay_match(r) for r in m]; print('REPLAYED', len(g), len(m))")
+    with tempfile.TemporaryDirectory() as d:
+        gp, mp = os.path.join(d, "g.json"), os.path.join(d, "m.json")
+        json.dump(games, open(gp, "w"))
+        json.dump(matches, open(mp, "w"))
+        for hashseed in (None, "4242", "7"):
+            env = {k: v for k, v in os.environ.items() if k != "PYTHONHASHSEED"}
+            if hashseed is not None:
+                env["PYTHONHASHSEED"] = hashseed
+            out = subprocess.run([sys.executable, "-c", code % (ROOT, gp, mp)], capture_output=True, text=True,
+                                 cwd=ROOT, env=env)
+            assert f"REPLAYED {len(games)} {len(matches)}" in out.stdout, (hashseed, out.stderr[-2000:])
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

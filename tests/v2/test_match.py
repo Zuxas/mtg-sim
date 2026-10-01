@@ -12,7 +12,17 @@ from engine.v2.match import (ChoosePlayDraw, DoneSideboarding, Match, MatchError
                              SideboardSwap, make_match_record, replay_match)
 from engine.v2.policies import RandomLegalPolicy, SimpleAggroPolicy
 
-BURN = main_deck("mono_red_aggro_modern")
+_DECK = []
+
+
+def _burn():
+    """The Burn list, loaded lazily (not at collection time: loading card data during pytest
+    collection changes the timing of unrelated tests)."""
+    if not _DECK:
+        _DECK.extend(main_deck("mono_red_aggro_modern"))
+    return list(_DECK)
+
+
 SIDE = ["Lightning Helix", "Lightning Helix", "Skullcrack", "Skullcrack"]     # supported, 4-of rule holds
 
 
@@ -44,15 +54,15 @@ class _MatchRandom:
 
 
 def test_75_card_rules_and_support_are_enforced_before_the_match():   # CR 100.2a, 100.4a
-    assert _raises(MatchError, lambda: Match(BURN[:59], [], BURN, [], 1))
-    assert _raises(MatchError, lambda: Match(BURN, ["Mountain"] * 16, BURN, [], 1))
-    assert _raises(MatchError, lambda: Match(BURN, ["Skullcrack"] * 3, BURN, [], 1))       # 2 + 3 > 4
-    assert _raises(UnsupportedCardError, lambda: Match(BURN, ["Chalice of the Void"], BURN, [], 1))
-    Match(BURN, SIDE, BURN, SIDE, 1)
+    assert _raises(MatchError, lambda: Match(_burn()[:59], [], _burn(), [], 1))
+    assert _raises(MatchError, lambda: Match(_burn(), ["Mountain"] * 16, _burn(), [], 1))
+    assert _raises(MatchError, lambda: Match(_burn(), ["Skullcrack"] * 3, _burn(), [], 1))       # 2 + 3 > 4
+    assert _raises(UnsupportedCardError, lambda: Match(_burn(), ["Chalice of the Void"], _burn(), [], 1))
+    Match(_burn(), SIDE, _burn(), SIDE, 1)
 
 
 def test_game_one_chooser_and_play_draw():                               # CR 103.1
-    m = Match(BURN, SIDE, BURN, SIDE, 5)
+    m = Match(_burn(), SIDE, _burn(), SIDE, 5)
     kind, p = m.pending
     assert kind == "play_draw" and set(m.legal_actions()) == {ChoosePlayDraw(p, True), ChoosePlayDraw(p, False)}
     m.apply(ChoosePlayDraw(p, False))                                     # chooses to draw
@@ -60,7 +70,7 @@ def test_game_one_chooser_and_play_draw():                               # CR 10
 
 
 def test_loser_chooses_next_and_draw_keeps_previous_chooser():          # CR 103.1
-    m = Match(BURN, SIDE, BURN, SIDE, 9, turn_limit=50)
+    m = Match(_burn(), SIDE, _burn(), SIDE, 9, turn_limit=50)
     first = m.pending[1]
     m.apply(ChoosePlayDraw(first, True))
     m.current.run([SimpleAggroPolicy(1), SimpleAggroPolicy(2)])
@@ -71,7 +81,7 @@ def test_loser_chooses_next_and_draw_keeps_previous_chooser():          # CR 103
             m.apply(DoneSideboarding(m.pending[1]))
         assert m.pending == ("play_draw", loser)
     # a drawn game keeps the previous chooser
-    m2 = Match(BURN, SIDE, BURN, SIDE, 11, turn_limit=1)                  # 1-turn games end in draws
+    m2 = Match(_burn(), SIDE, _burn(), SIDE, 11, turn_limit=1)                  # 1-turn games end in draws
     c = m2.pending[1]
     m2.apply(ChoosePlayDraw(c, True))
     m2.current.run([SimpleAggroPolicy(1), SimpleAggroPolicy(2)])
@@ -83,7 +93,7 @@ def test_loser_chooses_next_and_draw_keeps_previous_chooser():          # CR 103
 
 
 def test_sideboard_swaps_are_staged_and_used_by_the_next_game():       # CR 100.4
-    m = Match(BURN, SIDE, BURN, SIDE, 13)
+    m = Match(_burn(), SIDE, _burn(), SIDE, 13)
     m.apply(ChoosePlayDraw(m.pending[1], True))
     m.current.run([SimpleAggroPolicy(1), SimpleAggroPolicy(2)])
     m.finish_game()
@@ -104,7 +114,7 @@ def test_sideboard_swaps_are_staged_and_used_by_the_next_game():       # CR 100.
 
 def test_complete_matches_end_at_two_wins_and_replay_exactly():
     for seed in range(6):
-        m = Match(BURN, SIDE, BURN, SIDE, 100 + seed, check_invariants=True)
+        m = Match(_burn(), SIDE, _burn(), SIDE, 100 + seed, check_invariants=True)
         pols = [SimpleAggroPolicy(seed), RandomLegalPolicy(seed + 1)] if seed % 2 else \
             [SimpleAggroPolicy(seed), SimpleAggroPolicy(seed + 1)]
         mp = [_MatchRandom(seed), _MatchRandom(seed + 50)]
@@ -118,7 +128,7 @@ def test_complete_matches_end_at_two_wins_and_replay_exactly():
 
 
 def test_tampered_match_record_is_rejected():
-    m = Match(BURN, SIDE, BURN, SIDE, 77)
+    m = Match(_burn(), SIDE, _burn(), SIDE, 77)
     m.run([SimpleAggroPolicy(1), SimpleAggroPolicy(2)], [_MatchRandom(1), _MatchRandom(2)])
     rec = make_match_record(m)
     bad = dict(rec, match_hash="0" * 64)

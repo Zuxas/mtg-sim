@@ -16,6 +16,8 @@ outside an action opens its own.
 """
 from __future__ import annotations
 
+import hashlib
+
 from engine.v2 import abilities as AB
 from engine.v2.events import Event, ev
 from engine.v2.objects import CardInstance, GameObject, StackEntry
@@ -244,6 +246,7 @@ TOUCHES = {
     "drop_trigger": ("pending_triggers",),
     "priority_resume": ("priority_resume",),
     "pending_entry": ("pending_entry",),
+    "set_continuation": ("continuation",),
 }
 
 
@@ -273,7 +276,10 @@ def _h_shuffle(s, evs, player):
     _keep_rng(s)
     lib = _zone(s, (player, "library"))
     s.rng.shuffle(lib)
-    evs.append(ev("Shuffled", player=player, order=tuple(lib)))
+    # The new order is hidden information: the event carries a digest keyed by the (secret) game
+    # RNG state, so the transition hash still commits to the order without revealing it.
+    commitment = hashlib.sha256((repr(tuple(lib)) + repr(s.rng.getstate())).encode()).hexdigest()[:24]
+    evs.append(ev("Shuffled", player=player, commitment=commitment))
 
 
 def _h_draw(s, evs, player):
@@ -288,6 +294,11 @@ def _h_draw(s, evs, player):
 
 def _h_move(s, evs, oid, dest, position="end", controller=None, tapped=False):
     _move(s, oid, dest, position, controller, evs, tapped)
+
+
+def _h_set_continuation(s, evs, value):
+    s.continuation = value
+    evs.append(ev("Continuation", value=tuple(value) if value else None))
 
 
 def _h_pending_entry(s, evs, value):

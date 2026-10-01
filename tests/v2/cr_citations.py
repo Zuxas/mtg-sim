@@ -89,4 +89,8 @@ CITATIONS = {
     "605.3b": ['An activated mana ability doesn’t go on the stack, so it can’t be targeted, countered, or otherwise responded to.'],
     "614.1c": ['Effects that read “[This permanent] enters with .'],
     "614.1d": ['Continuous effects that read “[This permanent] enters .'],
+    "608.2": ['If the object that’s resolving is an instant spell, a sorcery spell, or an ability, its resolution may involve several steps.'],
+    "701.23": ['Search'],
+    "701.23a": ['To search for a card in a zone, look at all cards in that zone (even if it’s a hidden zone) and find a card that matches the given description.'],
+    "701.23b": ['If a player is searching a hidden zone for cards with a stated quality, such as a card with a certain card type or color, that player isn’t required to find som'],
 }

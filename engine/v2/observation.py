@@ -53,10 +53,21 @@ class Observation:
     attackers: tuple
     blocks: tuple
     pending_triggers: tuple         # ((tid, controller, ability key, source card name), ...) -- public
+    my_search: tuple                # ((oid, name), ...) matching cards -- ONLY while this seat searches
     my_attack_choices: tuple        # ((oid, attacks), ...) staged by this seat (active player only)
     my_block_choices: tuple         # ((blocker, attacker or None), ...) staged by this seat (defender only)
     my_divisions: tuple             # ((attacker, ((blocker, dmg), ...)), ...) staged by this seat (active only)
     result: object
+
+
+def _search_view(state, seat) -> tuple:
+    pd = state.pending
+    if pd is None or pd.kind != "search_choice" or pd.player != seat:
+        return ()
+    from engine.v2.abilities import fetch_matches
+    key = state.continuation.data[0]
+    return tuple((oid, state.instances[state.objects[oid].ciid].name)
+                 for oid in sorted(state.zones[(seat, "library")]) if fetch_matches(state, key, oid))
 
 
 def observe(state, seat: int) -> Observation:
@@ -93,6 +104,7 @@ def observe(state, seat: int) -> Observation:
         attackers=tuple(state.attackers), blocks=tuple(sorted(state.blocks.items())),
         pending_triggers=tuple((t.tid, t.controller, t.key, state.instances[t.ciid].name)
                                for t in state.pending_triggers),
+        my_search=_search_view(state, seat),
         my_attack_choices=tuple(sorted(state.attack_choices.items())) if attacking else (),
         my_block_choices=tuple(sorted(state.block_choices.items(), key=lambda kv: kv[0])) if defending else (),
         my_divisions=tuple(sorted(state.divisions.items())) if attacking else (),

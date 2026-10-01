@@ -152,7 +152,41 @@ _CYCLE_DRAW = ActivatedSpec("land_draw", ("1",), True, 0, True)
 ACTIVATED = {                         # effect_key -> activated (non-mana) abilities, in printed order
     "sunbaked_canyon": (_CYCLE_DRAW,),
     "fiery_islet": (_CYCLE_DRAW,),
+    # "{T}, Pay 1 life, Sacrifice this land: Search your library for a X or Y card, put it onto the
+    # battlefield, then shuffle."
+    "arid_mesa": (ActivatedSpec("fetch_mountain_plains", (), True, 1, True),),
+    "bloodstained_mire": (ActivatedSpec("fetch_swamp_mountain", (), True, 1, True),),
 }
+# fetch ability key -> the land subtypes it searches for (CR 701.23a: "a Mountain or Plains card")
+FETCH_TYPES = {"fetch_mountain_plains": ("Mountain", "Plains"), "fetch_swamp_mountain": ("Swamp", "Mountain")}
+
+
+def fetch_matches(state, key, oid) -> bool:
+    """Exact search predicate: a card with one of the named land subtypes."""
+    return any(t in state.definition(oid).subtypes for t in FETCH_TYPES[key])
+
+
+# ------------------------------------------------------------------ paused resolutions (typed, hashed)
+class Continuation(NamedTuple):
+    """A resolution paused for a player's choice (CR 608.2): which entry, which stage, the data
+    fixed so far, and a digest checked on resume (corruption guard). Serializable plain values."""
+    kind: str
+    sid: str
+    stage: str
+    data: tuple
+    digest: str
+
+
+def continuation(kind, sid, stage, data) -> Continuation:
+    import hashlib
+    body = repr((kind, sid, stage, tuple(data)))
+    return Continuation(kind, sid, stage, tuple(data), hashlib.sha256(body.encode()).hexdigest()[:16])
+
+
+def check_continuation(c) -> None:
+    good = continuation(c.kind, c.sid, c.stage, c.data).digest
+    if c.digest != good:
+        raise RuntimeError(f"corrupted continuation {c}")
 assert all(not a.targets for specs in ACTIVATED.values() for a in specs)    # no targeted activations yet
 
 # ability key -> (zone its source must be in, target kinds)
@@ -225,7 +259,9 @@ RESOLVE = {
     "vortex_free_cast": _res_vortex_free_cast,
 }
 
-ABILITY_NAMES = {"land_draw": "Draw a card", "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
+ABILITY_NAMES = {"fetch_mountain_plains": "Search for a Mountain or Plains card",
+                 "fetch_swamp_mountain": "Search for a Swamp or Mountain card",
+                 "land_draw": "Draw a card", "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
                  "vortex_upkeep": "Roiling Vortex upkeep damage", "vortex_free_cast": "Roiling Vortex free-spell damage"}
 
 

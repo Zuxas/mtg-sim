@@ -117,6 +117,13 @@ class ChooseTriggerTargets:
 
 
 @dataclass(frozen=True)
+class ChooseSearchResult:
+    """The searching player's private choice (CR 701.23a); None = find nothing (CR 701.23b)."""
+    player: int
+    oid: object
+
+
+@dataclass(frozen=True)
 class ChooseEntryPayment:
     """'As this land enters, you may pay 2 life. If you don't, it enters tapped.' (CR 614.1c)"""
     player: int
@@ -132,7 +139,8 @@ class Concede:
 ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCards, PassPriority, PlayLand,
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
                                         ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
-                                        ChooseTriggerTargets, ActivateAbility, ChooseEntryPayment, Concede)}
+                                        ChooseTriggerTargets, ActivateAbility, ChooseEntryPayment, ChooseSearchResult,
+                                        Concede)}
 
 
 def to_record(a) -> list:

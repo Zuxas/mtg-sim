@@ -189,6 +189,11 @@ class Game:
         elif k == "discard":
             n = pd.info[0]
             out = [A.DiscardToHandSize(p, c) for c in combinations(sorted(s.zones[(p, "hand")]), n)]
+        elif k == "search_choice":
+            c = s.continuation
+            out = [A.ChooseSearchResult(p, None)]                         # CR 701.23b: may fail to find
+            out += [A.ChooseSearchResult(p, oid) for oid in sorted(s.zones[(p, "library")])
+                    if AB.fetch_matches(s, c.data[0], oid)]
         elif k == "entry_payment":
             oid = pd.info[0]
             out = [A.ChooseEntryPayment(p, oid, False)]                  # the tapped result is always allowed
@@ -432,8 +437,7 @@ class Game:
         passes = s.passes + 1
         if passes >= 2:                                                   # CR 117.4
             if s.stack:
-                self._resolve_top()
-                if s.result is None:
+                if self._resolve_top() and s.result is None:              # False: paused for a choice
                     self._give_priority(s.active)                         # CR 117.3b
             else:
                 self._leave_step()
@@ -527,43 +531,80 @@ class Game:
         self._commit("rollback", [op("note", "RollbackReason", reason), op("revert_cast", reverse_mana)])
 
     # ================================================================ resolution (CR 608)
-    def _resolve_ability(self, e):
+    def _resolve_ability(self, e) -> bool:
         s = self.s
         if not AB.still_true(s, e):                                       # CR 603.4
             self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityRemoved", e.sid)])
-            return
+            return True
         if e.targets:                                                     # CR 608.2b
             kinds = AB.ability_targets(e.ability)
             legal = [t for t in e.targets if casting.target_still_legal_kinds(s, t, kinds)]
             if not legal:
                 self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityFizzled", e.sid)])
-                return
+                return True
+        if e.ability in AB.FETCH_TYPES:                                   # paused: the searcher chooses
+            self._commit("resolve_pause", [
+                op("set_continuation", AB.continuation("fetch", e.sid, "search", (e.ability,))),
+                op("pending", "search_choice", e.controller, (e.sid,))])
+            return False
         ops = AB.RESOLVE[e.ability](AB.context(s, e))
         ops += [op("remove_entry", e.sid), op("note", "AbilityResolved", e.sid)]
         self._commit("resolve", ops)
+        return True
 
-    def _resolve_top(self):
+    def _do_ChooseSearchResult(self, a):
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        if a.oid is None:
+            self._continue_resolution([op("note", "SearchFoundNothing", c.sid)])
+            return
+        if replacement.needs_entry_choice(s, a.oid):                     # fetched shock land: choose first
+            self._commit("resolve_pause", [
+                op("note", "SearchFound", c.sid, a.oid),
+                op("set_continuation", AB.continuation("fetch", c.sid, "entry", c.data + (a.oid,))),
+                op("pending_entry", (a.oid, a.player, "fetch")),
+                op("pending", "entry_payment", a.player, (a.oid,))])
+            return
+        self._continue_resolution([op("note", "SearchFound", c.sid, a.oid)]
+                                  + self._land_entry_ops(a.oid, a.player, False))
+
+    def _continue_resolution(self, ops):
+        """Finish a paused fetch: put the card onto the battlefield (if any), THEN shuffle
+        (even when nothing was found), remove the ability, give priority (CR 117.3b)."""
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        e = s.entry(c.sid)
+        ops = list(ops) + [op("shuffle", e.controller), op("set_continuation", None),
+                           op("remove_entry", e.sid), op("note", "AbilityResolved", e.sid)]
+        self._commit("resolve", ops)
+        if s.result is None:
+            self._give_priority(s.active)
+
+    def _resolve_top(self) -> bool:
+        """Resolve the top object; False if it paused for a player's choice."""
         s = self.s
         e = s.stack[-1]
         if e.state == "ability":
-            self._resolve_ability(e)
-            return
+            return self._resolve_ability(e)
         d = s.definition(e.ciid, is_ciid=True)
         if d.is_permanent_spell:                                          # CR 608.3a, 110.2
             ops = [op("remove_entry", e.sid), op("move", e.oid, "battlefield", "end", e.controller),
                    op("note", "SpellResolved", e.sid)]
             self._commit("resolve", ops)
-            return
+            return True
         legal = [t for t in e.targets if casting.target_still_legal(s, t, d.effect_key)]   # CR 608.2b
         if e.targets and not legal:
             self._commit("resolve", [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),
                                      op("note", "SpellFizzled", e.sid)])
-            return
+            return True
         ctx_targets = tuple(t if t[0] != "stack" else ("stack", t[1], s.entry(t[1]).oid) for t in legal)
         ops = EFFECTS[d.effect_key](EffectContext(e.controller, e.oid, ctx_targets))
         ops += [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),     # CR 608.2n
                 op("note", "SpellResolved", e.sid)]
         self._commit("resolve", ops)
+        return True
 
     # ================================================================ combat (CR 508-511)
     def _attack_next(self):

@@ -22,7 +22,7 @@ def compute(state) -> tuple:
         t = state.toughness(oid)
         if t <= 0:                                                    # CR 704.5f
             ops.append(op("move", oid, "graveyard", "end"))
-        elif state.objects[oid].damage >= t:                          # CR 704.5g
+        elif state.objects[oid].damage >= t and not state.has_effect("indestructible", oid):   # 704.5g, 702.12b
             ops.append(op("note", "Destroyed", oid))
             ops.append(op("move", oid, "graveyard", "end"))
     for p, reason in losers:

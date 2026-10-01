@@ -68,6 +68,8 @@ class GameState:
     blocked: tuple = ()                                    # attackers that became blocked (stay blocked)
     divisions: dict = field(default_factory=dict)          # attacker oid -> ((blocker, dmg), ...) staged
     first_strike_done: bool = False
+    first_step_strikers: tuple = ()                        # creatures with first/double strike as the first
+                                                           # combat damage step began (CR 702.4b)
     open_cast: object = None                               # dict while a casting transaction is open
     lost: list = field(default_factory=lambda: [None, None])
     pending_triggers: tuple = ()                           # TriggerInstance records awaiting the stack (CR 603.3)
@@ -107,6 +109,9 @@ class GameState:
         o = self.objects[oid]
         return (self.definition(oid).toughness or 0) + o.eot_toughness
 
+    def has_effect(self, kind, a=None) -> bool:
+        return any(e.kind == kind and e.a == a for e in self.turn_effects)
+
     def entry(self, sid):
         return next((e for e in self.stack if e.sid == sid), None)
 
@@ -126,6 +131,7 @@ class GameState:
             "pending": self.pending.view() if self.pending else None,
             "attackers": list(self.attackers), "blocks": sorted(self.blocks.items()),
             "blocked": list(self.blocked), "first_strike_done": self.first_strike_done,
+            "first_step_strikers": list(self.first_step_strikers),
             "draw_failed": list(self.draw_failed), "lost": list(self.lost), "result": self.result,
             "starting_player": self.starting_player,
             "pending_triggers": [tuple(t) for t in self.pending_triggers],

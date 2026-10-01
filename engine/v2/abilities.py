@@ -156,6 +156,7 @@ ACTIVATED = {                         # effect_key -> activated (non-mana) abili
     # battlefield, then shuffle."
     "arid_mesa": (ActivatedSpec("fetch_mountain_plains", (), True, 1, True),),
     "bloodstained_mire": (ActivatedSpec("fetch_swamp_mountain", (), True, 1, True),),
+    "roiling_vortex": (ActivatedSpec("vortex_no_lifegain", ("R",), False, 0, False),),   # {R}: ...
 }
 # fetch ability key -> the land subtypes it searches for (CR 701.23a: "a Mountain or Plains card")
 FETCH_TYPES = {"fetch_mountain_plains": ("Mountain", "Plains"), "fetch_swamp_mountain": ("Swamp", "Mountain")}
@@ -251,8 +252,13 @@ def _res_land_draw(ctx):
     return [op("draw", ctx.controller)]
 
 
+def _res_vortex_no_lifegain(ctx):
+    return [op("add_turn_effect", "no_lifegain", 1 - ctx.controller)]   # "Your opponents can't gain life this turn."
+
+
 RESOLVE = {
     "land_draw": _res_land_draw,
+    "vortex_no_lifegain": _res_vortex_no_lifegain,
     "prowess": _res_prowess,
     "goblin_guide_reveal": _res_goblin_guide,
     "vortex_upkeep": _res_vortex_upkeep,
@@ -261,7 +267,8 @@ RESOLVE = {
 
 ABILITY_NAMES = {"fetch_mountain_plains": "Search for a Mountain or Plains card",
                  "fetch_swamp_mountain": "Search for a Swamp or Mountain card",
-                 "land_draw": "Draw a card", "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
+                 "land_draw": "Draw a card", "vortex_no_lifegain": "Opponents can't gain life",
+                 "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
                  "vortex_upkeep": "Roiling Vortex upkeep damage", "vortex_free_cast": "Roiling Vortex free-spell damage"}
 
 

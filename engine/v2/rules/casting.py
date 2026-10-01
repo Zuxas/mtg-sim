@@ -10,6 +10,7 @@ TARGET_SPEC = {                     # effect_key -> what it may target
     "counterspell": ("spell",),
     "lava_spike": ("player",),
     "lightning_helix": ("creature", "player"),
+    "skullcrack": ("player",),
 }
 
 

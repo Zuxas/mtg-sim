@@ -40,6 +40,14 @@ def has_first_strike(state, oid) -> bool:
     return state.definition(oid).has("First strike")
 
 
+def has_double_strike(state, oid) -> bool:
+    return state.definition(oid).has("Double strike") or state.has_effect("double_strike", oid)
+
+
+def strikes_first(state, oid) -> bool:
+    return has_first_strike(state, oid) or has_double_strike(state, oid)
+
+
 def combat_creatures(state) -> list:
     alive = [a for a in state.attackers if a in state.objects and state.objects[a].zone == "battlefield"]
     alive += [b for b in state.blocks if b in state.objects and state.objects[b].zone == "battlefield"]
@@ -47,16 +55,17 @@ def combat_creatures(state) -> list:
 
 
 def any_first_strike(state) -> bool:
-    return any(has_first_strike(state, c) for c in combat_creatures(state))
+    return any(strikes_first(state, c) for c in combat_creatures(state))
 
 
 def deals_damage_now(state, oid, first_step: bool) -> bool:
-    """CR 510.4 / 702.7b: in the first-strike step only first strikers; in the second
-    step only creatures without first strike (if a first-strike step happened)."""
+    """CR 510.4 / 702.4b / 702.7b: the first combat damage step has only creatures with first
+    strike or double strike; the second has those that had neither as the first step began,
+    plus those that currently have double strike."""
     if first_step:
-        return has_first_strike(state, oid)
+        return strikes_first(state, oid)
     if state.first_strike_done:
-        return not has_first_strike(state, oid)
+        return oid not in state.first_step_strikers or has_double_strike(state, oid)
     return True
 
 

@@ -93,4 +93,8 @@ CITATIONS = {
     "701.23": ['Search'],
     "701.23a": ['To search for a card in a zone, look at all cards in that zone (even if it’s a hidden zone) and find a card that matches the given description.'],
     "701.23b": ['If a player is searching a hidden zone for cards with a stated quality, such as a card with a certain card type or color, that player isn’t required to find som'],
+    "119.7": ['If an effect says that a player can’t gain life, that player can’t make an exchange such that the player’s life total would become higher; in that case, the exc'],
+    "615.12": ['Some effects state that damage “can’t be prevented.” If unpreventable damage would be dealt, any applicable prevention effects are still applied to it.'],
+    "702.12b": ['A permanent with indestructible can’t be destroyed.'],
+    "702.4b": ['If at least one attacking or blocking creature has first strike (see rule 702.7) or double strike as the combat damage step begins, the only creatures that assi'],
 }

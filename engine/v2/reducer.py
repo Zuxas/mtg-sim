@@ -20,7 +20,7 @@ import hashlib
 
 from engine.v2 import abilities as AB
 from engine.v2.events import Event, ev
-from engine.v2.objects import CardInstance, GameObject, StackEntry
+from engine.v2.objects import CardInstance, GameObject, StackEntry, TurnEffect
 from engine.v2.state import Pending
 
 
@@ -233,7 +233,10 @@ TOUCHES = {
     "declare_blockers": ("blocks", "blocked", "block_choices"),
     "division": ("divisions",),
     "clear_combat": ("attackers", "blocks", "blocked", "divisions", "attack_choices", "block_choices",
-                     "first_strike_done"),
+                     "first_strike_done", "first_step_strikers"),
+    "clear_divisions": ("divisions",),
+    "add_turn_effect": ("turn_effects",),
+    "cleanup_wear_off": ("turn_effects",),
     "damage_player": ("life", "life_lost_turn"),
     "pay_life": ("life", "life_lost_turn"),
     "push_ability": ("next_ability", "stack"),
@@ -316,7 +319,7 @@ def _h_set(s, evs, attr, value):
         s.occ.append(AB.StepOcc(value, s.active))
 
 
-_SETTABLE = {"mull_stage", "mull_round", "step", "first_strike_done", "attackers", "blocked"}
+_SETTABLE = {"mull_stage", "mull_round", "step", "first_strike_done", "attackers", "blocked", "first_step_strikers"}
 
 
 def _h_mull_declare(s, evs, player, choice):
@@ -569,6 +572,7 @@ def _h_division(s, evs, attacker, division):
 def _h_clear_combat(s, evs):
     s.attackers, s.blocks, s.blocked, s.divisions = (), {}, (), {}
     s.attack_choices, s.block_choices, s.first_strike_done = {}, {}, False
+    s.first_step_strikers = ()
     evs.append(_iv(ev("CombatCleared")))
 
 
@@ -615,8 +619,24 @@ def _h_sacrifice(s, evs, oid):
 
 def _h_gain_life(s, evs, player, n):
     _need(n > 0, "life gain of a non-positive amount")
+    if s.has_effect("no_lifegain", player):                               # CR 119.7: the gain doesn't happen
+        evs.append(ev("LifeGainPrevented", player=player, n=n))
+        return
     s.life[player] += n                                                    # CR 119.3
     evs.append(ev("LifeChanged", player=player, life=s.life[player], delta=n))
+
+
+def _h_add_turn_effect(s, evs, kind, a=None):
+    _need(kind in ("no_lifegain", "no_prevention", "indestructible", "double_strike"), f"turn effect {kind}")
+    eff = TurnEffect(kind, a)
+    if eff not in s.turn_effects:
+        s.turn_effects = s.turn_effects + (eff,)
+    evs.append(ev("TurnEffectAdded", effect=kind, a=a))
+
+
+def _h_clear_divisions(s, evs):
+    s.divisions = {}
+    evs.append(ev("DivisionsCleared"))
 
 
 def _h_eot_mod(s, evs, oid, p, t):
@@ -634,6 +654,7 @@ def _h_cleanup_wear_off(s, evs):                          # CR 514.2 (simultaneo
         if o.damage or o.eot_power or o.eot_toughness:
             o = _obj(s, oid)
             o.damage = o.eot_power = o.eot_toughness = 0
+    s.turn_effects = ()                                                    # "until end of turn" / "this turn" end
     evs.append(_iv(ev("CleanupWearOff")))
 
 

@@ -11,6 +11,15 @@ Only engine.v2.reducer mutates these.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import NamedTuple
+
+
+class TurnEffect(NamedTuple):
+    """A typed duration-scoped effect ending at cleanup (CR 514.2). Kinds:
+    no_lifegain (a = player, CR 119.7), no_prevention (a = None, CR 615.12),
+    indestructible (a = ObjectId, CR 702.12b), double_strike (a = ObjectId, CR 702.4b)."""
+    kind: str
+    a: object = None
 
 
 @dataclass(frozen=True)

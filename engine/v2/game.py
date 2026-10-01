@@ -671,7 +671,9 @@ class Game:
             if power > 0 and att in s.objects and s.objects[att].zone == "battlefield":
                 ops.append(op("damage_creature", b, att, power))
         if first_step:
-            ops.append(op("set", "first_strike_done", True))
+            strikers = tuple(sorted(c for c in combat.combat_creatures(s) if combat.strikes_first(s, c)))
+            ops += [op("set", "first_strike_done", True), op("set", "first_step_strikers", strikers),
+                    op("clear_divisions")]                                # 510.1c: assigned again next step
         self._commit("combat_damage", ops)                                # CR 510.2 simultaneous
         self._give_priority(s.active)
 

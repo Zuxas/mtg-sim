@@ -225,9 +225,13 @@ def _shadow_scenarios():
     """Milestone-two card tests whose commits exercise the new ops (each re-run under shadow)."""
     from tests.v2 import test_activated as S2
     from tests.v2 import test_replacement as S4
+    from tests.v2 import test_duration as S5
     from tests.v2 import test_search as S3
     from tests.v2 import test_triggers as T
-    return [S3.test_fetched_shock_land_asks_for_its_entry_payment,
+    return [S5.test_skullcrack_stops_life_gain_and_damage_prevention_this_turn,
+            S5.test_double_strike_second_step_uses_first_step_snapshot,
+            S5.test_roiling_vortex_r_ability_stops_only_opponents_gaining_life,
+            S3.test_fetched_shock_land_asks_for_its_entry_payment,
             S3.test_failure_to_find_still_shuffles,
             S4.test_sacred_foundry_choice_happens_before_the_move_commits,
             S4.test_inspiring_vantage_tapped_with_three_other_lands,

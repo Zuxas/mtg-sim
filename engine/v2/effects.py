@@ -32,6 +32,14 @@ def lava_spike(ctx):
     return [_damage(ctx, t, 3) for t in ctx.legal_targets if t[0] == "player"]
 
 
+def skullcrack(ctx):
+    # "Players can't gain life this turn. Damage can't be prevented this turn. Skullcrack deals 3
+    # damage to target player or planeswalker." (no planeswalkers are supported)
+    out = [op("add_turn_effect", "no_lifegain", 0), op("add_turn_effect", "no_lifegain", 1),
+           op("add_turn_effect", "no_prevention", None)]
+    return out + [_damage(ctx, t, 3) for t in ctx.legal_targets if t[0] == "player"]
+
+
 def lightning_helix(ctx):
     # Reached only with a legal target: with none the spell doesn't resolve (CR 608.2b), so no life
     return [_damage(ctx, t, 3) for t in ctx.legal_targets] + [op("gain_life", ctx.controller, 3)]
@@ -61,6 +69,7 @@ EFFECTS = {
     "divination": divination,
     "lava_spike": lava_spike,
     "lightning_helix": lightning_helix,
+    "skullcrack": skullcrack,
 }
 
 

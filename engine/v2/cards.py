@@ -40,6 +40,8 @@ SUPPORTED = {
     "Sacred Foundry": ("sacred_foundry", "1"),
     "Arid Mesa": ("arid_mesa", "1"),
     "Bloodstained Mire": ("bloodstained_mire", "1"),
+    "Skullcrack": ("skullcrack", "1"),
+    "Roiling Vortex": ("roiling_vortex", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
@@ -49,7 +51,7 @@ CARD_KEYWORDS = {
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
 PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",
                             "sunbaked_canyon", "fiery_islet", "inspiring_vantage", "sacred_foundry",
-                            "arid_mesa", "bloodstained_mire"})
+                            "arid_mesa", "bloodstained_mire", "roiling_vortex"})
 BASIC_LAND_COLOR = {"Plains": "W", "Island": "U", "Swamp": "B", "Mountain": "R", "Forest": "G"}
 COLORS = ("W", "U", "B", "R", "G", "C")
 

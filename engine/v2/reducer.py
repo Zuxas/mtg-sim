@@ -223,6 +223,7 @@ TOUCHES = {
     "spend_mana": ("pools", "open_cast"),
     "open_cast": ("next_prov", "stack", "open_cast"),
     "set_targets": ("stack",),
+    "set_mode": ("stack",),
     "record_activation": ("open_cast",),
     "commit_cast": ("objects", "retired", "stack", "open_cast"),
     "revert_cast": ("stack", "pools", "priority", "passes", "pending", "open_cast", "life"),
@@ -450,6 +451,13 @@ def _h_open_cast(s, evs, source_oid, controller):
                    "activations": [], "paid": {}, "priority": s.priority, "passes": s.passes,
                    "pending": s.pending.view() if s.pending else None}
     evs.append(ev("CastProposed", prov=prov, source=source_oid, ciid=o.ciid, controller=controller))
+
+
+def _h_set_mode(s, evs, sid, mode):
+    e = s.entry(sid)
+    _need(e is not None and e.state == "proposed" and e.mode is None, "mode for a non-proposed entry")
+    e.mode = mode
+    evs.append(ev("ModeChosen", sid=sid, mode=mode))
 
 
 def _h_set_targets(s, evs, sid, targets):

@@ -12,6 +12,48 @@ TARGET_SPEC = {                     # effect_key -> what it may target
     "lightning_helix": ("creature", "player"),
     "skullcrack": ("player",),
 }
+MODAL = {"boros_charm": 3}                                  # effect_key -> number of modes (choose one)
+MODE_TARGETS = {                                            # (key, mode) -> target slots (kinds per slot)
+    ("boros_charm", 0): (("player",),),                     # 4 damage to target player (no planeswalkers)
+    ("boros_charm", 1): (),                                 # permanents you control gain indestructible
+    ("boros_charm", 2): (("creature",),),                   # target creature gains double strike
+}
+# Searing Blaze: "target player or planeswalker and target creature that player ... controls"
+DEPENDENT = {"searing_blaze"}
+
+
+def target_slots(key, mode=None) -> tuple:
+    if (key, mode) in MODE_TARGETS:
+        return MODE_TARGETS[(key, mode)]
+    if key in DEPENDENT:
+        return (("player",), ("creature",))
+    spec = TARGET_SPEC.get(key)
+    return (spec,) if spec else ()
+
+
+def target_choices(state, key, mode=None, exclude_sid=None) -> list:
+    """Every complete legal target assignment (CR 601.2c, 115.1); [()] when untargeted."""
+    slots = target_slots(key, mode)
+    if not slots:
+        return [()]
+    if key in DEPENDENT:
+        return [(("player", p), ("obj", c)) for p in (0, 1) if state.lost[p] is None
+                for c in creatures_on_battlefield(state) if state.objects[c].controller == p]
+    return [(t,) for t in options_for_kinds(state, slots[0], exclude_sid)]
+
+
+def castable_modes(state, key, exclude_sid=None) -> list:
+    """CR 700.2a: a mode that would be illegal (no legal targets) can't be chosen."""
+    return [m for m in range(MODAL[key]) if target_choices(state, key, m, exclude_sid)]
+
+
+def slot_still_legal(state, key, i, target, targets) -> bool:
+    """CR 608.2b per target; Searing Blaze's creature must still be controlled by the targeted player."""
+    if not target_still_legal(state, target, key):
+        return False
+    if key in DEPENDENT and i == 1:
+        return state.objects[target[1]].controller == targets[0][1]
+    return True
 
 
 def creatures_on_battlefield(state) -> list:
@@ -75,12 +117,14 @@ def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=Non
         return False
     if not d.is_instant and not (sorcery_timing_ok(state, player) if timing is None else timing):
         return False
-    if d.effect_key in TARGET_SPEC:
+    key = d.effect_key
+    if key in TARGET_SPEC or key in MODAL or key in DEPENDENT:
         if targets_ok is None:
             targets_ok = {}
-        if d.effect_key not in targets_ok:                  # per-decision cache (same answer per key)
-            targets_ok[d.effect_key] = bool(target_options(state, d.effect_key))
-        if not targets_ok[d.effect_key]:
+        if key not in targets_ok:                           # per-decision cache (same answer per key)
+            targets_ok[key] = bool(castable_modes(state, key)) if key in MODAL else \
+                target_choices(state, key) != []
+        if not targets_ok[key]:
             return False
     return payable_with_sources(state, player, d.cost_symbols, avail)
 

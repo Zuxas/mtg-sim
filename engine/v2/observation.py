@@ -28,6 +28,7 @@ class StackView:
     controller: int
     state: str
     targets: tuple
+    mode: object = None
 
 
 @dataclass(frozen=True)
@@ -86,7 +87,7 @@ def observe(state, seat: int) -> Observation:
     from engine.v2.abilities import ABILITY_NAMES
     stack = tuple(StackView(e.sid, state.instances[e.ciid].name if e.state != "ability"
                             else f"{ABILITY_NAMES[e.ability]} ({state.instances[e.ciid].name})",
-                            e.controller, e.state, tuple(e.targets))
+                            e.controller, e.state, tuple(e.targets), e.mode)
                   for e in state.stack)
     opp = 1 - seat
     attacking, defending = seat == state.active, seat != state.active

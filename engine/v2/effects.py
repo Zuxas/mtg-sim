@@ -14,6 +14,9 @@ class EffectContext:
     controller: int
     source_oid: int
     legal_targets: tuple            # (("obj", oid) | ("player", p) | ("stack", sid, oid), ...)
+    mode: object = None             # chosen mode (CR 700.2a)
+    slots: tuple = ()               # per target slot: the target, or None if it became illegal (CR 608.2b)
+    facts: tuple = ()               # read-only facts fixed at resolution (see FACTS)
 
 
 def _damage(ctx, t, n):
@@ -38,6 +41,19 @@ def skullcrack(ctx):
     out = [op("add_turn_effect", "no_lifegain", 0), op("add_turn_effect", "no_lifegain", 1),
            op("add_turn_effect", "no_prevention", None)]
     return out + [_damage(ctx, t, 3) for t in ctx.legal_targets if t[0] == "player"]
+
+
+def boros_charm(ctx):
+    if ctx.mode == 0:
+        return [_damage(ctx, t, 4) for t in ctx.legal_targets if t[0] == "player"]
+    if ctx.mode == 1:                     # the set of permanents is fixed now (CR 611.2c)
+        return [op("add_turn_effect", "indestructible", oid) for oid in ctx.facts[0]]
+    return [op("add_turn_effect", "double_strike", t[1]) for t in ctx.legal_targets if t[0] == "obj"]
+
+
+def searing_blaze(ctx):
+    n = 3 if ctx.facts[0] else 1          # landfall: a land entered under its controller's control this turn
+    return [_damage(ctx, t, n) for t in ctx.slots if t is not None]
 
 
 def lightning_helix(ctx):
@@ -70,7 +86,18 @@ EFFECTS = {
     "lava_spike": lava_spike,
     "lightning_helix": lightning_helix,
     "skullcrack": skullcrack,
+    "boros_charm": boros_charm,
+    "searing_blaze": searing_blaze,
 }
+
+
+def facts(state, key, entry) -> tuple:
+    """Read-only facts an effect needs, taken at resolution."""
+    if key == "searing_blaze":
+        return (state.lands_entered_turn[entry.controller] > 0,)
+    if key == "boros_charm" and entry.mode == 1:
+        return (tuple(sorted(o for o in state.zones[("bf",)] if state.objects[o].controller == entry.controller)),)
+    return ()
 
 
 def check_registry():

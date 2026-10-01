@@ -226,9 +226,12 @@ def _shadow_scenarios():
     from tests.v2 import test_activated as S2
     from tests.v2 import test_replacement as S4
     from tests.v2 import test_duration as S5
+    from tests.v2 import test_modes_targets as S7
     from tests.v2 import test_search as S3
     from tests.v2 import test_triggers as T
-    return [S5.test_skullcrack_stops_life_gain_and_damage_prevention_this_turn,
+    return [S7.test_boros_charm_mode_1_indestructible_for_permanents_controlled_at_resolution,
+            S7.test_searing_blaze_with_one_legal_target_still_resolves,
+            S5.test_skullcrack_stops_life_gain_and_damage_prevention_this_turn,
             S5.test_double_strike_second_step_uses_first_step_snapshot,
             S5.test_roiling_vortex_r_ability_stops_only_opponents_gaining_life,
             S3.test_fetched_shock_land_asks_for_its_entry_payment,

@@ -42,11 +42,14 @@ SUPPORTED = {
     "Bloodstained Mire": ("bloodstained_mire", "1"),
     "Skullcrack": ("skullcrack", "1"),
     "Roiling Vortex": ("roiling_vortex", "1"),
+    "Boros Charm": ("boros_charm", "1"),
+    "Searing Blaze": ("searing_blaze", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
 CARD_KEYWORDS = {
     "monastery_swiftspear": frozenset({"Prowess"}),                 # engine.v2.abilities prowess trigger
+    "searing_blaze": frozenset({"Landfall"}),                       # ability word; effects.searing_blaze
 }
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
 PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",

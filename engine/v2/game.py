@@ -15,6 +15,7 @@ from engine.v2 import actions as A
 from engine.v2 import reducer
 from engine.v2.cards import definitions, definitions_hash, oracle_file_sha256, validate_deck
 from engine.v2.effects import EFFECTS, EffectContext
+from engine.v2.effects import facts as effect_facts
 from engine.v2.observation import observe as _observe
 from engine.v2.ops import op
 from engine.v2.rules import casting, combat, replacement, sba
@@ -167,10 +168,14 @@ class Game:
             out += self._activation_actions(p, timing)
             tgt: dict = {}
             out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
+        elif k == "cast_mode":
+            e = s.stack[-1]
+            key = s.definition(e.ciid, is_ciid=True).effect_key
+            out = [A.ChooseMode(p, m) for m in casting.castable_modes(s, key, exclude_sid=e.sid)]
         elif k == "cast_targets":
             e = s.stack[-1]
             key = s.definition(e.ciid, is_ciid=True).effect_key
-            out = [A.ChooseTargets(p, (t,)) for t in casting.target_options(s, key, exclude_sid=e.sid)]
+            out = [A.ChooseTargets(p, t) for t in casting.target_choices(s, key, e.mode, exclude_sid=e.sid)]
         elif k == "cast_mana":
             e = s.stack[-1]
             d = s.definition(e.ciid, is_ciid=True)
@@ -507,9 +512,16 @@ class Game:
         s = self.s
         key = s.definition(a.oid).effect_key
         ops = [op("open_cast", a.oid, a.player)]                          # CR 601.2a
-        nxt = "cast_targets" if key in casting.TARGET_SPEC else "cast_mana"
+        nxt = "cast_mode" if key in casting.MODAL else ("cast_targets" if casting.target_slots(key) else "cast_mana")
         ops.append(op("pending", nxt, a.player))
         self._commit("cast_propose", ops)
+
+    def _do_ChooseMode(self, a):
+        s = self.s
+        e = s.stack[-1]
+        key = s.definition(e.ciid, is_ciid=True).effect_key
+        nxt = "cast_targets" if casting.target_slots(key, a.mode) else "cast_mana"
+        self._commit("cast_mode", [op("set_mode", e.sid, a.mode), op("pending", nxt, a.player)])   # CR 601.2b
 
     def _do_ChooseTargets(self, a):
         self._commit("cast_targets", [op("set_targets", self.s.stack[-1].sid, a.targets),
@@ -594,13 +606,16 @@ class Game:
                    op("note", "SpellResolved", e.sid)]
             self._commit("resolve", ops)
             return True
-        legal = [t for t in e.targets if casting.target_still_legal(s, t, d.effect_key)]   # CR 608.2b
+        ok = [casting.slot_still_legal(s, d.effect_key, i, t, e.targets) for i, t in enumerate(e.targets)]
+        legal = [t for t, good in zip(e.targets, ok) if good]                              # CR 608.2b
         if e.targets and not legal:
             self._commit("resolve", [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),
                                      op("note", "SpellFizzled", e.sid)])
             return True
         ctx_targets = tuple(t if t[0] != "stack" else ("stack", t[1], s.entry(t[1]).oid) for t in legal)
-        ops = EFFECTS[d.effect_key](EffectContext(e.controller, e.oid, ctx_targets))
+        slots = tuple(t if good else None for t, good in zip(e.targets, ok))
+        ops = EFFECTS[d.effect_key](EffectContext(e.controller, e.oid, ctx_targets, e.mode, slots,
+                                                  effect_facts(s, d.effect_key, e)))
         ops += [op("remove_entry", e.sid), op("move", e.oid, "graveyard", "end"),     # CR 608.2n
                 op("note", "SpellResolved", e.sid)]
         self._commit("resolve", ops)

@@ -63,6 +63,13 @@ class ProposeCast:
 
 
 @dataclass(frozen=True)
+class ChooseMode:
+    """CR 601.2b / 700.2a: announced before targets."""
+    player: int
+    mode: int
+
+
+@dataclass(frozen=True)
 class ChooseTargets:
     player: int
     targets: tuple
@@ -140,7 +147,7 @@ ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCard
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
                                         ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
                                         ChooseTriggerTargets, ActivateAbility, ChooseEntryPayment, ChooseSearchResult,
-                                        Concede)}
+                                        ChooseMode, Concede)}
 
 
 def to_record(a) -> list:

@@ -224,12 +224,17 @@ def test_shadow_failing_commit_restores_state_in_every_real_context():
 def _shadow_scenarios():
     """Milestone-two card tests whose commits exercise the new ops (each re-run under shadow)."""
     from tests.v2 import test_activated as S2
+    from tests.v2 import test_alt_costs as S6
     from tests.v2 import test_replacement as S4
     from tests.v2 import test_duration as S5
     from tests.v2 import test_modes_targets as S7
     from tests.v2 import test_search as S3
     from tests.v2 import test_triggers as T
-    return [S7.test_boros_charm_mode_1_indestructible_for_permanents_controlled_at_resolution,
+    return [S6.test_upkeep_removes_the_last_counter_and_the_card_is_cast_free,
+            S6.test_declining_the_suspend_cast_leaves_it_exiled,
+            S6.test_spectacle_cost_is_fixed_for_the_whole_cast,
+            S6.test_roiling_vortex_punishes_a_spell_cast_without_mana,
+            S7.test_boros_charm_mode_1_indestructible_for_permanents_controlled_at_resolution,
             S7.test_searing_blaze_with_one_legal_target_still_resolves,
             S5.test_skullcrack_stops_life_gain_and_damage_prevention_this_turn,
             S5.test_double_strike_second_step_uses_first_step_snapshot,

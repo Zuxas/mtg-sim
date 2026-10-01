@@ -56,6 +56,7 @@ class Observation:
     pending_triggers: tuple         # ((tid, controller, ability key, source card name), ...) -- public
     my_search: tuple                # ((oid, name), ...) matching cards -- ONLY while this seat searches
     turn_effects: tuple             # ((kind, a), ...) public duration effects
+    exile: tuple                    # per player: ((oid, name, counters), ...) -- public zone
     my_attack_choices: tuple        # ((oid, attacks), ...) staged by this seat (active player only)
     my_block_choices: tuple         # ((blocker, attacker or None), ...) staged by this seat (defender only)
     my_divisions: tuple             # ((attacker, ((blocker, dmg), ...)), ...) staged by this seat (active only)
@@ -108,6 +109,7 @@ def observe(state, seat: int) -> Observation:
                                for t in state.pending_triggers),
         my_search=_search_view(state, seat),
         turn_effects=tuple(tuple(e) for e in state.turn_effects),
+        exile=tuple(tuple((o, name(o), state.objects[o].counters) for o in state.zones[(p, "exile")]) for p in (0, 1)),
         my_attack_choices=tuple(sorted(state.attack_choices.items())) if attacking else (),
         my_block_choices=tuple(sorted(state.block_choices.items(), key=lambda kv: kv[0])) if defending else (),
         my_divisions=tuple(sorted(state.divisions.items())) if attacking else (),

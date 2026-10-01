@@ -58,8 +58,27 @@ class ActivateAbility:
 
 @dataclass(frozen=True)
 class ProposeCast:
+    """CR 601.2a-b. `cost` = the announced payment: "normal" (mana cost) or an alternative
+    cost such as "spectacle" (CR 118.9); it is fixed for the whole casting transaction."""
     player: int
     oid: int
+    cost: str = "normal"
+
+
+@dataclass(frozen=True)
+class Suspend:
+    """Special action (CR 116.2f, 702.62a): pay the suspend cost and exile the card with N time
+    counters. Doesn't use the stack."""
+    player: int
+    oid: int
+    assignment: tuple
+
+
+@dataclass(frozen=True)
+class ChooseSuspendCast:
+    """'you may play it without paying its mana cost if able' (CR 702.62a)."""
+    player: int
+    cast: bool
 
 
 @dataclass(frozen=True)
@@ -147,7 +166,7 @@ ACTION_TYPES = {c.__name__: c for c in (DeclareKeep, DeclareMulligan, BottomCard
                                         ActivateManaAbility, ProposeCast, ChooseTargets, PayCost, ChooseAttack,
                                         ChooseBlock, AssignCombatDamage, DiscardToHandSize, OrderTrigger,
                                         ChooseTriggerTargets, ActivateAbility, ChooseEntryPayment, ChooseSearchResult,
-                                        ChooseMode, Concede)}
+                                        ChooseMode, Suspend, ChooseSuspendCast, Concede)}
 
 
 def to_record(a) -> list:

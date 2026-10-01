@@ -87,6 +87,19 @@ def _vortex_upkeep(s, src, occ):
     return None
 
 
+def _suspend_upkeep(s, src, occ):
+    o = s.objects[src]
+    if isinstance(occ, StepOcc) and occ.step == "upkeep" and occ.active == o.owner and o.counter("time") > 0:
+        return ()                                                        # intervening "if this card is suspended"
+    return None
+
+
+def _suspend_last(s, src, occ):
+    if isinstance(occ, LastCounterOcc) and occ.oid == src:
+        return ()
+    return None
+
+
 def _vortex_free_cast(s, src, occ):
     if isinstance(occ, CastOcc) and occ.mana_spent == 0:                # intervening if (CR 603.4)
         return (occ.player, occ.sid)
@@ -98,7 +111,11 @@ TRIGGERS = {                          # effect_key -> TriggerSpecs of that card
     "goblin_guide": (TriggerSpec("goblin_guide_reveal", "battlefield", _goblin_guide, (AttackOcc,)),),
     "roiling_vortex": (TriggerSpec("vortex_upkeep", "battlefield", _vortex_upkeep, (StepOcc,), ("upkeep",)),
                        TriggerSpec("vortex_free_cast", "battlefield", _vortex_free_cast, (CastOcc,))),
+    "rift_bolt": (TriggerSpec("suspend_upkeep", "exile", _suspend_upkeep, (StepOcc,), ("upkeep",)),
+                  TriggerSpec("suspend_cast", "exile", _suspend_last, (LastCounterOcc,))),
 }
+SUSPEND = {"rift_bolt": (1, ("R",))}               # effect_key -> (N time counters, suspend cost) "Suspend 1-{R}"
+SPECTACLE = {"skewer_the_critics": ("R",)}         # effect_key -> spectacle cost "Spectacle {R}"
 TRIGGER_KEYS = frozenset(TRIGGERS)
 SPEC_BY_KEY = {t.key: t for specs in TRIGGERS.values() for t in specs}
 _WANTED = frozenset(c for specs in TRIGGERS.values() for t in specs for c in t.on)
@@ -221,6 +238,12 @@ def still_true(s, e) -> bool:
     """Intervening-if re-check on resolution (CR 603.4)."""
     if e.ability == "vortex_free_cast":
         return True                   # "no mana was spent to cast that spell" is fixed once cast
+    if e.ability == "suspend_upkeep":                                    # "if this card is suspended"
+        o = s.objects.get(e.source)
+        return o is not None and o.zone == "exile" and o.counter("time") > 0
+    if e.ability == "suspend_cast":                                      # "if it's exiled"
+        o = s.objects.get(e.source)
+        return o is not None and o.zone == "exile"
     return True
 
 
@@ -238,6 +261,10 @@ def _res_goblin_guide(ctx):
     if is_land:
         out.append(op("move", top, "hand", "end"))
     return out
+
+
+def _res_suspend_upkeep(ctx):
+    return [op("remove_counter", ctx.source, "time", 1)]
 
 
 def _res_vortex_upkeep(ctx):
@@ -262,6 +289,7 @@ RESOLVE = {
     "prowess": _res_prowess,
     "goblin_guide_reveal": _res_goblin_guide,
     "vortex_upkeep": _res_vortex_upkeep,
+    "suspend_upkeep": _res_suspend_upkeep,
     "vortex_free_cast": _res_vortex_free_cast,
 }
 
@@ -269,7 +297,8 @@ ABILITY_NAMES = {"fetch_mountain_plains": "Search for a Mountain or Plains card"
                  "fetch_swamp_mountain": "Search for a Swamp or Mountain card",
                  "land_draw": "Draw a card", "vortex_no_lifegain": "Opponents can't gain life",
                  "prowess": "Prowess", "goblin_guide_reveal": "Goblin Guide reveal",
-                 "vortex_upkeep": "Roiling Vortex upkeep damage", "vortex_free_cast": "Roiling Vortex free-spell damage"}
+                 "vortex_upkeep": "Roiling Vortex upkeep damage",
+                 "suspend_upkeep": "Remove a time counter", "suspend_cast": "Cast without paying its mana cost", "vortex_free_cast": "Roiling Vortex free-spell damage"}
 
 
 def ability_targets(key) -> tuple:

@@ -56,6 +56,14 @@ def searing_blaze(ctx):
     return [_damage(ctx, t, n) for t in ctx.slots if t is not None]
 
 
+def rift_bolt(ctx):
+    return [_damage(ctx, t, 3) for t in ctx.legal_targets]
+
+
+def skewer_the_critics(ctx):
+    return [_damage(ctx, t, 3) for t in ctx.legal_targets]
+
+
 def lightning_helix(ctx):
     # Reached only with a legal target: with none the spell doesn't resolve (CR 608.2b), so no life
     return [_damage(ctx, t, 3) for t in ctx.legal_targets] + [op("gain_life", ctx.controller, 3)]
@@ -88,6 +96,8 @@ EFFECTS = {
     "skullcrack": skullcrack,
     "boros_charm": boros_charm,
     "searing_blaze": searing_blaze,
+    "rift_bolt": rift_bolt,
+    "skewer_the_critics": skewer_the_critics,
 }
 
 

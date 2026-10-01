@@ -44,12 +44,16 @@ SUPPORTED = {
     "Roiling Vortex": ("roiling_vortex", "1"),
     "Boros Charm": ("boros_charm", "1"),
     "Searing Blaze": ("searing_blaze", "1"),
+    "Rift Bolt": ("rift_bolt", "1"),
+    "Skewer the Critics": ("skewer_the_critics", "1"),
 }
 SUPPORTED_KEYWORDS = frozenset({"Flying", "Haste", "First strike", "Vigilance"})
 # Keywords implemented only by specific cards' behaviour (never accepted on any other card).
 CARD_KEYWORDS = {
     "monastery_swiftspear": frozenset({"Prowess"}),                 # engine.v2.abilities prowess trigger
     "searing_blaze": frozenset({"Landfall"}),                       # ability word; effects.searing_blaze
+    "rift_bolt": frozenset({"Suspend"}),                            # Suspend action + abilities.rift_bolt triggers
+    "skewer_the_critics": frozenset({"Spectacle"}),                 # abilities.SPECTACLE alternative cost
 }
 # effect keys of permanents whose behaviour lives outside engine.v2.effects (no spell effect)
 PERMANENT_KEYS = frozenset({"basic_land", "vanilla_creature", "monastery_swiftspear", "goblin_guide",

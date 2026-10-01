@@ -168,6 +168,13 @@ class Game:
             out += self._activation_actions(p, timing)
             tgt: dict = {}
             out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
+            for oid in hand:
+                key = s.definition(oid).effect_key
+                if key in AB.SPECTACLE and casting.spectacle_ok(s, p) and \
+                        casting.can_propose_cast(s, p, oid, avail, timing, tgt, AB.SPECTACLE[key]):
+                    out.append(A.ProposeCast(p, oid, "spectacle"))                       # CR 702.137a
+                if key in AB.SUSPEND and casting.can_suspend(s, p, oid, timing):
+                    out += [A.Suspend(p, oid, asg) for asg in payment_assignments(AB.SUSPEND[key][1], s.pools[p])]
         elif k == "cast_mode":
             e = s.stack[-1]
             key = s.definition(e.ciid, is_ciid=True).effect_key
@@ -180,7 +187,7 @@ class Game:
             e = s.stack[-1]
             d = s.definition(e.ciid, is_ciid=True)
             out = [A.ActivateManaAbility(p, oid, c) for oid, opts in sources_with_options(s, p) for c, _l in opts]
-            out += [A.PayCost(p, asg) for asg in payment_assignments(d.cost_symbols, s.pools[p])]
+            out += [A.PayCost(p, asg) for asg in payment_assignments(s.open_cast["cost"], s.pools[p])]
         elif k == "declare_attack":
             oid = pd.info[0]
             out = [A.ChooseAttack(p, oid, True), A.ChooseAttack(p, oid, False)]
@@ -199,6 +206,11 @@ class Game:
             out = [A.ChooseSearchResult(p, None)]                         # CR 701.23b: may fail to find
             out += [A.ChooseSearchResult(p, oid) for oid in sorted(s.zones[(p, "library")])
                     if AB.fetch_matches(s, c.data[0], oid)]
+        elif k == "suspend_cast_choice":
+            out = [A.ChooseSuspendCast(p, False)]                         # "If you don't, it remains exiled."
+            oid = s.continuation.data[0]
+            if casting.target_choices(s, s.definition(oid).effect_key):  # "if able" (legal targets exist)
+                out.append(A.ChooseSuspendCast(p, True))
         elif k == "entry_payment":
             oid = pd.info[0]
             out = [A.ChooseEntryPayment(p, oid, False)]                  # the tapped result is always allowed
@@ -511,7 +523,8 @@ class Game:
     def _do_ProposeCast(self, a):
         s = self.s
         key = s.definition(a.oid).effect_key
-        ops = [op("open_cast", a.oid, a.player)]                          # CR 601.2a
+        cost = AB.SPECTACLE[key] if a.cost == "spectacle" else None
+        ops = [op("open_cast", a.oid, a.player, a.cost, cost)]            # CR 601.2a-b
         nxt = "cast_mode" if key in casting.MODAL else ("cast_targets" if casting.target_slots(key) else "cast_mana")
         ops.append(op("pending", nxt, a.player))
         self._commit("cast_propose", ops)
@@ -529,11 +542,44 @@ class Game:
 
     def _do_PayCost(self, a):
         s = self.s
-        d = s.definition(s.stack[-1].ciid, is_ciid=True)
         ops = [op("spend_mana", a.player, c, n) for c, n in a.assignment]  # CR 601.2h
-        ops.append(op("commit_cast", d.cost_symbols))                     # CR 601.2i
+        ops.append(op("commit_cast"))                                     # CR 601.2i
+        c = s.continuation
+        if c is not None and c.kind == "suspend":                         # cast during resolution (CR 608.2g):
+            AB.check_continuation(c)                                      # no priority; the trigger finishes
+            trig = s.entry(c.sid)
+            self._commit("cast", ops)
+            self._commit("resolve", [op("set_continuation", None), op("remove_entry", trig.sid),
+                                     op("note", "AbilityResolved", trig.sid)])
+            if s.result is None:
+                self._give_priority(s.active)
+            return
         self._commit("cast", ops)
         self._give_priority(a.player)                                     # CR 117.3c
+
+    def _do_Suspend(self, a):
+        """CR 116.2f / 702.62a: pay {R}, exile with N time counters; no stack; priority stays."""
+        s = self.s
+        n, _cost = AB.SUSPEND[s.definition(a.oid).effect_key]
+        ops = [op("spend_mana", a.player, c, k) for c, k in a.assignment]
+        ops += [op("note", "Suspended", a.oid), op("exile_with_counters", a.oid, "time", n)]
+        self._commit("special_action", ops)
+        self._give_priority(a.player)
+
+    def _do_ChooseSuspendCast(self, a):
+        s = self.s
+        c = s.continuation
+        AB.check_continuation(c)
+        oid = c.data[0]
+        if not a.cast:
+            self._commit("resolve", [op("set_continuation", None), op("note", "SuspendDeclined", oid),
+                                     op("remove_entry", c.sid), op("note", "AbilityResolved", c.sid)])
+            if s.result is None:
+                self._give_priority(s.active)
+            return
+        key = s.definition(oid).effect_key                                # "without paying its mana cost"
+        nxt = "cast_targets" if casting.target_slots(key) else "cast_mana"
+        self._commit("cast_propose", [op("open_cast", oid, a.player, "free", ()), op("pending", nxt, a.player)])
 
     def rollback_open_cast(self, reason: str, reverse_mana: bool = True):
         """CR 733.1 / 733.2: reverse an illegal or uncompletable proposal. Milestone one
@@ -554,6 +600,11 @@ class Game:
             if not legal:
                 self._commit("resolve", [op("remove_entry", e.sid), op("note", "AbilityFizzled", e.sid)])
                 return True
+        if e.ability == "suspend_cast":                                   # paused: may cast it (CR 702.62a)
+            self._commit("resolve_pause", [
+                op("set_continuation", AB.continuation("suspend", e.sid, "choose", (e.source,))),
+                op("pending", "suspend_cast_choice", e.controller, (e.source,))])
+            return False
         if e.ability in AB.FETCH_TYPES:                                   # paused: the searcher chooses
             self._commit("resolve_pause", [
                 op("set_continuation", AB.continuation("fetch", e.sid, "search", (e.ability,))),

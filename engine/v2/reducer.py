@@ -305,6 +305,27 @@ def _h_set_continuation(s, evs, value):
     evs.append(ev("Continuation", value=tuple(value) if value else None))
 
 
+def _h_exile_with_counters(s, evs, oid, kind, n):
+    """Suspend's special action (CR 702.62a): exile the card with N counters, one zone change."""
+    new = _move(s, oid, "exile", "end", None, evs)
+    o = _obj(s, new)
+    o.counters = tuple(sorted({**dict(o.counters), kind: n}.items()))
+    evs.append(ev("CounterAdded", oid=new, counter=kind, n=n))
+
+
+def _h_remove_counter(s, evs, oid, kind, n):
+    o = _obj(s, oid)
+    c = dict(o.counters)
+    _need(c.get(kind, 0) >= n, "remove of counters that are not there")
+    c[kind] -= n
+    if not c[kind]:
+        del c[kind]
+    o.counters = tuple(sorted(c.items()))
+    evs.append(ev("CounterRemoved", oid=oid, counter=kind, n=n))
+    if kind == "time" and o.zone == "exile" and not c.get("time"):
+        s.occ.append(AB.LastCounterOcc(oid, o.owner))                    # CR 702.62a third ability
+
+
 def _h_pending_entry(s, evs, value):
     s.pending_entry = value
     evs.append(ev("PendingEntry", value=value))
@@ -438,19 +459,25 @@ def _h_spend_mana(s, evs, player, color, n):
     evs.append(ev("ManaSpent", player=player, color=color, n=n))
 
 
-def _h_open_cast(s, evs, source_oid, controller):
+def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbols=None):
+    """CR 601.2a-b: the card moves to the stack as a proposed spell; the announced cost (its mana
+    cost, an alternative cost, or "free") is fixed for the whole casting transaction."""
     _need(s.open_cast is None, "nested casting transaction")
     o = s.objects[source_oid]
-    _need(o.zone == "hand" and o.owner == controller, "cast from outside the caster's hand")
+    _need(o.zone in ("hand", "exile") and o.owner == controller, "cast from outside the caster's hand/exile")
+    if cost_symbols is None:
+        cost_symbols = s.def_by_ciid[o.ciid].cost_symbols
+    frm = o.zone
     idx = _remove_from_zone(s, o)
     _obj(s, source_oid).zone = "suspended"
     prov = f"P{s.next_prov}"
     s.next_prov += 1
-    s.stack.append(StackEntry(sid=prov, ciid=o.ciid, controller=controller, state="proposed"))
-    s.open_cast = {"prov": prov, "source": source_oid, "from": "hand", "index": idx, "controller": controller,
+    s.stack.append(StackEntry(sid=prov, ciid=o.ciid, controller=controller, state="proposed", cost=cost_name))
+    s.open_cast = {"prov": prov, "source": source_oid, "from": frm, "index": idx, "controller": controller,
                    "activations": [], "paid": {}, "priority": s.priority, "passes": s.passes,
-                   "pending": s.pending.view() if s.pending else None}
-    evs.append(ev("CastProposed", prov=prov, source=source_oid, ciid=o.ciid, controller=controller))
+                   "pending": s.pending.view() if s.pending else None, "cost": tuple(cost_symbols)}
+    evs.append(ev("CastProposed", prov=prov, source=source_oid, ciid=o.ciid, controller=controller, frm=frm,
+                  cost=cost_name))
 
 
 def _h_set_mode(s, evs, sid, mode):
@@ -473,9 +500,10 @@ def _h_record_activation(s, evs, land_oid, color, life=0):
     evs.append(ev("ActivationRecorded", land=land_oid, color=color, life=life))
 
 
-def _h_commit_cast(s, evs, cost_symbols):
+def _h_commit_cast(s, evs):
     oc = s.open_cast
     _need(oc is not None, "commit without an open cast")
+    cost_symbols = oc["cost"]                                             # the announced cost (CR 601.2f)
     _need(_covers(cost_symbols, oc["paid"]), f"payment {oc['paid']} does not match cost {cost_symbols}")  # CR 601.2h
     src = s.objects[oc["source"]]
     del s.objects[oc["source"]]

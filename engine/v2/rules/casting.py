@@ -11,6 +11,8 @@ TARGET_SPEC = {                     # effect_key -> what it may target
     "lava_spike": ("player",),
     "lightning_helix": ("creature", "player"),
     "skullcrack": ("player",),
+    "rift_bolt": ("creature", "player"),
+    "skewer_the_critics": ("creature", "player"),
 }
 MODAL = {"boros_charm": 3}                                  # effect_key -> number of modes (choose one)
 MODE_TARGETS = {                                            # (key, mode) -> target slots (kinds per slot)
@@ -107,7 +109,7 @@ def sorcery_timing_ok(state, player) -> bool:
     return player == state.active and state.step in MAIN_STEPS and not state.stack
 
 
-def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=None) -> bool:
+def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=None, cost=None) -> bool:
     """ProposeCast is legal only when a legal completion exists (spec 7.4)."""
     o = state.objects.get(oid)
     if o is None or o.zone != "hand" or o.owner != player:
@@ -126,7 +128,28 @@ def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=Non
                 target_choices(state, key) != []
         if not targets_ok[key]:
             return False
-    return payable_with_sources(state, player, d.cost_symbols, avail)
+    return payable_with_sources(state, player, d.cost_symbols if cost is None else cost, avail)
+
+
+def spectacle_ok(state, player) -> bool:
+    """CR 702.137a: an opponent lost life this turn."""
+    return state.life_lost_turn[1 - player]
+
+
+def can_suspend(state, player, oid, timing=None) -> bool:
+    """CR 116.2f / 702.62a,c: from hand, only when the player could begin to cast the card."""
+    o = state.objects.get(oid)
+    if o is None or o.zone != "hand" or o.owner != player:
+        return False
+    d = state.definition(oid)
+    if d.effect_key not in _suspend_keys():
+        return False
+    return d.is_instant or (sorcery_timing_ok(state, player) if timing is None else timing)
+
+
+def _suspend_keys():
+    from engine.v2.abilities import SUSPEND
+    return SUSPEND
 
 
 def can_play_land(state, player, oid) -> bool:

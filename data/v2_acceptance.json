@@ -28,13 +28,13 @@
  },
  "M7": {
   "games": 200,
-  "wall_seconds": 9.96,
-  "games_per_s_wall": 20.07,
-  "cpu_seconds": 9.73,
-  "games_per_s_cpu": 20.55,
-  "actions_per_s_cpu": 18950,
+  "wall_seconds": 9.0,
+  "games_per_s_wall": 22.23,
+  "cpu_seconds": 8.84,
+  "games_per_s_cpu": 22.61,
+  "actions_per_s_cpu": 20858,
   "mean_actions": 922,
   "note": "single core, random policies, invariants off, card data pre-loaded; target 200, blocker < 20"
  },
- "wall_seconds": 402.2
+ "wall_seconds": 409.2
 }

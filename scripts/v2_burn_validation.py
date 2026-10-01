@@ -94,7 +94,7 @@ def render(g) -> str:
     for t in s.log.transitions:
         for e in t.events:
             d = dict(e.data)
-            if e.kind == "ZoneChanged" and "ciid" in d:                  # public moves only
+            if e.kind == "ZoneChanged" and "new" in d:                   # moves into public zones only
                 ciid_of[d["new"]] = d["ciid"]
             if e.kind == "SpellCast":
                 ciid_of[d["oid"]] = d["ciid"]

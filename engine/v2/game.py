@@ -247,7 +247,7 @@ class Game:
             if casting.target_choices(s, s.definition(oid).effect_key):  # "if able" (legal targets exist)
                 out.append(A.ChooseSuspendCast(p, True))
         elif k == "entry_payment":
-            oid = pd.info[0]
+            oid = s.pending_entry[0]                                      # info names the card instance only
             out = [A.ChooseEntryPayment(p, oid, False)]                  # the tapped result is always allowed
             if replacement.can_pay_shock(s, p):
                 out.append(A.ChooseEntryPayment(p, oid, True))           # CR 119.4
@@ -526,8 +526,9 @@ class Game:
 
     def _do_PlayLand(self, a):
         if replacement.needs_entry_choice(self.s, a.oid):                # CR 614.12: choose before it enters
+            s = self.s
             self._commit("entry_choice", [op("pending_entry", (a.oid, a.player, "play")),
-                                          op("pending", "entry_payment", a.player, (a.oid,))])
+                                          op("pending", "entry_payment", a.player, (("ciid", s.objects[a.oid].ciid),))])
             return
         self._commit("play_land", self._land_entry_ops(a.oid, a.player, False) + [op("land_played", a.player)])
         self._give_priority(a.player)                                     # CR 117.3c
@@ -622,7 +623,7 @@ class Game:
         s = self.s
         n, _cost = AB.SUSPEND[s.definition(a.oid).effect_key]
         ops = [op("spend_mana", a.player, c, k) for c, k in a.assignment]
-        ops += [op("note", "Suspended", a.oid), op("exile_with_counters", a.oid, "time", n)]
+        ops += [op("note", "Suspended", ("ciid", s.objects[a.oid].ciid)), op("exile_with_counters", a.oid, "time", n)]
         self._commit("special_action", ops)
         self._give_priority(a.player)
 
@@ -684,12 +685,12 @@ class Game:
             return
         if replacement.needs_entry_choice(s, a.oid):                     # fetched shock land: choose first
             self._commit("resolve_pause", [
-                op("note", "SearchFound", c.sid, a.oid),
+                op("note", "SearchFound", c.sid, ("ciid", s.objects[a.oid].ciid)),
                 op("set_continuation", AB.continuation("fetch", c.sid, "entry", c.data + (a.oid,))),
                 op("pending_entry", (a.oid, a.player, "fetch")),
-                op("pending", "entry_payment", a.player, (a.oid,))])
+                op("pending", "entry_payment", a.player, (("ciid", s.objects[a.oid].ciid),))])
             return
-        self._continue_resolution([op("note", "SearchFound", c.sid, a.oid)]
+        self._continue_resolution([op("note", "SearchFound", c.sid, ("ciid", s.objects[a.oid].ciid))]
                                   + self._land_entry_ops(a.oid, a.player, False))
 
     def _continue_resolution(self, ops):

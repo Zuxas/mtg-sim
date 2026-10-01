@@ -182,6 +182,21 @@ def _remove_from_zone(s, o):
     return idx
 
 
+def _zone_event(s, oid, new, o, src, dest):
+    """A zone change as the log records it. An ObjectId that exists only in a hidden zone (library,
+    hand) never appears in the log -- not even as a number, which would link a later public event to
+    the moment the card was drawn or put back. A move between hidden zones carries no identity at
+    all; a hidden card that becomes public is identified by its card instance from then on."""
+    src_hidden, dest_hidden = src in _HIDDEN_ZONES, dest in _HIDDEN_ZONES
+    if src_hidden and dest_hidden:
+        return ev("ZoneChanged", owner=o.owner, frm=src, to=dest, commitment=_hidden(s, ("move", oid, o.ciid, new)))
+    if src_hidden:
+        return ev("ZoneChanged", new=new, ciid=o.ciid, frm=src, to=dest)
+    if dest_hidden:
+        return ev("ZoneChanged", old=oid, ciid=o.ciid, frm=src, to=dest, commitment=_hidden(s, ("move", new)))
+    return ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest)
+
+
 def _move(s, oid, dest, position, controller, evs, tapped=False):
     """Zone change (CR 400.7): retire oid, create a new object for the same card instance."""
     _need(oid in s.objects and oid not in s.retired, f"move of dead object {oid}")
@@ -206,10 +221,7 @@ def _move(s, oid, dest, position, controller, evs, tapped=False):
             lst.append(new)
         else:
             lst.insert(int(position), new)
-    if src in _HIDDEN_ZONES and dest in _HIDDEN_ZONES:              # no card identity in the log
-        evs.append(ev("ZoneChanged", old=oid, new=new, frm=src, to=dest, commitment=_hidden(s, ("move", o.ciid, new))))
-    else:
-        evs.append(ev("ZoneChanged", old=oid, new=new, ciid=o.ciid, frm=src, to=dest))
+    evs.append(_zone_event(s, oid, new, o, src, dest))
     if no.tapped:
         evs.append(ev("EntersTapped", oid=new))
     if dest == "battlefield":
@@ -313,8 +325,8 @@ def _h_draw(s, evs, player):
         s.draw_failed[player] = True                       # CR 704.5b
         evs.append(ev("DrawFailed", player=player))
         return
-    new = _move(s, lib[0], "hand", "end", None, evs)
-    evs.append(ev("Drew", player=player, oid=new))
+    _move(s, lib[0], "hand", "end", None, evs)
+    evs.append(ev("Drew", player=player))
 
 
 def _h_move(s, evs, oid, dest, position="end", controller=None, tapped=False):
@@ -323,7 +335,9 @@ def _h_move(s, evs, oid, dest, position="end", controller=None, tapped=False):
 
 def _h_set_continuation(s, evs, value):
     s.continuation = value
-    evs.append(ev("Continuation", value=tuple(value) if value else None))
+    # the paused choice's data may name hidden cards (looked-at library cards): logged as a commitment
+    evs.append(ev("Continuation", ckind=value.kind, sid=value.sid, stage=value.stage,
+                  commitment=_hidden(s, ("cont", tuple(value)))) if value else ev("Continuation", ckind=None))
 
 
 def _h_exile_with_counters(s, evs, oid, kind, n):
@@ -349,7 +363,7 @@ def _h_remove_counter(s, evs, oid, kind, n):
 
 def _h_pending_entry(s, evs, value):
     s.pending_entry = value
-    evs.append(ev("PendingEntry", value=value))
+    evs.append(ev("PendingEntry", value=None if value is None else (("ciid", s.objects[value[0]].ciid),) + tuple(value[1:])))
 
 
 def _h_set(s, evs, attr, value):
@@ -391,7 +405,7 @@ def _h_store_bottom(s, evs, player, cards):
     # The event log is not part of any Observation, so the ordered choice is recorded here
     # (hashed) without being revealed to the opponent.
     s.mull_bottoms[player] = tuple(cards)
-    evs.append(ev("BottomChosen", player=player, cards=tuple(cards)))
+    evs.append(ev("BottomChosen", player=player, n=len(cards), commitment=_hidden(s, ("bottom", tuple(cards)))))
 
 
 def _h_clear_bottoms(s, evs):
@@ -511,8 +525,8 @@ def _h_open_cast(s, evs, source_oid, controller, cost_name="normal", cost_symbol
     s.open_cast = {"prov": prov, "source": source_oid, "from": frm, "index": idx, "controller": controller,
                    "activations": [], "paid": {}, "priority": s.priority, "passes": s.passes,
                    "pending": s.pending.view() if s.pending else None, "cost": tuple(cost_symbols)}
-    evs.append(ev("CastProposed", prov=prov, source=source_oid, ciid=o.ciid, controller=controller, frm=frm,
-                  cost=cost_name))
+    evs.append(ev("CastProposed", prov=prov, ciid=o.ciid, controller=controller, frm=frm, cost=cost_name,
+                  **({} if frm in _HIDDEN_ZONES else {"source": source_oid})))
 
 
 def _h_set_mode(s, evs, sid, mode):
@@ -550,8 +564,8 @@ def _h_commit_cast(s, evs):
     e.sid, e.state, e.oid = f"O{new}", "cast", new
     e.mana_spent = sum(oc["paid"].values())                               # recorded for "no mana spent" checks
     s.open_cast = None
-    evs.append(ev("SpellCast", sid=e.sid, oid=new, retired=oc["source"], ciid=src.ciid, controller=e.controller,
-                  mana_spent=e.mana_spent))
+    evs.append(ev("SpellCast", sid=e.sid, oid=new, ciid=src.ciid, controller=e.controller, mana_spent=e.mana_spent,
+                  frm=oc["from"], **({} if oc["from"] in _HIDDEN_ZONES else {"retired": oc["source"]})))
     s.occ.append(AB.CastOcc(e.controller, e.sid, src.ciid, s.def_by_ciid[src.ciid].is_creature, e.mana_spent))
 
 
@@ -588,7 +602,8 @@ def _h_revert_cast(s, evs, reverse_mana):
     s.priority, s.passes = oc["priority"], oc["passes"]
     s.pending = Pending(*oc["pending"]) if oc["pending"] else None
     s.open_cast = None
-    evs.append(ev("ProposalReverted", prov=oc["prov"], source=src.oid, reversed_mana=bool(reverse_mana)))
+    evs.append(ev("ProposalReverted", prov=oc["prov"], reversed_mana=bool(reverse_mana),
+                  **({} if oc["from"] in _HIDDEN_ZONES else {"source": src.oid})))
 
 
 def _h_remove_entry(s, evs, sid):
@@ -774,7 +789,7 @@ def _h_priority_resume(s, evs, value):
 def _h_reveal(s, evs, player, oid):
     """CR 701.20a/b: show a card to all players; it stays in its zone."""
     o = s.objects[oid]
-    evs.append(ev("Revealed", player=player, oid=oid, name=s.instances[o.ciid].name))
+    evs.append(ev("Revealed", player=player, ciid=o.ciid, zone=o.zone, name=s.instances[o.ciid].name))
 
 
 def _add_triggers(s, evs, found):

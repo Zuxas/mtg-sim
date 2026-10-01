@@ -224,8 +224,31 @@ is checked verbatim against the parsed entry (`tests/v2/test_rule_citations.py`)
 `definitions_hash` + installed oracle sha256 (SNAPSHOT.json). Replay: `engine.v2.record.make_record/replay`.
 Tests: `python tests/v2/test_m1_rules.py` (28), `test_m5_m6.py` (8), `test_rule_citations.py` (4); acceptance
 `python scripts/v2_acceptance.py` -> data/v2_acceptance.json (M2 10k fuzz 0 violations, M3 10k exact
-replays + fresh-process JSON replay, M4 1k scripted, M7 20.55 games/s CPU in the acceptance process / ~26 standalone vs target 200; determinism lint + guard in tests/v2/test_determinism.py; transactional commits + actions, every op emits an event, staged combat choices in observations: tests/v2/test_transactions.py; replay refuses pre-v2-m1.1 records with ReplayVersionError; registry 16 cards incl. Lava Spike + Lightning Helix (tests/v2/test_effects_burn.py); milestone two (Burn mirror) needs subsystems S1-S7 PROPOSED in harness/specs/2026-09-30-v2-m2-burn-mirror-proposal.md, awaiting approval). NOT wired to the launcher; legacy engines
-unchanged and still labelled experimental. Next (post-M1): effect library growth, a real matchup, Bo3.
+replays + fresh-process JSON replay, M4 1k scripted, M7 22.6 games/s CPU in the acceptance process vs target 200,
+floor 20 -- reported-only, thin margin); determinism lint + guard (tests/v2/test_determinism.py); transactional
+commits + actions, every op emits an event (tests/v2/test_transactions.py); replay refuses records from other
+engine versions with ReplayVersionError (ENGINE_VERSION v2-m2.0).
+
+### RULES ENGINE V2 -- milestone two: the real Modern Burn mirror — 2026-10-01
+
+Spec `harness/specs/2026-09-30-v2-m2-burn-mirror-proposal.md` (approved as one block, SHIPPED; results,
+implementation decisions D1-D10 and limitations are recorded there). Commits c083785..4d3965d (unpushed).
+Subsystems: S1 triggered abilities (typed occurrences -> pending triggers -> SBAs -> APNAP stacking with a
+staged OrderTrigger, intervening-if, non-card ability entries; `engine/v2/abilities.py`), S2 activated
+abilities + costs (pain-land life costs share one life budget; `ActivateAbility` pays tap/life/sacrifice/pool
+mana atomically), S4 ETB replacements (`rules/replacement.py`: fast land, shock land choice before the move),
+S3 library search (fetch lands; private `ChooseSearchResult`; shuffle digest instead of the order),
+S5 typed turn effects (can't gain life, can't be prevented, indestructible, double strike), S7 modes +
+dependent targets (Boros Charm, Searing Blaze), S6 spectacle + suspend (typed digest-checked continuation for
+the resolution-time cast). Registry: 30 cards incl. all 18 of `decks/mono_red_aggro_modern.txt`
+(`engine/v2/decklists.main_deck`). Validation `python scripts/v2_burn_validation.py` -> data/v2_burn_validation.json
++ data/v2_burn_logs/ (10k games, invariants on: 0 crashes / violations / dead ends / illegal accepted, 1k exact
+replays, 300/300 repeats, 0 turn-limit draws; 88-99 g/s wall on 20 workers, ~37 g/s single core).
+Best-of-three: `engine/v2/match.py` (ChoosePlayDraw per CR 103.1, staged SideboardSwap / DoneSideboarding,
+first to 2 wins, cap 5 games; MatchRecord + replay_match); `python scripts/v2_bo3_validation.py` (500 matches,
+500/500 exact replays). The real Burn sideboard is unsupported (refused). Tests: `python -m pytest -q tests/v2`
+(146). NOT wired to the launcher; legacy engines unchanged and still labelled experimental. Next: compare
+simulated decisions/outcomes with known gameplay, then a strict experimental v2 launcher option.
 
 ### Exact card identity + versioned Scryfall snapshot — 2026-09-30
 

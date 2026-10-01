@@ -67,13 +67,15 @@ def activatable_mana_options(state, player, oid) -> tuple:
 def sources_with_options(state, player) -> list:
     """[(oid, activatable options)] for the player's untapped mana sources (one pass)."""
     life = state.life[player]
-    objs, defs = state.objects, state.def_by_ciid
+    objs, cache = state.objects, state.mana_by_ciid
     out = []
     for oid in state.zones[("bf",)]:
         o = objs[oid]
         if o.controller != player or o.tapped:
             continue
-        opts = _opts_of(defs[o.ciid])
+        opts = cache.get(o.ciid)
+        if opts is None:                                               # derived from the fixed definition
+            opts = cache[o.ciid] = _opts_of(state.def_by_ciid[o.ciid])
         if opts:
             opts = _affordable(opts, life)
             if opts:

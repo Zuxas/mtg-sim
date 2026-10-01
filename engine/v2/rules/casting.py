@@ -46,7 +46,25 @@ def target_choices(state, key, mode=None, exclude_sid=None) -> list:
 
 def castable_modes(state, key, exclude_sid=None) -> list:
     """CR 700.2a: a mode that would be illegal (no legal targets) can't be chosen."""
-    return [m for m in range(MODAL[key]) if target_choices(state, key, m, exclude_sid)]
+    return [m for m in range(MODAL[key]) if has_legal_targets(state, key, m, exclude_sid)]
+
+
+def has_legal_targets(state, key, mode=None, exclude_sid=None) -> bool:
+    """Existence-only form of target_choices (same answer, without building the list)."""
+    slots = target_slots(key, mode)
+    if not slots:
+        return True
+    if key in DEPENDENT:
+        return any(state.objects[c].controller in (0, 1) and state.lost[state.objects[c].controller] is None
+                   for c in creatures_on_battlefield(state))
+    kinds = slots[0]
+    if "player" in kinds and (state.lost[0] is None or state.lost[1] is None):
+        return True
+    if "creature" in kinds and creatures_on_battlefield(state):
+        return True
+    if "spell" in kinds and any(e.state == "cast" and e.sid != exclude_sid for e in state.stack):
+        return True
+    return False
 
 
 def slot_still_legal(state, key, i, target, targets) -> bool:
@@ -114,18 +132,26 @@ def can_propose_cast(state, player, oid, avail=None, timing=None, targets_ok=Non
     o = state.objects.get(oid)
     if o is None or o.zone != "hand" or o.owner != player:
         return False
-    d = state.definition(oid)
+    d = state.def_by_ciid[o.ciid]
     if d.is_land:
         return False
     if not d.is_instant and not (sorcery_timing_ok(state, player) if timing is None else timing):
         return False
+    if targets_ok is None:
+        targets_ok = {}
+    memo = ("castable", d.name, cost)                       # per decision: same card + cost -> same answer
+    if memo in targets_ok:
+        return targets_ok[memo]
+    targets_ok[memo] = ok = _castable(state, player, d, avail, targets_ok, cost)
+    return ok
+
+
+def _castable(state, player, d, avail, targets_ok, cost) -> bool:
     key = d.effect_key
     if key in TARGET_SPEC or key in MODAL or key in DEPENDENT:
-        if targets_ok is None:
-            targets_ok = {}
         if key not in targets_ok:                           # per-decision cache (same answer per key)
             targets_ok[key] = bool(castable_modes(state, key)) if key in MODAL else \
-                target_choices(state, key) != []
+                has_legal_targets(state, key)
         if not targets_ok[key]:
             return False
     return payable_with_sources(state, player, d.cost_symbols if cost is None else cost, avail)

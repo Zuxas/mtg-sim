@@ -26,6 +26,29 @@ from engine.v2.state import GameState
 STEPS = ("untap", "upkeep", "draw", "main1", "begin_combat", "declare_attackers", "declare_blockers",
          "first_strike_damage", "combat_damage", "end_combat", "main2", "end", "cleanup")
 RNG_ALGORITHM = f"python-random-mt19937/{platform.python_version()}"
+_ALT_KEYS = frozenset(AB.SPECTACLE) | frozenset(AB.SUSPEND)
+_ACTS: dict = {}
+_PRIO_OPS: dict = {}
+
+
+def _priority_ops(player, passes) -> tuple:
+    k = (player, passes)
+    ops = _PRIO_OPS.get(k)
+    if ops is None:
+        ops = _PRIO_OPS[k] = (op("priority", player, passes), op("pending", "priority", player))
+    return ops
+
+
+def _act(cls, *args):
+    """Interned action value: actions are frozen, so equal ones may share one object (avoids
+    rebuilding the same options on every decision). Bounded."""
+    k = (cls, args)
+    a = _ACTS.get(k)
+    if a is None:
+        if len(_ACTS) > 50000:
+            _ACTS.clear()
+        a = _ACTS[k] = cls(*args)
+    return a
 
 
 class IllegalAction(ValueError):
@@ -161,15 +184,18 @@ class Game:
             timing = casting.sorcery_timing_ok(s, p)
             srcs = sources_with_options(s, p)
             avail = avail_from(s, p, srcs)
-            out = [A.PassPriority(p)]
+            out = [_act(A.PassPriority, p)]
             if timing and s.land_played[p] == 0:
-                out += [A.PlayLand(p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
-            out += [A.ActivateManaAbility(p, oid, c) for oid, opts in srcs for c, _l in opts]
+                out += [_act(A.PlayLand, p, oid) for oid in hand if casting.can_play_land(s, p, oid)]
+            out += [_act(A.ActivateManaAbility, p, oid, c) for oid, opts in srcs for c, _l in opts]
             out += self._activation_actions(p, timing)
             tgt: dict = {}
-            out += [A.ProposeCast(p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
+            out += [_act(A.ProposeCast, p, oid) for oid in hand if casting.can_propose_cast(s, p, oid, avail, timing, tgt)]
+            defs, objs = s.def_by_ciid, s.objects
             for oid in hand:
-                key = s.definition(oid).effect_key
+                key = defs[objs[oid].ciid].effect_key
+                if key not in _ALT_KEYS:
+                    continue
                 if key in AB.SPECTACLE and casting.spectacle_ok(s, p) and \
                         casting.can_propose_cast(s, p, oid, avail, timing, tgt, AB.SPECTACLE[key]):
                     out.append(A.ProposeCast(p, oid, "spectacle"))                       # CR 702.137a
@@ -190,7 +216,7 @@ class Game:
             out += [A.PayCost(p, asg) for asg in payment_assignments(s.open_cast["cost"], s.pools[p])]
         elif k == "declare_attack":
             oid = pd.info[0]
-            out = [A.ChooseAttack(p, oid, True), A.ChooseAttack(p, oid, False)]
+            out = [_act(A.ChooseAttack, p, oid, True), _act(A.ChooseAttack, p, oid, False)]
         elif k == "declare_block":
             b = pd.info[0]
             out = [A.ChooseBlock(p, b, None)] + [A.ChooseBlock(p, b, a) for a in s.attackers
@@ -223,7 +249,7 @@ class Game:
             t = next(x for x in s.pending_triggers if x.tid == tid)
             out = [A.ChooseTriggerTargets(p, tid, (tg,))
                    for tg in casting.options_for_kinds(s, AB.SPEC_BY_KEY[t.key].targets)]
-        out.append(A.Concede(p))                                          # always legal
+        out.append(_act(A.Concede, p))                                    # always legal
         return out
 
     def _completing_mana_actions(self, p, cost) -> list:
@@ -240,7 +266,7 @@ class Game:
                 pool = dict(s.pools[p])
                 pool[c] = pool.get(c, 0) + 1
                 if can_pay(cost, Avail(pool, rest)):
-                    out.append(A.ActivateManaAbility(p, oid, c))
+                    out.append(_act(A.ActivateManaAbility, p, oid, c))
         return out
 
     def _activation_actions(self, p, timing) -> list:
@@ -399,7 +425,7 @@ class Game:
             if not self._stack_triggers(player):
                 return                                                    # waiting for a stacking decision
             passes = 0                                                    # the stack changed (CR 117.4)
-        ops = [op("priority", player, passes), op("pending", "priority", player)]
+        ops = list(_priority_ops(player, passes))
         if s.priority_resume is not None:
             ops.append(op("priority_resume", None))
         self._commit("priority", ops)

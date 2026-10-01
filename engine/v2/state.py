@@ -87,6 +87,8 @@ class GameState:
     next_ability: int = 1                                  # ability stack ids "A<n>"
     log: EventLog = field(default_factory=EventLog)
     def_by_ciid: dict = field(default_factory=dict)       # derived cache: ciid -> CardDefinition (not hashed)
+    mana_by_ciid: dict = field(default_factory=dict)      # derived cache: ciid -> mana options (not hashed)
+    mana_by_ciid: dict = field(default_factory=dict)      # derived cache: ciid -> mana options (not hashed)
     txn: dict = field(default_factory=dict)                # reducer transaction journal (not hashed)
     txn_open: bool = False
     occ: list = field(default_factory=list)                # occurrences of the transition being committed

@@ -415,15 +415,29 @@ def _h_empty_pools(s, evs):
 _NO_MANA_EMPTIED = ev("ManaEmptied", player=None, mana=())
 
 
+_PRIORITY_EV: dict = {}
+_PENDING: dict = {}                    # (kind, player, info) -> (Pending, Event); Pending is never mutated
+
+
 def _h_priority(s, evs, player, passes):
     s.priority, s.passes = player, passes
-    evs.append(_iv(Event("Priority", (("passes", passes), ("player", player)))))
+    e = _PRIORITY_EV.get((player, passes))
+    if e is None:
+        e = _PRIORITY_EV[(player, passes)] = _iv(Event("Priority", (("passes", passes), ("player", player))))
+    evs.append(e)
 
 
 def _h_pending(s, evs, kind, player, info=()):
-    info = tuple(info)
-    s.pending = Pending(kind, player, info) if kind else None
-    evs.append(_iv(Event("PendingSet", (("info", info), ("pkind", kind), ("player", player)))))
+    k = (kind, player, info)
+    got = _PENDING.get(k)
+    if got is None:
+        info = tuple(info)
+        if len(_PENDING) > 20000:
+            _PENDING.clear()
+        got = _PENDING[k] = (Pending(kind, player, info) if kind else None,
+                             _iv(Event("PendingSet", (("info", info), ("pkind", kind), ("player", player)))))
+    s.pending = got[0]
+    evs.append(got[1])
 
 
 def _h_land_played(s, evs, player):

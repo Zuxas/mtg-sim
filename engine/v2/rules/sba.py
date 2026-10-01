@@ -15,14 +15,16 @@ def compute(state) -> tuple:
             losers.append((p, "life"))
         elif state.draw_failed[p]:                                    # CR 704.5b
             losers.append((p, "draw_from_empty_library"))
-    for oid in list(state.battlefield()):
-        d = state.definition(oid)
+    objs, defs = state.objects, state.def_by_ciid
+    for oid in list(state.zones[("bf",)]):
+        o = objs[oid]
+        d = defs[o.ciid]
         if not d.is_creature:
             continue
-        t = state.toughness(oid)
+        t = (d.toughness or 0) + o.eot_toughness
         if t <= 0:                                                    # CR 704.5f
             ops.append(op("move", oid, "graveyard", "end"))
-        elif state.objects[oid].damage >= t and not state.has_effect("indestructible", oid):   # 704.5g, 702.12b
+        elif o.damage >= t and not state.has_effect("indestructible", oid):   # 704.5g, 702.12b
             ops.append(op("note", "Destroyed", oid))
             ops.append(op("move", oid, "graveyard", "end"))
     for p, reason in losers:

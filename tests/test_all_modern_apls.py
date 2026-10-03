@@ -69,6 +69,12 @@ def test_apl(name, pct, module_name, class_name, db_archetype, n_games=20):
 if __name__ == "__main__":
     print(f"\n{'%':>5}  {'Deck':<22} Result")
     print("=" * 70)
+    failures = []
     for name, pct, mod, cls, db_arch in MODERN_FIELD:
         result, wins, avg = test_apl(name, pct, mod, cls, db_arch)
         print(f"{pct:>5.1f}  {name:<22} {result}")
+        if "FAIL" in str(result):
+            failures.append(name)
+    if failures:                    # a FAIL row must fail the process (#9)
+        print(f"\n{len(failures)} APL(s) failed: {', '.join(failures)}")
+        sys.exit(1)

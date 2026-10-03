@@ -54,3 +54,4 @@ if __name__ == '__main__':
                 print(f"  FAIL {name}: {e}")
                 failed += 1
     print(f"\n{passed} passed, {failed} failed")
+    sys.exit(1 if failed else 0)   # a failed check must fail the process (#9)

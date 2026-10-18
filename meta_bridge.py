@@ -12,7 +12,8 @@ Falls back to format_config.py estimates when DB data is unavailable.
 import os, sqlite3
 from functools import lru_cache
 
-DB_PATH = os.path.join(
+# The analyzer's own MTG_META_DB wins (its live DB may sit outside the checkout).
+DB_PATH = os.environ.get("MTG_META_DB") or os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
 )
@@ -189,3 +190,71 @@ if __name__ == "__main__":
             real_wp = get_real_matchup("Boros Energy", arch, fmt)
             wp_str  = f"  BE win%={real_wp:.0f}%" if real_wp else ""
             print(f"  {arch:<35} {pct:.1f}%{wp_str}")
+
+
+class MetaBridge:
+    """Object interface the gauntlet / event drivers import (bo3_gauntlet,
+    gauntlet_any_deck, event_simulator, generate_matchup_data, sim_bridge).
+    It was dropped when this module became plain functions in f8191fe, so
+    every `from meta_bridge import MetaBridge` raised ImportError and the
+    drivers fell back or stopped. Field shares are percents, like
+    get_real_field() and format_config.get_field()."""
+
+    def __init__(self, format_name: str = "modern", min_matches: int = 10):
+        self.format = format_name.lower()
+        self.min_matches = min_matches
+
+    def field_shares(self, top_n: int = 15) -> dict:
+        """{archetype: share_pct}, largest first."""
+        return dict(get_real_field(self.format, top_n))
+
+    def real_matchup_matrix(self) -> dict:
+        """{(arch_a, arch_b): win_pct_for_a} from matchup_matrix, both
+        directions, pairs with >= min_matches games. A stored row for a
+        direction always wins over the 100-minus complement of the other.
+        {} without a DB (or with a warning if the query fails)."""
+        conn = _conn()
+        if not conn:
+            return {}
+        try:
+            rows = conn.execute(
+                "SELECT archetype_a, archetype_b, winrate FROM matchup_matrix "
+                "WHERE format=? AND matches >= ? AND archetype_a != archetype_b",
+                (self.format, self.min_matches)).fetchall()
+        except sqlite3.Error as e:
+            print(f"  [MetaBridge] matchup query failed: {e}")
+            return {}
+        finally:
+            conn.close()
+        out, stored = {}, set()
+        for a, b, wr in rows:
+            out[(a, b)] = round(wr * 100, 1)
+            stored.add((a, b))
+            if (b, a) not in stored:
+                out[(b, a)] = round(100 - wr * 100, 1)
+        return out
+
+    def field_summary(self, top_n: int = 15) -> list:
+        """[{rank, archetype, share, matches}] for sim_bridge --show-field."""
+        conn = _conn()
+        counts = {}
+        if conn:
+            try:
+                counts = dict(conn.execute(
+                    "SELECT player1_arch, COUNT(*) FROM matches "
+                    "WHERE format=? AND player1_arch != '' GROUP BY player1_arch",
+                    (self.format,)).fetchall())
+            except sqlite3.Error as e:
+                print(f"  [MetaBridge] match count query failed: {e}")
+            finally:
+                conn.close()
+        return [{"rank": i, "archetype": a, "share": pct, "matches": counts.get(a, 0)}
+                for i, (a, pct) in enumerate(self.field_shares(top_n).items(), 1)]
+
+    def matchup_coverage(self) -> dict:
+        m = self.real_matchup_matrix()
+        archs = {a for a, _ in m} | {b for _, b in m}
+        possible = len(archs) * (len(archs) - 1)
+        return {"archetypes": len(archs), "pairs_with_data": len(m),
+                "possible_pairs": possible,
+                "coverage_pct": round(len(m) / possible * 100, 1) if possible else 0}

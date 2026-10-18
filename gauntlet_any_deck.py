@@ -18,6 +18,9 @@ def main():
     ap.add_argument("--top-n",   type=int, default=12)
     ap.add_argument("--n-games", type=int, default=1000)
     ap.add_argument("--sims",    type=int, default=1000)
+    ap.add_argument("--gauntlet", default=None,
+                    help="field from an mtg-meta-analyzer gauntlet snapshot (.json) "
+                         "instead of the meta DB")
     args = ap.parse_args()
 
     pbs = {**load_all_playbooks(), **load_all_tac_guides()}
@@ -42,15 +45,27 @@ def main():
     print(f"Kill dist: T{avg_kill_turn(our_dist):.2f} avg")
 
     # Build field
-    try:
-        from meta_bridge import MetaBridge
-        bridge = MetaBridge(format_name=args.format, min_matches=10)
-        field  = bridge.field_shares(top_n=args.top_n)
-        real_matrix = bridge.real_matchup_matrix()
-        print(f"Field: top {args.top_n} {args.format.upper()} archetypes")
-    except Exception as e:
-        print(f"MetaBridge error: {e}")
-        return
+    if args.gauntlet:
+        from gauntlet_snapshot import load_snapshot, field as snapshot_field
+        try:
+            snap = load_snapshot(args.gauntlet)
+        except (OSError, ValueError) as e:
+            print(f"Gauntlet snapshot error: {e}")
+            return
+        field = snapshot_field(snap, top_n=args.top_n)
+        real_matrix = None
+        print(f"Field: {len(field)} archetypes from {os.path.basename(args.gauntlet)} "
+              f"({snap['window']['since']}..{snap['window']['until']})")
+    else:
+        try:
+            from meta_bridge import MetaBridge
+            bridge = MetaBridge(format_name=args.format, min_matches=10)
+            field  = bridge.field_shares(top_n=args.top_n)
+            real_matrix = bridge.real_matchup_matrix()
+            print(f"Field: top {args.top_n} {args.format.upper()} archetypes")
+        except Exception as e:
+            print(f"MetaBridge error: {e}")
+            return
 
     # Compute G1 and match win% per opponent
     print(f"\n{'='*65}")

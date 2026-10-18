@@ -1,0 +1,171 @@
+{
+  "schema": "mtg-meta-analyzer/gauntlet@1",
+  "format": "modern",
+  "created_at": "2026-10-17T21:00:00",
+  "window": {
+    "since": "2026-10-04",
+    "until": "2026-10-17",
+    "days": 14
+  },
+  "params": {
+    "size": 3,
+    "min_share": 0.0,
+    "include": [],
+    "exclude": [],
+    "allow_stale": false,
+    "list_policy": "newest list in the window, then best placement, then highest deck id"
+  },
+  "field_source": "decks",
+  "total_field": 100,
+  "entries": [
+    {
+      "archetype": "Boros Energy",
+      "appearances": 60,
+      "share": 0.6,
+      "aliases": [],
+      "selected": true,
+      "included": false,
+      "weight": 0.6,
+      "weight_override": null,
+      "decklist": {
+        "deck_id": 41,
+        "event": "Fixture Challenge 41",
+        "event_date": "2026-10-16",
+        "placement": 1,
+        "player": "Player 41",
+        "url": "https://example.test/d41",
+        "main": [
+          [
+            20,
+            "Mountain"
+          ],
+          [
+            20,
+            "Sacred Foundry"
+          ],
+          [
+            4,
+            "Galvanic Discharge"
+          ],
+          [
+            4,
+            "Guide of Souls"
+          ],
+          [
+            4,
+            "Lightning Bolt"
+          ],
+          [
+            4,
+            "Ocelot Pride"
+          ],
+          [
+            4,
+            "Ragavan, Nimble Pilferer"
+          ]
+        ],
+        "side": [
+          [
+            15,
+            "Wear // Tear"
+          ]
+        ],
+        "text": "20 Mountain\n20 Sacred Foundry\n4 Galvanic Discharge\n4 Guide of Souls\n4 Lightning Bolt\n4 Ocelot Pride\n4 Ragavan, Nimble Pilferer\n\nSideboard\n15 Wear // Tear"
+      },
+      "warnings": []
+    },
+    {
+      "archetype": "Eldrazi Tron",
+      "appearances": 30,
+      "share": 0.3,
+      "aliases": [],
+      "selected": true,
+      "included": false,
+      "weight": 0.3,
+      "weight_override": null,
+      "decklist": {
+        "deck_id": 61,
+        "event": "Fixture Challenge 61",
+        "event_date": "2026-10-16",
+        "placement": 1,
+        "player": "Player 61",
+        "url": "https://example.test/d61",
+        "main": [
+          [
+            48,
+            "Wastes"
+          ],
+          [
+            4,
+            "Expedition Map"
+          ],
+          [
+            4,
+            "Reality Smasher"
+          ],
+          [
+            4,
+            "Thought-Knot Seer"
+          ]
+        ],
+        "side": [
+          [
+            15,
+            "Relic of Progenitus"
+          ]
+        ],
+        "text": "48 Wastes\n4 Expedition Map\n4 Reality Smasher\n4 Thought-Knot Seer\n\nSideboard\n15 Relic of Progenitus"
+      },
+      "warnings": []
+    },
+    {
+      "archetype": "Living End",
+      "appearances": 10,
+      "share": 0.1,
+      "aliases": [],
+      "selected": true,
+      "included": false,
+      "weight": 0.1,
+      "weight_override": null,
+      "decklist": {
+        "deck_id": 91,
+        "event": "Fixture Challenge 91",
+        "event_date": "2026-10-16",
+        "placement": 1,
+        "player": "Player 91",
+        "url": "https://example.test/d91",
+        "main": [
+          [
+            52,
+            "Forest"
+          ],
+          [
+            4,
+            "Living End"
+          ],
+          [
+            4,
+            "Shardless Agent"
+          ]
+        ],
+        "side": [],
+        "text": "52 Forest\n4 Living End\n4 Shardless Agent"
+      },
+      "warnings": [
+        "no sideboard recorded"
+      ]
+    }
+  ],
+  "field": {
+    "Boros Energy": 60.0,
+    "Eldrazi Tron": 30.0,
+    "Living End": 10.0
+  },
+  "observed_field": {
+    "Boros Energy": 60.0,
+    "Eldrazi Tron": 30.0,
+    "Living End": 10.0
+  },
+  "warnings": [],
+  "content_sha256": "ce93d33f4f3ac17da423336ec0b82a7ee138befab7e1ee46510e34f0646a937c"
+}

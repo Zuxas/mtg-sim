@@ -15,6 +15,7 @@ Usage:
 """
 
 from __future__ import annotations
+import copy as _copy
 import random
 from typing import Optional
 
@@ -289,6 +290,32 @@ def _combat_other(side: str) -> str:
     return "opp" if side == "caster" else "caster"
 
 
+def _reset_apl(apl):
+    """Put an APL back in the state it was in before its first game (#15).
+
+    Callers reuse one APL object across G1-G3 and across whole gauntlets, and
+    APLs keep per-game counters on self (Kappa counters, spells cast, flags).
+    The first time an APL is seen its attributes are snapshotted; every game
+    after that starts from a deep copy of the snapshot. The object identity is
+    kept, so callers can still read an APL's state after a game.
+
+    Anything set on the APL before its first game is part of the snapshot and
+    survives. Anything set between games is discarded.
+    """
+    d = apl.__dict__
+    snap = d.get('_pristine_state')
+    if snap is None:
+        for k in ('_opp_gs', '_my_gs'):   # stale game states: never part of config
+            d.pop(k, None)
+        snap = _copy.deepcopy(d)
+    d.clear()
+    d.update(_copy.deepcopy(snap))
+    d['_pristine_state'] = snap
+    apl._opp_gs = None
+    apl._my_gs = None
+    apl._match_dmg = 0
+
+
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
@@ -307,6 +334,11 @@ def run_match(apl_a: MatchAPL, deck_a: list,
 
     mgs = MatchGameState(deck_a, deck_b, on_play=on_play, seed=seed)
 
+    # Reset per-game state so reused APL objects don't leak anything across
+    # games (#15): counters, flags, stale _opp_gs, plotted cards, and so on.
+    _reset_apl(apl_a)
+    _reset_apl(apl_b)
+
     # Wire opponent archetype keys so each APL's threat model is accurate.
     try:
         from sim_bridge import _infer_archetype_key as _iak
@@ -315,16 +347,6 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     except Exception:
         pass
 
-    # Clear per-match state so reused APL objects don't leak game state
-    # across matches (stale _opp_gs, plotted cards, damage counters, etc.)
-    for _apl in (apl_a, apl_b):
-        _apl._opp_gs  = None
-        _apl._my_gs   = None
-        _apl._match_dmg = 0
-        # Clear Plot exile zone if present
-        _plotted_attr = getattr(_apl, 'PLOTTED_ZONE', None)
-        if _plotted_attr and hasattr(_apl, _plotted_attr):
-            setattr(_apl, _plotted_attr, [])
 
     # --- Mulligan phase ---
     mull_a = _do_mulligan(apl_a, mgs.gs_a, mgs.rng)

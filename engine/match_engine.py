@@ -301,19 +301,40 @@ def _reset_apl(apl):
 
     Anything set on the APL before its first game is part of the snapshot and
     survives. Anything set between games is discarded.
+
+    Two escape hatches: an APL that defines reset_game_state() is reset by
+    that method alone; an APL whose attributes cannot be deep-copied keeps
+    the old named resets and prints one warning.
     """
+    # An APL can own its reset: define reset_game_state() and it is used
+    # instead of the snapshot.
+    custom = getattr(apl, 'reset_game_state', None)
     d = apl.__dict__
-    snap = d.get('_pristine_state')
-    if snap is None:
-        for k in ('_opp_gs', '_my_gs'):   # stale game states: never part of config
-            d.pop(k, None)
-        snap = _copy.deepcopy(d)
-    d.clear()
-    d.update(_copy.deepcopy(snap))
-    d['_pristine_state'] = snap
+    if not callable(custom):
+        snap = d.get('_pristine_state')
+        if snap is None:
+            for k in ('_opp_gs', '_my_gs'):   # stale game states: never part of config
+                d.pop(k, None)
+            try:
+                snap = _copy.deepcopy(d)
+            except Exception as e:
+                # Something on the APL cannot be copied (a lock, a file, a
+                # client). Say so once and fall back to the old named resets.
+                print(f"  [!APL RESET] {type(apl).__name__} cannot be snapshotted ({type(e).__name__}); "
+                      f"per-game state may leak. Define reset_game_state() on it.")
+                snap = False
+        if snap:
+            d.clear()
+            d.update(_copy.deepcopy(snap))
+        d['_pristine_state'] = snap
+    else:
+        custom()
     apl._opp_gs = None
     apl._my_gs = None
     apl._match_dmg = 0
+    plotted = getattr(apl, 'PLOTTED_ZONE', None)
+    if plotted and hasattr(apl, plotted) and not d.get('_pristine_state'):
+        setattr(apl, plotted, [])
 
 
 def run_match(apl_a: MatchAPL, deck_a: list,

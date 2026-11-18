@@ -72,7 +72,43 @@ def test_bo3_set_same_for_one_and_two_workers():
     assert run(1) == run(2), (run(1), run(2))
 
 
+def test_apl_with_uncopyable_attribute_still_runs():
+    import threading, io, contextlib
+
+    class Locked(Leaky):
+        def __init__(self):
+            super().__init__()
+            self.lock = threading.Lock()      # deepcopy raises TypeError
+
+    a, b = Locked(), Leaky()
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        for s in range(3):
+            run_match(a, _lands(), b, _lands(), on_play=True, seed=s)
+    assert out.getvalue().count("[!APL RESET]") == 1, "warn once, not every game"
+    assert out.getvalue().isascii()
+
+
+def test_apl_can_own_its_reset():
+    class Custom(Leaky):
+        resets = 0
+
+        def reset_game_state(self):
+            self._counter = 0
+            Custom.resets += 1
+
+    a, b = Custom(), Leaky()
+    a.tuned = 1
+    run_match(a, _lands(), b, _lands(), on_play=True, seed=1)
+    a.tuned = 2                               # changed between games: kept
+    run_match(a, _lands(), b, _lands(), on_play=True, seed=2)
+    assert Custom.resets == 2 and a.tuned == 2
+    assert a.seen_at_start[-1] == 0
+
+
 if __name__ == "__main__":
+    test_apl_with_uncopyable_attribute_still_runs()
+    test_apl_can_own_its_reset()
     test_counter_starts_from_zero_every_game()
     test_config_set_before_first_game_survives()
     test_state_is_readable_after_a_game()

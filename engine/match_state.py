@@ -146,6 +146,23 @@ class MatchGameState:
             self.winner = source_player
             self.win_method = 'combat'
 
+    def check_life(self, method: str = 'noncombat') -> bool:
+        """State-based action (CR 704.5a): a player at 0 or less life loses.
+
+        Combat damage sets game_over in deal_damage; this catches everything
+        else (burn, drain, life payment). Both players dead -> 'draw'.
+        Returns True if the game is over.
+        """
+        if self.game_over:
+            return True
+        a_dead, b_dead = self.gs_a.life <= 0, self.gs_b.life <= 0
+        if not (a_dead or b_dead):
+            return False
+        self.game_over = True
+        self.winner = 'draw' if (a_dead and b_dead) else ('b' if a_dead else 'a')
+        self.win_method = method
+        return True
+
     def gain_life(self, player: str, amount: int):
         """Player gains life (from lifelink, etc.)."""
         gs = self.gs_a if player == 'a' else self.gs_b

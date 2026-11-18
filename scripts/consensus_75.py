@@ -1,7 +1,9 @@
 """Pull consensus 75 for an archetype from tournament data."""
-import sqlite3, json
+import sqlite3, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
 
-conn = sqlite3.connect('../mtg-meta-analyzer/data/mtg_meta.db')
+conn = paths.connect_meta_db()   # was a cwd-relative path
 c = conn.cursor()
 
 # Get all Boros Ocelot deck IDs

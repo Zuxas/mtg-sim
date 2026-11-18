@@ -73,6 +73,27 @@ mtg-sim/
 └── <root .py>       Driver entrypoints: sim.py, run_matchup.py, etc.
 ```
 
+## Sibling repos and data paths
+
+mtg-sim runs on its own. Some scripts also read data that lives in other repos. They look for it next to this one:
+
+```
+<workspace>/
+    mtg-sim/               this repo
+    mtg-meta-analyzer/     data/mtg_meta.db   (tournament data)
+    TeamResolve/           modern/ standard/ pioneer/ playbooks, guides/
+```
+
+Older checkouts that still have `My-Website/` and `Team Resolve/guides/` are found too. To point somewhere else, set an environment variable:
+
+| Variable | What it is |
+|---|---|
+| `MTG_META_DB` | Full path to `mtg_meta.db` |
+| `PLAYBOOK_DIR` | Folder holding the `modern/`, `standard/`, `pioneer/` playbook folders |
+| `TAC_GUIDES_DIR` | Folder holding the tac-team `.txt` guides |
+
+All of these go through `paths.py`. The meta DB is opened read-only, and a missing DB raises `FileNotFoundError` instead of creating an empty file.
+
 ## APL format
 
 An APL is a Python subclass of `BaseAPL` or `MatchAPL` that decides which card to play each priority window. APLs live in `apl/` — one file per archetype. The file's module docstring should describe the deck's game plan in turn-by-turn terms, and card names are declared as module-level constants to avoid string drift:

@@ -24,7 +24,8 @@ try:
 except ImportError:
     BS4_AVAILABLE = False
 
-PLAYBOOK_DIR = Path(__file__).parent.parent.parent / "My-Website"
+import paths
+PLAYBOOK_DIR = paths.playbook_dir()     # TeamResolve/ (or the older My-Website/)
 
 
 @dataclass
@@ -329,7 +330,7 @@ def find_playbook(
 # Also parse tac team TXT guides
 # ---------------------------------------------------------------------------
 
-TAC_TEAM_DIR = Path(__file__).parent.parent.parent / "Team Resolve" / "guides"
+TAC_TEAM_DIR = paths.tac_guides_dir()   # TeamResolve/guides (or "Team Resolve/guides")
 
 
 def parse_tac_guide(txt_path: str) -> PlaybookData:

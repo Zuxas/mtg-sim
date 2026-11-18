@@ -12,10 +12,8 @@ Falls back to format_config.py estimates when DB data is unavailable.
 import os, sqlite3
 from functools import lru_cache
 
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
-)
+import paths
+DB_PATH = str(paths.meta_db_path())
 
 # Canonical DB names → names we use in format_config/parallel_launcher
 # Keys are what we call them, values are what the DB calls them
@@ -50,7 +48,7 @@ def _normalize(name: str) -> str:
 def _conn():
     if not os.path.exists(DB_PATH):
         return None
-    return sqlite3.connect(DB_PATH)
+    return paths.connect_meta_db(DB_PATH)
 
 
 @lru_cache(maxsize=8)

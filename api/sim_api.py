@@ -86,6 +86,27 @@ DEFAULT_FIELD = {
 }
 
 
+def swap_cards(deck: list, card_out: str, card_in: str, count: int = 1) -> list:
+    """Copy of `deck` with `count` copies of card_out replaced by card_in.
+
+    card_in is loaded through the decklist loader, so it is a real Card with
+    its own cost, type, text and P/T. (The old code renamed a copy of the
+    outgoing card, which measured a card that does not exist: #33.)
+    """
+    slots = [i for i, c in enumerate(deck) if c.name.lower() == card_out.lower()]
+    if len(slots) < count:
+        raise ValueError(f"cannot swap {count} x {card_out!r}: the deck has {len(slots)}")
+    from data import deck as deck_loader
+    incoming = deck_loader._build_cards([(count, card_in)],
+                                        deck_loader._get_cards_local([card_in]))
+    if len(incoming) != count or not incoming[0].type_line:
+        raise ValueError(f"cannot swap in {card_in!r}: no card data found for it")
+    variant = list(deck)
+    for slot, card in zip(slots, incoming):
+        variant[slot] = card
+    return variant
+
+
 class MTGSim:
     """Clean API for the MTG Sim engine."""
     
@@ -172,19 +193,15 @@ class MTGSim:
                  "top8_pct": r.top8_pct, "day2_pct": r.x2_pct} for r in results]
 
     def test_swap(self, deck_name: str, card_out: str, card_in: str,
-                  opponent: str = None, n: int = 300, seed: int = 42) -> dict:
-        """Test swapping one card. Returns {base_wr, var_wr, delta}.
-        If opponent is None, tests against full field."""
+                  opponent: str = None, n: int = 300, seed: int = 42,
+                  count: int = 1) -> dict:
+        """Test swapping `count` copies of one card. Returns {base_wr, var_wr, delta}.
+        If opponent is None, tests against full field.
+        Raises ValueError if card_out is not in the deck (in that quantity) or
+        card_in cannot be resolved."""
         self._ensure_loaded()
-        from copy import deepcopy
-        
-        deck = self._decks[deck_name]
-        # Swap one copy
-        var_deck = list(deck)
-        for i, c in enumerate(var_deck):
-            if c.name.lower() == card_out.lower():
-                r = deepcopy(c); r.name = card_in; var_deck[i] = r; break
-        
+        var_deck = swap_cards(self._decks[deck_name], card_out, card_in, count)
+
         if opponent:
             base = self.matchup(deck_name, opponent, n=n, seed=seed)
             # Run with swapped deck

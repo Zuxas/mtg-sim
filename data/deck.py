@@ -139,7 +139,26 @@ def _get_cards_local(names: list[str]) -> dict:
         return get_cards_data(names)
 
 
+class UnresolvedCardError(ValueError):
+    """A decklist name has no card data (typo, new card, or lookup offline)."""
+
+
 def _build_cards(entries, scryfall_data: dict) -> list:
+    # A name with no data used to become a blank Card (no type, cmc 0, no P/T)
+    # and the sim ran on it without a word (#27). DFC_CORRECTIONS entries carry
+    # their own data, so they count as resolved.
+    unresolved = sorted({name for _, name in entries
+                         if not scryfall_data.get(name) and name not in DFC_CORRECTIONS})
+    if unresolved:
+        msg = (f"{len(unresolved)} card name(s) could not be resolved: "
+               + ", ".join(repr(n) for n in unresolved[:10])
+               + (" ..." if len(unresolved) > 10 else "")
+               + ". Check the spelling, run scripts/fetch_scryfall_bulk.sh, or check the "
+                 "network. Set MTG_SIM_ALLOW_UNRESOLVED=1 to load them as blank cards.")
+        import os
+        if not os.environ.get("MTG_SIM_ALLOW_UNRESOLVED"):
+            raise UnresolvedCardError(msg)
+        print(f"  [!UNRESOLVED] {msg}")
     cards = []
     for qty, name in entries:
         data = scryfall_data.get(name, {})

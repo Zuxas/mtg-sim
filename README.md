@@ -88,7 +88,7 @@ Older checkouts that still have `My-Website/` and `Team Resolve/guides/` are fou
 
 | Variable | What it is |
 |---|---|
-| `MTG_META_DB` | Full path to `mtg_meta.db` |
+| `MTG_META_DB` | Full (absolute) path to `mtg_meta.db` |
 | `PLAYBOOK_DIR` | Folder holding the `modern/`, `standard/`, `pioneer/` playbook folders |
 | `TAC_GUIDES_DIR` | Folder holding the tac-team `.txt` guides |
 

@@ -26,13 +26,12 @@ from typing import Optional
 # Path to the meta-analyzer database
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import paths
-DB_PATH = str(paths.meta_db_path())
 from data.deck import load_deck_from_text
 from engine.card_db import CardDB
 
 
 def _get_conn():
-    return paths.connect_meta_db(DB_PATH)   # raises FileNotFoundError if missing
+    return paths.connect_meta_db()   # raises FileNotFoundError if missing
 
 
 def load_saved_deck(name: str, format_name: str = None):

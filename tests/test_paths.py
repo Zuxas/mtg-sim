@@ -106,6 +106,20 @@ def test_db_is_opened_read_only():
             ro.close()
 
 
+def test_override_set_after_import_still_applies():
+    import meta_bridge
+    with tempfile.TemporaryDirectory() as d:
+        db = Path(d) / "meta.db"
+        sqlite3.connect(db).close()
+        os.environ["MTG_META_DB"] = str(db)
+        try:
+            con = meta_bridge._conn()
+            assert con is not None, "bridge kept the path it saw at import"
+            con.close()
+        finally:
+            del os.environ["MTG_META_DB"]
+
+
 def test_no_hand_built_paths_left():
     """The copies the issue lists must go through paths.py."""
     root = paths.REPO_ROOT

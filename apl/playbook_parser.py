@@ -25,7 +25,6 @@ except ImportError:
     BS4_AVAILABLE = False
 
 import paths
-PLAYBOOK_DIR = paths.playbook_dir()     # TeamResolve/ (or the older My-Website/)
 
 
 @dataclass
@@ -249,7 +248,7 @@ def load_all_playbooks(
     Results are cached in data/playbook_cache.json for fast reuse.
     """
     cache_path = CACHE_PATH
-    pb_dir     = Path(playbook_dir) if playbook_dir else PLAYBOOK_DIR
+    pb_dir     = Path(playbook_dir) if playbook_dir else paths.playbook_dir()   # TeamResolve/ (or the older My-Website/)
 
     if use_cache and cache_path.exists() and not force_rebuild:
         raw = json.loads(cache_path.read_text(encoding="utf-8"))
@@ -330,7 +329,6 @@ def find_playbook(
 # Also parse tac team TXT guides
 # ---------------------------------------------------------------------------
 
-TAC_TEAM_DIR = paths.tac_guides_dir()   # TeamResolve/guides (or "Team Resolve/guides")
 
 
 def parse_tac_guide(txt_path: str) -> PlaybookData:
@@ -371,7 +369,7 @@ def parse_tac_guide(txt_path: str) -> PlaybookData:
 
 
 def load_all_tac_guides(tac_dir: str = None) -> dict[str, PlaybookData]:
-    d = Path(tac_dir) if tac_dir else TAC_TEAM_DIR
+    d = Path(tac_dir) if tac_dir else paths.tac_guides_dir()
     results = {}
     for f in d.glob("tac team*.txt"):
         try:

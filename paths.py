@@ -35,6 +35,7 @@ def _first_existing(candidates):
 
 def meta_db_path() -> Path:
     """Path to the mtg-meta-analyzer SQLite DB. Not checked for existence."""
+    # ponytail: a relative override resolves against the cwd; use absolute paths.
     override = os.environ.get("MTG_META_DB")
     return Path(override) if override else WORKSPACE / "mtg-meta-analyzer" / "data" / "mtg_meta.db"
 

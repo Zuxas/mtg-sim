@@ -80,6 +80,9 @@ def _apply_sb(mainboard: list, sideboard: dict,
     try:
         return apply_sideboard_plan(mainboard, sideboard, sb_in_raw, sb_out_raw)
     except Exception:
+        import os
+        if os.environ.get("SIM_DEBUG"):
+            raise
         return mainboard  # fallback to pre-board if sb fails
 
 

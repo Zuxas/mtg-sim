@@ -118,7 +118,7 @@ def _tap_lands_for_response(gs):
     gs._response_pool_filled_turn = getattr(gs, 'turn', 0)
     for land in gs.zones.lands_on_battlefield():
         try:
-            gs.mana_pool.add_land(land.type_line or "", land.name or "")
+            gs.mana_pool.add_land(land.type_line or "", land.name or "", land.oracle_text or "")
         except Exception:
             gs.mana_pool.add("C", 1)
 

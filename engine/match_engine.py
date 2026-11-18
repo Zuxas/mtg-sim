@@ -73,7 +73,7 @@ def _tap_for_response(gs: GameState):
     for land in gs.zones.lands_on_battlefield():
         if not land.tapped:
             land.tapped = True
-            gs.mana_pool.add_land(land.type_line, land.name)
+            gs.mana_pool.add_land(land.type_line, land.name, land.oracle_text or "")
 
 
 def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,

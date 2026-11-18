@@ -1167,7 +1167,7 @@ class GameState:
         if reserve <= 0:
             for land in untapped:
                 land.tapped = True
-                self.mana_pool.add_land(land.type_line, land.name)
+                self.mana_pool.add_land(land.type_line, land.name, land.oracle_text or "")
         else:
             # Sort: basics (single-type) first, duals/flex last
             def _tap_priority(land):
@@ -1180,7 +1180,7 @@ class GameState:
             n_tap = max(0, len(ordered) - reserve)
             for land in ordered[:n_tap]:
                 land.tapped = True
-                self.mana_pool.add_land(land.type_line, land.name)
+                self.mana_pool.add_land(land.type_line, land.name, land.oracle_text or "")
             if len(ordered) > n_tap:
                 held = [l.name for l in ordered[n_tap:]]
                 self._log(f"  tap_lands: held {held} untapped (reserve={reserve})")
@@ -1449,7 +1449,7 @@ class GameState:
         enters_tapped = self._enters_tapped(best)
         if not enters_tapped:
             best.tapped = True
-            self.mana_pool.add_land(best.type_line, best.name)
+            self.mana_pool.add_land(best.type_line, best.name, best.oracle_text or "")
         else:
             best.tapped = True
 
@@ -1496,7 +1496,7 @@ class GameState:
                       f"{self.zones.count_lands_in_play()} total)")
         else:
             card.tapped = True  # tap immediately for mana
-            self.mana_pool.add_land(card.type_line, card.name)
+            self.mana_pool.add_land(card.type_line, card.name, card.oracle_text or "")
             self._log(f"  Land: {card.name} "
                       f"({self.zones.count_lands_in_play()} total)")
 
@@ -1538,6 +1538,7 @@ class GameState:
             self._log(f"  [Voice of Victory lock] {card.name} blocked (opp's turn)")
             return False
         self.mana_pool.pay(card.mana_cost, effective_cmc)
+        self.life -= self.mana_pool.life_paid   # Phyrexian pips paid with life (#16)
         self.spells_cast_this_turn += 1
         # Cosmogrand Zenith — 'Whenever you cast your second spell
         # each turn, create two 1/1 white Human Soldier tokens OR

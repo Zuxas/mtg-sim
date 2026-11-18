@@ -75,14 +75,22 @@ def test_active_player_dying_on_own_turn_loses():
     assert b.turns == [1], b.turns
 
 
-def test_both_at_zero_is_a_draw():
+def test_both_at_zero_is_an_unbiased_seeded_tie():
+    wins = {'a': 0, 'b': 0}
+    for seed in range(60):
+        a, b = _Stub(_burn_on(2, self_dmg=20)), _Stub()
+        r = run_match(a, _lands(), b, _lands(), on_play=True, seed=seed)
+        assert r.win_method == 'simultaneous_tie', r.win_method
+        wins[r.winner] += 1
+    assert min(wins.values()) >= 15, f"tie break is biased: {wins}"
     a, b = _Stub(_burn_on(2, self_dmg=20)), _Stub()
-    r = run_match(a, _lands(), b, _lands(), on_play=True, seed=3)
-    assert r.winner == 'draw', r.winner
+    again = run_match(a, _lands(), b, _lands(), on_play=True, seed=0)
+    a, b = _Stub(_burn_on(2, self_dmg=20)), _Stub()
+    assert again.winner == run_match(a, _lands(), b, _lands(), on_play=True, seed=0).winner
 
 
 if __name__ == "__main__":
     test_burn_in_main_phase_ends_game_that_turn()
     test_active_player_dying_on_own_turn_loses()
-    test_both_at_zero_is_a_draw()
+    test_both_at_zero_is_an_unbiased_seeded_tie()
     print("test_noncombat_lethal: OK")

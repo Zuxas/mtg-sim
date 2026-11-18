@@ -150,8 +150,11 @@ class MatchGameState:
         """State-based action (CR 704.5a): a player at 0 or less life loses.
 
         Combat damage sets game_over in deal_damage; this catches everything
-        else (burn, drain, life payment). Both players dead -> 'draw'.
-        Returns True if the game is over.
+        else (burn, drain, life payment). Returns True if the game is over.
+
+        Both players dead at once is a draw by the rules. Nothing downstream
+        models draws (Bo3 and the set totals score any non-'a' winner for B),
+        so it is a seeded coin flip, flagged win_method='simultaneous_tie'.
         """
         if self.game_over:
             return True
@@ -159,8 +162,12 @@ class MatchGameState:
         if not (a_dead or b_dead):
             return False
         self.game_over = True
-        self.winner = 'draw' if (a_dead and b_dead) else ('b' if a_dead else 'a')
-        self.win_method = method
+        if a_dead and b_dead:
+            self.winner = self.rng.choice(['a', 'b'])
+            self.win_method = 'simultaneous_tie'
+        else:
+            self.winner = 'b' if a_dead else 'a'
+            self.win_method = method
         return True
 
     def gain_life(self, player: str, amount: int):

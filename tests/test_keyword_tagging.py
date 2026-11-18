@@ -109,6 +109,20 @@ def test_has_keyword_fallback_uses_the_same_rule():
     assert not has_keyword(blank, "flying")
 
 
+def test_sentence_starting_with_a_keyword_is_not_a_keyword_line():
+    assert _kw("Lord", "Flying creatures you control get +1/+1.") == set()
+    assert _kw("Hater", "Reach creatures can't block this turn") == set()
+    assert _kw("Paywall", "Ward\u2014Pay 2 life.\nDredge 3") == {KWTag.WARD, KWTag.DREDGE}
+
+
+def test_temporary_self_grant_is_not_intrinsic():
+    assert _kw("Pumper", "{R}: This creature has flying until end of turn.") == set()
+    assert _kw("Crasher", "Whenever you cast a spell, this creature has trample this turn.") == set()
+    # "this turn" inside the condition is not a duration
+    assert _kw("Stoic Sphinx", "Flash\nFlying\nThis creature has hexproof as long as you "
+               "haven't cast a spell this turn.") == {KWTag.FLASH, KWTag.FLYING, KWTag.HEXPROOF}
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

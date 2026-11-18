@@ -206,7 +206,11 @@ _KEYWORD_WORDS = (
 )
 # One item of a keyword line: a keyword, optionally with a cost, number or
 # quality ("ward {2}", "dredge 3", "protection from red", "hexproof from black").
-_KEYWORD_ITEM = re.compile(rf"^(?:{_KEYWORD_WORDS})(?:\b[^.]{{0,40}})?\.?$")
+# Anything else after the keyword ("flying creatures you control get +1/+1")
+# is a sentence about other things, not a keyword line.
+_KEYWORD_ITEM = re.compile(
+    rf"^(?:{_KEYWORD_WORDS})"
+    r"(?: ?(?:\{[^}]+\})+| x| \d+| ?\u2014[^.]*|(?<=from) [^.]*| from [^.]*)?\.?$")
 # "This creature has flying", "<Card name> has flying and lifelink as long as ..."
 # Also "this creature gets +2/+2, has flying, and ..." and "as long as ..., it
 # gets +4/+4 and has trample".
@@ -238,7 +242,11 @@ def keyword_text(card: Card) -> str:
     for sentence in re.split(r"(?<=\.)\s+|\n", text):
         if "as long as" in sentence and not TAG_CONDITIONAL_SELF_GRANTS:
             continue
-        kept += [m.group(1) for m in _SELF_GRANT.finditer(sentence)]
+        for m in _SELF_GRANT.finditer(sentence):
+            grant = m.group(1).split(" as long as ")[0]
+            # temporary: the resolving effect grants it, not deck load
+            if "until end of turn" not in grant and "this turn" not in grant:
+                kept.append(grant)
     return "\n".join(kept)
 
 

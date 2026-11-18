@@ -564,6 +564,13 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
             match_apl.main_phase2_match(view, opp_view)
         elif hasattr(match_apl, 'main_phase2'):
             match_apl.main_phase2(view)
+        # Beginning of the active player's end step. Runs here because this
+        # is the last point with the active player's view built and synced.
+        # ponytail: fires before the turn's win check, not after; fine while
+        # own_end_step only makes tokens/gains life, move if it deals damage.
+        own_end = getattr(match_apl, 'own_end_step', None)
+        if own_end:
+            own_end(view, opp_view)
     except Exception as e:
         if os.environ.get("SIM_DEBUG"):
             raise

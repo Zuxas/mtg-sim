@@ -571,6 +571,9 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 return result
 
             # --- END STEP ---
+            own_end = getattr(apl, 'own_end_step', None)   # active player's own triggers
+            if own_end:
+                own_end(gs, opp_gs)
             _tap_for_response(opp_gs)   # opponent can tap for end-step instants/flash
             opp_apl.end_step_actions(opp_gs, gs)
 

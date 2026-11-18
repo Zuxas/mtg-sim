@@ -499,6 +499,14 @@ class MatchAPL(BaseAPL):
         
         return None
 
+    def own_end_step(self, gs: GameState, opponent: GameState):
+        """
+        "At the beginning of your end step" triggers, on YOUR turn. Both
+        engines call it for the active player before the opponent's
+        end_step_actions window. Default: do nothing.
+        """
+        pass
+
     def end_step_actions(self, gs: GameState, opponent: GameState):
         """
         Actions at end of opponent's turn (flash creatures, instants).

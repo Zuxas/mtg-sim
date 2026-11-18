@@ -591,11 +591,16 @@ def run_match(apl_a: MatchAPL, deck_a: list,
         _sb = _inev(mgs.gs_b.life, mgs.gs_b.zones.hand, mgs.gs_b.zones.battlefield, mgs.gs_a.zones.battlefield)
         if _sa != _sb:
             mgs.winner = 'a' if _sa > _sb else 'b'
-        else:
-            mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
-    else:
+    if mgs.winner is None and mgs.gs_a.life != mgs.gs_b.life:
         mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
     mgs.win_method = 'timeout'
+    if mgs.winner is None:
+        # Dead-even stall (#29). Used to go to B every time, which read as a
+        # 0% mirror. Seeded coin flip keeps it unbiased and reproducible.
+        # ponytail: coin flip, not a draw bucket; add winner='draw' handling
+        # through the Bo3/gauntlet consumers if stalls need their own column.
+        mgs.winner = mgs.rng.choice(['a', 'b'])
+        mgs.win_method = 'timeout_tie'
     result = mgs.to_match_result()
     result.mulligans_a = mull_a
     result.mulligans_b = mull_b
@@ -630,6 +635,8 @@ def run_match_set(apl_a: MatchAPL, deck_a: list,
             results.a_wins += 1
         else:
             results.b_wins += 1
+        if match.win_method == 'timeout_tie':
+            results.ties += 1
         results.kill_turns.append(match.kill_turn)
         results.results.append(match)
 
@@ -648,6 +655,8 @@ def print_match_report(results: MatchSetResults,
     print(f"{'='*50}")
     print(f"  {name_a}: {results.win_pct_a()}% win rate "
           f"({results.a_wins}-{results.b_wins})")
+    if results.ties:
+        print(f"  Timeout ties (coin flip): {results.ties}")
     print(f"  Avg game length: {results.avg_turns:.1f} turns")
     pd = results.play_draw_split()
     print(f"  On play: {pd['on_play']}% | On draw: {pd['on_draw']}%")

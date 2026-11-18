@@ -60,6 +60,12 @@ def test_dfc_is_found_by_front_face_and_fully_populated():
     assert len(c["card_faces"]) == 2
 
 
+def test_back_face_name_does_not_resolve_to_the_front_face():
+    data, _ = _with_fake_scryfall([AJANI], lambda: scryfall_client.get_cards_data(
+        ["Ajani, Nacatl Avenger"]))
+    assert "Ajani, Nacatl Avenger" not in data, data.keys()
+
+
 def test_lookup_is_case_insensitive_and_accepts_slash_spellings():
     data, sent = _with_fake_scryfall([BOLT, WEAR], lambda: scryfall_client.get_cards_data(
         ["lightning bolt", "Wear / Tear"]))
@@ -105,6 +111,7 @@ def test_carddb_does_not_match_on_substrings():
 
 if __name__ == "__main__":
     test_dfc_is_found_by_front_face_and_fully_populated()
+    test_back_face_name_does_not_resolve_to_the_front_face()
     test_lookup_is_case_insensitive_and_accepts_slash_spellings()
     test_unknown_name_raises_and_names_the_card()
     test_override_loads_blank_cards_with_a_warning()

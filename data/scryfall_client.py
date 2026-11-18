@@ -94,9 +94,11 @@ def get_cards_data(names: Iterable[str]) -> dict:
             }
             result[name] = entry
             found[name.lower()] = entry
-            for face in faces:
-                if face.get("name"):
-                    found.setdefault(face["name"].lower(), entry)
+            # The entry is the FRONT face, so only the front-face name maps to
+            # it. A back-face name stays unresolved and fails loudly instead of
+            # quietly getting the front face's cost and stats.
+            if front.get("name"):
+                found.setdefault(front["name"].lower(), entry)
 
     # Scryfall answers under its canonical name ("Front // Back", canonical
     # capitals). Callers look up the spelling they asked for, so answer under

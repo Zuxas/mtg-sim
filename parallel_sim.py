@@ -47,8 +47,10 @@ def _worker(task: dict) -> dict:
         if use_combo:
             # Combo matchup: use hand-aware interaction model
             from engine.combo_model import run_combo_matchup
-            g1 = run_combo_matchup(opp_name, n=n, game=1, seed=seed)
-            g2 = run_combo_matchup(opp_name, n=n, game=2, seed=seed+1)
+            g1 = run_combo_matchup(opp_name, n=n, game=1, seed=seed,
+                                   format_name=format_name, our_deck=our_deck)
+            g2 = run_combo_matchup(opp_name, n=n, game=2, seed=seed+1,
+                                   format_name=format_name, our_deck=our_deck)
             match = round(g1["win_pct"] / 3 + g2["win_pct"] * 2 / 3, 1)
             return {
                 "opp":       opp_name,

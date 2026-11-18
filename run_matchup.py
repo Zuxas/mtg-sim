@@ -93,7 +93,8 @@ def _run_combo(result, opp_name, format_name, n, seed):
 
     # Fall back to combo kill-turn sampler
     if g1 is None:
-        g1_data = run_combo_matchup(opp_name, n=n, game=1, seed=seed)
+        g1_data = run_combo_matchup(opp_name, n=n, game=1, seed=seed,
+                                    format_name=format_name, our_deck=our_deck)
         g1 = g1_data["win_pct"]
         result["avg_turns"] = g1_data.get("avg_turns", 0)
         result["hard_stop"] = g1_data.get("hard_stop_rate", 0)

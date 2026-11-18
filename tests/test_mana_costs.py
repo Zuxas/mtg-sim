@@ -112,6 +112,46 @@ def test_lands_without_a_basic_type_follow_their_text():
     assert made("Land - Island Mountain", "Steam Vents", "({T}: Add {U} or {R}.)") == {"flex": 1}
 
 
+def test_hybrid_search_finds_the_legal_assignment():
+    # greedy would spend W on {W/U} and then have nothing for {W/R}
+    pool = ManaPool(W=1, U=1)
+    assert pool.pay("{W/U}{W/R}", 2) and pool.total() == 0
+    assert not ManaPool(U=2).can_pay("{W/U}{W/R}", 2)
+    pool = ManaPool(W=1, R=2)                   # {2/W}{R/W}: R for hybrid, W for 2/W, or 2 generic
+    assert pool.can_pay("{2/W}{R/W}", 3)
+
+
+def test_cannot_pay_more_life_than_you_have():
+    from data.card import Card
+    from engine.game_state import GameState
+    growth = lambda: Card(name="Mutagenic Growth", mana_cost=GROWTH, cmc=1,
+                          type_line="Instant", oracle_text="", colors=["G"])
+    gs = GameState(mainboard=[], on_play=True)
+    gs.life = 1
+    spell = growth()
+    gs.zones.hand = [spell]
+    assert gs.cast_spell(spell) is False and gs.life == 1 and spell in gs.zones.hand
+    gs.life = 2                                  # paying to exactly 0 is legal
+    assert gs.can_pay_mana(GROWTH, 1)
+    gs.life = 1
+    gs.mana_pool.add("G", 1)                     # with mana there is no life cost
+    assert gs.cast_spell(spell) is not False and gs.life == 1
+
+
+def test_every_payment_path_charges_life():
+    """cast_spell, counterspells, the priority stack and the reactive window
+    all pay through GameState.pay_mana."""
+    import inspect
+    from engine import game_state, counter_resolver, priority_stack, match_engine
+    for mod in (counter_resolver, priority_stack, match_engine):
+        src = inspect.getsource(mod)
+        assert "mana_pool.pay(" not in src and "pay_mana(" in src, mod.__name__
+    gs = game_state.GameState(mainboard=[], on_play=True)
+    assert gs.pay_mana(DISMEMBER, 3) is False    # the generic {1} has no mana
+    gs.mana_pool.add("R", 1)
+    assert gs.pay_mana(DISMEMBER, 3) and gs.life == 16
+
+
 def test_cast_spell_charges_phyrexian_life():
     from data.card import Card
     from engine.game_state import GameState

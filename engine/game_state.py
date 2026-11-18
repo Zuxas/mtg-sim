@@ -798,7 +798,7 @@ class GameState:
         if spec is None:
             return False
         warp_cost_str, warp_cmc = spec
-        if not self.mana_pool.can_cast(warp_cost_str, warp_cmc):
+        if not self.can_pay_mana(warp_cost_str, warp_cmc):
             return False
         if card not in self.zones.hand:
             return False
@@ -816,7 +816,7 @@ class GameState:
                 and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
             return False
         # Pay the warp cost (cheaper than full)
-        self.mana_pool.pay(warp_cost_str, warp_cmc)
+        self.pay_mana(warp_cost_str, warp_cmc)
         self.spells_cast_this_turn += 1
         # Card enters battlefield normally as a creature
         self.zones.play_from_hand(card)
@@ -1146,6 +1146,23 @@ class GameState:
     # -----------------------------------------------------------------------
     # APL-facing actions
     # -----------------------------------------------------------------------
+
+    def can_pay_mana(self, mana_cost: str, cmc: float) -> bool:
+        """Can this player pay the cost right now? Unlike mana_pool.can_cast,
+        this knows the life total, so a Phyrexian pip cannot be paid with life
+        the player does not have (#16)."""
+        self.mana_pool.life_available = self.life
+        return self.mana_pool.can_cast(mana_cost, cmc)
+
+    def pay_mana(self, mana_cost: str, cmc: float) -> bool:
+        """Pay a cost from the pool and take any Phyrexian life off the player.
+        The one place a real mana cost is paid: cast_spell, warp, counterspells
+        and the reactive windows all come through here."""
+        self.mana_pool.life_available = self.life
+        if not self.mana_pool.pay(mana_cost, cmc):
+            return False
+        self.life -= self.mana_pool.life_paid
+        return True
 
     def tap_lands(self):
         """
@@ -1513,7 +1530,7 @@ class GameState:
         # Effective cost after any per-card reductions ('this spell
         # costs {X} less' — Hearth Elemental, Eddymurk Crab, etc.)
         effective_cmc = _effective_cmc(card, self)
-        if not self.mana_pool.can_cast(card.mana_cost, effective_cmc):
+        if not self.can_pay_mana(card.mana_cost, effective_cmc):
             return False
         # ── High Noon lock (symmetric: both players limited to 1 spell/turn) ──
         # 'Each player can't cast more than one spell each turn.'
@@ -1537,8 +1554,7 @@ class GameState:
                 and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
             self._log(f"  [Voice of Victory lock] {card.name} blocked (opp's turn)")
             return False
-        self.mana_pool.pay(card.mana_cost, effective_cmc)
-        self.life -= self.mana_pool.life_paid   # Phyrexian pips paid with life (#16)
+        self.pay_mana(card.mana_cost, effective_cmc)
         self.spells_cast_this_turn += 1
         # Cosmogrand Zenith — 'Whenever you cast your second spell
         # each turn, create two 1/1 white Human Soldier tokens OR

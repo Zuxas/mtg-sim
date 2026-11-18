@@ -123,8 +123,8 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
             # If no creature to kill, burn the player
         
         # Cast the spell
-        if reactive_gs.mana_pool.can_cast(response.mana_cost, response.cmc):
-            reactive_gs.mana_pool.pay(response.mana_cost, response.cmc)
+        if reactive_gs.can_pay_mana(response.mana_cost, response.cmc):
+            reactive_gs.pay_mana(response.mana_cost, response.cmc)
             reactive_gs.zones.hand.remove(response)
             reactive_gs.zones.graveyard.append(response)
             reactive_gs.noncreature_spells_this_turn += 1

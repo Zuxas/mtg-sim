@@ -81,6 +81,7 @@ class ManaPool:
     cost_reduction: int = 0  # generic cost reduction (affinity, delve, domain, convoke)
     phyrexian_life_ok: bool = True  # APL switch: False = Phyrexian pips must be paid with mana
     life_paid: int = 0       # life owed for Phyrexian pips by the last pay()
+    life_available: int = None  # player's life, set by GameState.pay_mana; None = not checked
 
     def total(self) -> int:
         return self.W + self.U + self.B + self.R + self.G + self.C + self.flex
@@ -152,9 +153,11 @@ class ManaPool:
         """Work out a payment. Returns (remaining pool dict, life paid) or None.
 
         Order: colored pips (own color, then flex), {C} pips (colorless mana
-        only), hybrid pips, Phyrexian pips in their own color if the generic
-        part can still be paid, generic, then any Phyrexian pips still unpaid
-        from leftover mana, falling back to 2 life each.
+        only), hybrid pips (both choices are searched, so {W/U}{W/R} off W+U
+        works), Phyrexian pips in their own color if the generic part can
+        still be paid, generic, then any Phyrexian pips still unpaid from
+        leftover mana, falling back to 2 life each. Life is refused when it
+        exceeds `life_available`.
         """
         left = dict(W=self.W, U=self.U, B=self.B, R=self.R, G=self.G,
                     C=self.C, flex=self.flex)
@@ -179,24 +182,43 @@ class ManaPool:
             return None                      # {C} is payable only with colorless
         left["C"] -= req.get("C", 0)
 
-        generic = req.get("generic", 0)
-        for first, second in req.get("hybrid", []):
-            if first == "2":                 # {2/X}: X, or two generic
-                if not (left[second] > 0 and take(second)) and not (left["flex"] > 0 and take(second)):
-                    generic += 2
-            else:                            # {A/B}: whichever we have more of
-                a, b = sorted((first, second), key=lambda c: -left[c])
-                if left[a] > 0:
-                    left[a] -= 1
-                elif not take(b):
-                    return None
+        return self._plan_rest(left, req.get("generic", 0),
+                               list(req.get("hybrid", [])), req.get("phyrexian", []))
+
+    def _plan_rest(self, left, generic, hybrids, phyrexian):
+        """Hybrid pips (searching both choices), then Phyrexian and generic."""
+        if hybrids:
+            (first, second), rest = hybrids[0], hybrids[1:]
+            if first == "2":                 # {2/X}: X, flex, or two generic
+                options = [second, "flex", None]
+            else:                            # {A/B}: try the color we have more of first
+                options = sorted((first, second), key=lambda c: -left[c]) + ["flex"]
+            for src in options:
+                if src is None:
+                    plan = self._plan_rest(dict(left), generic + 2, rest, phyrexian)
+                elif left[src] > 0:
+                    trial = dict(left)
+                    trial[src] -= 1
+                    plan = self._plan_rest(trial, generic, rest, phyrexian)
+                else:
+                    continue
+                if plan is not None:
+                    return plan
+            return None
+
+        def take(color):
+            for src in (color, "flex"):
+                if left[src] > 0:
+                    left[src] -= 1
+                    return True
+            return False
 
         generic = max(0, generic - self.cost_reduction)
 
         # Phyrexian pips take mana of their own color when that still leaves
         # enough for the generic part; otherwise they wait for leftovers / life.
         unpaid = []
-        for colors in req.get("phyrexian", []):
+        for colors in phyrexian:
             color = next((c for c in colors if left[c] > 0), None)
             if color and sum(left.values()) - 1 >= generic:
                 left[color] -= 1
@@ -216,6 +238,9 @@ class ManaPool:
                 if not self.phyrexian_life_ok:
                     return None
                 life += 2
+        # CR 119.4: a player can pay life only if their total is at least that much
+        if self.life_available is not None and life > self.life_available:
+            return None
         return left, life
 
     def can_pay(self, mana_cost: str, cmc: float) -> bool:

@@ -123,9 +123,11 @@ jobs:
           PASS=0; FAIL=0
           for f in ${{ steps.changed.outputs.files }}; do
             echo "--- Verifying $f ---"
-            result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1)
+            # Fail closed: a crash (missing script, import error) prints no
+            # " FAIL " line and used to be counted as a pass.
+            if result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1); then rc=0; else rc=$?; fi
             echo "$result"
-            if echo "$result" | grep -q " FAIL "; then FAIL=$((FAIL+1)); else PASS=$((PASS+1)); fi
+            if [ $rc -ne 0 ] || echo "$result" | grep -q " FAIL "; then FAIL=$((FAIL+1)); else PASS=$((PASS+1)); fi
           done
           echo "Oracle gate: $PASS PASS, $FAIL FAIL"
           if [ $FAIL -gt 0 ]; then

@@ -87,6 +87,11 @@ def test_too_many_copies_raises():
     _raises(lambda: swap_cards(_deck(), "Lightning Bolt", "Path to Exile", count=5), "has 4")
 
 
+def test_bad_count_raises():
+    for bad in (0, -1, 1.5):
+        _raises(lambda: swap_cards(_deck(), "Lightning Bolt", "Path to Exile", count=bad), "count")
+
+
 def test_unknown_card_in_raises():
     _raises(lambda: swap_cards(_deck(), "Lightning Bolt", "Pathh to Exile"), "Pathh to Exile")
 

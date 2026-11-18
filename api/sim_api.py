@@ -93,6 +93,8 @@ def swap_cards(deck: list, card_out: str, card_in: str, count: int = 1) -> list:
     its own cost, type, text and P/T. (The old code renamed a copy of the
     outgoing card, which measured a card that does not exist: #33.)
     """
+    if not isinstance(count, int) or count < 1:
+        raise ValueError(f"count must be a positive whole number, got {count!r}")
     slots = [i for i, c in enumerate(deck) if c.name.lower() == card_out.lower()]
     if len(slots) < count:
         raise ValueError(f"cannot swap {count} x {card_out!r}: the deck has {len(slots)}")

@@ -89,7 +89,19 @@ def test_both_at_zero_is_an_unbiased_seeded_tie():
     assert again.winner == run_match(a, _lands(), b, _lands(), on_play=True, seed=0).winner
 
 
+def test_both_dead_overrides_an_early_combat_winner():
+    """deal_damage names a winner the moment life hits 0. If the other player
+    is also at 0 by the time state is checked, it is still a tie."""
+    from engine.match_state import MatchGameState
+    mgs = MatchGameState(_lands(), _lands(), seed=1)
+    mgs.gs_a.life = 0
+    mgs.deal_damage('a', 20)
+    assert mgs.game_over and mgs.winner == 'a'
+    assert mgs.check_life() and mgs.win_method == 'simultaneous_tie'
+
+
 if __name__ == "__main__":
+    test_both_dead_overrides_an_early_combat_winner()
     test_burn_in_main_phase_ends_game_that_turn()
     test_active_player_dying_on_own_turn_loses()
     test_both_at_zero_is_an_unbiased_seeded_tie()

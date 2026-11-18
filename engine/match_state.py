@@ -156,9 +156,9 @@ class MatchGameState:
         models draws (Bo3 and the set totals score any non-'a' winner for B),
         so it is a seeded coin flip, flagged win_method='simultaneous_tie'.
         """
-        if self.game_over:
-            return True
         a_dead, b_dead = self.gs_a.life <= 0, self.gs_b.life <= 0
+        if self.game_over and not (a_dead and b_dead):
+            return True     # already decided (deal_damage names the winner at once)
         if not (a_dead or b_dead):
             return False
         self.game_over = True

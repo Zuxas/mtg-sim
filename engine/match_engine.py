@@ -635,7 +635,7 @@ def run_match_set(apl_a: MatchAPL, deck_a: list,
             results.a_wins += 1
         else:
             results.b_wins += 1
-        if match.win_method == 'timeout_tie':
+        if match.win_method.endswith('_tie'):
             results.ties += 1
         results.kill_turns.append(match.kill_turn)
         results.results.append(match)
@@ -656,7 +656,7 @@ def print_match_report(results: MatchSetResults,
     print(f"  {name_a}: {results.win_pct_a()}% win rate "
           f"({results.a_wins}-{results.b_wins})")
     if results.ties:
-        print(f"  Timeout ties (coin flip): {results.ties}")
+        print(f"  Ties (coin flip): {results.ties}")
     print(f"  Avg game length: {results.avg_turns:.1f} turns")
     pd = results.play_draw_split()
     print(f"  On play: {pd['on_play']}% | On draw: {pd['on_draw']}%")

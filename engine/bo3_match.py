@@ -268,7 +268,7 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     results.g3_wr_a = round(g3_a_wins / max(1, g3_total) * 100, 1) if g3_total else 0
     results.g3_rate = round(g3_count / max(1, n) * 100, 1)
     results.tied_games = sum(1 for b in results.results for g in b.game_results
-                             if g.win_method == 'timeout_tie')
+                             if g.win_method.endswith('_tie'))
     results.avg_total_turns = round(
         sum(r.total_turns for r in results.results) / max(1, n), 1)
     
@@ -294,5 +294,5 @@ def print_bo3_report(results: Bo3SetResults,
     print(f"    Went to G3:      {results.g3_rate}%")
     print(f"    Avg match length: {results.avg_total_turns} turns")
     if results.tied_games:
-        print(f"    Timeout ties (coin flip): {results.tied_games} games")
+        print(f"    Ties (coin flip): {results.tied_games} games")
     print()

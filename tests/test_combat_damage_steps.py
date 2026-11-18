@@ -12,7 +12,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.card import Card, Tag
-from engine.match_state import resolve_combat
+from engine.match_state import resolve_combat, combat_damage
 from engine.match_runner import TwoPlayerGameState, _resolve_combat
 
 FS, DS, LL, TR, DT, IND = ("first_strike", "double_strike", "lifelink",
@@ -83,7 +83,33 @@ def test_match_runner_resolver():
         _check("match_runner", case, got)
 
 
+def test_lethal_first_strike_step_stops_combat():
+    """Defender at 2: a first striker deals 3 unblocked. The game is over
+    before the regular step, so the double striker deals only its first hit
+    and a lifelink blocker cannot gain the defender back to life."""
+    fs = _c("First Striker", 3, 3, FS)
+    ds = _c("Double Striker", 2, 2, DS)
+    vanilla = _c("Bear", 2, 2)
+    blk = _c("Lifelinker", 2, 4, LL)
+    r = combat_damage([fs, ds, vanilla], {id(vanilla): [blk]}, defender_life=2)
+    assert (r.face, r.defender_lifelink, r.hits_on_player) == (5, 0, 2), r
+    # Same board with the defender healthy: both steps happen
+    r = combat_damage([fs, ds, vanilla], {id(vanilla): [blk]}, defender_life=20)
+    assert (r.face, r.defender_lifelink) == (7, 2), r
+
+
+def test_lifelink_blocker_in_same_step_keeps_defender_alive():
+    """Lifelink is simultaneous with damage inside one step."""
+    atk = _c("Attacker", 3, 3)
+    other = _c("Other", 2, 2)
+    blk = _c("Lifelinker", 2, 4, LL)
+    r = combat_damage([atk, other], {id(other): [blk]}, defender_life=2)
+    assert 2 + r.defender_lifelink - r.face == 1, r
+
+
 if __name__ == "__main__":
+    test_lethal_first_strike_step_stops_combat()
+    test_lifelink_blocker_in_same_step_keeps_defender_alive()
     test_match_state_resolver()
     test_match_runner_resolver()
     print(f"test_combat_damage_steps: OK ({len(CASES)} cases x 2 resolvers)")

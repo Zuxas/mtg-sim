@@ -276,7 +276,8 @@ class DamageResult:
     dead_blockers:     list = field(default_factory=list)
 
 
-def combat_damage(attackers, assignments, has=None, divert=None) -> DamageResult:
+def combat_damage(attackers, assignments, has=None, divert=None,
+                  defender_life=None) -> DamageResult:
     """Combat damage for both match engines (CR 510, issue #13).
 
     assignments: {id(attacker): [blockers]}; missing or empty = unblocked.
@@ -284,6 +285,9 @@ def combat_damage(attackers, assignments, has=None, divert=None) -> DamageResult
     divert(attacker, power): optional. Return the damage an UNBLOCKED attacker
         deals somewhere other than the player (a planeswalker), or None to
         hit the player as usual.
+    defender_life: the defending player's life. If the first-strike step
+        leaves them at 0 or less the game is over, so the regular step is
+        not dealt (no late lifelink rescue, no extra damage or triggers).
 
     Two damage steps. In each, every creature that strikes in that step --
     attackers AND blockers -- deals damage at once, then lethal damage is
@@ -357,6 +361,9 @@ def combat_damage(attackers, assignments, has=None, divert=None) -> DamageResult
                         and (m >= safe_toughness(c) or id(c) in touched)):
                     dead.add(id(c))
                     out.append(c)
+        if (first and defender_life is not None
+                and defender_life + res.defender_lifelink - res.face <= 0):
+            break
     return res
 
 
@@ -370,7 +377,9 @@ def resolve_combat(attackers: list[Card],
     blocker_assignments: {id(attacker_card): [list of blocker cards]}
     Cards not in the dict are unblocked.
     """
-    r = combat_damage(attackers, blocker_assignments)
+    defender = (mgs.gs_b if attacking_player == 'a' else mgs.gs_a) if mgs else None
+    r = combat_damage(attackers, blocker_assignments,
+                      defender_life=defender.life if defender else None)
     return CombatResult(damage_to_defender=r.face,
                         life_gained_attacker=r.attacker_lifelink,
                         life_gained_defender=r.defender_lifelink,

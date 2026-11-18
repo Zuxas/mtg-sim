@@ -1253,7 +1253,8 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
         return atk_pwr
 
     _dmg = combat_damage(atk_sorted, assignments, has=_has,
-                         divert=_divert_to_pw if pw_assignment else None)
+                         divert=_divert_to_pw if pw_assignment else None,
+                         defender_life=gs.life_b if attacker == "a" else gs.life_a)
     total_dmg = _dmg.face
     lifelink_gain = _dmg.attacker_lifelink
     defender_lifelink_gain = _dmg.defender_lifelink

@@ -52,6 +52,24 @@ def test_other_deck_is_flagged_and_warned_once():
     assert out2 == "", "warn once per deck"
     r3, out3 = _quiet(lambda: run_combo_matchup("Neobrand", n=100, seed=1, our_deck="Legacy Humans"))
     assert r3["our_side_modeled"] is True and out3 == ""
+    # a name that merely contains "humans", or Humans in another format, is not it
+    r4, _ = _quiet(lambda: run_combo_matchup("Neobrand", n=100, seed=1, our_deck="5C Humans"))
+    r5, _ = _quiet(lambda: run_combo_matchup("Neobrand", n=100, seed=1, our_deck="Humans",
+                                             format_name="modern"))
+    assert r4["our_side_modeled"] is False and r5["our_side_modeled"] is False
+
+
+def test_proxy_flag_reaches_the_matchup_record():
+    combo_model._WARNED_DECKS.clear()
+    record = {"our_deck": "Boros Energy"}
+    real = run_matchup._get_sb_premium
+    run_matchup._get_sb_premium = lambda *a, **k: 0.0
+    try:
+        _quiet(lambda: run_matchup._run_combo(record, "Neobrand", "modern", 100, 1))
+    finally:
+        run_matchup._get_sb_premium = real
+    if record.get("g1_source") == "com":       # no DB data: the sampler was used
+        assert record["our_side_modeled"] is False, record
 
 
 def test_both_callers_pass_the_format():
@@ -67,4 +85,5 @@ if __name__ == "__main__":
     test_sampler_takes_a_distribution_for_one_instance()
     test_other_deck_is_flagged_and_warned_once()
     test_both_callers_pass_the_format()
+    test_proxy_flag_reaches_the_matchup_record()
     print("test_combo_model_format: OK")

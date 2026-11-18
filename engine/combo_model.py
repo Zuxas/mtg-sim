@@ -210,6 +210,7 @@ def adjusted_kill_dist(base_dist: dict, delay: float) -> dict:
 
 
 _WARNED_DECKS = set()   # decks already warned about in run_combo_matchup
+MODELED_DECKS = {"legacy humans", "humans"}   # the only list this model encodes (Legacy)
 
 
 def run_combo_matchup(
@@ -228,7 +229,8 @@ def run_combo_matchup(
 
     OUR side is always the Legacy Humans list this module encodes
     (HUMANS_MAINDECK, its hate cards, OUR_KILL_DIST). `our_deck` does not
-    change the numbers. If it names anything else, the result is flagged
+    change the numbers. If it names anything else (or the format is not
+    Legacy), the result is flagged
     `our_side_modeled: False` and one warning is printed per deck, because
     the win rate is then Humans' win rate, not that deck's.
     """
@@ -238,9 +240,10 @@ def run_combo_matchup(
                        .get("combo_kill_dists", {}).get(archetype.lower()))
     except Exception:
         custom_dist = None
-    our_side_modeled = our_deck is None or "humans" in our_deck.lower()
-    if not our_side_modeled and our_deck not in _WARNED_DECKS:
-        _WARNED_DECKS.add(our_deck)
+    our_side_modeled = (our_deck is None or
+                        (our_deck.lower() in MODELED_DECKS and format_name == "legacy"))
+    if not our_side_modeled and (our_deck, format_name) not in _WARNED_DECKS:
+        _WARNED_DECKS.add((our_deck, format_name))
         print(f"  [!COMBO MODEL] our side is modeled as Legacy Humans, not {our_deck!r}: "
               f"combo-cell win rates do not reflect this deck")
     """

@@ -63,6 +63,8 @@ def _worker(task: dict) -> dict:
                 "type":      "combo",
                 "n":         n,
                 "error":     None,
+                # False = Legacy Humans' win rate standing in for our deck's
+                "our_side_modeled": g1.get("our_side_modeled", True),
             }
         else:
             # Fair matchup: both-sides combat sim

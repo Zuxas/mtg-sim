@@ -107,7 +107,63 @@ def test_failures_are_counted_and_reported():
         card_effects.HANDLER_ERRORS.update(saved)
 
 
+# ---- what the repaired patterns DO (the sweep only proves they do not raise) ----
+
+def _run(name, kind="spell"):
+    gs = _fixture()
+    card = _card(name, "Instant" if kind == "spell" else "Creature - Test", 3, "2", "2")
+    (gs.zones.graveyard if kind == "spell" else gs.zones.battlefield).append(card)
+    registry = card_effects.SPELL_EFFECTS if kind == "spell" else card_effects.ETB_EFFECTS
+    registry[name](gs, card)
+    return gs, card
+
+
+def test_face_damage_hits_the_opponent_on_both_channels():
+    from engine import card_handlers_verified as h
+    gs = _fixture()
+    h._face(gs, 3)
+    assert (gs.damage_dealt, gs._match_opp.life, gs.life) == (3, 17, 20)
+    solo = _side()                      # goldfish: no opponent object
+    h._face(solo, 3)
+    assert solo.damage_dealt == 3
+
+
+def test_pox_plague_is_symmetric():
+    gs, _ = _run("Pox Plague")
+    assert (gs.life, gs._match_opp.life) == (10, 10), (gs.life, gs._match_opp.life)
+
+
+def test_until_end_of_turn_pump_wears_off():
+    gs, _ = _run("Violent Urge")
+    bear = next(c for c in gs.zones.battlefield if c.name == "Grizzly Bears")
+    assert bear.effective_power() == 3, bear.effective_power()
+    gs._end()
+    assert bear.effective_power() == 2 and bear.counters == 0
+
+
+def test_mana_handlers_add_flex_mana():
+    gs = _fixture()
+    before = gs.mana_pool.flex
+    lotus = _card("Gilded Lotus", "Artifact", 5)
+    gs.zones.battlefield.append(lotus)
+    card_effects.ETB_EFFECTS["Gilded Lotus"](gs, lotus)
+    assert gs.mana_pool.flex == before + 3
+
+
+def test_walking_ballista_is_a_2_2():
+    gs = _fixture()
+    ballista = _card("Walking Ballista", "Artifact Creature - Construct", 0, "0", "0")
+    gs.zones.battlefield.append(ballista)
+    card_effects.ETB_EFFECTS["Walking Ballista"](gs, ballista)
+    assert (ballista.effective_power(), ballista.effective_toughness()) == (2, 2)
+
+
 if __name__ == "__main__":
+    test_face_damage_hits_the_opponent_on_both_channels()
+    test_pox_plague_is_symmetric()
+    test_until_end_of_turn_pump_wears_off()
+    test_mana_handlers_add_flex_mana()
+    test_walking_ballista_is_a_2_2()
     test_failures_are_counted_and_reported()
     fails = sweep()
     total = len(card_effects.ETB_EFFECTS) + len(card_effects.SPELL_EFFECTS)

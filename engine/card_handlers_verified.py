@@ -33,6 +33,14 @@ from engine.keywords import KWTag
 from data.card import Tag
 
 
+def _pump_eot(card, n):
+    """+N/+N until end of turn. Uses the +1/+1 counter slot (the only P/T
+    modifier a Card has) and records the amount so GameState._end() takes it
+    back off. A +N/+0 pump therefore also gives +N toughness for the turn."""
+    card.counters = (card.counters or 0) + n
+    card._pump_until_eot = getattr(card, "_pump_until_eot", 0) + n
+
+
 def safe_power(c):
     """Module-level so handlers can call it; imported lazily because
     match_state imports this module's dependents."""
@@ -16148,7 +16156,7 @@ def _violent_outburst_spell(gs, card):
     from data.card import Tag
     for c in gs.zones.battlefield:
         if c.has(Tag.CREATURE):
-            c.counters = (c.counters or 0) + 1   # +1/+0 until EOT, counter proxy
+            _pump_eot(c, 1)   # +1/+0 until end of turn
     # Cascade: find cheaper spell, cast free (model: top 3 look)
     for _ in range(3):
         if not gs.zones.library: break
@@ -16168,7 +16176,7 @@ def _violent_urge_spell(gs, card):
     from data.card import Tag
     for c in gs.zones.battlefield:
         if c.has(Tag.CREATURE):
-            c.counters = (c.counters or 0) + 1   # +1/+0 until EOT, counter proxy
+            _pump_eot(c, 1)   # +1/+0 until end of turn
     gs._log("  Violent Urge: +1/+0 trample team")
 
 
@@ -16403,7 +16411,7 @@ def _xenagos_god_revels_etb(gs, card):
     if attackers:
         t = max(attackers, key=lambda c: safe_power(c))
         x = safe_power(t)
-        t.counters = (t.counters or 0) + x   # +X/+X until EOT, counter proxy
+        _pump_eot(t, x)   # +X/+X until end of turn
         t.tags.add(KWTag.HASTE)
         gs._log(f"  Xenagos: +{x}/+{x} haste to {t.name}")
 
@@ -31043,8 +31051,11 @@ def _pox_plague_spell(gs, card):
             opp.zones.battlefield.remove(c)
             opp.zones.graveyard.append(c)
         gs._log(f"  Pox Plague: opp discards {discard_n}, loses {len(opp_perms)//2} permanents")
-    # We also take damage (symmetric)
-    _face(gs, 5)
+    # Each player loses half their life, rounded down. (The old line here was
+    # `gs.zones.life -= 5`, which raised; the card text is symmetric.)
+    gs.life -= gs.life // 2
+    if opp:
+        opp.life -= opp.life // 2
 
 
 def _startled_relic_sloth_etb(gs, card):

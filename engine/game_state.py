@@ -675,6 +675,13 @@ class GameState:
             self.zones.graveyard.append(card)
             self._log(f"  EOT: sacrificed {card.name} (Mobilize)")
 
+        # "Until end of turn" pumps wear off (card_handlers_verified._pump_eot)
+        for card in self.zones.battlefield:
+            bonus = getattr(card, "_pump_until_eot", 0)
+            if bonus:
+                card.counters -= bonus
+                card._pump_until_eot = 0
+
         # Revert Mutavault / Restless lands back to non-creature lands
         for card in self.zones.battlefield:
             if not getattr(card, "_revert_at_eot", False):

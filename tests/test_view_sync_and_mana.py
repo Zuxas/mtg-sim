@@ -12,8 +12,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.card import Card
 from apl.match_apl import MatchAPL
-from engine.match_runner import (TwoPlayerGameState, _simple_play_turn,
-                                 _run_post_combat_phase, _run_end_step)
+from engine.match_runner import (TwoPlayerGameState, MatchResult, _simple_play_turn,
+                                 _run_post_combat_phase, _run_end_step,
+                                 _run_player_turn, run_match)
 
 
 def _mountain():
@@ -137,6 +138,70 @@ def test_main2_still_syncs():
     gs = _gs(a, Probe())
     _run_post_combat_phase(gs, "a", a)
     assert (gs.life_a, gs.life_b, gs.damage_to_b) == (19, 17, 3)
+
+
+def test_damage_only_and_life_only_sources_both_count():
+    def main1(gs, opp):
+        gs.damage_dealt += 3    # Bolt, damage_dealt only
+        opp.life -= 2           # separate drain, life only
+    a = Probe(main1=main1)
+    gs = _gs(a, Probe())
+    _simple_play_turn(gs, "a", a)
+    assert gs.life_b == 15, gs.life_b
+
+
+def test_two_both_channel_burns_count_twice_not_four_times():
+    def main1(gs, opp):
+        for _ in range(2):
+            gs.damage_dealt += 3
+            opp.life -= 3
+    a = Probe(main1=main1)
+    gs = _gs(a, Probe())
+    _simple_play_turn(gs, "a", a)
+    assert gs.life_b == 14, gs.life_b
+
+
+def test_damage_plus_opponent_lifegain_nets_out():
+    def main1(gs, opp):
+        gs.damage_dealt += 3
+        opp.life += 2
+    a = Probe(main1=main1)
+    gs = _gs(a, Probe())
+    _simple_play_turn(gs, "a", a)
+    assert gs.life_b == 19, gs.life_b
+
+
+# ---- lethal in a view ends the game there (review follow-up) -------------
+
+def test_main1_lethal_ends_turn_before_main2():
+    a = Probe(main1=lambda gs, opp: setattr(gs, "damage_dealt", gs.damage_dealt + 20))
+    gs = _gs(a, Probe())
+    res = MatchResult()
+    assert _run_player_turn(gs, "a", a, skip_draw=True, result=res, turn_num=4)
+    assert res.won and "main2" not in a.seen, a.seen
+
+
+def test_active_player_paying_last_life_loses():
+    a = Probe(main1=lambda gs, opp: setattr(gs, "life", 0))
+    gs = _gs(a, Probe())
+    res = MatchResult()
+    assert _run_player_turn(gs, "a", a, skip_draw=True, result=res, turn_num=4)
+    assert res.won is False
+
+
+def test_end_step_lethal_ends_the_game_before_next_turn():
+    lands = [_mountain() for _ in range(60)]
+    turns_b = []
+
+    class B(Probe):
+        def main_phase_match(self, gs, opp):
+            turns_b.append(gs.turn)
+
+    # A is on the play; A burns B out at the end of B's turn 2
+    a = Probe(end=lambda gs, opp: setattr(opp, "life", 0) if gs.turn == 2 else None)
+    r = run_match(a, list(lands), B(), list(lands), on_play=True, seed=5)
+    assert r.won and r.kill_turn == 2, (r.won, r.kill_turn)
+    assert turns_b == [1, 2], turns_b
 
 
 if __name__ == "__main__":

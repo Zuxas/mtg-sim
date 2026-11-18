@@ -173,11 +173,15 @@ def _turn_pool(gs, player: str, untap: bool = False):
     windows, and reactive windows on the opponent's turn -- so mana spent in
     one phase is gone in the next. Lands played later add their own mana via
     GameState.play_land. cost_reduction is per-view scratch state, so it resets.
+
+    This is a budget of untapped mana sources, not a rules mana pool: the
+    runner has no tapped/untapped state on lands, and mana does not really
+    float between phases (CR 500.4). A ritual's leftover mana therefore
+    carries to the next phase, which the real rules would not allow.
     """
     attr = "pool_" + player
     pool = getattr(gs, attr, None)
     if untap or pool is None:
-        from engine.mana import ManaPool
         pool = ManaPool()
         for c in (gs.bf_a if player == "a" else gs.bf_b):
             if c.is_land():
@@ -190,20 +194,60 @@ def _turn_pool(gs, player: str, untap: bool = False):
     return pool
 
 
-def _sync_view(gs, player: str, view, opp_view, dmg_before: int, opp_life_before: int):
+class _PhaseView(GameState):
+    """Per-phase GameState view that can log changes to life / damage_dealt.
+
+    Opponent life loss reaches a view on two channels: handlers that write
+    `_match_opp.life`, and APL/handler code that only bumps `damage_dealt`
+    (about 150 sites). The shared burn primitives write BOTH for one event.
+    Logging each write in order lets _sync_view tell those apart (#23).
+    """
+    def _logged(attr, kind):
+        key = "_pv_" + attr
+
+        def _get(self):
+            return self.__dict__.get(key, 0)
+
+        def _set(self, value):
+            old = self.__dict__.get(key)
+            self.__dict__[key] = value
+            if old is not None and value != old and self.__dict__.get("_log_kind") == kind:
+                self.__dict__["_loss_log"].append(
+                    (kind, old - value if kind == "life" else value - old))
+        return property(_get, _set)
+
+    life = _logged("life", "life")
+    damage_dealt = _logged("damage_dealt", "dmg")
+    del _logged
+
+
+def _watch(view, opp_view) -> list:
+    """Start logging `view`'s damage_dealt bumps and `opp_view`'s life changes
+    into one ordered list. Call after both views are seeded."""
+    log = []
+    view.__dict__.update(_loss_log=log, _log_kind="dmg")
+    opp_view.__dict__.update(_loss_log=log, _log_kind="life")
+    return log
+
+
+def _sync_view(gs, player: str, view, log: list):
     """Write a phase view's life and damage back to the match state (#23).
 
-    `view` belongs to `player`; `opp_view` to the other seat. The player's life
-    is copied straight back (fetch/shock payments, lifegain). Opponent life
-    loss reaches us two ways: handlers that write `_match_opp.life` and code
-    that only bumps `view.damage_dealt`. Shared burn primitives do both.
-    # ponytail: max() of the two channels, so a both-channel Bolt counts once.
-    # Under-counts a turn that mixes a damage-only source with a life-only
-    # source; fix by making every handler use one channel.
+    `view` belongs to `player`; its life is copied straight back (fetch/shock
+    payments, lifegain). The opponent loses the sum of the logged events, where
+    a damage_dealt bump and an equal life write next to each other are ONE
+    event written to both channels. Negative life entries are lifegain.
+    # ponytail: adjacency test. Miscounts only if two separate sources of the
+    # same size hit back to back on different channels. Goes away once every
+    # handler writes life only.
     """
-    dealt = getattr(view, "damage_dealt", 0) - dmg_before
-    drop = opp_life_before - opp_view.life
-    loss = max(dealt, drop) if drop >= 0 else dealt + drop  # drop < 0: opp gained life
+    loss, i = 0, 0
+    while i < len(log):
+        kind, n = log[i]
+        if n > 0 and i + 1 < len(log) and log[i + 1] == ("life" if kind == "dmg" else "dmg", n):
+            i += 1
+        loss += n
+        i += 1
     if player == "a":
         gs.life_a = view.life
         gs.life_b -= loss
@@ -212,6 +256,27 @@ def _sync_view(gs, player: str, view, opp_view, dmg_before: int, opp_life_before
         gs.life_b = view.life
         gs.life_a -= loss
         gs.damage_to_a += max(loss, 0)
+
+
+def _check_dead(gs, result, turn_num: int) -> bool:
+    """State-based check on BOTH players (CR 704.5a). Fills `result` and
+    returns True if the game is over. Called after every phase that can change
+    life, so a dead player takes no further actions and a player who pays
+    their last life on their own turn loses."""
+    a_dead, b_dead = gs.life_a <= 0, gs.life_b <= 0
+    if not (a_dead or b_dead):
+        return False
+    if a_dead and b_dead:
+        # Simultaneous: a draw by the rules. No consumer models draws yet, so
+        # it is a seeded coin flip, flagged as a tie.
+        result.won = gs.rng.random() < 0.5
+        result.tie = True
+    else:
+        result.won = b_dead
+    result.kill_turn = result.turn_count = turn_num
+    result.loser_life = gs.life_b if result.won else gs.life_a
+    result.winner_damage = gs.damage_to_b if result.won else gs.damage_to_a
+    return True
 
 
 def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
@@ -248,7 +313,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
                 on_play = not gs.on_play
                 hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
                 life, land_played = gs.life_b, gs.land_played_b
-            v = GameState(mainboard=[], on_play=on_play)
+            v = _PhaseView(mainboard=[], on_play=on_play)
             v.turn              = gs.turn
             v.zones.hand        = hand   # list aliased — mutations propagate
             v.zones.battlefield = bf
@@ -291,7 +356,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         # Auto-upgrade goldfish APLs to opp-aware removal play.
         # Hand-tuned MatchAPLs (BorosEnergyMatchAPL etc.) keep their own logic.
         match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
-        opp_life_before = opp_view.life
+        loss_log = _watch(view, opp_view)
 
         try:
             match_apl.main_phase_match(view, opp_view)
@@ -316,7 +381,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         # Life and damage back to the match state (#23). The view is fresh, so
         # view.damage_dealt holds only this main phase's damage. This replaces
         # the old WANTS_STORM-only damage sync.
-        _sync_view(gs, player, view, opp_view, 0, opp_life_before)
+        _sync_view(gs, player, view, loss_log)
         return
 
     # -------- Legacy heuristic fallback (apl is None) --------
@@ -442,6 +507,8 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     # R5: planeswalker loyalty activation (gated; once per player-turn so the
     # CR 606.3 budget holds by construction). Gate OFF -> no-op, byte-identical.
     _run_pw_activations(gs, player, apl)
+    if _check_dead(gs, result, turn_num):
+        return True
 
     # Combat (Phase 3: keyword-aware -- first strike, deathtouch,
     # lifelink, trample, flying-vs-blocker, indestructible.
@@ -491,27 +558,13 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
             else:
                 gs.draw_b(creatures_hit)
 
+    if _check_dead(gs, result, turn_num):
+        return True
+
     # Main phase 2 (Phase 1 wiring, commit a31f360)
     _run_post_combat_phase(gs, player, apl)
 
-    # Win check
-    if player == "a":
-        if gs.life_b <= 0:  # damage_to_b is a stat only (#28)
-            result.won           = True
-            result.kill_turn     = turn_num
-            result.loser_life    = gs.life_b
-            result.winner_damage = gs.damage_to_b
-            result.turn_count    = turn_num
-            return True
-    else:
-        if gs.life_a <= 0:  # damage_to_a is a stat only (#28)
-            result.won           = False
-            result.kill_turn     = turn_num
-            result.loser_life    = gs.life_a
-            result.winner_damage = gs.damage_to_a
-            result.turn_count    = turn_num
-            return True
-    return False
+    return _check_dead(gs, result, turn_num)
 
 
 def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
@@ -549,7 +602,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         life, land_played = gs.life_b, gs.land_played_b
         prev_damage = gs.damage_to_a
 
-    view = GameState(mainboard=[], on_play=on_play)
+    view = _PhaseView(mainboard=[], on_play=on_play)
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -574,7 +627,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     else:
         opp_hand, opp_bf, opp_gy = gs.hand_a, gs.bf_a, gs.gy_a
         opp_life = gs.life_a
-    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view = _PhaseView(mainboard=[], on_play=not on_play)
     opp_view.turn = gs.turn
     opp_view.zones.hand = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -586,6 +639,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     opp_view._match_opp = view
 
     match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
+    loss_log = _watch(view, opp_view)
 
     try:
         if hasattr(match_apl, 'main_phase2_match'):
@@ -601,7 +655,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
             file=sys.stderr,
         )
 
-    _sync_view(gs, player, view, opp_view, prev_damage, opp_life)
+    _sync_view(gs, player, view, loss_log)
     if player == "a":
         gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
         gs.noncreature_spells_a = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_a)
@@ -1531,7 +1585,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         opp_hand, opp_bf, opp_gy, opp_lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
         opp_life = gs.life_a
 
-    view = GameState(mainboard=[], on_play=on_play)
+    view = _PhaseView(mainboard=[], on_play=on_play)
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -1541,7 +1595,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     view.land_played       = land_played
     view.mana_pool = _turn_pool(gs, reactive_player)  # only what they held up (#24)
 
-    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view = _PhaseView(mainboard=[], on_play=not on_play)
     opp_view.turn              = gs.turn
     opp_view.zones.hand        = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -1564,6 +1618,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         view.spells_cast_this_turn        = gs.spells_cast_b
         view.noncreature_spells_this_turn = gs.noncreature_spells_b
 
+    loss_log = _watch(view, opp_view)
     try:
         match_apl.end_step_actions(view, opp_view)
     except Exception as e:
@@ -1573,7 +1628,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
               file=sys.stderr)
 
     # Life and damage back (#23), then land/spell counters
-    _sync_view(gs, reactive_player, view, opp_view, 0, opp_life)
+    _sync_view(gs, reactive_player, view, loss_log)
     if reactive_player == "a":
         gs.land_played_a = view.land_played
         gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
@@ -1661,6 +1716,8 @@ def run_match(
             return result
         # End-step: second player's APL may flash instants at end of first's turn
         _run_end_step(gs, first, second, second_apl)
+        if _check_dead(gs, result, turn_num):
+            return result
 
         # Second player's turn (always draws)
         if _run_player_turn(gs, second, second_apl,
@@ -1669,6 +1726,8 @@ def run_match(
             return result
         # End-step: first player's APL may flash instants at end of second's turn
         _run_end_step(gs, second, first, first_apl)
+        if _check_dead(gs, result, turn_num):
+            return result
 
     # Time out — call it based on life totals (R6 gated: inevitability tiebreaker when opted in)
     if _hidden_info_match_gate(gs):

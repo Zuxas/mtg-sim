@@ -16,6 +16,9 @@ from data.card import Card, Tag
 from engine.zones import Zones
 
 
+BAD_BOTTOMS = 0   # times a bottom() choice had to be corrected (#14)
+
+
 def generic_keep(hand: list[Card], mulligans_taken: int, on_play: bool) -> bool:
     lands = sum(1 for c in hand if c.is_land())
     size  = len(hand)
@@ -106,7 +109,19 @@ def take_opening_hand(
                 if card in hand:
                     hand.remove(card)
                     library.append(card)
-            while len(hand) > max(0, 7 - mulligans):
+            target = max(0, 7 - mulligans)
+            if len(hand) > target:
+                # bottom_fn returned too few cards, or cards not in the hand
+                msg = (f"bottom() left {len(hand)} cards after {mulligans} mulligan(s), "
+                       f"expected {target}; trimming from the end of the hand")
+                import os
+                if os.environ.get("SIM_DEBUG"):
+                    raise ValueError(msg)
+                global BAD_BOTTOMS
+                BAD_BOTTOMS += 1
+                if BAD_BOTTOMS == 1:
+                    print(f"  [!MULLIGAN] {msg} (reported once; SIM_DEBUG=1 to raise)")
+            while len(hand) > target:
                 library.append(hand.pop())
             if verbose:
                 bottomed = [c.name for c in to_bottom]

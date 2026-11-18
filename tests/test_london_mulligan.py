@@ -87,10 +87,24 @@ def test_bottom_choice_is_respected_and_short_bottoms_are_trimmed():
     gs = match_runner.TwoPlayerGameState(_deck(), _deck(), on_play=True, seed=3)
     match_runner._opening_hand(gs, "a", apl)
     assert all(c.is_land() for c in gs.lib_a[-2:]), "bottomed cards go to the bottom of the library"
+    import apl.mulligan as mull, io, contextlib
+    os.environ.pop("SIM_DEBUG", None)
+    before = mull.BAD_BOTTOMS
     lazy = Mull(2, bottom_count=0)     # bottom() returns nothing
     gs = match_runner.TwoPlayerGameState(_deck(), _deck(), on_play=True, seed=3)
-    match_runner._opening_hand(gs, "a", lazy)
+    with contextlib.redirect_stdout(io.StringIO()):
+        match_runner._opening_hand(gs, "a", lazy)
     assert len(gs.hand_a) == 5, len(gs.hand_a)
+    assert mull.BAD_BOTTOMS == before + 1, "a corrected bottom() is counted"
+    os.environ["SIM_DEBUG"] = "1"      # strict mode: raise instead
+    try:
+        gs = match_runner.TwoPlayerGameState(_deck(), _deck(), on_play=True, seed=3)
+        match_runner._opening_hand(gs, "a", Mull(2, bottom_count=0))
+        raise AssertionError("SIM_DEBUG should raise on a bad bottom()")
+    except ValueError:
+        pass
+    finally:
+        del os.environ["SIM_DEBUG"]
 
 
 def test_seeded_and_reproducible():

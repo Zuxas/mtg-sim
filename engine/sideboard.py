@@ -151,10 +151,14 @@ def apply_sideboard_plan(
     cards_in:  list[tuple[int, str]] = []
     cards_out: list[tuple[int, str]] = []
 
-    for raw in sb_in_raw:
-        cards_in.extend(parse_sb_string(raw))
-    for raw in sb_out_raw:
-        cards_out.extend(parse_sb_string(raw))
+    for raws, parsed, side in ((sb_in_raw, cards_in, "in"), (sb_out_raw, cards_out, "out")):
+        for raw in raws:
+            entries = parse_sb_string(raw)
+            if not entries and str(raw).strip():
+                # e.g. "Blood Moon" with no quantity: it used to vanish silently
+                _warn(f"cannot read sideboard-{side} entry {raw!r} "
+                      f"(expected a quantity and a card name, like '2 Blood Moon')")
+            parsed.extend(entries)
 
     deck_names = [c.name for c in deck]
     sb_names   = list(sb.keys())

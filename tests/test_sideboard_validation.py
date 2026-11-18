@@ -70,6 +70,12 @@ def test_asking_for_more_than_exist_is_reported():
     assert "sideboard has 3" in out, out
 
 
+def test_entry_without_a_quantity_is_reported():
+    deck, out = _apply(["Blood Moon"], ["Lightning Bolt"])
+    assert len(deck) == 60
+    assert out.count("cannot read sideboard-") == 2 and "'Blood Moon'" in out, out
+
+
 def test_warnings_print_once_and_are_ascii():
     os.environ.pop("SIM_DEBUG", None)
     sideboard._WARNED.clear()

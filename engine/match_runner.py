@@ -166,30 +166,41 @@ class TwoPlayerGameState:
                 c._warp_exiled_turn = self.turn
 
 
-def _turn_pool(gs, player: str, untap: bool = False):
-    """Mana pool a player carries through the turn cycle (#24).
+def _land_pool(battlefield):
+    """Fresh ManaPool with one mana per land (color-aware via add_land)."""
+    pool = ManaPool()
+    for c in battlefield:
+        if c.is_land():
+            try:
+                pool.add_land(c.type_line or "", c.name or "")
+            except Exception:
+                pool.add("C", 1)
+    return pool
 
-    Built from lands in play at that player's untap step (`untap=True`, start
-    of their main phase 1), then shared by every later view -- main 2, combat
-    windows, and reactive windows on the opponent's turn -- so mana spent in
-    one phase is gone in the next. Lands played later add their own mana via
+
+def _turn_pool(gs, player: str, untap: bool = False):
+    """Mana pool the ACTIVE player carries through their own turn (#24).
+
+    Built from lands in play at the start of their main phase 1 (`untap=True`),
+    then shared by their combat-window and main-2 views, so mana spent in main 1
+    is gone in main 2. Lands played later add their own mana via
     GameState.play_land. cost_reduction is per-view scratch state, so it resets.
 
-    This is a budget of untapped mana sources, not a rules mana pool: the
-    runner has no tapped/untapped state on lands, and mana does not really
-    float between phases (CR 500.4). A ritual's leftover mana therefore
-    carries to the next phase, which the real rules would not allow.
+    This is a budget of mana sources, not a rules mana pool: leftover ritual
+    mana carries to the next phase, which CR 500.4 would not allow.
+
+    Reactive views (the non-active player's counterspell, combat-trick and
+    end-step windows) do NOT use this. They still get _land_pool(), a full
+    pool, as before. Making them use what the player left over needs APLs that
+    hold mana back, and in this runner they cannot: views are pre-filled, so
+    reserve_mana()/tap_lands() have nothing to withhold. With leftovers only,
+    UW Control cast 0 counters in 60 games. That half of #24 needs real
+    tapped/untapped land state first.
     """
     attr = "pool_" + player
     pool = getattr(gs, attr, None)
     if untap or pool is None:
-        pool = ManaPool()
-        for c in (gs.bf_a if player == "a" else gs.bf_b):
-            if c.is_land():
-                try:
-                    pool.add_land(c.type_line or "", c.name or "")
-                except Exception:
-                    pool.add("C", 1)
+        pool = _land_pool(gs.bf_a if player == "a" else gs.bf_b)
         setattr(gs, attr, pool)
     pool.cost_reduction = 0
     return pool
@@ -339,9 +350,10 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
                 v.noncreature_spells_this_turn = gs.noncreature_spells_b
             # Color-aware mana via ManaPool.add_land -- handles basics,
             # duals, fetchlands (flex), Wasteland (colorless), etc.
-            # Active player untaps here; the opponent only has what they
-            # left untapped on their own turn (#24).
-            v.mana_pool = _turn_pool(gs, for_player, untap=(for_player == player))
+            # Active player: the pool they carry through this turn (#24).
+            # Opponent: a full pool, as before (see _turn_pool).
+            v.mana_pool = (_turn_pool(gs, for_player, untap=True) if for_player == player
+                           else _land_pool(bf))
             return v
 
         view     = _build_view(player)
@@ -914,7 +926,7 @@ def _instant_combat_enabled_runner(gs: "TwoPlayerGameState") -> bool:
                 or getattr(apl_b, 'WANTS_INSTANT_COMBAT', False))
 
 
-def _build_combat_view(gs: "TwoPlayerGameState", player: str):
+def _build_combat_view(gs: "TwoPlayerGameState", player: str, active: bool = False):
     """Build a single-player GameState view aliasing this seat's zone lists.
 
     Mirrors _simple_play_turn._build_view so mutations (removal moving a card
@@ -936,7 +948,7 @@ def _build_combat_view(gs: "TwoPlayerGameState", player: str):
     v.zones.graveyard   = gy
     v.zones.library     = lib
     v.life = life
-    v.mana_pool = _turn_pool(gs, player)
+    v.mana_pool = _turn_pool(gs, player) if active else _land_pool(bf)
     return v
 
 
@@ -946,7 +958,7 @@ def _run_combat_window_runner(gs: "TwoPlayerGameState", attacker: str, window: i
     land on the aliased zone lists. ZERO random()."""
     from engine.match_engine import _run_combat_window
     defender = "b" if attacker == "a" else "a"
-    active_view = _build_combat_view(gs, attacker)
+    active_view = _build_combat_view(gs, attacker, active=True)
     opp_view    = _build_combat_view(gs, defender)
     active_apl  = gs.apl_a if attacker == "a" else gs.apl_b
     opp_apl     = gs.apl_b if attacker == "a" else gs.apl_a
@@ -1598,7 +1610,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     view.zones.library     = lib
     view.life              = life
     view.land_played       = land_played
-    view.mana_pool = _turn_pool(gs, reactive_player)  # only what they held up (#24)
+    view.mana_pool = _land_pool(bf)   # reactive: full pool (see _turn_pool)
 
     opp_view = _PhaseView(mainboard=[], on_play=not on_play)
     opp_view.turn              = gs.turn

@@ -180,6 +180,75 @@ _COMPILED_RULES: list[tuple[str, list[re.Pattern]]] = [
 # Public API
 # ---------------------------------------------------------------------------
 
+# Keyword abilities: a card HAS one only if it is printed as an ability of the
+# card, not merely mentioned (#17). "It gains trample until end of turn",
+# "target creature you control gains lifelink" and "destroy target creature
+# with flying" used to tag the card itself.
+KEYWORD_ABILITY_TAGS = {
+    KWTag.FLYING, KWTag.REACH, KWTag.MENACE, KWTag.TRAMPLE, KWTag.SHADOW,
+    KWTag.FEAR, KWTag.INTIMIDATE, KWTag.FIRST_STRIKE, KWTag.DOUBLE_STRIKE,
+    KWTag.DEATHTOUCH, KWTag.LIFELINK, KWTag.VIGILANCE, KWTag.HASTE,
+    KWTag.DEFENDER, KWTag.INDESTRUCTIBLE, KWTag.HEXPROOF, KWTag.WARD,
+    KWTag.PROTECTION, KWTag.SHROUD, KWTag.FLASH, KWTag.PROWESS,
+    KWTag.UNDYING, KWTag.PERSIST, KWTag.DREDGE,
+}
+# "This creature has flying as long as <condition>": the tagger cannot evaluate
+# the condition, so the keyword is either always on or always off. True keeps
+# what the old tagger did for these cards (always on: Dragon's Rage Channeler
+# flies, Wildfire Wickerfolk tramples). False never tags them. The cards this
+# affects are listed in data/keyword_tag_audit_2026-11-18.md.
+TAG_CONDITIONAL_SELF_GRANTS = True
+
+_KEYWORD_WORDS = (
+    "flying|reach|menace|trample|shadow|fear|intimidate|first strike|double strike|"
+    "deathtouch|lifelink|vigilance|haste|defender|indestructible|hexproof|ward|"
+    "protection from|shroud|flash|prowess|undying|persist|dredge"
+)
+# One item of a keyword line: a keyword, optionally with a cost, number or
+# quality ("ward {2}", "dredge 3", "protection from red", "hexproof from black").
+_KEYWORD_ITEM = re.compile(rf"^(?:{_KEYWORD_WORDS})(?:\b[^.]{{0,40}})?\.?$")
+# "This creature has flying", "<Card name> has flying and lifelink as long as ..."
+# Also "this creature gets +2/+2, has flying, and ..." and "as long as ..., it
+# gets +4/+4 and has trample".
+_SELF_GRANT = re.compile(
+    r"(?:this creature|this permanent|~|as long as [^.\n]*?, it)(?: also)?"
+    r"(?: gets? [+-]\d+/[+-]\d+(?:,| and))? (?:has|have) ([^.\n]*)")
+_REMINDER = re.compile(r"\([^)]*\)")
+
+
+def keyword_text(card: Card) -> str:
+    """The part of a card's oracle text that states its OWN keyword abilities.
+
+    Kept: keyword lines (a line that, with reminder text removed, is a
+    comma-separated list of keyword abilities) and what follows "this creature
+    has" / "<card name> has" (a conditional "has flying as long as ..." counts
+    only while TAG_CONDITIONAL_SELF_GRANTS is on). Dropped: everything a card grants to something
+    else, grants "until end of turn", or only refers to.
+    """
+    text = _REMINDER.sub("", (card.oracle_text or "").lower())
+    name = (card.name or "").lower()
+    if name:
+        text = text.replace(name, "~").replace(name.split(",")[0], "~")
+    kept = []
+    for line in text.split("\n"):
+        line = line.strip()
+        items = [i.strip() for i in re.split(r"[,;]", line) if i.strip()]
+        if items and all(_KEYWORD_ITEM.match(i) for i in items):
+            kept.append(line)
+    for sentence in re.split(r"(?<=\.)\s+|\n", text):
+        if "as long as" in sentence and not TAG_CONDITIONAL_SELF_GRANTS:
+            continue
+        kept += [m.group(1) for m in _SELF_GRANT.finditer(sentence)]
+    return "\n".join(kept)
+
+
+def _matching_tags(card: Card) -> set[str]:
+    full = (card.oracle_text or "").lower()
+    own = keyword_text(card)
+    return {tag for tag, patterns in _COMPILED_RULES
+            if any(p.search(own if tag in KEYWORD_ABILITY_TAGS else full) for p in patterns)}
+
+
 def tag_keywords(card: Card) -> set[str]:
     """
     Parse card.oracle_text and add matching keyword tags to card.tags.
@@ -187,19 +256,8 @@ def tag_keywords(card: Card) -> set[str]:
     """
     if not card.oracle_text:
         return set()
-
-    text = card.oracle_text.lower()
-    added: set[str] = set()
-
-    for tag, patterns in _COMPILED_RULES:
-        if tag in card.tags:
-            continue
-        for pattern in patterns:
-            if pattern.search(text):
-                card.tags.add(tag)
-                added.add(tag)
-                break
-
+    added = _matching_tags(card) - set(card.tags)
+    card.tags.update(added)
     return added
 
 
@@ -207,17 +265,7 @@ def get_keywords(card: Card) -> set[str]:
     """Return keyword tags without modifying the card (read-only)."""
     if not card.oracle_text:
         return set()
-
-    text = card.oracle_text.lower()
-    found: set[str] = set()
-
-    for tag, patterns in _COMPILED_RULES:
-        for pattern in patterns:
-            if pattern.search(text):
-                found.add(tag)
-                break
-
-    return found
+    return _matching_tags(card)
 
 
 # ---------------------------------------------------------------------------

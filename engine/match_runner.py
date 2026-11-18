@@ -45,6 +45,7 @@ class MatchResult:
     mulligans_a:   int   = 0
     mulligans_b:   int   = 0
     turn_count:    int   = 0
+    tie:           bool  = False   # timed out dead even; winner was a coin flip (#29)
     snapshots_a:   list  = field(default_factory=list)
 
 
@@ -503,6 +504,8 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Main phase 1
     _simple_play_turn(gs, player, apl)
+    if _check_dead(gs, result, turn_num):
+        return True
 
     # R5: planeswalker loyalty activation (gated; once per player-turn so the
     # CR 606.3 budget holds by construction). Gate OFF -> no-op, byte-identical.
@@ -926,7 +929,7 @@ def _build_combat_view(gs: "TwoPlayerGameState", player: str):
         on_play = not gs.on_play
         hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
         life = gs.life_b
-    v = GameState(mainboard=[], on_play=on_play)
+    v = _PhaseView(mainboard=[], on_play=on_play)
     v.turn = gs.turn
     v.zones.hand        = hand
     v.zones.battlefield = bf
@@ -953,7 +956,9 @@ def _run_combat_window_runner(gs: "TwoPlayerGameState", attacker: str, window: i
     opp_view._self_apl = opp_apl
     opp_view._match_opp_apl = active_apl
     opp_view._match_opp = active_view
+    loss_log = _watch(active_view, opp_view)
     _run_combat_window(active_view, active_apl, opp_view, opp_apl, window=window)
+    _sync_view(gs, attacker, active_view, loss_log)   # tricks that burn or cost life (#23)
 
 
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):

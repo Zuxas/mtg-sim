@@ -954,7 +954,8 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                         if opponent:
                             from data.card import Card
                             bird = Card("Bird Token", mana_cost=None, cmc=0,
-                                       type_line="Token Creature — Bird")
+                                       type_line="Token Creature — Bird",
+                                       oracle_text="Flying")
                             bird.power = '2'; bird.toughness = '2'
                             bird.summoning_sickness = False
                             opponent.zones.battlefield.append(bird)

@@ -121,6 +121,9 @@ jobs:
         shell: bash
         env:
           HARNESS_ROOT: ${{ vars.HARNESS_ROOT || 'E:/vscode ai project/harness' }}
+          # Windows defaults stdout to cp1252; Gemma's verdicts contain arrows and
+          # minus signs, and the verifier died printing them mid-file.
+          PYTHONIOENCODING: utf-8
         run: |
           PASS=0; FAIL=0
           for f in ${{ steps.changed.outputs.files }}; do

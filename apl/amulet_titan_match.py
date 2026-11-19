@@ -229,6 +229,9 @@ class AmuletTitanMatchAPL(MatchAPL):
                 gs.zones.hand.remove(land)
                 gs.zones.battlefield.append(land)
                 land.turn_entered = gs.turn
+                # "onto the battlefield tapped", unless Amulet of Vigor untaps it
+                # or Spelunking makes lands enter untapped
+                land.tapped = not any(x.name in (AMULET, SPELUNKING) for x in gs.zones.battlefield)
                 gs.zones.draw(1)
                 gs._log(f"  Colossus ETB: land {land.name} to battlefield + draw")
 

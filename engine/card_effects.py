@@ -129,7 +129,7 @@ def _doomsday_excruciator_etb(gs, card):
         exile_count = len(lib) - 6
         # bottom 6 are the LAST 6 in the list (assuming draw pops front)
         exiled = lib[:exile_count]
-        g.zones.library = lib[exile_count:]
+        del lib[:exile_count]      # in place: `lib` may be shared with the match state
         g.zones.exile.extend(exiled)
         return exile_count
 
@@ -582,6 +582,48 @@ LANDFALL_TOKEN = LANDFALL_GROW   # Chocobo was miscategorized before
 LANDFALL_ASCENSION = LANDFALL_QUEST
 
 
+# Handler failures (#26). A handler that raises makes its card do nothing, so
+# every failure is counted and reported once at exit instead of vanishing into
+# gs._log (which is silent unless verbose). SIM_DEBUG=1 re-raises.
+HANDLER_ERRORS = {}   # (kind, card name, exception type) -> count
+
+
+def _handler_failed(gs, kind, card, exc):
+    import os
+    key = (kind, card.name, type(exc).__name__)
+    HANDLER_ERRORS[key] = HANDLER_ERRORS.get(key, 0) + 1
+    gs._log(f"  {kind} effect {card.name} error: {exc}")
+    if os.environ.get("SIM_DEBUG"):
+        raise exc
+
+
+def handler_error_summary(limit=10):
+    """ASCII lines describing handler failures so far; [] if there were none."""
+    if not HANDLER_ERRORS:
+        return []
+    top = sorted(HANDLER_ERRORS.items(), key=lambda kv: -kv[1])
+    lines = [f"[!HANDLER ERRORS] {sum(HANDLER_ERRORS.values())} failed calls across "
+             f"{len(HANDLER_ERRORS)} handlers -- these cards did nothing. "
+             f"SIM_DEBUG=1 to raise."]
+    lines += [f"    {n:6d} x {kind} {name} ({exc})" for (kind, name, exc), n in top[:limit]]
+    if len(top) > limit:
+        lines.append(f"    ... and {len(top) - limit} more")
+    return lines
+
+
+def _report_handler_errors():
+    # ponytail: atexit covers every driver in one place. Counts from
+    # ProcessPoolExecutor workers stay in the workers; sum them over the
+    # pool if parallel runs need the report.
+    import sys
+    for line in handler_error_summary():
+        print(line, file=sys.stderr)
+
+
+import atexit as _atexit
+_atexit.register(_report_handler_errors)
+
+
 def on_etb(gs, card):
     """Called from GameState._apply_entering_etb."""
     fn = ETB_EFFECTS.get(card.name)
@@ -590,7 +632,7 @@ def on_etb(gs, card):
     try:
         fn(gs, card)
     except Exception as e:
-        gs._log(f"  ETB effect {card.name} error: {e}")
+        _handler_failed(gs, "ETB", card, e)
 
 
 # ── Discard triggers (Monument to Endurance) ───────────────────────
@@ -795,7 +837,7 @@ def on_spell_resolve(gs, card):
     try:
         fn(gs, card)
     except Exception as e:
-        gs._log(f"  Spell effect {card.name} error: {e}")
+        _handler_failed(gs, "Spell", card, e)
 
 
 # Load hand-verified handlers (overrides auto-parser output).

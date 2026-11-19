@@ -117,7 +117,7 @@ def _pay_for_counter(gs, card) -> bool:
         gs.tap_lands()
     if not gs.mana_pool.can_cast(cost, cmc):
         return False
-    return gs.mana_pool.pay(cost, cmc)
+    return gs.pay_mana(cost, cmc)
 
 
 def _log(gs, msg: str):

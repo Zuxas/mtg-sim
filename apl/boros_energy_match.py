@@ -261,13 +261,7 @@ class BorosEnergyMatchAPL(MatchAPL):
                          for c in gs.zones.battlefield)
             
             # 0 ability: create Cat + damage
-            token = gs._make_token("Cat Warrior Token", "2", "1", "Creature — Cat Warrior")
-            self._tokens_entered += 1
-            guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-            if guides:
-                gs.life += guides
-                gs.energy = getattr(gs, 'energy', 0) + guides
-                self._gained_life_this_turn = True
+            self._token(gs, "Cat Warrior Token", "2", "1", "Creature — Cat Warrior")
             
             creature_count = len(creatures) + 1  # +1 for the new token
             if has_red:
@@ -309,23 +303,11 @@ class BorosEnergyMatchAPL(MatchAPL):
         for name in deploy_order:
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
+                    # Guide of Souls and Ajani's Cat Warrior are the engine's job.
+                    self._cast(gs, c)
                     self._grant_arena_haste(gs, c)
-                    # Guide triggers for itself entering
-                    guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
-                    if guides and c.has(Tag.CREATURE):
-                        gs.life += guides
-                        gs.energy = getattr(gs, 'energy', 0) + guides
-                        self._gained_life_this_turn = True
-                    # Ajani ETB: create 2/1 Cat token
                     if name == AJANI:
-                        token = gs._make_token("Cat Warrior Token", "2", "1",
-                                               "Creature — Cat Warrior")
                         self._tokens_entered += 1
-                        if guides:
-                            gs.life += guides
-                            gs.energy = getattr(gs, 'energy', 0) + guides
-                            self._gained_life_this_turn = True
                     break
 
         # 4. Haste creatures pre-combat
@@ -333,13 +315,8 @@ class BorosEnergyMatchAPL(MatchAPL):
         for name in (RAGAVAN, SCREAMING_NEMESIS):
             for c in list(gs.zones.hand):
                 if c.name == name and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                    gs.cast_spell(c)
+                    self._cast(gs, c)
                     self._grant_arena_haste(gs, c)
-                    guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
-                    if guides:
-                        gs.life += guides
-                        gs.energy = getattr(gs, 'energy', 0) + guides
-                        self._gained_life_this_turn = True
                     break
 
         # 5. Goblin Bombardment
@@ -354,40 +331,14 @@ class BorosEnergyMatchAPL(MatchAPL):
         # Key synergy: discarding Phlage sets up GY for escape
         for c in list(gs.zones.hand):
             if c.name == SEASONED_PYRO and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
+                # The engine handler does the discard 2 / draw 2 / Elementals.
+                # ponytail: it picks the discards, so the "pitch Phlage for
+                # escape" preference this APL had is gone; teach the handler
+                # if that line matters.
+                board = len(gs.zones.battlefield)
+                self._cast(gs, c)
                 self._grant_arena_haste(gs, c)
-                guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
-                if guides:
-                    gs.life += guides
-                    gs.energy = getattr(gs, 'energy', 0) + guides
-                    self._gained_life_this_turn = True
-                # Discard 2: prefer Phlage (GY setup) > excess lands > highest CMC
-                discarded_nonlands = 0
-                for _ in range(2):
-                    if not gs.zones.hand: break
-                    # Priority: Phlage (want in GY for escape)
-                    phlages = [x for x in gs.zones.hand if x.name == PHLAGE]
-                    lands = [x for x in gs.zones.hand if x.is_land()]
-                    if phlages:
-                        d = phlages[0]; gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
-                        discarded_nonlands += 1
-                    elif lands and len(lands) > 2:
-                        d = lands[-1]; gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
-                    elif gs.zones.hand:
-                        d = max(gs.zones.hand, key=lambda x: getattr(x, 'cmc', 0))
-                        gs.zones.hand.remove(d); gs.zones.graveyard.append(d)
-                        if not d.is_land(): discarded_nonlands += 1
-                # Draw 2
-                gs.zones.draw(2)
-                # Create Elemental tokens for each nonland discarded
-                for _ in range(discarded_nonlands):
-                    gs._make_token("Elemental Token", "1", "1", "Creature - Elemental")
-                    self._tokens_entered += 1
-                    if guides:
-                        gs.life += guides
-                        gs.energy = getattr(gs, 'energy', 0) + guides
-                        self._gained_life_this_turn = True
-                gs._log(f"  Pyromancer: discard 2 (Phlage→GY), draw 2, +{discarded_nonlands} Elementals")
+                self._tokens_entered += max(0, len(gs.zones.battlefield) - board - 1)
                 break
 
         # 5b. PHLAGE — hardcast as removal, escape as finisher
@@ -469,8 +420,14 @@ class BorosEnergyMatchAPL(MatchAPL):
                 if c.name == GALVANIC and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     creatures = gs.zones.creatures_on_battlefield()
                     if creatures:
+                        # Resolved by hand: the engine handler sends Galvanic's
+                        # 3 damage to the face, which the card cannot do (it
+                        # targets a creature or planeswalker), and it used to
+                        # run on top of this +3 energy.
+                        gs.mana_pool.pay(c.mana_cost, c.cmc)
+                        gs.zones.hand.remove(c)
+                        gs.zones.graveyard.append(c)
                         gs.energy = getattr(gs, 'energy', 0) + 3
-                        gs.cast_spell(c)
                         gs._log(f"  Galvanic: +3 energy (self-target, no opponent creatures)")
                     break
 
@@ -484,14 +441,9 @@ class BorosEnergyMatchAPL(MatchAPL):
             if not castable:
                 break
             card = min(castable, key=lambda c: (c.cmc, c.name))
-            if not gs.cast_spell(card):
+            if not self._cast(gs, card):
                 break
             self._grant_arena_haste(gs, card)
-            guides = sum(1 for x in gs.zones.battlefield if x.name == GUIDE_OF_SOULS)
-            if guides:
-                gs.life += guides
-                gs.energy = getattr(gs, 'energy', 0) + guides
-                self._gained_life_this_turn = True
             # Ranger-Captain of Eos ETB: search library for a creature with MV <= 1.
             # Oracle: "When this creature enters, you may search your library for a
             # creature card with mana value 1 or less, reveal it, put it into your hand."
@@ -519,17 +471,35 @@ class BorosEnergyMatchAPL(MatchAPL):
         """Ocelot Pride: Cat at the beginning of OUR end step if we gained life."""
         self._simulate_end_step(gs)
 
+    def _cast(self, gs: GameState, card) -> bool:
+        """gs.cast_spell, noting life gained from the engine's own triggers.
+
+        The engine resolves enter-the-battlefield effects itself: Guide of
+        Souls (+1 life, +1 energy per OTHER creature entering, tokens
+        included), Ajani's Cat Warrior, Seasoned Pyromancer's rummage and
+        Elementals. This APL used to do each of those a second time by hand.
+        """
+        before = gs.life
+        ok = gs.cast_spell(card)
+        if gs.life > before:
+            self._gained_life_this_turn = True
+        return ok
+
+    def _token(self, gs: GameState, *args):
+        """gs._make_token, noting life gained from Guide of Souls."""
+        before = gs.life
+        token = gs._make_token(*args)
+        self._tokens_entered += 1
+        if gs.life > before:
+            self._gained_life_this_turn = True
+        return token
+
     def _simulate_end_step(self, gs: GameState):
         """Ocelot Pride: create Cat token if we gained life this turn."""
         ocelots = sum(1 for c in gs.zones.battlefield if c.name == OCELOT_PRIDE)
         if ocelots > 0 and self._gained_life_this_turn:
             for _ in range(ocelots):
-                token = gs._make_token("Cat Token", "1", "1", "Creature — Cat")
-                self._tokens_entered += 1
-                guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-                if guides:
-                    gs.life += guides
-                    gs.energy = getattr(gs, 'energy', 0) + guides
+                self._token(gs, "Cat Token", "1", "1", "Creature — Cat")
             gs._log(f"  Ocelot: {ocelots} Cat token(s)")
 
     # ------------------------------------------------------------------

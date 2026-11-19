@@ -73,6 +73,27 @@ mtg-sim/
 └── <root .py>       Driver entrypoints: sim.py, run_matchup.py, etc.
 ```
 
+## Sibling repos and data paths
+
+mtg-sim runs on its own. Some scripts also read data that lives in other repos. They look for it next to this one:
+
+```
+<workspace>/
+    mtg-sim/               this repo
+    mtg-meta-analyzer/     data/mtg_meta.db   (tournament data)
+    TeamResolve/           modern/ standard/ pioneer/ playbooks, guides/
+```
+
+Older checkouts that still have `My-Website/` and `Team Resolve/guides/` are found too. To point somewhere else, set an environment variable:
+
+| Variable | What it is |
+|---|---|
+| `MTG_META_DB` | Full (absolute) path to `mtg_meta.db` |
+| `PLAYBOOK_DIR` | Folder holding the `modern/`, `standard/`, `pioneer/` playbook folders |
+| `TAC_GUIDES_DIR` | Folder holding the tac-team `.txt` guides |
+
+All of these go through `paths.py`. The meta DB is opened read-only, and a missing DB raises `FileNotFoundError` instead of creating an empty file.
+
 ## APL format
 
 An APL is a Python subclass of `BaseAPL` or `MatchAPL` that decides which card to play each priority window. APLs live in `apl/` — one file per archetype. The file's module docstring should describe the deck's game plan in turn-by-turn terms, and card names are declared as module-level constants to avoid string drift:
@@ -116,7 +137,24 @@ python tests/test_standard_apls.py
 
 Each test sets `sys.path` up to the repo root before importing, so any cwd works.
 
-CI runs `tests/test_match_engine.py` on push (see `.github/workflows/tests.yml`).
+To run them as a suite:
+
+```bash
+python scripts/run_tests.py            # fast tier (about 2 minutes, no card data or DB needed)
+python scripts/run_tests.py --all      # every script, including the tiers below
+python scripts/run_tests.py test_determinism test_menace_combat   # just these
+```
+
+The runner prints `PASS` / `FAIL` per script with its runtime, shows the tail of a failing script's output, and exits 1 if anything failed.
+
+| Tier | What | When it runs |
+|---|---|---|
+| Fast | Every `tests/test_*.py` not listed below. Deterministic, self-contained. | CI, on every push and PR (`fast-tests` job in `.github/workflows/tests.yml`) |
+| Slow | `test_run_match_set_workers` (n=10000 runs, wall-clock speedup assertion) | `--all`, locally |
+| Card data | `test_api`, `test_anchor_amulet` (need `scripts/fetch_scryfall_bulk.sh`) | `--all`, locally |
+| Meta DB | `test_modern_apls`, `test_all_modern_apls`, `test_pioneer_apls`, `test_standard_apls` (need the mtg-meta-analyzer DB) | `--all`, locally |
+
+The exclusion list, with a reason for each script, is `EXCLUDED` in `scripts/run_tests.py`. Skipped scripts are printed in every run, so a skip is never silent. A new `tests/test_*.py` joins the fast tier automatically.
 
 ## Status
 

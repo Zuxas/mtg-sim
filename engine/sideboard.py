@@ -65,27 +65,50 @@ def parse_sb_string(raw: str) -> list[tuple[int, str]]:
     return []
 
 
+_WARNED = set()   # messages already printed by _warn
+
+
+def _warn(msg: str):
+    """Report a sideboarding problem: once per distinct message (a gauntlet
+    applies the same plan thousands of times), and raise under SIM_DEBUG."""
+    import os
+    if os.environ.get("SIM_DEBUG"):
+        raise ValueError(msg)
+    if msg not in _WARNED:
+        _WARNED.add(msg)
+        print(f"  [!SIDEBOARD] {msg}")
+
+
+def _debug() -> bool:
+    import os
+    return bool(os.environ.get("SIM_DEBUG"))
+
+
+def _norm(name: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
 def _fuzzy_match(card_name: str, deck_names: list[str]) -> Optional[str]:
-    """Case-insensitive fuzzy match of card name against a list."""
-    name_clean = re.sub(r"[^a-z0-9]", "", card_name.lower())
+    """Match a plan's card name against real names (#18).
 
-    # Exact match
+    Exact match first, ignoring case and punctuation. Otherwise a fuzzy match
+    is accepted only if exactly ONE distinct card starts with or contains the
+    name. The old 8-character-prefix rule turned "Kozilek's Return" into
+    Kozilek's Command. Ambiguous or unknown names return None; the caller
+    reports them.
+    """
+    want = _norm(card_name)
+    if not want:
+        return None
+    distinct = {}
     for n in deck_names:
-        if re.sub(r"[^a-z0-9]", "", n.lower()) == name_clean:
-            return n
-
-    # Prefix match (first word)
-    first_word = name_clean[:8]
-    for n in deck_names:
-        if re.sub(r"[^a-z0-9]", "", n.lower()).startswith(first_word):
-            return n
-
-    # Substring match
-    for n in deck_names:
-        if name_clean in re.sub(r"[^a-z0-9]", "", n.lower()):
-            return n
-
-    return None
+        distinct.setdefault(_norm(n), n)
+    if want in distinct:
+        return distinct[want]
+    if len(want) < 4:
+        return None
+    hits = [n for key, n in distinct.items() if want in key]
+    return hits[0] if len(hits) == 1 else None
 
 
 # ---------------------------------------------------------------------------
@@ -128,18 +151,33 @@ def apply_sideboard_plan(
     cards_in:  list[tuple[int, str]] = []
     cards_out: list[tuple[int, str]] = []
 
-    for raw in sb_in_raw:
-        cards_in.extend(parse_sb_string(raw))
-    for raw in sb_out_raw:
-        cards_out.extend(parse_sb_string(raw))
+    for raws, parsed, side in ((sb_in_raw, cards_in, "in"), (sb_out_raw, cards_out, "out")):
+        for raw in raws:
+            entries = parse_sb_string(raw)
+            if not entries and str(raw).strip():
+                # e.g. "Blood Moon" with no quantity: it used to vanish silently
+                _warn(f"cannot read sideboard-{side} entry {raw!r} "
+                      f"(expected a quantity and a card name, like '2 Blood Moon')")
+            parsed.extend(entries)
 
     deck_names = [c.name for c in deck]
     sb_names   = list(sb.keys())
 
+    size_before = len(deck)
+    what = f"plan in={cards_in} out={cards_out}"
+
+    def match(name, names, where):
+        hit = _fuzzy_match(name, names)
+        if not hit:
+            close = sorted({n for n in names if _norm(name)[:4] and _norm(name)[:4] in _norm(n)})[:4]
+            _warn(f"{name!r} not found in the {where}"
+                  + (f" (did you mean one of {close}?)" if close else "") + f"; {what}")
+        return hit
+
     # Remove sb_out cards from deck
-    removed = 0
+    removed = []
     for qty, name in cards_out:
-        matched = _fuzzy_match(name, deck_names)
+        matched = match(name, deck_names, "mainboard")
         if not matched:
             continue
         to_remove = qty
@@ -147,19 +185,25 @@ def apply_sideboard_plan(
         for card in deck:
             if card.name == matched and to_remove > 0:
                 to_remove -= 1
-                removed   += 1
+                removed.append(card)
             else:
                 new_deck.append(card)
         deck = new_deck
+        if to_remove:
+            _warn(f"asked to take out {qty} x {matched!r} but the mainboard has "
+                  f"{qty - to_remove}; {what}")
 
     # Add sb_in cards to deck
-    added = 0
+    added = []
     for qty, name in cards_in:
-        matched = _fuzzy_match(name, sb_names)
+        matched = match(name, sb_names, "sideboard")
         if not matched:
             continue
         available = sb.get(matched, 0)
         to_add    = min(qty, available)
+        if to_add < qty:
+            _warn(f"asked to bring in {qty} x {matched!r} but the sideboard has "
+                  f"{available}; {what}")
         if to_add <= 0:
             continue
 
@@ -167,16 +211,28 @@ def apply_sideboard_plan(
         # fall back to Scryfall-cache placeholder if only a dict was provided.
         pool = sb_card_pool.get(matched, [])
         for _ in range(to_add):
-            if pool:
-                deck.append(deepcopy(pool.pop()))
-                added += 1
-            else:
-                card = _make_sb_card(matched)
-                if card:
-                    deck.append(card)
-                    added += 1
+            card = deepcopy(pool.pop()) if pool else _make_sb_card(matched)
+            if card:
+                deck.append(card)
+                added.append(card)
 
         sb[matched] = available - to_add
+
+    # Keep the deck the size it started at. A plan that does not balance is
+    # applied as far as it balances: extra cards brought in are left out, and
+    # cards taken out with nothing to replace them go back.
+    if len(removed) != len(added):
+        _warn(f"plan does not balance: {len(added)} in, {len(removed)} out; "
+              f"keeping the deck at {size_before} cards; {what}")
+    while len(deck) > size_before and added:
+        deck.remove(added.pop())
+    while len(deck) < size_before and removed:
+        deck.append(removed.pop())
+
+    over = sorted(n for n, c in Counter(c.name for c in deck).items()
+                  if c > 4 and not any(c2.name == n and "Basic" in (c2.type_line or "") for c2 in deck))
+    if over:
+        _warn(f"more than 4 copies after sideboarding: {over}; {what}")
 
     return deck
 
@@ -227,11 +283,13 @@ def get_sb_plan(
         from apl.playbook_parser import extract_sb_plans_from_html, find_playbook
         
         # Find the HTML file for this deck
-        pb_dirs = [
-            Path(__file__).parent.parent.parent / "My-Website" / "modern",
-            Path(__file__).parent.parent.parent / "My-Website" / "standard",
-            Path(__file__).parent.parent.parent / "My-Website" / "pioneer",
-        ]
+        # Playbook root: PLAYBOOK_DIR, else the sibling TeamResolve repo (paths.py)
+        import paths
+        root = paths.playbook_dir()
+        pb_dirs = [root / fmt for fmt in ("modern", "standard", "pioneer")]
+        if not any(d.exists() for d in pb_dirs):
+            _warn(f"no playbook folders under {root}: no card-level sideboard plans "
+                  f"will be found there (set PLAYBOOK_DIR / MTG_SIM_PLAYBOOK_DIR)")
         
         deck_slug = re.sub(r"[^a-z0-9]+", "-", our_deck.lower()).strip("-")
         
@@ -254,15 +312,20 @@ def get_sb_plan(
                             plan_lower = plan.opponent.lower()
                             if any(w in plan_lower for w in opp_words):
                                 return plan.sb_in, plan.sb_out
-    except Exception:
-        pass
+    except Exception as e:
+        if _debug():
+            raise
+        _warn(f"reading playbook HTML for {our_deck!r} failed: {type(e).__name__}: {e}")
     
     # Fallback to cached playbook matchup data
     if playbooks is None:
         try:
             from apl.playbook_parser import load_all_playbooks, load_all_tac_guides
             playbooks = {**load_all_playbooks(), **load_all_tac_guides()}
-        except Exception:
+        except Exception as e:
+            if _debug():
+                raise
+            _warn(f"loading playbooks failed: {type(e).__name__}: {e}")
             return [], []
 
     try:
@@ -276,7 +339,9 @@ def get_sb_plan(
             mu_clean = re.sub(r"[^a-z0-9]", "", matchup.opponent.lower())
             if opp_clean in mu_clean or mu_clean in opp_clean:
                 return matchup.sb_in, matchup.sb_out
-    except Exception:
-        pass
+    except Exception as e:
+        if _debug():
+            raise
+        _warn(f"looking up the {our_deck!r} vs {opponent!r} plan failed: {type(e).__name__}: {e}")
 
     return [], []

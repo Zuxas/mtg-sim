@@ -622,6 +622,7 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
                 # Apply lifelink
                 if combat_result.life_gained_attacker > 0:
                     mgs.gain_life(active, combat_result.life_gained_attacker)
+                    apl._gained_life_this_turn = True   # see MatchAPL.own_end_step
 
                 # Remove dead creatures
                 for dead in combat_result.attacker_deaths:
@@ -651,6 +652,9 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
                 return result
 
             # --- END STEP ---
+            own_end = getattr(apl, 'own_end_step', None)   # active player's own triggers
+            if own_end:
+                own_end(gs, opp_gs)
             _tap_for_response(opp_gs)   # opponent can tap for end-step instants/flash
             opp_apl.end_step_actions(opp_gs, gs)
             if mgs.check_life('noncombat'):

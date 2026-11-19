@@ -513,7 +513,11 @@ class BorosEnergyMatchAPL(MatchAPL):
                         gs._log(f"  Blood Moon: {opp_nonbasics} opp nonbasics now Mountains")
                         break
 
-        # 8. NOTE: Ocelot tokens happen at END STEP (in end_step_actions), not here
+        # 8. NOTE: Ocelot tokens happen at END STEP (in own_end_step), not here
+
+    def own_end_step(self, gs: GameState, opponent: GameState):
+        """Ocelot Pride: Cat at the beginning of OUR end step if we gained life."""
+        self._simulate_end_step(gs)
 
     def _simulate_end_step(self, gs: GameState):
         """Ocelot Pride: create Cat token if we gained life this turn."""
@@ -748,20 +752,9 @@ class BorosEnergyMatchAPL(MatchAPL):
            → Sacrifice to Bombardment FIRST for free damage before forced sacrifice
         3. Goblin Bombardment: sacrifice remaining expendable tokens for face damage
         """
-        guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-        
-        # 1. OCELOT END STEP — one Cat per Ocelot if gained life this turn
-        ocelots = sum(1 for c in gs.zones.battlefield if c.name == OCELOT_PRIDE)
-        if ocelots > 0 and self._gained_life_this_turn:
-            for _ in range(ocelots):
-                gs._make_token("Cat Token", "1", "1", "Creature — Cat")
-                self._tokens_entered += 1
-                # Cat entering triggers Guide
-                if guides:
-                    gs.life += guides
-                    gs.energy = getattr(gs, 'energy', 0) + guides
-            gs._log(f"  Ocelot end step: {ocelots} Cat token(s)")
-        
+        # 1. Ocelot Pride lives in own_end_step: it is a "your end step"
+        #    trigger and this method runs at the OPPONENT's end step.
+
         # 2. BOMBARDMENT — sacrifice MOBILIZE tokens (they die anyway) + strategic Cat sac
         # Key insight: Don't sacrifice ALL tokens. Keep Cats for blocking.
         # Only sacrifice Cats deliberately for Ajani transform or when going for lethal.

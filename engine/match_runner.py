@@ -539,6 +539,8 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     # lifelink, trample, flying-vs-blocker, indestructible.
     # Phase 3.5 Stage B: 5-tuple return adds defender_lifelink_gain.)
     dmg, attacker_lost, defender_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, player)
+    if lifelink_gain > 0 and apl is not None:
+        apl._gained_life_this_turn = True   # see MatchAPL.own_end_step
     if player == "a":
         gs.damage_to_b += dmg
         gs.life_b      -= dmg
@@ -671,6 +673,13 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
             match_apl.main_phase2_match(view, opp_view)
         elif hasattr(match_apl, 'main_phase2'):
             match_apl.main_phase2(view)
+        # Beginning of the active player's end step. Runs here because this
+        # is the last point with the active player's view built and synced.
+        # ponytail: fires before the turn's win check, not after; fine while
+        # own_end_step only makes tokens/gains life, move if it deals damage.
+        own_end = getattr(match_apl, 'own_end_step', None)
+        if own_end:
+            own_end(view, opp_view)
     except Exception as e:
         if os.environ.get("SIM_DEBUG"):
             raise

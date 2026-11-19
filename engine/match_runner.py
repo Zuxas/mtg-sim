@@ -223,9 +223,9 @@ class _PhaseView(GameState):
         def _set(self, value):
             old = self.__dict__.get(key)
             self.__dict__[key] = value
-            if old is not None and value != old and self.__dict__.get("_log_kind") == kind:
-                self.__dict__["_loss_log"].append(
-                    (kind, old - value if kind == "life" else value - old))
+            log = self.__dict__.get("_log_" + kind)   # one list per channel
+            if log is not None and old is not None and value != old:
+                log.append((kind, old - value if kind == "life" else value - old))
         return property(_get, _set)
 
     life = _logged("life", "life")
@@ -237,8 +237,8 @@ def _watch(view, opp_view) -> list:
     """Start logging `view`'s damage_dealt bumps and `opp_view`'s life changes
     into one ordered list. Call after both views are seeded."""
     log = []
-    view.__dict__.update(_loss_log=log, _log_kind="dmg")
-    opp_view.__dict__.update(_loss_log=log, _log_kind="life")
+    view.__dict__["_log_dmg"] = log
+    opp_view.__dict__["_log_life"] = log
     return log
 
 

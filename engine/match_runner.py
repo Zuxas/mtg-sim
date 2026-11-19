@@ -470,7 +470,7 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Win check
     if player == "a":
-        if gs.life_b <= 0 or gs.damage_to_b >= 20:
+        if gs.life_b <= 0:  # damage_to_b is a stat only (#28)
             result.won           = True
             result.kill_turn     = turn_num
             result.loser_life    = gs.life_b
@@ -478,7 +478,7 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
             result.turn_count    = turn_num
             return True
     else:
-        if gs.life_a <= 0 or gs.damage_to_a >= 20:
+        if gs.life_a <= 0:  # damage_to_a is a stat only (#28)
             result.won           = False
             result.kill_turn     = turn_num
             result.loser_life    = gs.life_a
@@ -1456,10 +1456,12 @@ def _run_match_with_combo(
         # Player A attacks (Phase 3: keyword-aware; _resolve_combat returns a 6-tuple)
         dmg, a_lost, b_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, "a")
         gs.damage_to_b += dmg
-        # Note: combo path doesn't track gs.life_a directly; lifelink no-op here
+        gs.life_b      -= dmg
+        gs.life_a      += lifelink_gain
+        gs.life_b      += defender_lifelink_gain
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
 
-        if gs.damage_to_b >= 20:
+        if gs.life_b <= 0:
             result.won = True; result.kill_turn = turn_num
             result.winner_damage = gs.damage_to_b; result.turn_count = turn_num
             return result

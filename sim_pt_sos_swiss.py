@@ -20,7 +20,8 @@ from apl import get_apl
 N_SIM   = 400   # games per kill-dist per archetype
 N_RACE  = 8000  # race trials per match
 
-DB_PATH = r"E:\vscode ai project\mtg-meta-analyzer\data\mtg_meta.db"
+import paths
+DB_PATH = str(paths.meta_db_path())   # was a hardcoded E:\ path
 
 # Map DB archetype names → APL registry keys
 ARCH_MAP = {
@@ -98,7 +99,7 @@ DECK_FILES = {
 
 
 def load_players():
-    con = sqlite3.connect(DB_PATH)
+    con = paths.connect_meta_db(DB_PATH)
     cur = con.cursor()
     cur.execute("""
         SELECT player, archetype FROM decks

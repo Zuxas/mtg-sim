@@ -1607,11 +1607,12 @@ class AmuletTitanAPL(SBPlanMixin, BaseAPL):
         if colossus_on_bf:
             n_lands = len([x for x in gs.zones.battlefield if x.is_land()])
             from data.card import Card
-            token = Card.__new__(Card)
-            token.name = "Colossus Token"
-            token.power = str(n_lands)
-            token.toughness = str(n_lands)
-            token.type_line = "Creature - Plant Beast"
+            # A real Card, not Card.__new__: a half-built object has no
+            # mana_cost/cmc/counters, so dataclass == (list.remove) raised
+            # AttributeError on Python 3.12.
+            token = Card(name="Colossus Token", mana_cost="", cmc=0,
+                         type_line="Creature - Plant Beast",
+                         power=str(n_lands), toughness=str(n_lands))
             token.tags = {'creature'}
             token.summoning_sickness = True
             token.turn_entered = gs.turn

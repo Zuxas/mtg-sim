@@ -118,7 +118,7 @@ def _tap_lands_for_response(gs):
     gs._response_pool_filled_turn = getattr(gs, 'turn', 0)
     for land in gs.zones.lands_on_battlefield():
         try:
-            gs.mana_pool.add_land(land.type_line or "", land.name or "")
+            gs.mana_pool.add_land(land.type_line or "", land.name or "", land.oracle_text or "")
         except Exception:
             gs.mana_pool.add("C", 1)
 
@@ -174,7 +174,7 @@ def try_counter_spell(opp_apl, opp_gs, my_gs, spell) -> bool:
         # the window, so the counter spell itself won't trigger one)
         opp_gs._in_counter_window = True
         try:
-            opp_gs.mana_pool.pay(counter.mana_cost, counter.cmc)
+            opp_gs.pay_mana(counter.mana_cost, counter.cmc)
             opp_gs.zones.hand.remove(counter)
             opp_gs.zones.graveyard.append(counter)
             opp_gs.spells_cast_this_turn += 1

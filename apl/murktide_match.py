@@ -34,6 +34,30 @@ COUNTERS = {COUNTERSPELL, SPELL_PIERCE, SPELL_SNARE}
 REMOVAL  = {BOLT, UNHOLY}
 
 
+def _destroy(player, card):
+    """Move THIS card from the battlefield to the graveyard.
+
+    By identity: Card is a dataclass, so list.remove(card) takes out the first
+    EQUAL card, and counters set as plain attributes are not part of equality.
+    Two Ocelot Prides, one pumped: removing the pumped one took out the other
+    and left the pumped one in both zones.
+    """
+    bf = player.zones.battlefield
+    if any(x is card for x in bf):
+        bf[:] = [x for x in bf if x is not card]
+        player.zones.graveyard.append(card)
+
+
+def _delirium(gs) -> bool:
+    """Four or more card types among cards in our graveyard."""
+    types = set()
+    for card in gs.zones.graveyard:
+        tl = (getattr(card, 'type_line', '') or '').lower()
+        types.update(t for t in ('creature', 'instant', 'sorcery', 'artifact', 'enchantment',
+                                 'land', 'planeswalker', 'battle', 'kindred') if t in tl)
+    return len(types) >= 4
+
+
 class MurktideMatchAPL(MatchAPL):
     name = "Dimir Murktide"
     win_condition_damage = 20
@@ -153,8 +177,11 @@ class MurktideMatchAPL(MatchAPL):
                     gs.zones.graveyard.append(c)
                     gs.zones.draw(1)
                 else:
+                    # Every cantrip here (Preordain, Opt, Consider, Expressive
+                    # Iteration) has an engine handler that draws when the
+                    # spell resolves. Drawing again by hand made each one
+                    # worth an extra card, even when it was countered.
                     gs.cast_spell(c)
-                    gs.zones.draw(1)
                 break
 
         # 4. Murktide Regent — delve finisher
@@ -200,16 +227,21 @@ class MurktideMatchAPL(MatchAPL):
         target = max(opp_creatures, key=lambda c: safe_power(c))
         if safe_power(target) < 2: return
 
-        # Unholy Heat first (6 damage with delirium)
+        # Unholy Heat first: 2 damage, 6 with delirium. Only cast it on
+        # something it kills.
+        heat_dmg = 6 if _delirium(gs) else 2
+        heat_targets = [x for x in opp_creatures
+                        if safe_toughness(x) <= heat_dmg and safe_power(x) >= 2]
+        heat_target = max(heat_targets, key=lambda x: safe_power(x), default=None)
         for c in list(gs.zones.hand):
+            if heat_target is None:
+                break
             if c.name == UNHOLY and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                 gs.mana_pool.pay(c.mana_cost, c.cmc)
                 gs.zones.hand.remove(c)
                 gs.zones.graveyard.append(c)
-                if target in opponent.zones.battlefield:
-                    opponent.zones.battlefield.remove(target)
-                    opponent.zones.graveyard.append(target)
-                gs._log(f"  Unholy Heat → kill {target.name}")
+                _destroy(opponent, heat_target)
+                gs._log(f"  Unholy Heat ({heat_dmg}) → kill {heat_target.name}")
                 return
 
         # Bolt — kills toughness ≤3
@@ -219,9 +251,7 @@ class MurktideMatchAPL(MatchAPL):
                     gs.mana_pool.pay(c.mana_cost, c.cmc)
                     gs.zones.hand.remove(c)
                     gs.zones.graveyard.append(c)
-                    if target in opponent.zones.battlefield:
-                        opponent.zones.battlefield.remove(target)
-                        opponent.zones.graveyard.append(target)
+                    _destroy(opponent, target)
                     gs._log(f"  Bolt → kill {target.name}")
                     return
 

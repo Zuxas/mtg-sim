@@ -9,13 +9,10 @@ Pulls real tournament data:
 Falls back to format_config.py estimates when DB data is unavailable.
 """
 
-import os, sqlite3
+import os, sqlite3, sys
 from functools import lru_cache
 
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
-)
+import paths
 
 # Canonical DB names → names we use in format_config/parallel_launcher
 # Keys are what we call them, values are what the DB calls them
@@ -47,10 +44,19 @@ def _normalize(name: str) -> str:
     return NAME_MAP.get(name, name)
 
 
+_warned = False
+
+
 def _conn():
-    if not os.path.exists(DB_PATH):
+    # Path is read per call so MTG_META_DB set after import still applies.
+    try:
+        return paths.connect_meta_db()
+    except FileNotFoundError as e:
+        global _warned
+        if not _warned:      # callers fall back to estimates; say so once
+            _warned = True
+            print(f"[!META DB] {e} Using estimated data.", file=sys.stderr)
         return None
-    return sqlite3.connect(DB_PATH)
 
 
 @lru_cache(maxsize=8)

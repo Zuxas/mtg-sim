@@ -5,8 +5,8 @@ import sys, os, json, re, sqlite3
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _ROOT)
 
-DB = os.path.join(_ROOT, '..', 'mtg-meta-analyzer', 'data', 'mtg_meta.db')
-conn = sqlite3.connect(DB)
+import paths
+conn = paths.connect_meta_db()
 cur  = conn.cursor()
 cur.execute("SELECT id, name, format, archetype, mainboard FROM saved_decks ORDER BY id")
 rows = cur.fetchall()

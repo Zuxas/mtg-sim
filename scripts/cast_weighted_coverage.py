@@ -24,11 +24,9 @@ from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
 
-import os as _os
-DB_PATH = Path(_os.environ.get(
-    "MTG_META_DB",
-    Path(__file__).resolve().parent.parent.parent / "mtg-meta-analyzer" / "data" / "mtg_meta.db"
-))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import paths
+DB_PATH = paths.meta_db_path()
 
 
 def parse_ddmmyy(s: str):
@@ -65,7 +63,7 @@ def main() -> int:
         return 2
     registered = set(ETB_EFFECTS.keys()) | set(SPELL_EFFECTS.keys())
 
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = paths.connect_meta_db(DB_PATH)
     cur = conn.cursor()
 
     # Pull recent <format>-legal deck_cards slots.

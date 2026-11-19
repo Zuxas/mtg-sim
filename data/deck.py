@@ -222,6 +222,12 @@ def _build_cards(entries, scryfall_data: dict) -> list:
 
 def load_deck_from_text(text: str):
     main_entries, side_entries = _parse_decklist(text)
+    # A list with a card nobody could identify still loads, but it is not the
+    # registered 75, so say so every time it is used.
+    marked = [l for l in text.splitlines() if l.strip().startswith("// UNRESOLVED")]
+    if marked:
+        print(f"  [!INCOMPLETE DECK] {len(marked)} line(s) marked UNRESOLVED: "
+              f"this is not the full registered list; do not treat its results as validated")
     all_names = list({name for _, name in main_entries + side_entries})
     card_data = _get_cards_local(all_names)
     mainboard = _build_cards(main_entries, card_data)

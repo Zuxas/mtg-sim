@@ -49,7 +49,8 @@ class CardDB:
             self._cards    = _db_instance._cards
             self._by_name  = _db_instance._by_name
             self._rulings  = _db_instance._rulings
-            self._loaded   = True
+            # not True: a singleton that found no oracle file is still unloaded
+            self._loaded   = _db_instance._loaded
             return
 
         self._rules_dir = Path(rules_dir) if rules_dir else _RULES_DIR

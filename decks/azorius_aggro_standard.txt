@@ -1,5 +1,6 @@
 // Azorius Merfolk Aggro - brian cusick (2026-02-22)
 // Current #5 Standard (9.5% meta)
+// audit:incomplete -- one sideboard card could not be identified (see the UNRESOLVED line); 13-card sideboard
 2 Abandoned Air Temple
 4 Cavern of Souls
 4 Deepchannel Duelist

@@ -172,6 +172,34 @@ def test_missing_local_data_is_an_error_not_an_api_call():
         os.environ.pop("MTG_SIM_ALLOW_NETWORK", None)
 
 
+def test_unloaded_singleton_stays_unloaded():
+    import engine.card_db as card_db
+    import tempfile
+    real = card_db._db_instance
+    try:
+        card_db._db_instance = CardDB(rules_dir=tempfile.mkdtemp())   # no oracle file there
+        assert card_db._db_instance._loaded is False
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert CardDB()._loaded is False and CardDB()._loaded is False
+    finally:
+        card_db._db_instance = real
+
+
+def test_unresolved_marker_is_reported_on_load():
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        _with_db(_BoltDB(), lambda: None)
+        import engine.card_db as card_db
+        real = card_db.CardDB
+        card_db.CardDB = lambda *a, **k: _BoltDB()
+        try:
+            main, side = deck.load_deck_from_text("4 Lightning Bolt\nSideboard\n// UNRESOLVED: 2 Nope\n")
+        finally:
+            card_db.CardDB = real
+    assert len(main) == 4 and side == [] and "[!INCOMPLETE DECK] 1 line" in out.getvalue()
+    assert out.getvalue().isascii()
+
+
 if __name__ == "__main__":
     test_dfc_is_found_by_front_face_and_fully_populated()
     test_back_face_name_does_not_resolve_to_the_front_face()
@@ -182,4 +210,6 @@ if __name__ == "__main__":
     test_scryfall_client_works_without_requests()
     test_arena_names_load_as_the_paper_card()
     test_missing_local_data_is_an_error_not_an_api_call()
+    test_unloaded_singleton_stays_unloaded()
+    test_unresolved_marker_is_reported_on_load()
     print("test_card_resolution: OK")

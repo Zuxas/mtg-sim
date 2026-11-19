@@ -17,8 +17,9 @@ Sources of truth (see handoff 2026-05-11_post-compact_looting_session.md):
   - Match data: Team Resolve/guides/looting_portland_side_events.md (3-2 result)
 
 CRITICAL CARD-TEXT NOTES (verified 2026-05-11):
-  - Detect Intrusion / Belion are Arena names of Spider-Sense / Hydro-Man, Fluid Felon (Standard legal); not in this list
-  - Detect Intrusion / Belion are Unhinged JOKE cards, NOT Standard legal
+  - Cori-Steel Cutter is BANNED (since 2025-06-30) -- not a Prowess card anymore
+  - Detect Intrusion / Belion are Arena names of Spider-Sense / Hydro-Man, Fluid Felon
+    (Standard legal, not joke cards); they are not in this list
   - Flow State is a SORCERY (not enchantment) -- Annul misses, Spell Snare hits
   - Voice of Victory is a CREATURE (1/3) -- Annul misses
   - Aven Interrupter is 3 CMC -- Spell Snare misses

@@ -1,5 +1,6 @@
 // Jeskai Control - blahh8000 (2026-04-19)
 // Current Standard control deck with real counters
+// audit:incomplete -- one sideboard card could not be identified (see the UNRESOLVED line); 13-card sideboard
 4 Consult the Star Charts
 1 Cori Mountain Monastery
 2 Day of Judgment

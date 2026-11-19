@@ -31,6 +31,13 @@ def _cast_into_a_counter(card):
     return gs, opp
 
 
+def _zones_holding(gs, card):
+    """Every zone the exact card object is in. A card is in one zone."""
+    z = gs.zones
+    return [name for name in ("hand", "battlefield", "graveyard", "exile", "library")
+            for c in getattr(z, name) if c is card]
+
+
 def test_countered_instant():
     bolt = Card(name="Lightning Bolt", mana_cost="{R}", cmc=1.0, type_line="Instant",
                 oracle_text="Lightning Bolt deals 3 damage to any target.")
@@ -39,6 +46,9 @@ def test_countered_instant():
     assert bolt not in gs.zones.hand, "countered spell is still in hand"
     assert gs.zones.graveyard.count(bolt) == 1
     assert opp.life == 20 and gs.mana_pool.total() == 2
+    assert _zones_holding(gs, bolt) == ["graveyard"]
+    # Countering a spell does not undo casting it (prowess still triggers).
+    assert gs.spells_cast_this_turn == 1 and gs.noncreature_spells_this_turn == 1
 
 
 def test_countered_creature():
@@ -48,6 +58,8 @@ def test_countered_creature():
     gs, _ = _cast_into_a_counter(bear)
     assert bear not in gs.zones.hand and bear not in gs.zones.battlefield
     assert gs.zones.graveyard.count(bear) == 1
+    assert _zones_holding(gs, bear) == ["graveyard"]
+    assert gs.noncreature_spells_this_turn == 0
 
 
 if __name__ == "__main__":

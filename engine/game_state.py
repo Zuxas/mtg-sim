@@ -1586,6 +1586,10 @@ class GameState:
                     if card in self.zones.hand:
                         self.zones.hand.remove(card)
                     self.zones.graveyard.append(card)
+                    # It was still cast: prowess and other "whenever you cast
+                    # a noncreature spell" counts must see it.
+                    if not card.has(Tag.CREATURE):
+                        self.noncreature_spells_this_turn += 1
                     self._log(f"  [COUNTERED] {card.name}")
                     self.check_state_based_actions()
                     return True

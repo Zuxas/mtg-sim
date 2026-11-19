@@ -340,12 +340,30 @@ def _reset_apl(apl):
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
-              max_turns: int = 15,
+              max_turns: int = 40,   # safety cap; see test_games_play_out
               seed: int = None) -> MatchResult:
     """
     Run a single match between two MatchAPLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: engine code that uses
+    the global `random` (zones.shuffle, card handlers) is seeded for the
+    duration of the game and the caller's global state is restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     # Shallow-copy each Card so per-game mutations (power changes, tapped,
     # summoning_sickness, counters) don't leak into subsequent games when
     # the same deck list is reused across run_match_set iterations.
@@ -377,6 +395,15 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     hand_a_names = [c.name for c in mgs.gs_a.zones.hand]
     hand_b_names = [c.name for c in mgs.gs_b.zones.hand]
 
+    def _finish():
+        result = mgs.to_match_result()
+        result.mulligans_a = mull_a
+        result.mulligans_b = mull_b
+        result.hand_a = hand_a_names
+        result.hand_b = hand_b_names
+        result._on_play = on_play
+        return result
+
     # --- Game loop ---
     for turn_num in range(1, max_turns + 1):
         mgs.turn = turn_num
@@ -396,15 +423,16 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             gs.spells_cast_this_turn = 0
             gs.innocence_drew_this_turn = False
             gs._monument_choices_this_turn = set()   # Monument to Endurance choice reset
-            # NOTE: In real MTG, mana empties at the cleanup step. We intentionally
-            # do NOT reset the mana pool here because tap_lands() auto-taps ALL
-            # lands unconditionally — there's no concept of "hold up mana" for
-            # instant-speed interaction. If we reset here, neither player has mana
-            # in any response window, eliminating all interaction. The accumulation
-            # serves as a rough proxy for held-up mana until per-land tap control
-            # is implemented. Known limitation: players can interact across multiple
-            # turns' worth of accumulated mana (slightly too much interaction).
-            # TODO: implement selective land tapping per APL (COUNTER_COST reserve)
+            # Mana does not carry from one of your turns to the next (CR 500.4).
+            # The pool used to be left alone "as a rough proxy for held-up
+            # mana", which let it pile up without limit: six lands gave 21
+            # mana on turn 6, and every unspent point was banked forever.
+            # ponytail: what you leave unspent on your own turn still floats
+            # through the opponent's turn. That is the same mana you could
+            # have held up by not tapping, so it keeps instant-speed plays
+            # working for APLs with no reserve_mana(); empty at end of turn
+            # once every APL holds lands back through reserve_mana().
+            gs.mana_pool.empty()
             # Stash opp GS on active gs so ETB handlers (Bringer's
             # Living End mass-reanimate, etc.) can reach across.
             gs._match_opp = opp_gs
@@ -436,7 +464,22 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             skip_draw = (turn_num == 1 and
                          ((active == 'a' and on_play) or
                           (active == 'b' and not on_play)))
-            if not skip_draw and gs.zones.library:
+            if not skip_draw and not gs.zones.library:
+                # Rule 104.3c: drawing from an empty library loses the game.
+                # ponytail: draw step only; the ~300 handler sites that pop
+                # the library directly still treat an empty library as a
+                # no-op. Route them through one draw() to cover spell draws.
+                mgs.game_over = True
+                mgs.winner = 'b' if active == 'a' else 'a'
+                mgs.win_method = 'decked'
+                result = mgs.to_match_result()
+                result.mulligans_a = mull_a
+                result.mulligans_b = mull_b
+                result.hand_a = hand_a_names
+                result.hand_b = hand_b_names
+                result._on_play = on_play
+                return result
+            if not skip_draw:
                 gs.zones.hand.append(gs.zones.library.pop(0))
 
             # Let the APL declare how much mana to hold up before tapping.
@@ -449,13 +492,15 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             gs.tap_lands()
 
             # Check if Monument to Endurance drain during tap_lands() killed opponent
-            if opp_gs.life <= 0 and not mgs.game_over:
-                mgs.game_over = True
-                mgs.winner    = active
-                mgs.win_method = 'monument_drain'
+            if mgs.check_life('monument_drain'):
+                return _finish()
 
             # --- MAIN PHASE 1 ---
             apl.main_phase_match(gs, opp_gs)
+            # SBA (#22): burn/drain/life payment in main phase ends the game now,
+            # not after the dead player has taken another turn.
+            if mgs.check_life('noncombat'):
+                return _finish()
 
             # --- INTERACTION: Reactive player responds after main phase ---
             opp_player = 'b' if active == 'a' else 'a'
@@ -463,7 +508,7 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             _tap_for_response(opp_gs)   # opponent can tap lands to respond
             for _ in range(spells_this_phase):
                 _try_reactive_interaction(opp_apl, opp_gs, gs, mgs, opp_player)
-                if mgs.game_over:
+                if mgs.check_life('noncombat'):
                     break
             if mgs.game_over:
                 result = mgs.to_match_result()
@@ -487,7 +532,7 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             if not gate_on and hasattr(opp_apl, 'pre_combat_instant'):
                 _tap_for_response(opp_gs)
                 opp_apl.pre_combat_instant(opp_gs, gs)
-                if mgs.game_over:
+                if mgs.check_life('noncombat'):
                     result = mgs.to_match_result()
                     result.mulligans_a = mull_a
                     result.mulligans_b = mull_b
@@ -581,6 +626,11 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 combat_result = resolve_combat(
                     attackers, blocker_assignments, active, mgs)
 
+                # Lifelink happens at the same time as the damage, so the
+                # defender's gain goes in BEFORE deal_damage decides lethal.
+                if combat_result.life_gained_defender > 0:
+                    mgs.gain_life(opp_player, combat_result.life_gained_defender)
+
                 # Apply damage to defending player
                 mgs.deal_damage(active, combat_result.damage_to_defender)
 
@@ -604,7 +654,9 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 card.counters -= bonus
 
             # --- CHECK WIN ---
-            if mgs.game_over:
+            # deal_damage already labelled combat kills; check_life catches
+            # combat-window burn and life lost to attack triggers.
+            if mgs.check_life('noncombat'):
                 result = mgs.to_match_result()
                 result.mulligans_a = mull_a
                 result.mulligans_b = mull_b
@@ -616,6 +668,8 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             # --- END STEP ---
             _tap_for_response(opp_gs)   # opponent can tap for end-step instants/flash
             opp_apl.end_step_actions(opp_gs, gs)
+            if mgs.check_life('noncombat'):
+                return _finish()
 
             # Cleanup: remove temporary effects, discard to 7
             if len(gs.zones.hand) > 7:
@@ -634,11 +688,16 @@ def run_match(apl_a: MatchAPL, deck_a: list,
         _sb = _inev(mgs.gs_b.life, mgs.gs_b.zones.hand, mgs.gs_b.zones.battlefield, mgs.gs_a.zones.battlefield)
         if _sa != _sb:
             mgs.winner = 'a' if _sa > _sb else 'b'
-        else:
-            mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
-    else:
+    if mgs.winner is None and mgs.gs_a.life != mgs.gs_b.life:
         mgs.winner = 'a' if mgs.gs_b.life < mgs.gs_a.life else 'b'
     mgs.win_method = 'timeout'
+    if mgs.winner is None:
+        # Dead-even stall (#29). Used to go to B every time, which read as a
+        # 0% mirror. Seeded coin flip keeps it unbiased and reproducible.
+        # ponytail: coin flip, not a draw bucket; add winner='draw' handling
+        # through the Bo3/gauntlet consumers if stalls need their own column.
+        mgs.winner = mgs.rng.choice(['a', 'b'])
+        mgs.win_method = 'timeout_tie'
     result = mgs.to_match_result()
     result.mulligans_a = mull_a
     result.mulligans_b = mull_b
@@ -673,6 +732,8 @@ def run_match_set(apl_a: MatchAPL, deck_a: list,
             results.a_wins += 1
         else:
             results.b_wins += 1
+        if match.win_method.endswith('_tie'):
+            results.ties += 1
         results.kill_turns.append(match.kill_turn)
         results.results.append(match)
 
@@ -691,6 +752,8 @@ def print_match_report(results: MatchSetResults,
     print(f"{'='*50}")
     print(f"  {name_a}: {results.win_pct_a()}% win rate "
           f"({results.a_wins}-{results.b_wins})")
+    if results.ties:
+        print(f"  Ties (coin flip): {results.ties}")
     print(f"  Avg game length: {results.avg_turns:.1f} turns")
     pd = results.play_draw_split()
     print(f"  On play: {pd['on_play']}% | On draw: {pd['on_draw']}%")

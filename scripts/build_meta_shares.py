@@ -29,10 +29,9 @@ from typing import Dict, Set
 REPO_ROOT = Path(__file__).resolve().parent.parent
 os.chdir(REPO_ROOT)
 
-META_DB_PATH = Path(os.environ.get(
-    "MTG_META_DB",
-    REPO_ROOT.parent / "mtg-meta-analyzer" / "data" / "mtg_meta.db"
-))
+sys.path.insert(0, str(REPO_ROOT))
+import paths
+META_DB_PATH = paths.meta_db_path()
 OUTPUT_PATH = Path("data/priority_queue/meta_share_by_deck.json")
 DECKS_DIR = Path("decks")
 
@@ -110,7 +109,7 @@ def main() -> None:
         print(f"DB not found at {db_path}", file=sys.stderr)
         sys.exit(1)
 
-    con = sqlite3.connect(str(db_path))
+    con = paths.connect_meta_db(db_path)
     cur = con.cursor()
     cur.execute(
         """

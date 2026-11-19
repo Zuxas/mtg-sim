@@ -60,6 +60,9 @@ jobs:
           python-version: '3.x'
       - name: Install dependencies
         run: pip install requests
+      # Decks load from the local Scryfall copy only.
+      - name: Fetch Scryfall bulk data
+        run: bash scripts/fetch_scryfall_bulk.sh
       - name: Determinism tests (4 checks)
         run: python tests/test_determinism.py
       - name: Menace combat tests
@@ -264,6 +267,11 @@ jobs:
             echo "run=false" >> $GITHUB_OUTPUT
             echo "No engine/ or apl/boros_energy changes -- goldfish guard skipped"
           fi
+      # Skips when the runner's copy is under 7 days old.
+      - name: Fetch or refresh Scryfall bulk data
+        if: steps.changed.outputs.run == 'true'
+        shell: bash
+        run: bash scripts/fetch_scryfall_bulk.sh
       - name: Boros Energy goldfish baseline
         if: steps.changed.outputs.run == 'true'
         shell: bash

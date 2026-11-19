@@ -49,7 +49,8 @@ class CardDB:
             self._cards    = _db_instance._cards
             self._by_name  = _db_instance._by_name
             self._rulings  = _db_instance._rulings
-            self._loaded   = True
+            # not True: a singleton that found no oracle file is still unloaded
+            self._loaded   = _db_instance._loaded
             return
 
         self._rules_dir = Path(rules_dir) if rules_dir else _RULES_DIR
@@ -139,10 +140,14 @@ class CardDB:
         key = self._norm(card_name)
         if key in self._by_name:
             return self._by_name[key]
-        # Partial match
-        for norm_name, card in self._by_name.items():
-            if key in norm_name or norm_name in key:
-                return card
+        # Unique-prefix match only (#27). The old two-way substring test
+        # returned the first card whose name appeared anywhere in the query,
+        # so 'Shadow of the Goblin' resolved to the Unglued card 'Ow'.
+        if len(key) >= 8:
+            hits = {id(card): card for norm_name, card in self._by_name.items()
+                    if norm_name.startswith(key)}
+            if len(hits) == 1:
+                return next(iter(hits.values()))
         return None
 
     def oracle_text(self, card_name: str) -> str:

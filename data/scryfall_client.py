@@ -16,8 +16,15 @@ Attribution: Card data from Scryfall (https://scryfall.com).
 Magic: The Gathering is (c) Wizards of the Coast.
 """
 
-import requests
 from typing import Iterable
+
+# Only the network fallback needs `requests`. A machine with the bulk oracle
+# file and no `requests` (the self-hosted CI runner) must still be able to
+# import this module, and with it sim.py.
+try:
+    import requests
+except ModuleNotFoundError:
+    requests = None
 
 _ENDPOINT = "https://api.scryfall.com/cards/collection"
 _BATCH = 75
@@ -33,6 +40,11 @@ def _chunks(seq, n):
         yield seq[i:i + n]
 
 
+def _front(name: str) -> str:
+    """Front-face name of 'A // B' (decklists also write 'A / B')."""
+    return name.replace(" // ", " / ").split(" / ")[0].strip()
+
+
 def get_cards_data(names: Iterable[str]) -> dict:
     """Resolve card names to a small dict of gameplay-relevant fields.
 
@@ -45,11 +57,15 @@ def get_cards_data(names: Iterable[str]) -> dict:
         return {}
 
     result = {}
+    found = {}   # lowercased canonical and face names -> entry
     headers = {"User-Agent": _USER_AGENT, "Accept": "application/json"}
 
     for batch in _chunks(names, _BATCH):
-        body = {"identifiers": [{"name": n} for n in batch]}
+        # The collection endpoint matches a front-face name, not "Front // Back"
+        body = {"identifiers": [{"name": _front(n)} for n in batch]}
         try:
+            if requests is None:
+                raise RuntimeError("the 'requests' package is not installed")
             r = requests.post(_ENDPOINT, json=body, headers=headers, timeout=10)
             r.raise_for_status()
             payload = r.json()
@@ -61,17 +77,44 @@ def get_cards_data(names: Iterable[str]) -> dict:
             name = c.get("name")
             if not name:
                 continue
-            result[name] = {
-                "name":           c.get("name", name),
-                "mana_cost":      c.get("mana_cost", ""),
+            # Double-faced cards keep mana_cost / type_line / P/T on the faces;
+            # the game object is the front face (#27).
+            faces = c.get("card_faces") or []
+            front = faces[0] if faces else {}
+
+            def _field(key, default=""):
+                value = c.get(key)
+                return value if value not in (None, "") else front.get(key, default)
+
+            entry = {
+                "name":           name,
+                "mana_cost":      _field("mana_cost"),
                 "cmc":            float(c.get("cmc", 0)),
-                "type_line":      c.get("type_line", ""),
-                "oracle_text":    c.get("oracle_text", ""),
-                "power":          c.get("power"),
-                "toughness":      c.get("toughness"),
-                "colors":         c.get("colors", []),
+                "type_line":      (c.get("type_line") or "").split(" // ")[0] if faces
+                                  else c.get("type_line", ""),
+                "oracle_text":    _field("oracle_text"),
+                "power":          _field("power", None),
+                "toughness":      _field("toughness", None),
+                "colors":         _field("colors", []),
                 "color_identity": c.get("color_identity", []),
                 "scryfall_id":    c.get("id", ""),
+                "card_faces":     faces,
+                "loyalty":        _field("loyalty", None),
             }
+            result[name] = entry
+            found[name.lower()] = entry
+            # The entry is the FRONT face, so only the front-face name maps to
+            # it. A back-face name stays unresolved and fails loudly instead of
+            # quietly getting the front face's cost and stats.
+            if front.get("name"):
+                found.setdefault(front["name"].lower(), entry)
+
+    # Scryfall answers under its canonical name ("Front // Back", canonical
+    # capitals). Callers look up the spelling they asked for, so answer under
+    # that too.
+    for n in names:
+        entry = found.get(n.lower()) or found.get(_front(n).lower())
+        if n not in result and entry:
+            result[n] = entry
 
     return result

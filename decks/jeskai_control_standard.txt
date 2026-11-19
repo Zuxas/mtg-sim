@@ -1,5 +1,6 @@
 // Jeskai Control - blahh8000 (2026-04-19)
 // Current Standard control deck with real counters
+// audit:incomplete -- one sideboard card could not be identified (see the UNRESOLVED line); 13-card sideboard
 4 Consult the Star Charts
 1 Cori Mountain Monastery
 2 Day of Judgment
@@ -34,6 +35,7 @@ Sideboard
 2 Disdainful Stroke
 2 Exorcise
 2 Get Out
-2 Kinetic Hellion
+// UNRESOLVED 2026-11-19: '2 Kinetic Hellion' is not a card name Scryfall knows (paper or Arena).
+// It used to load silently as a blank card. Replace this line with the real card.
 2 Soul-Guide Lantern
 3 Torch the Tower

@@ -33,34 +33,17 @@ from data.card import Card, Tag
 
 
 def _do_mulligan(apl: MatchAPL, gs: GameState, rng: random.Random) -> int:
-    """Run London mulligan for one player. Returns number of mulligans."""
-    mulligans = 0
-    hand_size = 7
-    # Draw opening hand
-    for _ in range(hand_size):
-        if gs.zones.library:
-            gs.zones.hand.append(gs.zones.library.pop(0))
+    """London mulligan for one player (#14). Returns number of mulligans.
 
-    for attempt in range(3):
-        if apl.keep(gs.zones.hand, mulligans, gs.on_play):
-            # Bottom cards if mulliganed
-            if mulligans > 0:
-                to_bottom = apl.bottom(gs.zones.hand, mulligans)
-                for card in to_bottom:
-                    if card in gs.zones.hand:
-                        gs.zones.hand.remove(card)
-                        gs.zones.library.append(card)
-            break
-        else:
-            # Shuffle hand back, draw fewer
-            gs.zones.library.extend(gs.zones.hand)
-            gs.zones.hand = []
-            rng.shuffle(gs.zones.library)
-            mulligans += 1
-            for _ in range(7 - mulligans):
-                if gs.zones.library:
-                    gs.zones.hand.append(gs.zones.library.pop(0))
-
+    Draw 7 every time; on keep, bottom one card per mulligan taken. After 3
+    mulligans the 4-card hand is kept. Shared with the goldfish path and
+    match_runner via apl.mulligan.take_opening_hand.
+    """
+    hand, library, mulligans = take_opening_hand(
+        gs.zones.library, apl.keep, apl.bottom, on_play=gs.on_play,
+        max_mulligans=3, rng=rng, shuffle_first=False)
+    gs.zones.hand[:] = hand
+    gs.zones.library[:] = library
     return mulligans
 
 

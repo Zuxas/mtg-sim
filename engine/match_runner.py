@@ -1426,6 +1426,23 @@ class ComboKillSampler:
         return turn == self._kill_t
 
 
+def _opening_hand(gs: TwoPlayerGameState, player: str, apl) -> int:
+    """Deal `player` a London-mulligan opening hand (#14) using the APL's own
+    keep()/bottom() when it has them. Returns the number of mulligans taken."""
+    from apl.mulligan import take_opening_hand
+    a = player == "a"
+    hand, library, mulligans = take_opening_hand(
+        gs.lib_a if a else gs.lib_b,
+        getattr(apl, "keep", None), getattr(apl, "bottom", None),
+        on_play=gs.on_play if a else not gs.on_play,
+        max_mulligans=3, rng=gs.rng, shuffle_first=False)
+    if a:
+        gs.hand_a, gs.lib_a = hand, library
+    else:
+        gs.hand_b, gs.lib_b = hand, library
+    return mulligans
+
+
 def _run_match_with_combo(
     apl_a, deck_a, combo_b: ComboKillSampler,
     on_play: bool, max_turns: int, rng: random.Random
@@ -1438,16 +1455,7 @@ def _run_match_with_combo(
     gs = TwoPlayerGameState(deck_a, [], on_play=on_play, seed=rng.randint(0, 999999))
 
     # Opening hand for A only
-    gs.draw_a(7)
-    for _ in range(3):
-        if sum(1 for c in gs.hand_a if c.is_land()) < 2:
-            gs.lib_a = gs.hand_a + gs.lib_a
-            gs.hand_a = []
-            gs.rng.shuffle(gs.lib_a)
-            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
-            result.mulligans_a += 1
-        else:
-            break
+    result.mulligans_a = _opening_hand(gs, "a", apl_a)
 
     for turn_num in range(1, max_turns + 1):
         gs.turn = turn_num
@@ -1625,32 +1633,9 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
     gs.apl_a = apl_a
     gs.apl_b = apl_b
 
-    # Opening hands
-    gs.draw_a(7)
-    gs.draw_b(7)
-
-    # Simple mulligan: mull if 0 or 1 land
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_a if c.is_land())
-        if lands < 2:
-            gs.lib_a = gs.hand_a + gs.lib_a
-            gs.hand_a = []
-            gs.rng.shuffle(gs.lib_a)
-            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
-            result.mulligans_a += 1
-        else:
-            break
-
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_b if c.is_land())
-        if lands < 2:
-            gs.lib_b = gs.hand_b + gs.lib_b
-            gs.hand_b = []
-            gs.rng.shuffle(gs.lib_b)
-            gs.draw_b(max(4, 7 - result.mulligans_b - 1))
-            result.mulligans_b += 1
-        else:
-            break
+    # Opening hands: London mulligan, asking each APL's keep()/bottom() (#14)
+    result.mulligans_a = _opening_hand(gs, "a", apl_a)
+    result.mulligans_b = _opening_hand(gs, "b", apl_b)
 
     for turn_num in range(1, max_turns + 1):
         gs.turn = turn_num

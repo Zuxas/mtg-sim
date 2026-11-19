@@ -209,6 +209,10 @@ def adjusted_kill_dist(base_dist: dict, delay: float) -> dict:
     return result
 
 
+_WARNED_DECKS = set()   # decks already warned about in run_combo_matchup
+MODELED_DECKS = {"legacy humans", "humans"}   # the only list this model encodes (Legacy)
+
+
 def run_combo_matchup(
     archetype:   str,
     n:           int   = 10000,
@@ -216,19 +220,32 @@ def run_combo_matchup(
     on_play:     bool  = True,
     seed:        int   = 42,
     format_name: str   = "legacy",
+    our_deck:    str   = None,
 ) -> dict:
     """
     Simulate N games of our deck vs a combo archetype.
-    Pulls kill distributions from format_config (not hardcoded).
+    Pulls the opponent's kill distribution from format_config for
+    `format_name` and hands it to the sampler for this call only (#25).
+
+    OUR side is always the Legacy Humans list this module encodes
+    (HUMANS_MAINDECK, its hate cards, OUR_KILL_DIST). `our_deck` does not
+    change the numbers. If it names anything else (or the format is not
+    Legacy), the result is flagged
+    `our_side_modeled: False` and one warning is printed per deck, because
+    the win rate is then Humans' win rate, not that deck's.
     """
-    from engine.match_runner import ComboKillSampler
     try:
-        from format_config import get_combo_dist
-        custom_dist = get_combo_dist(archetype, format_name)
-        if custom_dist:
-            ComboKillSampler.KILL_DISTS[archetype.lower()] = custom_dist
+        from format_config import get_format
+        custom_dist = ((get_format(format_name) or {})
+                       .get("combo_kill_dists", {}).get(archetype.lower()))
     except Exception:
-        pass
+        custom_dist = None
+    our_side_modeled = (our_deck is None or
+                        (our_deck.lower() in MODELED_DECKS and format_name == "legacy"))
+    if not our_side_modeled and (our_deck, format_name) not in _WARNED_DECKS:
+        _WARNED_DECKS.add((our_deck, format_name))
+        print(f"  [!COMBO MODEL] our side is modeled as Legacy Humans, not {our_deck!r}: "
+              f"combo-cell win rates do not reflect this deck")
     """
     Simulate N games of Humans vs a combo archetype.
     Returns win%, avg game length, and breakdown by outcome type.
@@ -289,7 +306,7 @@ def run_combo_matchup(
         eval_h = evaluate_hand(hand, arch, on_play)
 
         # Sample their kill turn
-        sampler = ComboKillSampler(archetype, rng)
+        sampler = ComboKillSampler(archetype, rng, dist=custom_dist)
         their_kill = sampler._kill_t
 
         # Adjust their kill turn based on our interaction
@@ -347,4 +364,6 @@ def run_combo_matchup(
         "outcomes":   outcomes,
         "hard_stop_rate": round(
             (outcomes["hard_stop_wins"] + outcomes["hard_stop_lost"]) / n * 100, 1),
+        "format":     format_name,
+        "our_side_modeled": our_side_modeled,
     }

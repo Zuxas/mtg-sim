@@ -38,9 +38,8 @@ for p in (SIM_ROOT, HARNESS_SCRIPTS):
         sys.path.insert(0, p)
 
 # Meta-analyzer DB lives alongside the sibling mtg-meta-analyzer repo.
-DB_PATH = os.path.abspath(os.path.join(
-    SIM_ROOT, "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
-))
+import paths
+DB_PATH = str(paths.meta_db_path())
 
 # SQL expression to normalise mixed date formats in events.date to YYYYMMDD.
 # Mirrors auto_pipeline._DB_DATE_KEY: MTGTop8 stores DD/MM/YY, MTGDecks stores
@@ -113,7 +112,7 @@ def generate_deck(archetype, format_name="modern"):
         sys.stderr.write(f"meta DB not found at {DB_PATH}\n")
         return None
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = paths.connect_meta_db(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
         deck_row = _find_deck_row(conn, archetype, format_name)

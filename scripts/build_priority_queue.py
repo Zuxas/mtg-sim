@@ -51,10 +51,8 @@ DEFAULT_QUEUE_PATH = Path("data/priority_queue/standard_matrix_queue.json")
 DEFAULT_QUEUE_CSV_PATH = Path("data/priority_queue/standard_matrix_queue.csv")
 DEFAULT_TELEMETRY_SUMMARY_PATH = Path("data/telemetry/card_summary_latest.json")
 DECKS_DIR = Path("decks")
-DEFAULT_META_DB_PATH = Path(os.environ.get(
-    "MTG_META_DB",
-    Path(__file__).resolve().parent.parent.parent / "mtg-meta-analyzer" / "data" / "mtg_meta.db"
-))
+import paths
+DEFAULT_META_DB_PATH = paths.meta_db_path()
 
 
 def load_meta_share_by_deck(path: Path = DEFAULT_META_SHARE_PATH) -> Dict[str, float]:
@@ -127,7 +125,7 @@ def load_decklists_from_db(
     def iso_to_sortable(iso_date: str) -> str:
         return iso_date[2:4] + "-" + iso_date[5:7] + "-" + iso_date[8:10]
 
-    con = sqlite3.connect(str(db_path))
+    con = paths.connect_meta_db(db_path)
     cur = con.cursor()
 
     where_clauses = ["LOWER(e.format) = 'standard'"]

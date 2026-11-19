@@ -117,14 +117,10 @@ class AmuletTitanMatchAPL(MatchAPL):
         # the battlefield."
         for c in list(gs.zones.hand):
             if c.name == SPELUNKING and avail >= 3:
+                # The engine handler draws the card and puts the land onto
+                # the battlefield. Doing it again here made Spelunking draw two
+                # and ramp two.
                 gs.cast_spell(c); self._spelunking_active = True
-                gs.zones.draw(1)  # ETB draw
-                extra = [x for x in gs.zones.hand if x.is_land()]
-                if extra and not gs.land_played:
-                    gs.zones.hand.remove(extra[0])
-                    gs.zones.battlefield.append(extra[0])
-                    extra[0].turn_entered = gs.turn
-                    gs._log(f"  Spelunking ETB: land {extra[0].name} to battlefield")
                 avail = gs.mana_pool.total()
                 gs._log(f"  Spelunking: lands untapped + creatures haste")
                 break
@@ -132,14 +128,7 @@ class AmuletTitanMatchAPL(MatchAPL):
         # 3. Arboreal Grazer ({G}) — extra land drop
         for c in list(gs.zones.hand):
             if c.name == GRAZER and avail >= 1:
-                gs.cast_spell(c)
-                # Put a land from hand onto battlefield
-                extra_lands = [x for x in gs.zones.hand if x.is_land()]
-                if extra_lands:
-                    land = extra_lands[0]
-                    gs.zones.hand.remove(land); gs.zones.battlefield.append(land)
-                    land.turn_entered = gs.turn
-                    gs._log(f"  Grazer: extra land drop ({land.name})")
+                gs.cast_spell(c)      # the handler puts the land in; once
                 avail = gs.mana_pool.total() + self._bounce_land_bonus(gs)
                 break
 
@@ -240,6 +229,9 @@ class AmuletTitanMatchAPL(MatchAPL):
                 gs.zones.hand.remove(land)
                 gs.zones.battlefield.append(land)
                 land.turn_entered = gs.turn
+                # "onto the battlefield tapped", unless Amulet of Vigor untaps it
+                # or Spelunking makes lands enter untapped
+                land.tapped = not any(x.name in (AMULET, SPELUNKING) for x in gs.zones.battlefield)
                 gs.zones.draw(1)
                 gs._log(f"  Colossus ETB: land {land.name} to battlefield + draw")
 

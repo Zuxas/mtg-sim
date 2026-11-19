@@ -1,9 +1,9 @@
 """Pull top decklists for all Modern meta archetypes and test APLs."""
 import sqlite3, json, os, sys, importlib, traceback
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
 
-DB = os.path.join(os.path.dirname(__file__), "..", "mtg-meta-analyzer", "data", "mtg_meta.db")
-conn = sqlite3.connect(DB)
+conn = paths.connect_meta_db()   # the old path pointed inside the repo
 c = conn.cursor()
 
 from format_config import FORMATS

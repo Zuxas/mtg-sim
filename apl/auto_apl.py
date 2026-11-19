@@ -161,98 +161,50 @@ def _safe_class_name(name: str) -> str:
 
 def _get_api_token() -> str:
     """
-    Get Anthropic API token from Claude Code credentials (persisted).
-    Falls back to ANTHROPIC_API_KEY env var or .env file.
-    Never requires manual setup.
+    Anthropic API key from ANTHROPIC_API_KEY: the environment first, then a
+    .env file in the project root.
 
-    Auth-path probe results:
-    - 2026-04-28: HTTP 401 "OAuth authentication is currently not supported" (transient policy state)
-    - 2026-04-29: HTTP 200 SUCCESS with sk-ant-oat01... OAuth token, no ANTHROPIC_API_KEY set.
-    OAuth tokens NOW WORK against api.anthropic.com/v1/messages. Claude path is free under Claude Max.
+    This used to fall back to Claude Code's own OAuth credentials
+    (~/.claude/.credentials.json), refresh them against claude.ai and rewrite
+    that file in place. Removed (#20): the write was neither atomic nor locked,
+    rotating the refresh token from here could log Claude Code out or corrupt
+    its credentials, and a simulator should not read another app's secrets.
     """
-    import os, json, time
+    import os
     from pathlib import Path
 
-    # 1. Environment variable
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if key:
         return key
 
-    # 2. Claude Code OAuth credentials (~/.claude/.credentials.json)
-    creds_path = Path.home() / ".claude" / ".credentials.json"
-    if creds_path.exists():
-        try:
-            creds = json.loads(creds_path.read_text(encoding="utf-8"))
-            oauth = creds.get("claudeAiOauth", {})
-            token     = oauth.get("accessToken", "")
-            expires   = oauth.get("expiresAt", 0)
-            refresh   = oauth.get("refreshToken", "")
-
-            # Token still valid (with 5-min buffer)
-            if token and expires > (time.time() * 1000 + 300_000):
-                return token
-
-            # Token expired — refresh it
-            if refresh:
-                refreshed = _refresh_oauth_token(refresh)
-                if refreshed:
-                    # Persist refreshed token
-                    oauth["accessToken"]  = refreshed["access_token"]
-                    oauth["expiresAt"]    = int(time.time() * 1000) + refreshed.get("expires_in", 3600) * 1000
-                    if "refresh_token" in refreshed:
-                        oauth["refreshToken"] = refreshed["refresh_token"]
-                    creds["claudeAiOauth"] = oauth
-                    creds_path.write_text(json.dumps(creds), encoding="utf-8")
-                    return refreshed["access_token"]
-        except Exception as e:
-            print(f"[AutoAPL] Claude Code creds error: {e}")
-
-    # 3. .env file in project root
     env_file = Path(__file__).parent.parent / ".env"
     if env_file.exists():
-        for line in env_file.read_text().splitlines():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
             if line.startswith("ANTHROPIC_API_KEY="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
+                key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if key:
+                    return key
 
     raise RuntimeError(
-        "No Anthropic API token found.\n"
-        "Options:\n"
-        "  1. Set ANTHROPIC_API_KEY env var\n"
-        "  2. Create .env with ANTHROPIC_API_KEY=sk-ant-...\n"
-        "  3. Make sure Claude Code is installed and logged in"
+        "No Anthropic API key configured, so no APL can be generated.\n"
+        "  Set the ANTHROPIC_API_KEY environment variable, or put\n"
+        "  ANTHROPIC_API_KEY=sk-ant-... in a .env file in the repo root.\n"
+        "  Without a key, decks fall back to GenericAPL."
     )
 
 
-def _refresh_oauth_token(refresh_token: str) -> dict:
-    """Refresh an expired Claude Code OAuth token."""
-    import urllib.request, json
-    try:
-        payload = json.dumps({
-            "grant_type":    "refresh_token",
-            "refresh_token": refresh_token,
-        }).encode()
-        req = urllib.request.Request(
-            "https://claude.ai/api/oauth/token",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read())
-    except Exception as e:
-        print(f"[AutoAPL] Token refresh failed: {e}")
-        return {}
+def _auth_headers(token: str) -> dict:
+    """Bearer auth for an OAuth-style token, x-api-key for an API key."""
+    if token.startswith("Bearer "):
+        return {"Authorization": token}
+    if token.startswith("sk-ant-oat"):
+        return {"Authorization": f"Bearer {token}"}
+    return {"x-api-key": token}
 
 
 def _call_claude(prompt: str, model: str = "claude-sonnet-4-6") -> str:
-    """Call Claude API using persisted Claude Code credentials."""
-    token = _get_api_token()
-
-    # OAuth tokens use Bearer auth; API keys use x-api-key
-    if token.startswith("sk-ant-oat") or token.startswith("Bearer "):
-        auth_headers = {"Authorization": f"Bearer {token.lstrip('Bearer ')}"}
-    else:
-        auth_headers = {"x-api-key": token}
+    """Call the Claude API with the key from ANTHROPIC_API_KEY."""
+    auth_headers = _auth_headers(_get_api_token())
 
     payload = json.dumps({
         "model":      model,

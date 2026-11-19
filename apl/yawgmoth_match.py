@@ -139,17 +139,10 @@ class YawgmothMatchAPL(MatchAPL):
         # Oracle: "Reveal top 4, put a permanent card into hand, rest to GY."
         for c in list(gs.zones.hand):
             if c.name == MALEVOLENT and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                # The engine handler reveals four, takes the permanent, bins
+                # the rest and makes the Spawn. Repeating it here dug eight
+                # cards deep and took two.
                 gs.cast_spell(c)
-                top4 = gs.zones.library[:4]
-                permanents = [x for x in top4 if x.has(Tag.CREATURE) or x.has(Tag.ARTIFACT)]
-                if permanents:
-                    best = max(permanents, key=lambda x: getattr(x, 'cmc', 0))
-                    gs.zones.library.remove(best)
-                    gs.zones.hand.append(best)
-                    for card in top4:
-                        if card in gs.zones.library and card != best:
-                            gs.zones.library.remove(card)
-                            gs.zones.graveyard.append(card)
                 gs._log(f"  Malevolent Rumble: tutor from top 4")
                 break
 

@@ -45,6 +45,31 @@ def test_match_runner_games_finish():
     _check(match_runner)
 
 
+def _lands(n):
+    from data.card import Card, Tag
+    out = []
+    for _ in range(n):
+        c = Card(name="Mountain", mana_cost="", cmc=0.0, type_line="Basic Land - Mountain")
+        c.tags = {Tag.LAND}
+        out.append(c)
+    return out
+
+
+def test_drawing_from_an_empty_library_loses():
+    """Rule 104.3c. A's deck is 12 lands, B's is 60. Nobody deals damage, so
+    the only way the game ends is A failing to draw."""
+    from apl.match_apl import GenericMatchAPL
+    for engine in (match_engine, match_runner):
+        r = engine.run_match(GenericMatchAPL(), _lands(12), GenericMatchAPL(), _lands(60),
+                             on_play=True, seed=1)
+        a_won = (r.winner == "a") if hasattr(r, "winner") else r.won
+        # 12 cards and a draw a turn: gone by turn 13 at the latest, however
+        # many cards a mulligan put back. Without the rule it runs to the cap.
+        assert not a_won and r.kill_turn <= 13, (engine.__name__, a_won, r.kill_turn)
+        if hasattr(r, "win_method"):
+            assert r.win_method == "decked"
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

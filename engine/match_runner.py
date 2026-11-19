@@ -395,6 +395,16 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Draw step
     if not skip_draw:
+        if not (gs.lib_a if player == "a" else gs.lib_b):
+            # Rule 104.3c: drawing from an empty library loses the game.
+            # ponytail: draw step only; spell and ability draws from an
+            # empty library are still no-ops (draw_a/draw_b and handlers).
+            result.won           = player != "a"
+            result.kill_turn     = turn_num
+            result.turn_count    = turn_num
+            result.loser_life    = gs.life_a if player == "a" else gs.life_b
+            result.winner_damage = gs.damage_to_a if player == "a" else gs.damage_to_b
+            return True
         if player == "a":
             gs.draw_a(1)
         else:

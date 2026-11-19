@@ -509,6 +509,16 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Draw step
     if not skip_draw:
+        if not (gs.lib_a if player == "a" else gs.lib_b):
+            # Rule 104.3c: drawing from an empty library loses the game.
+            # ponytail: draw step only; spell and ability draws from an
+            # empty library are still no-ops (draw_a/draw_b and handlers).
+            result.won           = player != "a"
+            result.kill_turn     = turn_num
+            result.turn_count    = turn_num
+            result.loser_life    = gs.life_a if player == "a" else gs.life_b
+            result.winner_damage = gs.damage_to_a if player == "a" else gs.damage_to_b
+            return True
         if player == "a":
             gs.draw_a(1)
         else:
@@ -1320,132 +1330,44 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
                     chosen_atk = pool.pop(0)   # one attacker per walker
                     pw_assignment[id(chosen_atk)] = pw_card
 
-    atk_dead = set()  # id() of dead attackers
-    blk_dead = set()  # id() of dead blockers
-    blk_lookup = {id(b): b for b in blockers}
-    atk_lookup = {id(a): a for a in attackers}
-    total_dmg = 0
-    lifelink_gain = 0           # attacker-side lifelink (gains attacking player)
-    defender_lifelink_gain = 0  # blocker-side lifelink (gains defending player)
-    creatures_hit_player = 0    # count of attackers that dealt damage to defending player
+    # Damage steps live in match_state.combat_damage, shared with the
+    # match_engine path (#13). KWTag-only keyword test: this runner does not
+    # fall back to oracle text.
+    from engine.match_state import combat_damage
 
-    def _is_indestructible(c):
-        return KWTag.INDESTRUCTIBLE in c.tags
+    def _has(c, kw):
+        return kw.replace(" ", "_") in c.tags
 
-    def _resolve_strike_step(strike_attackers):
-        """Resolve damage for one strike step (first-strike or regular).
-        Updates atk_dead, blk_dead, total_dmg, lifelink_gain in enclosing
-        scope. Skips attackers/blockers already dead from prior step.
+    def _divert_to_pw(atk, atk_pwr):
+        """R5: an unblocked attacker routed at an opposing planeswalker removes
+        loyalty instead of hitting the player. It is committed to the walker,
+        so it deals nothing if the walker is already gone (no trample-over-PW
+        in v1). Returns damage dealt (lifelink counts it); None = not routed."""
+        pw_target = pw_assignment.get(id(atk))
+        if pw_target is None:
+            return None
+        if (getattr(pw_target, "loyalty", 0) or 0) <= 0:
+            return 0
+        pw_target.loyalty -= atk_pwr
+        if pw_target.loyalty <= 0:
+            from engine import planeswalkers as _pw
+            dbf = gs.bf_b if attacker == "a" else gs.bf_a
+            dgy = gs.gy_b if attacker == "a" else gs.gy_a
+            if pw_target in dbf:
+                dbf.remove(pw_target)
+                dgy.append(pw_target)
+                _pw.note_pw_combat_death()
+        return atk_pwr
 
-        Phase 3.5 Stage A: handles multi-blocker assignment (menace).
-        Attacker assigns damage among blockers in list order (biggest-
-        first); deathtouch makes 1 damage lethal to each blocker.
-        """
-        nonlocal total_dmg, lifelink_gain, defender_lifelink_gain, creatures_hit_player
-        for atk in strike_attackers:
-            if id(atk) in atk_dead:
-                continue
-            atk_pwr = _safe_power(atk)
-            atk_tou = _safe_toughness(atk)
-            atk_dt  = KWTag.DEATHTOUCH in atk.tags
-            atk_ll  = KWTag.LIFELINK in atk.tags
-            atk_tr  = KWTag.TRAMPLE in atk.tags
-
-            blocker_list = assignments.get(id(atk), [])
-            # Filter out blockers already dead from prior step
-            live_blockers = [b for b in blocker_list if id(b) not in blk_dead]
-
-            if not live_blockers:
-                # R5: unblocked attacker routed at an opposing planeswalker.
-                # Combat damage removes loyalty (does NOT reduce the player's
-                # life); the attacker is committed to the walker, so it deals no
-                # face damage even if the walker is already dead (no trample-over-
-                # PW in v1). Lifelink still gains. 0-loyalty -> shared SBA.
-                if id(atk) in pw_assignment:
-                    pw_target = pw_assignment[id(atk)]
-                    if (getattr(pw_target, "loyalty", 0) or 0) > 0 and atk_pwr > 0:
-                        pw_target.loyalty -= atk_pwr
-                        if atk_ll:
-                            lifelink_gain += atk_pwr
-                        if pw_target.loyalty <= 0:
-                            from engine import planeswalkers as _pw
-                            dbf = gs.bf_b if attacker == "a" else gs.bf_a
-                            dgy = gs.gy_b if attacker == "a" else gs.gy_a
-                            if pw_target in dbf:
-                                dbf.remove(pw_target)
-                                dgy.append(pw_target)
-                                _pw.note_pw_combat_death()
-                    continue
-                # Unblocked (or all blockers died in first-strike step):
-                # full damage to defending player
-                if atk_pwr > 0:
-                    total_dmg += atk_pwr
-                    creatures_hit_player += 1   # for Enduring Curiosity trigger
-                if atk_ll:
-                    lifelink_gain += atk_pwr
-                continue
-
-            # Blocked combat -- two sequential passes over live_blockers.
-            # Pass 1: accumulate total damage TO attacker before lethality
-            # check (CR: blocker damage sums on the attacker; total >=
-            # toughness is lethal). Pre-fix bug: per-blocker check meant
-            # 2x 2/2 vs 3/4 menace attacker didn't kill it (neither blocker
-            # had 2 >= 4 individually). Hidden in BE/Murktide mirrors (no
-            # menace) but breaks Rakdos Bloodtithe Harvester etc.
-            total_damage_to_atk = 0
-            any_blocker_deathtouch = False
-            for blk in live_blockers:
-                blk_pwr = _safe_power(blk)
-                if blk_pwr > 0:
-                    total_damage_to_atk += blk_pwr
-                    if KWTag.DEATHTOUCH in blk.tags:
-                        any_blocker_deathtouch = True
-                    # Phase 3.5 Stage B: blocker-side lifelink (defender
-                    # gains life equal to blocker's damage to attacker).
-                    if KWTag.LIFELINK in blk.tags:
-                        defender_lifelink_gain += blk_pwr
-
-            # Apply combined damage to attacker
-            if total_damage_to_atk > 0 and not _is_indestructible(atk):
-                if total_damage_to_atk >= atk_tou or any_blocker_deathtouch:
-                    atk_dead.add(id(atk))
-
-            # Pass 2: attacker assigns damage among blockers in list order
-            # (biggest-first per assignment, CR 509.4 attacker chooses order)
-            damage_remaining = atk_pwr
-            for blk in live_blockers:
-                blk_tou = _safe_toughness(blk)
-                if damage_remaining > 0:
-                    # Deathtouch: 1 damage is lethal regardless of toughness
-                    damage_to_assign = 1 if atk_dt else min(damage_remaining, blk_tou)
-                    if not _is_indestructible(blk):
-                        if damage_to_assign >= blk_tou or atk_dt:
-                            blk_dead.add(id(blk))
-                    if atk_ll:
-                        lifelink_gain += damage_to_assign
-                    damage_remaining -= damage_to_assign
-
-            # Trample: excess damage after all blockers go to defending player
-            if atk_tr and damage_remaining > 0:
-                total_dmg += damage_remaining
-                if atk_ll:
-                    lifelink_gain += damage_remaining
-
-    # First-strike step: FIRST_STRIKE or DOUBLE_STRIKE attackers
-    first_strikers = [c for c in atk_sorted
-                      if KWTag.FIRST_STRIKE in c.tags
-                      or KWTag.DOUBLE_STRIKE in c.tags]
-    _resolve_strike_step(first_strikers)
-
-    # Regular step: any attacker without FIRST_STRIKE deals damage
-    # (DOUBLE_STRIKE deals damage in BOTH steps)
-    regular_strikers = [c for c in atk_sorted
-                        if KWTag.FIRST_STRIKE not in c.tags
-                        or KWTag.DOUBLE_STRIKE in c.tags]
-    _resolve_strike_step(regular_strikers)
-
-    atk_losses = [atk_lookup[i] for i in atk_dead]
-    blk_losses = [blk_lookup[i] for i in blk_dead]
+    _dmg = combat_damage(atk_sorted, assignments, has=_has,
+                         divert=_divert_to_pw if pw_assignment else None,
+                         defender_life=getattr(gs, "life_b" if attacker == "a" else "life_a", None))
+    total_dmg = _dmg.face
+    lifelink_gain = _dmg.attacker_lifelink
+    defender_lifelink_gain = _dmg.defender_lifelink
+    creatures_hit_player = _dmg.hits_on_player   # for Enduring Curiosity trigger
+    atk_losses = _dmg.dead_attackers
+    blk_losses = _dmg.dead_blockers
 
     # Restore Slickshot power after damage is resolved
     for card, orig_pwr in slickshot_boosted:
@@ -1504,6 +1426,23 @@ class ComboKillSampler:
         return turn == self._kill_t
 
 
+def _opening_hand(gs: TwoPlayerGameState, player: str, apl) -> int:
+    """Deal `player` a London-mulligan opening hand (#14) using the APL's own
+    keep()/bottom() when it has them. Returns the number of mulligans taken."""
+    from apl.mulligan import take_opening_hand
+    a = player == "a"
+    hand, library, mulligans = take_opening_hand(
+        gs.lib_a if a else gs.lib_b,
+        getattr(apl, "keep", None), getattr(apl, "bottom", None),
+        on_play=gs.on_play if a else not gs.on_play,
+        max_mulligans=3, rng=gs.rng, shuffle_first=False)
+    if a:
+        gs.hand_a, gs.lib_a = hand, library
+    else:
+        gs.hand_b, gs.lib_b = hand, library
+    return mulligans
+
+
 def _run_match_with_combo(
     apl_a, deck_a, combo_b: ComboKillSampler,
     on_play: bool, max_turns: int, rng: random.Random
@@ -1516,20 +1455,23 @@ def _run_match_with_combo(
     gs = TwoPlayerGameState(deck_a, [], on_play=on_play, seed=rng.randint(0, 999999))
 
     # Opening hand for A only
-    gs.draw_a(7)
-    for _ in range(3):
-        if sum(1 for c in gs.hand_a if c.is_land()) < 2:
-            gs.lib_a = gs.hand_a + gs.lib_a
-            gs.hand_a = []
-            gs.rng.shuffle(gs.lib_a)
-            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
-            result.mulligans_a += 1
-        else:
-            break
+    result.mulligans_a = _opening_hand(gs, "a", apl_a)
 
     for turn_num in range(1, max_turns + 1):
         gs.turn = turn_num
         gs.land_played_a = False
+
+        def _combo_kills() -> bool:
+            if not combo_b.kills_on_turn(turn_num):
+                return False
+            result.won = False; result.kill_turn = turn_num
+            result.winner_damage = 20; result.turn_count = turn_num
+            return True
+
+        # A on the draw: the combo player's turn N comes BEFORE A's turn N, so
+        # A does not get that turn's attack first (#31).
+        if not on_play and _combo_kills():
+            return result
 
         if turn_num > 1:
             for c in gs.bf_a:
@@ -1553,10 +1495,8 @@ def _run_match_with_combo(
             result.winner_damage = gs.damage_to_b; result.turn_count = turn_num
             return result
 
-        # Player B combo kill check
-        if combo_b.kills_on_turn(turn_num):
-            result.won = False; result.kill_turn = turn_num
-            result.winner_damage = 20; result.turn_count = turn_num
+        # A on the play: the combo player's turn N comes after A's turn N
+        if on_play and _combo_kills():
             return result
 
     result.won = gs.damage_to_b > 0
@@ -1671,13 +1611,30 @@ def run_match(
     apl_b,
     deck_b:   list,
     on_play:  bool = True,
-    max_turns: int = 15,
+    max_turns: int = 40,   # safety cap; see test_games_play_out
     seed:     int  = None,
 ) -> MatchResult:
     """
     Run a single match between two APLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: the global `random`
+    (zones.shuffle, card handlers) is seeded for the game and restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     result = MatchResult()
     gs = TwoPlayerGameState(deck_a, deck_b, on_play=on_play, seed=seed)
     # Stash APLs on TwoPlayerGameState so view-builders can wire
@@ -1686,32 +1643,9 @@ def run_match(
     gs.apl_a = apl_a
     gs.apl_b = apl_b
 
-    # Opening hands
-    gs.draw_a(7)
-    gs.draw_b(7)
-
-    # Simple mulligan: mull if 0 or 1 land
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_a if c.is_land())
-        if lands < 2:
-            gs.lib_a = gs.hand_a + gs.lib_a
-            gs.hand_a = []
-            gs.rng.shuffle(gs.lib_a)
-            gs.draw_a(max(4, 7 - result.mulligans_a - 1))
-            result.mulligans_a += 1
-        else:
-            break
-
-    for _ in range(3):
-        lands = sum(1 for c in gs.hand_b if c.is_land())
-        if lands < 2:
-            gs.lib_b = gs.hand_b + gs.lib_b
-            gs.hand_b = []
-            gs.rng.shuffle(gs.lib_b)
-            gs.draw_b(max(4, 7 - result.mulligans_b - 1))
-            result.mulligans_b += 1
-        else:
-            break
+    # Opening hands: London mulligan, asking each APL's keep()/bottom() (#14)
+    result.mulligans_a = _opening_hand(gs, "a", apl_a)
+    result.mulligans_b = _opening_hand(gs, "b", apl_b)
 
     for turn_num in range(1, max_turns + 1):
         gs.turn = turn_num
@@ -1759,9 +1693,16 @@ def run_match(
     if _hidden_info_match_gate(gs):
         _sa = _inevitability_score(gs.life_a, gs.hand_a, gs.bf_a, gs.bf_b)
         _sb = _inevitability_score(gs.life_b, gs.hand_b, gs.bf_b, gs.bf_a)
-        result.won = (_sa > _sb) if _sa != _sb else (gs.life_b < gs.life_a)
+        _score = (_sa > _sb) - (_sa < _sb)
     else:
-        result.won       = gs.life_b < gs.life_a
+        _score = 0
+    _score = _score or ((gs.life_a > gs.life_b) - (gs.life_a < gs.life_b))
+    if _score:
+        result.won = _score > 0
+    else:
+        # Dead-even stall (#29): seeded coin flip instead of always B.
+        result.won = gs.rng.random() < 0.5
+        result.tie = True
     result.kill_turn = max_turns
     result.turn_count = max_turns
     return result
@@ -1845,6 +1786,7 @@ def run_match_set(
                     results.a_wins += 1
                 else:
                     results.b_wins += 1
+                results.ties += match.tie
                 results.kill_turns.append(match.kill_turn)
         else:
             game_args = [
@@ -1859,6 +1801,7 @@ def run_match_set(
                     results.a_wins += 1
                 else:
                     results.b_wins += 1
+                results.ties += match.tie
                 results.kill_turns.append(match.kill_turn)
     finally:
         random.setstate(saved_global_random_state)

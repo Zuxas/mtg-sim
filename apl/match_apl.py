@@ -23,6 +23,13 @@ from engine.match_state import (
 from data.card import Card, Tag
 
 
+def is_instant_speed(card) -> bool:
+    """True if `card` can be cast on the opponent's turn: an instant, or
+    anything with flash. Sorcery-speed removal, burn and discard cannot (#30)."""
+    from engine.keywords import KWTag
+    return card.has(Tag.INSTANT) or KWTag.FLASH in getattr(card, "tags", ())
+
+
 class MatchAPL(BaseAPL):
     """
     Extended APL interface for two-player games.
@@ -475,9 +482,10 @@ class MatchAPL(BaseAPL):
         """
         from engine.stack import classify_card, InteractionType
         
-        # Find instants we could cast
+        # Find instants we could cast. Sorceries are not castable here: this
+        # runs on the opponent's turn (#30).
         for c in gs.zones.hand:
-            if not (c.has(Tag.INSTANT) or c.has(Tag.SORCERY)):
+            if not is_instant_speed(c):
                 continue
             if not hasattr(c, 'cmc') or c.cmc > gs.mana_pool.total():
                 continue

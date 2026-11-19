@@ -133,7 +133,8 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     with open(out, "w") as f:
         json.dump({
             "our_deck": our_deck, "format": format_name,
-            "field_weighted_match": fw or 0,   # 0 = unavailable, as before
+            "field_weighted_match": fw or 0,
+            "field_weighted_available": fw is not None,   # False: the 0 above is not a win rate
             "excluded_field_pct": excluded,
             "elapsed_s": round(elapsed, 1),
             "n_per_matchup": n, "results": done,

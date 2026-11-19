@@ -237,7 +237,8 @@ def run_parallel(
             "n_per_matchup": n,
             "cores":      n_cores,
             "elapsed_s":  round(elapsed, 1),
-            "field_weighted_match": fw or 0,   # 0 = unavailable, as before
+            "field_weighted_match": fw or 0,
+            "field_weighted_available": fw is not None,   # False: the 0 above is not a win rate
             "excluded_field_pct": excluded,
             "results":    results,
         }, f, indent=2)

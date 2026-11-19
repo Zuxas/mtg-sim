@@ -24,3 +24,24 @@ assert field_weighted([bad]) == (None, 20.0)
 assert field_weighted([]) == (None, 0.0)
 assert cell_flag(bad).strip() == "[!COMBO MODEL]" and cell_flag(good) == ""
 print("test_field_weighted_excludes_mismodeled: OK")
+
+# end to end on the reader: a saved run with no valid cell shows "unavailable", not 0.0%
+import contextlib
+import io
+
+import dashboard
+
+saved = {"our_deck": "X", "format": "modern", "field_weighted_match": 0,
+         "field_weighted_available": False, "excluded_field_pct": 20.0, "results": [bad]}
+buf = io.StringIO()
+with contextlib.redirect_stdout(buf):
+    dashboard.print_run(saved)
+out = buf.getvalue()
+assert "unavailable" in out and "0.0% field-weighted" not in out and "NEGATIVE EV" not in out, out
+# older saved runs (no flag) still print their number
+buf = io.StringIO()
+with contextlib.redirect_stdout(buf):
+    dashboard.print_run({"our_deck": "X", "format": "modern", "field_weighted_match": 55.0,
+                         "results": [good]})
+assert "55.0% field-weighted" in buf.getvalue()
+print("reader: OK")

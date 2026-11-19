@@ -73,6 +73,10 @@ def run_gauntlet(deck_name: str, n: int, seed: int, format_name: str = "modern")
             with open(path) as f:
                 data = json.load(f)
             if data.get("our_deck") == deck_name:
+                if not data.get("field_weighted_available", True):
+                    print(f"GAUNTLET: field-weighted win rate unavailable for {deck_name}",
+                          file=sys.stderr)
+                    return None
                 return {
                     "field_weighted": data.get("field_weighted_match", 0.0),
                     "matchups": {

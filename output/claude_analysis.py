@@ -17,8 +17,14 @@ Usage:
 
 import os
 import json
-import requests
 from typing import Optional
+
+# Only the API call needs `requests`. `sim.py --no-claude` must still start on
+# a machine without it (the self-hosted CI runner).
+try:
+    import requests
+except ModuleNotFoundError:
+    requests = None
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 DEFAULT_MODEL     = "claude-sonnet-4-20250514"
@@ -48,6 +54,8 @@ def _call_claude(prompt: str, system: str) -> str:
         "system":     system,
         "messages":   [{"role": "user", "content": prompt}],
     }
+    if requests is None:
+        raise RuntimeError("the 'requests' package is not installed; install it or pass --no-claude")
     resp = requests.post(ANTHROPIC_API_URL, headers=headers,
                          json=body, timeout=60)
     resp.raise_for_status()

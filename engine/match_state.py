@@ -11,6 +11,7 @@ and adds new concepts (opponent life tracking, combat interaction).
 """
 
 from __future__ import annotations
+import re
 import random
 from dataclasses import dataclass, field
 from typing import Optional
@@ -297,14 +298,18 @@ def has_keyword(card: Card, keyword: str) -> bool:
 
     Checks card.tags first (populated by tag_keywords() at deck load; KWTag
     values use underscores so 'first strike' -> 'first_strike').  Falls back
-    to oracle_text for keywords not covered by KWTag (e.g. double strike).
+    to the card's OWN keyword text for cards that were never tagged. It no
+    longer searches the whole oracle text, which matched keywords the card
+    only grants or mentions (#17).
     """
     tags = getattr(card, 'tags', None)
     if tags:
         if keyword.lower().replace(' ', '_') in tags:
             return True
-    oracle = getattr(card, 'oracle_text', '') or ''
-    return keyword.lower() in oracle.lower()
+    if not getattr(card, 'oracle_text', ''):
+        return False
+    from engine.keywords import keyword_text
+    return re.search(rf"\b{re.escape(keyword.lower())}\b", keyword_text(card)) is not None
 
 
 # Conditional evasion registry. Key = attacker card name; value = a

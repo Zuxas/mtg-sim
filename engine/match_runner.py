@@ -509,6 +509,16 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Draw step
     if not skip_draw:
+        if not (gs.lib_a if player == "a" else gs.lib_b):
+            # Rule 104.3c: drawing from an empty library loses the game.
+            # ponytail: draw step only; spell and ability draws from an
+            # empty library are still no-ops (draw_a/draw_b and handlers).
+            result.won           = player != "a"
+            result.kill_turn     = turn_num
+            result.turn_count    = turn_num
+            result.loser_life    = gs.life_a if player == "a" else gs.life_b
+            result.winner_damage = gs.damage_to_a if player == "a" else gs.damage_to_b
+            return True
         if player == "a":
             gs.draw_a(1)
         else:
@@ -1662,13 +1672,30 @@ def run_match(
     apl_b,
     deck_b:   list,
     on_play:  bool = True,
-    max_turns: int = 15,
+    max_turns: int = 40,   # safety cap; see test_games_play_out
     seed:     int  = None,
 ) -> MatchResult:
     """
     Run a single match between two APLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: the global `random`
+    (zones.shuffle, card handlers) is seeded for the game and restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     result = MatchResult()
     gs = TwoPlayerGameState(deck_a, deck_b, on_play=on_play, seed=seed)
     # Stash APLs on TwoPlayerGameState so view-builders can wire

@@ -292,12 +292,30 @@ def _combat_other(side: str) -> str:
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
-              max_turns: int = 15,
+              max_turns: int = 40,   # safety cap; see test_games_play_out
               seed: int = None) -> MatchResult:
     """
     Run a single match between two MatchAPLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: engine code that uses
+    the global `random` (zones.shuffle, card handlers) is seeded for the
+    duration of the game and the caller's global state is restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     # Shallow-copy each Card so per-game mutations (power changes, tapped,
     # summoning_sickness, counters) don't leak into subsequent games when
     # the same deck list is reused across run_match_set iterations.
@@ -402,7 +420,22 @@ def run_match(apl_a: MatchAPL, deck_a: list,
             skip_draw = (turn_num == 1 and
                          ((active == 'a' and on_play) or
                           (active == 'b' and not on_play)))
-            if not skip_draw and gs.zones.library:
+            if not skip_draw and not gs.zones.library:
+                # Rule 104.3c: drawing from an empty library loses the game.
+                # ponytail: draw step only; the ~300 handler sites that pop
+                # the library directly still treat an empty library as a
+                # no-op. Route them through one draw() to cover spell draws.
+                mgs.game_over = True
+                mgs.winner = 'b' if active == 'a' else 'a'
+                mgs.win_method = 'decked'
+                result = mgs.to_match_result()
+                result.mulligans_a = mull_a
+                result.mulligans_b = mull_b
+                result.hand_a = hand_a_names
+                result.hand_b = hand_b_names
+                result._on_play = on_play
+                return result
+            if not skip_draw:
                 gs.zones.hand.append(gs.zones.library.pop(0))
 
             # Let the APL declare how much mana to hold up before tapping.

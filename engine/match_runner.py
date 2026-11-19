@@ -1685,9 +1685,16 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
     if _hidden_info_match_gate(gs):
         _sa = _inevitability_score(gs.life_a, gs.hand_a, gs.bf_a, gs.bf_b)
         _sb = _inevitability_score(gs.life_b, gs.hand_b, gs.bf_b, gs.bf_a)
-        result.won = (_sa > _sb) if _sa != _sb else (gs.life_b < gs.life_a)
+        _score = (_sa > _sb) - (_sa < _sb)
     else:
-        result.won       = gs.life_b < gs.life_a
+        _score = 0
+    _score = _score or ((gs.life_a > gs.life_b) - (gs.life_a < gs.life_b))
+    if _score:
+        result.won = _score > 0
+    else:
+        # Dead-even stall (#29): seeded coin flip instead of always B.
+        result.won = gs.rng.random() < 0.5
+        result.tie = True
     result.kill_turn = max_turns
     result.turn_count = max_turns
     return result
@@ -1771,6 +1778,7 @@ def run_match_set(
                     results.a_wins += 1
                 else:
                     results.b_wins += 1
+                results.ties += match.tie
                 results.kill_turns.append(match.kill_turn)
         else:
             game_args = [
@@ -1785,6 +1793,7 @@ def run_match_set(
                     results.a_wins += 1
                 else:
                     results.b_wins += 1
+                results.ties += match.tie
                 results.kill_turns.append(match.kill_turn)
     finally:
         random.setstate(saved_global_random_state)

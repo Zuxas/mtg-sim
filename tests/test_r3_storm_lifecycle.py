@@ -37,6 +37,12 @@ Discriminators (design 4.1):
   (iii) gate is load-bearing: the GREEN expectation FAILS on the RED state
         (gate OFF -> damage dropped) -- the GATE-THE-TEST clause below.
 
+UPDATE (issue #23): the main-phase-1 sync is now unconditional, for every
+APL. Dropping main-1 burn for non-storm decks was the bug #23 fixes, so the
+gate-OFF phase below no longer shows the damage being dropped; it shows the
+same scaled damage landing. Discriminator (iii) above is retired. (i) and (ii)
+still hold and are asserted for both gate states.
+
 ASCII-only output. Prints "ALL R3 PROOF TESTS PASS". Exit 0 on pass, 1 on fail.
 """
 import sys, os
@@ -141,20 +147,20 @@ def _green_assert(life_b: int, damage_to_b: int) -> None:
         f"GREEN: opp life must be 20-(K+1)={20 - (K + 1)} (got {life_b})"
 
 
-def run_red():
-    """Gate OFF (WANTS_STORM False) == pre-R3 / legacy match path: the storm
-    payoff's damage is computed on the throwaway view and then DROPPED. The
-    opponent's match life total never moves."""
+def run_gate_off():
+    """Gate OFF (WANTS_STORM False). Before issue #23 this was the RED phase:
+    main-phase-1 damage was computed on the throwaway view and DROPPED unless
+    the active APL opted into storm. #23 makes the main-1 sync unconditional
+    (dropping burn for every non-storm deck was the bug), so the gate no longer
+    decides whether damage lands. The same scaled damage must arrive."""
     apl, gs = _fresh_state(wants_storm=False)
-    assert apl.WANTS_STORM is False, "RED: active-player gate must be OFF"
+    assert apl.WANTS_STORM is False, "gate-off: active-player gate must be OFF"
     assert _storm_match_gate(gs) is False, \
-        "RED: no seat wants storm -> _storm_match_gate OFF"
+        "gate-off: no seat wants storm -> _storm_match_gate OFF"
 
     _simple_play_turn(gs, "a", apl)
 
-    assert gs.life_b == 20, f"RED: opp life must stay 20 (got {gs.life_b})"
-    assert gs.damage_to_b == 0, \
-        f"RED: storm damage must be DROPPED (got {gs.damage_to_b})"
+    _green_assert(gs.life_b, gs.damage_to_b)
     return {"life_b": gs.life_b, "damage_to_b": gs.damage_to_b}
 
 
@@ -174,29 +180,20 @@ def run_green():
 
 
 def run():
-    red = run_red()
+    gate_off = run_gate_off()
     green = run_green()
 
-    # GATE-THE-TEST: the GREEN expectation MUST fail on the RED (gate-off)
-    # state. If it didn't, the gate would not be the discriminator.
-    gate_is_discriminator = False
-    try:
-        _green_assert(red["life_b"], red["damage_to_b"])
-    except AssertionError:
-        gate_is_discriminator = True
-    assert gate_is_discriminator, \
-        "GATE-THE-TEST: GREEN expectation unexpectedly held on the gate-OFF state"
-
-    # The differential: RED shows the storm damage ABSENT, GREEN shows it
-    # PRESENT and SCALED.
-    assert red["life_b"] == 20 and red["damage_to_b"] == 0, \
-        "RED phase did not reproduce the storm-dropped baseline"
+    # Since #23 the storm gate is not what propagates main-1 damage, so there
+    # is no RED/GREEN differential left to prove. What still discriminates is
+    # the SCALING: K+1 damage, not 1, on the shared match state, either way.
+    assert gate_off == green, \
+        f"gate-off and gate-on must now agree (got {gate_off} vs {green})"
     assert (green["damage_to_b"] == K + 1
             and green["life_b"] == 20 - (K + 1)), \
-        "GREEN phase did not reproduce the scaled+propagated storm line"
+        "storm line was not scaled and propagated"
 
     import json
-    print("R3_LIFECYCLE_RED   " + json.dumps(red, sort_keys=True))
+    print("R3_LIFECYCLE_GATE_OFF " + json.dumps(gate_off, sort_keys=True))
     print("R3_LIFECYCLE_GREEN " + json.dumps(green, sort_keys=True))
     print(f"R3_STORM_COUNT K={K} copies={K + 1}")
     print("ALL R3 PROOF TESTS PASS")

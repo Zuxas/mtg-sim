@@ -45,6 +45,7 @@ class MatchResult:
     mulligans_a:   int   = 0
     mulligans_b:   int   = 0
     turn_count:    int   = 0
+    tie:           bool  = False   # timed out dead even; winner was a coin flip (#29)
     snapshots_a:   list  = field(default_factory=list)
 
 
@@ -165,6 +166,131 @@ class TwoPlayerGameState:
                 c._warp_exiled_turn = self.turn
 
 
+def _land_pool(battlefield):
+    """Fresh ManaPool with one mana per land (color-aware via add_land)."""
+    pool = ManaPool()
+    for c in battlefield:
+        if c.is_land():
+            try:
+                pool.add_land(c.type_line or "", c.name or "")
+            except Exception:
+                pool.add("C", 1)
+    return pool
+
+
+def _turn_pool(gs, player: str, untap: bool = False):
+    """Mana pool the ACTIVE player carries through their own turn (#24).
+
+    Built from lands in play at the start of their main phase 1 (`untap=True`),
+    then shared by their combat-window and main-2 views, so mana spent in main 1
+    is gone in main 2. Lands played later add their own mana via
+    GameState.play_land. cost_reduction is per-view scratch state, so it resets.
+
+    This is a budget of mana sources, not a rules mana pool: leftover ritual
+    mana carries to the next phase, which CR 500.4 would not allow.
+
+    Reactive views (the non-active player's counterspell, combat-trick and
+    end-step windows) do NOT use this. They still get _land_pool(), a full
+    pool, as before. Making them use what the player left over needs APLs that
+    hold mana back, and in this runner they cannot: views are pre-filled, so
+    reserve_mana()/tap_lands() have nothing to withhold. With leftovers only,
+    UW Control cast 0 counters in 60 games. That half of #24 needs real
+    tapped/untapped land state first.
+    """
+    attr = "pool_" + player
+    pool = getattr(gs, attr, None)
+    if untap or pool is None:
+        pool = _land_pool(gs.bf_a if player == "a" else gs.bf_b)
+        setattr(gs, attr, pool)
+    pool.cost_reduction = 0
+    return pool
+
+
+class _PhaseView(GameState):
+    """Per-phase GameState view that can log changes to life / damage_dealt.
+
+    Opponent life loss reaches a view on two channels: handlers that write
+    `_match_opp.life`, and APL/handler code that only bumps `damage_dealt`
+    (about 150 sites). The shared burn primitives write BOTH for one event.
+    Logging each write in order lets _sync_view tell those apart (#23).
+    """
+    def _logged(attr, kind):
+        key = "_pv_" + attr
+
+        def _get(self):
+            return self.__dict__.get(key, 0)
+
+        def _set(self, value):
+            old = self.__dict__.get(key)
+            self.__dict__[key] = value
+            log = self.__dict__.get("_log_" + kind)   # one list per channel
+            if log is not None and old is not None and value != old:
+                log.append((kind, old - value if kind == "life" else value - old))
+        return property(_get, _set)
+
+    life = _logged("life", "life")
+    damage_dealt = _logged("damage_dealt", "dmg")
+    del _logged
+
+
+def _watch(view, opp_view) -> list:
+    """Start logging `view`'s damage_dealt bumps and `opp_view`'s life changes
+    into one ordered list. Call after both views are seeded."""
+    log = []
+    view.__dict__["_log_dmg"] = log
+    opp_view.__dict__["_log_life"] = log
+    return log
+
+
+def _sync_view(gs, player: str, view, log: list):
+    """Write a phase view's life and damage back to the match state (#23).
+
+    `view` belongs to `player`; its life is copied straight back (fetch/shock
+    payments, lifegain). The opponent loses the sum of the logged events, where
+    a damage_dealt bump and an equal life write next to each other are ONE
+    event written to both channels. Negative life entries are lifegain.
+    # ponytail: adjacency test. Miscounts only if two separate sources of the
+    # same size hit back to back on different channels. Goes away once every
+    # handler writes life only.
+    """
+    loss, i = 0, 0
+    while i < len(log):
+        kind, n = log[i]
+        if n > 0 and i + 1 < len(log) and log[i + 1] == ("life" if kind == "dmg" else "dmg", n):
+            i += 1
+        loss += n
+        i += 1
+    if player == "a":
+        gs.life_a = view.life
+        gs.life_b -= loss
+        gs.damage_to_b += max(loss, 0)
+    else:
+        gs.life_b = view.life
+        gs.life_a -= loss
+        gs.damage_to_a += max(loss, 0)
+
+
+def _check_dead(gs, result, turn_num: int) -> bool:
+    """State-based check on BOTH players (CR 704.5a). Fills `result` and
+    returns True if the game is over. Called after every phase that can change
+    life, so a dead player takes no further actions and a player who pays
+    their last life on their own turn loses."""
+    a_dead, b_dead = gs.life_a <= 0, gs.life_b <= 0
+    if not (a_dead or b_dead):
+        return False
+    if a_dead and b_dead:
+        # Simultaneous: a draw by the rules. No consumer models draws yet, so
+        # it is a seeded coin flip, flagged as a tie.
+        result.won = gs.rng.random() < 0.5
+        result.tie = True
+    else:
+        result.won = b_dead
+    result.kill_turn = result.turn_count = turn_num
+    result.loser_life = gs.life_b if result.won else gs.life_a
+    result.winner_damage = gs.damage_to_b if result.won else gs.damage_to_a
+    return True
+
+
 def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
     """
     Turn simulator for a player.
@@ -199,7 +325,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
                 on_play = not gs.on_play
                 hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
                 life, land_played = gs.life_b, gs.land_played_b
-            v = GameState(mainboard=[], on_play=on_play)
+            v = _PhaseView(mainboard=[], on_play=on_play)
             v.turn              = gs.turn
             v.zones.hand        = hand   # list aliased — mutations propagate
             v.zones.battlefield = bf
@@ -222,14 +348,12 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             else:
                 v.spells_cast_this_turn        = gs.spells_cast_b
                 v.noncreature_spells_this_turn = gs.noncreature_spells_b
-            # Color-aware mana via ManaPool.add_land — handles basics,
+            # Color-aware mana via ManaPool.add_land -- handles basics,
             # duals, fetchlands (flex), Wasteland (colorless), etc.
-            for c in v.zones.battlefield:
-                if c.is_land():
-                    try:
-                        v.mana_pool.add_land(c.type_line or "", c.name or "")
-                    except Exception:
-                        v.mana_pool.add("C", 1)
+            # Active player: the pool they carry through this turn (#24).
+            # Opponent: a full pool, as before (see _turn_pool).
+            v.mana_pool = (_turn_pool(gs, for_player, untap=True) if for_player == player
+                           else _land_pool(bf))
             return v
 
         view     = _build_view(player)
@@ -245,6 +369,7 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
         # Auto-upgrade goldfish APLs to opp-aware removal play.
         # Hand-tuned MatchAPLs (BorosEnergyMatchAPL etc.) keep their own logic.
         match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
+        loss_log = _watch(view, opp_view)
 
         try:
             match_apl.main_phase_match(view, opp_view)
@@ -266,21 +391,10 @@ def _simple_play_turn(gs: TwoPlayerGameState, player: str, apl=None):
             gs.land_played_b = view.land_played
             gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', 0)
             gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', 0)
-        # R3 storm (gated): propagate the ACTIVE player's main-phase-1 spell damage
-        # back to the match state. Mirrors _run_post_combat_phase's damage sync. The
-        # view is fresh (_build_view makes a new GameState, never seeds damage_dealt),
-        # so view.damage_dealt holds ONLY this main1's damage and += onto the cumulative
-        # total is correct (no double-count). Gated on the ACTIVE apl's WANTS_STORM (not
-        # _storm_match_gate) so the opponent's own main1 burn stays dropped, exactly as
-        # pre-R3. Gate OFF -> pure no-op -> byte-identical to the trilogy+R4 baseline.
-        if getattr(apl, "WANTS_STORM", False):
-            _dmg = getattr(view, "damage_dealt", 0)
-            if player == "a":
-                gs.damage_to_b += _dmg
-                gs.life_b -= _dmg
-            else:
-                gs.damage_to_a += _dmg
-                gs.life_a -= _dmg
+        # Life and damage back to the match state (#23). The view is fresh, so
+        # view.damage_dealt holds only this main phase's damage. This replaces
+        # the old WANTS_STORM-only damage sync.
+        _sync_view(gs, player, view, loss_log)
         return
 
     # -------- Legacy heuristic fallback (apl is None) --------
@@ -395,6 +509,16 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Draw step
     if not skip_draw:
+        if not (gs.lib_a if player == "a" else gs.lib_b):
+            # Rule 104.3c: drawing from an empty library loses the game.
+            # ponytail: draw step only; spell and ability draws from an
+            # empty library are still no-ops (draw_a/draw_b and handlers).
+            result.won           = player != "a"
+            result.kill_turn     = turn_num
+            result.turn_count    = turn_num
+            result.loser_life    = gs.life_a if player == "a" else gs.life_b
+            result.winner_damage = gs.damage_to_a if player == "a" else gs.damage_to_b
+            return True
         if player == "a":
             gs.draw_a(1)
         else:
@@ -402,10 +526,14 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
 
     # Main phase 1
     _simple_play_turn(gs, player, apl)
+    if _check_dead(gs, result, turn_num):
+        return True
 
     # R5: planeswalker loyalty activation (gated; once per player-turn so the
     # CR 606.3 budget holds by construction). Gate OFF -> no-op, byte-identical.
     _run_pw_activations(gs, player, apl)
+    if _check_dead(gs, result, turn_num):
+        return True
 
     # Combat (Phase 3: keyword-aware -- first strike, deathtouch,
     # lifelink, trample, flying-vs-blocker, indestructible.
@@ -455,27 +583,13 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
             else:
                 gs.draw_b(creatures_hit)
 
+    if _check_dead(gs, result, turn_num):
+        return True
+
     # Main phase 2 (Phase 1 wiring, commit a31f360)
     _run_post_combat_phase(gs, player, apl)
 
-    # Win check
-    if player == "a":
-        if gs.life_b <= 0 or gs.damage_to_b >= 20:
-            result.won           = True
-            result.kill_turn     = turn_num
-            result.loser_life    = gs.life_b
-            result.winner_damage = gs.damage_to_b
-            result.turn_count    = turn_num
-            return True
-    else:
-        if gs.life_a <= 0 or gs.damage_to_a >= 20:
-            result.won           = False
-            result.kill_turn     = turn_num
-            result.loser_life    = gs.life_a
-            result.winner_damage = gs.damage_to_a
-            result.turn_count    = turn_num
-            return True
-    return False
+    return _check_dead(gs, result, turn_num)
 
 
 def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
@@ -492,9 +606,6 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     See harness/knowledge/tech/match-runner-combat-gap-2026-04-26.md.
 
     Caveats (Phase 2 fixes):
-    - view.mana_pool resets fresh from lands-in-play (not synced from
-      main_phase remainder). main_phase2 effectively has full mana
-      again. BE may over-cast Phlage hardcast.
     - view.energy resets to 0 each phase call. Pre-existing energy
       from main_phase is lost. APL flags persist on apl instance.
     - APLs without main_phase2 method no-op via getattr fallback.
@@ -516,7 +627,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         life, land_played = gs.life_b, gs.land_played_b
         prev_damage = gs.damage_to_a
 
-    view = GameState(mainboard=[], on_play=on_play)
+    view = _PhaseView(mainboard=[], on_play=on_play)
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -533,12 +644,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
         view.spells_cast_this_turn        = gs.spells_cast_b
         view.noncreature_spells_this_turn = gs.noncreature_spells_b
 
-    for c in view.zones.battlefield:
-        if c.is_land():
-            try:
-                view.mana_pool.add_land(c.type_line or "", c.name or "")
-            except Exception:
-                view.mana_pool.add("C", 1)
+    view.mana_pool = _turn_pool(gs, player)  # what main 1 left over (#24)
 
     if player == "a":
         opp_hand, opp_bf, opp_gy = gs.hand_b, gs.bf_b, gs.gy_b
@@ -546,7 +652,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     else:
         opp_hand, opp_bf, opp_gy = gs.hand_a, gs.bf_a, gs.gy_a
         opp_life = gs.life_a
-    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view = _PhaseView(mainboard=[], on_play=not on_play)
     opp_view.turn = gs.turn
     opp_view.zones.hand = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -558,6 +664,7 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
     opp_view._match_opp = view
 
     match_apl = apl if isinstance(apl, MatchAPL) else RemovalAwareGoldfishAdapter(apl)
+    loss_log = _watch(view, opp_view)
 
     try:
         if hasattr(match_apl, 'main_phase2_match'):
@@ -573,17 +680,11 @@ def _run_post_combat_phase(gs: TwoPlayerGameState, player: str, apl):
             file=sys.stderr,
         )
 
-    delta_damage = view.damage_dealt - prev_damage
+    _sync_view(gs, player, view, loss_log)
     if player == "a":
-        gs.damage_to_b = view.damage_dealt
-        gs.life_b -= delta_damage
-        gs.life_a = view.life
         gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
         gs.noncreature_spells_a = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_a)
     else:
-        gs.damage_to_a = view.damage_dealt
-        gs.life_a -= delta_damage
-        gs.life_b = view.life
         gs.spells_cast_b = getattr(view, 'spells_cast_this_turn', gs.spells_cast_b)
         gs.noncreature_spells_b = getattr(view, 'noncreature_spells_this_turn', gs.noncreature_spells_b)
 
@@ -835,7 +936,7 @@ def _instant_combat_enabled_runner(gs: "TwoPlayerGameState") -> bool:
                 or getattr(apl_b, 'WANTS_INSTANT_COMBAT', False))
 
 
-def _build_combat_view(gs: "TwoPlayerGameState", player: str):
+def _build_combat_view(gs: "TwoPlayerGameState", player: str, active: bool = False):
     """Build a single-player GameState view aliasing this seat's zone lists.
 
     Mirrors _simple_play_turn._build_view so mutations (removal moving a card
@@ -850,19 +951,14 @@ def _build_combat_view(gs: "TwoPlayerGameState", player: str):
         on_play = not gs.on_play
         hand, bf, gy, lib = gs.hand_b, gs.bf_b, gs.gy_b, gs.lib_b
         life = gs.life_b
-    v = GameState(mainboard=[], on_play=on_play)
+    v = _PhaseView(mainboard=[], on_play=on_play)
     v.turn = gs.turn
     v.zones.hand        = hand
     v.zones.battlefield = bf
     v.zones.graveyard   = gy
     v.zones.library     = lib
     v.life = life
-    for c in v.zones.battlefield:
-        if c.is_land():
-            try:
-                v.mana_pool.add_land(c.type_line or "", c.name or "")
-            except Exception:
-                v.mana_pool.add("C", 1)
+    v.mana_pool = _turn_pool(gs, player) if active else _land_pool(bf)
     return v
 
 
@@ -872,7 +968,7 @@ def _run_combat_window_runner(gs: "TwoPlayerGameState", attacker: str, window: i
     land on the aliased zone lists. ZERO random()."""
     from engine.match_engine import _run_combat_window
     defender = "b" if attacker == "a" else "a"
-    active_view = _build_combat_view(gs, attacker)
+    active_view = _build_combat_view(gs, attacker, active=True)
     opp_view    = _build_combat_view(gs, defender)
     active_apl  = gs.apl_a if attacker == "a" else gs.apl_b
     opp_apl     = gs.apl_b if attacker == "a" else gs.apl_a
@@ -882,7 +978,9 @@ def _run_combat_window_runner(gs: "TwoPlayerGameState", attacker: str, window: i
     opp_view._self_apl = opp_apl
     opp_view._match_opp_apl = active_apl
     opp_view._match_opp = active_view
+    loss_log = _watch(active_view, opp_view)
     _run_combat_window(active_view, active_apl, opp_view, opp_apl, window=window)
+    _sync_view(gs, attacker, active_view, loss_log)   # tricks that burn or cost life (#23)
 
 
 def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
@@ -1358,10 +1456,12 @@ def _run_match_with_combo(
         # Player A attacks (Phase 3: keyword-aware; _resolve_combat returns a 6-tuple)
         dmg, a_lost, b_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, "a")
         gs.damage_to_b += dmg
-        # Note: combo path doesn't track gs.life_a directly; lifelink no-op here
+        gs.life_b      -= dmg
+        gs.life_a      += lifelink_gain
+        gs.life_b      += defender_lifelink_gain
         for c in a_lost: gs.bf_a.remove(c); gs.gy_a.append(c)
 
-        if gs.damage_to_b >= 20:
+        if gs.life_b <= 0:
             result.won = True; result.kill_turn = turn_num
             result.winner_damage = gs.damage_to_b; result.turn_count = turn_num
             return result
@@ -1424,7 +1524,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         opp_hand, opp_bf, opp_gy, opp_lib = gs.hand_a, gs.bf_a, gs.gy_a, gs.lib_a
         opp_life = gs.life_a
 
-    view = GameState(mainboard=[], on_play=on_play)
+    view = _PhaseView(mainboard=[], on_play=on_play)
     view.turn              = gs.turn
     view.zones.hand        = hand
     view.zones.battlefield = bf
@@ -1432,14 +1532,9 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
     view.zones.library     = lib
     view.life              = life
     view.land_played       = land_played
-    for c in bf:
-        if c.is_land():
-            try:
-                view.mana_pool.add_land(c.type_line or "", c.name or "")
-            except Exception:
-                view.mana_pool.add("C", 1)
+    view.mana_pool = _land_pool(bf)   # reactive: full pool (see _turn_pool)
 
-    opp_view = GameState(mainboard=[], on_play=not on_play)
+    opp_view = _PhaseView(mainboard=[], on_play=not on_play)
     opp_view.turn              = gs.turn
     opp_view.zones.hand        = opp_hand
     opp_view.zones.battlefield = opp_bf
@@ -1462,6 +1557,7 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         view.spells_cast_this_turn        = gs.spells_cast_b
         view.noncreature_spells_this_turn = gs.noncreature_spells_b
 
+    loss_log = _watch(view, opp_view)
     try:
         match_apl.end_step_actions(view, opp_view)
     except Exception as e:
@@ -1470,7 +1566,8 @@ def _run_end_step(gs: TwoPlayerGameState, active_player: str,
         print(f"  [WARN end_step {type(reactive_apl).__name__}: {e}]",
               file=sys.stderr)
 
-    # Sync hand/bf/gy back (APL may have moved cards)
+    # Life and damage back (#23), then land/spell counters
+    _sync_view(gs, reactive_player, view, loss_log)
     if reactive_player == "a":
         gs.land_played_a = view.land_played
         gs.spells_cast_a = getattr(view, 'spells_cast_this_turn', gs.spells_cast_a)
@@ -1487,13 +1584,30 @@ def run_match(
     apl_b,
     deck_b:   list,
     on_play:  bool = True,
-    max_turns: int = 15,
+    max_turns: int = 40,   # safety cap; see test_games_play_out
     seed:     int  = None,
 ) -> MatchResult:
     """
     Run a single match between two APLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: the global `random`
+    (zones.shuffle, card handlers) is seeded for the game and restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     result = MatchResult()
     gs = TwoPlayerGameState(deck_a, deck_b, on_play=on_play, seed=seed)
     # Stash APLs on TwoPlayerGameState so view-builders can wire
@@ -1558,6 +1672,8 @@ def run_match(
             return result
         # End-step: second player's APL may flash instants at end of first's turn
         _run_end_step(gs, first, second, second_apl)
+        if _check_dead(gs, result, turn_num):
+            return result
 
         # Second player's turn (always draws)
         if _run_player_turn(gs, second, second_apl,
@@ -1566,6 +1682,8 @@ def run_match(
             return result
         # End-step: first player's APL may flash instants at end of second's turn
         _run_end_step(gs, second, first, first_apl)
+        if _check_dead(gs, result, turn_num):
+            return result
 
     # Time out — call it based on life totals (R6 gated: inevitability tiebreaker when opted in)
     if _hidden_info_match_gate(gs):

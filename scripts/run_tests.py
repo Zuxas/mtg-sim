@@ -22,6 +22,7 @@ TIMEOUT = 600   # seconds per script
 EXCLUDED = {
     "test_run_match_set_workers": "slow: n=10000 runs and a wall-clock speedup assertion",
     "test_api":                   "needs card data: fetches from Scryfall when the local bulk is missing",
+    "test_integration_invariants": "needs card data: loads five real Modern decks, 120 games",
     "test_anchor_amulet":         "needs card data: scripts/fetch_scryfall_bulk.sh",
     "test_modern_apls":           "needs the mtg-meta-analyzer DB",
     "test_all_modern_apls":       "needs the mtg-meta-analyzer DB (db_bridge)",

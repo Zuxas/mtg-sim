@@ -292,7 +292,7 @@ def _combat_other(side: str) -> str:
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
-              max_turns: int = 15,
+              max_turns: int = 40,   # safety cap; see test_games_play_out
               seed: int = None) -> MatchResult:
     """
     Run a single match between two MatchAPLs.

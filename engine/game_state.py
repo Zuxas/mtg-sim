@@ -1316,7 +1316,9 @@ class GameState:
         "blooming marsh", "concealed courtyard", "inspiring vantage",
         "botanical sanctum",
         # SOS Standard fast lands
-        "stormcarved coast",        # {U}{R}, enters tapped unless 2+ other lands
+        # Stormcarved Coast was listed here, but it is a slow land (tapped
+        # unless you control two or more OTHER lands), the opposite of a fast
+        # land. Its own text decides now (_enters_tapped_by_text).
     }
 
     def _is_fetch_land(self, card: Card) -> bool:
@@ -1360,7 +1362,47 @@ class GameState:
         if name == "fabled passage":
             return self.zones.count_lands_in_play() < 4
 
-        return False  # default: untapped
+        return self._enters_tapped_by_text(card)
+
+    def _enters_tapped_by_text(self, card: Card) -> bool:
+        """Read "enters tapped" off the card instead of a name list.
+
+        The name lists above cover about 60 lands; 47 more in decks/ (surveil
+        lands, Triomes, creature lands, bounce lands, Bojuka Bog...) always
+        enter tapped and were being tapped for mana the turn they were played.
+        # ponytail: conditions it does not recognise count as untapped (the
+        # old behaviour), e.g. Starting Town's turn count.
+        """
+        import re
+        name = (card.name or "").lower()
+        text = re.sub(r"\([^)]*\)", "", (card.oracle_text or "").lower())
+        text = text.replace(name, "this land").replace("enters the battlefield tapped", "enters tapped")
+        lands = [c for c in self.zones.lands_on_battlefield() if c is not card]
+
+        def controls(kind):                       # "a swamp", "a basic land"
+            word = kind.strip().removeprefix("an ").removeprefix("a ").split()[0]
+            for c in lands:
+                # "Basic Land - Swamp": supertypes before the dash, subtypes after
+                supers, _, subs = (c.type_line or "").lower().replace("\u2014", "-").partition("-")
+                if word in (supers.split() if word == "basic" else subs.split()):
+                    return True
+            return False
+
+        for sentence in re.split(r"[.\n]", text):
+            sentence = sentence.strip()
+            if sentence == "this land enters tapped":
+                return True
+            m = re.fullmatch(r"this land enters tapped unless you control (.+)", sentence)
+            if m:
+                cond = m.group(1)
+                if cond == "two or more other lands":
+                    return len(lands) < 2
+                if cond.startswith(("a ", "an ")):
+                    return not any(controls(k) for k in cond.split(" or "))
+                return False
+            if sentence == "if you control two or more other lands, this land enters tapped":
+                return len(lands) >= 2
+        return False
 
     def _resolve_fetch(self, card: Card, need_mana_now: bool = True) -> bool:
         """
@@ -1579,8 +1621,17 @@ class GameState:
                     self._in_counter_window = False
                 if countered:
                     # Spell cost was paid but the spell does nothing.
-                    # Move to graveyard, skip resolution.
+                    # Move to graveyard, skip resolution. It has to leave the
+                    # hand too: it used to stay there as well, so a countered
+                    # spell could simply be cast again and one card sat in two
+                    # zones (the source of "list.remove(x): x not in list").
+                    if card in self.zones.hand:
+                        self.zones.hand.remove(card)
                     self.zones.graveyard.append(card)
+                    # It was still cast: prowess and other "whenever you cast
+                    # a noncreature spell" counts must see it.
+                    if not card.has(Tag.CREATURE):
+                        self.noncreature_spells_this_turn += 1
                     self._log(f"  [COUNTERED] {card.name}")
                     self.check_state_based_actions()
                     return True

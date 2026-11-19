@@ -101,8 +101,16 @@ class MatchGameState:
         self.rng = random.Random(seed)
 
         # Each player gets a full GameState with all mechanics
-        self.gs_a = GameState(list(deck_a), on_play=True)
-        self.gs_b = GameState(list(deck_b), on_play=False)
+        # _PhaseView is a GameState whose life / damage_dealt writes can be
+        # logged in order; settle_damage() needs that. Imported here because
+        # match_runner imports this module.
+        from engine.match_runner import _PhaseView, _watch
+        self.gs_a = _PhaseView(list(deck_a), on_play=True)
+        self.gs_b = _PhaseView(list(deck_b), on_play=False)
+        # One ordered log per direction: X's damage_dealt bumps and the
+        # life changes of X's opponent.
+        self._loss_logs = {'a': _watch(self.gs_a, self.gs_b),
+                           'b': _watch(self.gs_b, self.gs_a)}
 
         # Copy mainboard into library (goldfish engine does this in run_game)
         from copy import deepcopy
@@ -146,6 +154,64 @@ class MatchGameState:
             self.game_over = True
             self.winner = source_player
             self.win_method = 'combat'
+
+    def settle_damage(self):
+        """Take damage that was only written to `damage_dealt` off the
+        opponent's life.
+
+        About 40 APL and handler sites deal noncombat damage the goldfish way
+        (`gs.damage_dealt += n`) and never touch the opponent's life, so in a
+        match it vanished: Boros Energy lost about 15 points a game (Phlage,
+        Ajani, Goblin Bombardment). Other sites write `_match_opp.life`, and
+        the shared burn helpers and deal_damage() write both. Same rule as
+        match_runner._sync_view: a damage_dealt bump next to an equal life
+        loss is one event that already landed; a bump on its own has not.
+        # ponytail: adjacency test, same ceiling as _sync_view: a goldfish-style
+        # bump of n immediately followed by an unrelated life loss of exactly n
+        # (say, the opponent's own shock land) reads as one event and the bump
+        # is dropped. This is a bridge; the real fix is one deal_damage() that
+        # every APL and handler calls, then delete this.
+        """
+        for player, log in self._loss_logs.items():
+            opp = self.gs_b if player == 'a' else self.gs_a
+            owed, i = 0, 0
+            while i < len(log):
+                kind, n = log[i]
+                if n > 0 and i + 1 < len(log) and log[i + 1] == ("life" if kind == "dmg" else "dmg", n):
+                    i += 2          # written to both channels: already applied
+                    continue
+                if kind == "dmg" and n > 0:
+                    owed += n
+                i += 1
+            del log[:]
+            if owed:
+                opp.life -= owed
+                del log[:]          # our own write is not a new event
+
+    def check_life(self, method: str = 'noncombat') -> bool:
+        """State-based action (CR 704.5a): a player at 0 or less life loses.
+
+        Combat damage sets game_over in deal_damage; this catches everything
+        else (burn, drain, life payment). Returns True if the game is over.
+
+        Both players dead at once is a draw by the rules. Nothing downstream
+        models draws (Bo3 and the set totals score any non-'a' winner for B),
+        so it is a seeded coin flip, flagged win_method='simultaneous_tie'.
+        """
+        self.settle_damage()
+        a_dead, b_dead = self.gs_a.life <= 0, self.gs_b.life <= 0
+        if self.game_over and not (a_dead and b_dead):
+            return True     # already decided (deal_damage names the winner at once)
+        if not (a_dead or b_dead):
+            return False
+        self.game_over = True
+        if a_dead and b_dead:
+            self.winner = self.rng.choice(['a', 'b'])
+            self.win_method = 'simultaneous_tie'
+        else:
+            self.winner = 'b' if a_dead else 'a'
+            self.win_method = method
+        return True
 
     def gain_life(self, player: str, amount: int):
         """Player gains life (from lifelink, etc.)."""
@@ -261,8 +327,111 @@ class CombatResult:
     """Result of one combat step."""
     damage_to_defender:  int  = 0
     life_gained_attacker: int = 0   # from lifelink
+    life_gained_defender: int = 0   # from lifelink on blockers
     attacker_deaths:     list = field(default_factory=list)
     defender_deaths:     list = field(default_factory=list)
+
+
+@dataclass
+class DamageResult:
+    """Outcome of combat_damage()."""
+    face:              int  = 0   # combat damage to the defending player
+    attacker_lifelink: int  = 0
+    defender_lifelink: int  = 0
+    hits_on_player:    int  = 0   # damage events on the player (double strike = 2)
+    dead_attackers:    list = field(default_factory=list)
+    dead_blockers:     list = field(default_factory=list)
+
+
+def combat_damage(attackers, assignments, has=None, divert=None,
+                  defender_life=None) -> DamageResult:
+    """Combat damage for both match engines (CR 510, issue #13).
+
+    assignments: {id(attacker): [blockers]}; missing or empty = unblocked.
+    has(card, keyword): keyword test, names as printed ('first strike').
+    divert(attacker, power): optional. Return the damage an UNBLOCKED attacker
+        deals somewhere other than the player (a planeswalker), or None to
+        hit the player as usual.
+    defender_life: the defending player's life. If the first-strike step
+        leaves them at 0 or less the game is over, so the regular step is
+        not dealt (no late lifelink rescue, no extra damage or triggers).
+
+    Two damage steps. In each, every creature that strikes in that step --
+    attackers AND blockers -- deals damage at once, then lethal damage is
+    checked. A creature killed in the first-strike step deals nothing in the
+    regular step. An attacker that was blocked stays blocked when its blockers
+    die: it deals no damage unless it has trample (CR 510.1c). Lifelink counts
+    all damage dealt. Marked damage carries from the first step to the second.
+    """
+    has = has or has_keyword
+    res = DamageResult()
+    marked, touched, dead = {}, set(), set()   # id -> damage, deathtouched ids, dead ids
+    blocked = {id(a): list(assignments.get(id(a)) or []) for a in attackers}
+
+    def strikes(c, first):
+        fs, ds = has(c, 'first strike'), has(c, 'double strike')
+        return (fs or ds) if first else (ds or not fs)
+
+    def mark(src, tgt, n):
+        if n > 0:
+            marked[id(tgt)] = marked.get(id(tgt), 0) + n
+            if has(src, 'deathtouch'):
+                touched.add(id(tgt))
+
+    for first in (True, False):
+        for atk in attackers:
+            if id(atk) in dead:
+                continue
+            live = [b for b in blocked[id(atk)] if id(b) not in dead]
+            pwr = safe_power(atk)
+            if strikes(atk, first) and pwr > 0:
+                left = pwr
+                if not blocked[id(atk)]:
+                    diverted = divert(atk, pwr) if divert else None
+                    if diverted is None:
+                        res.face += pwr
+                        res.hits_on_player += 1
+                        left = 0
+                    else:
+                        left = pwr - diverted
+                else:
+                    trample = has(atk, 'trample')
+                    dt = has(atk, 'deathtouch')
+                    for n_blk, blk in enumerate(live):
+                        lethal = 1 if dt else max(
+                            safe_toughness(blk) - marked.get(id(blk), 0), 1)
+                        last = n_blk == len(live) - 1 and not trample
+                        n = left if last else min(left, lethal)
+                        mark(atk, blk, n)
+                        left -= n
+                        if left <= 0:
+                            break
+                    if trample and left > 0:
+                        res.face += left
+                        res.hits_on_player += 1
+                        left = 0
+                if has(atk, 'lifelink'):
+                    res.attacker_lifelink += pwr - left
+            for blk in live:
+                if strikes(blk, first):
+                    n = safe_power(blk)
+                    mark(blk, atk, n)
+                    if n > 0 and has(blk, 'lifelink'):
+                        res.defender_lifelink += n
+
+        # State-based actions between the two steps and after the second
+        for group, out in ((attackers, res.dead_attackers),
+                           ([b for bl in blocked.values() for b in bl], res.dead_blockers)):
+            for c in group:
+                m = marked.get(id(c), 0)
+                if (id(c) not in dead and m > 0 and not has(c, 'indestructible')
+                        and (m >= safe_toughness(c) or id(c) in touched)):
+                    dead.add(id(c))
+                    out.append(c)
+        if (first and defender_life is not None
+                and defender_life + res.defender_lifelink - res.face <= 0):
+            break
+    return res
 
 
 def resolve_combat(attackers: list[Card],
@@ -270,112 +439,19 @@ def resolve_combat(attackers: list[Card],
                    attacking_player: str,
                    mgs: MatchGameState) -> CombatResult:
     """
-    Resolve combat with keyword support.
-    
+    Resolve combat with keyword support. Thin wrapper over combat_damage().
+
     blocker_assignments: {id(attacker_card): [list of blocker cards]}
     Cards not in the dict are unblocked.
     """
-    result = CombatResult()
-    damage_taken = {}  # id(card) -> damage received
-
-    def deal_strike(strike_attackers, is_first_strike=False):
-        for atk in strike_attackers:
-            atk_pwr = safe_power(atk)
-            atk_deathtouch = has_keyword(atk, 'deathtouch')
-            atk_trample = has_keyword(atk, 'trample')
-            atk_lifelink = has_keyword(atk, 'lifelink')
-
-            blockers = blocker_assignments.get(id(atk), [])
-
-            if not blockers:
-                # Unblocked — all damage to defending player
-                result.damage_to_defender += atk_pwr
-                if atk_lifelink:
-                    result.life_gained_attacker += atk_pwr
-            else:
-                # Blocked — distribute damage among blockers
-                remaining_power = atk_pwr
-                for blk in blockers:
-                    blk_tou = safe_toughness(blk) - damage_taken.get(id(blk), 0)
-                    if blk_tou <= 0:
-                        continue
-                    if atk_deathtouch:
-                        # Deathtouch: 1 damage is lethal
-                        dmg_to_blk = 1
-                    else:
-                        dmg_to_blk = min(remaining_power, blk_tou)
-                    damage_taken[id(blk)] = damage_taken.get(id(blk), 0) + dmg_to_blk
-                    remaining_power -= dmg_to_blk
-                    if remaining_power <= 0:
-                        break
-
-                # Trample: excess damage goes to player
-                if atk_trample and remaining_power > 0:
-                    result.damage_to_defender += remaining_power
-                    if atk_lifelink:
-                        result.life_gained_attacker += remaining_power
-                elif atk_lifelink and remaining_power <= 0:
-                    # Lifelink from damage dealt to blockers
-                    result.life_gained_attacker += (atk_pwr - remaining_power)
-
-                # Blocker damages attacker
-                for blk in blockers:
-                    blk_pwr = safe_power(blk)
-                    blk_deathtouch = has_keyword(blk, 'deathtouch')
-                    if blk_deathtouch:
-                        damage_taken[id(atk)] = 9999  # lethal
-                    else:
-                        damage_taken[id(atk)] = damage_taken.get(id(atk), 0) + blk_pwr
-
-    # --- First strike damage step ---
-    first_strikers = [a for a in attackers
-                      if has_keyword(a, 'first strike') or has_keyword(a, 'double strike')]
-    if first_strikers:
-        deal_strike(first_strikers, is_first_strike=True)
-        # Remove creatures that died to first strike before regular damage
-        for card_id, dmg in list(damage_taken.items()):
-            card = _find_by_id(card_id, attackers, blocker_assignments)
-            if card and dmg >= safe_toughness(card):
-                if card in attackers:
-                    result.attacker_deaths.append(card)
-                else:
-                    result.defender_deaths.append(card)
-
-    # --- Regular damage step ---
-    regular_strikers = [a for a in attackers
-                        if a not in result.attacker_deaths
-                        and (not has_keyword(a, 'first strike')
-                             or has_keyword(a, 'double strike'))]
-    deal_strike(regular_strikers)
-
-    # --- Process deaths ---
-    all_creatures = list(attackers)
-    for blk_list in blocker_assignments.values():
-        all_creatures.extend(blk_list)
-
-    for card in all_creatures:
-        if card in result.attacker_deaths or card in result.defender_deaths:
-            continue
-        dmg = damage_taken.get(id(card), 0)
-        if dmg >= safe_toughness(card):
-            if card in attackers:
-                result.attacker_deaths.append(card)
-            else:
-                result.defender_deaths.append(card)
-
-    return result
-
-
-def _find_by_id(card_id, attackers, assignments):
-    """Find a card by its id() across attackers and blockers."""
-    for c in attackers:
-        if id(c) == card_id:
-            return c
-    for blk_list in assignments.values():
-        for c in blk_list:
-            if id(c) == card_id:
-                return c
-    return None
+    defender = (mgs.gs_b if attacking_player == 'a' else mgs.gs_a) if mgs else None
+    r = combat_damage(attackers, blocker_assignments,
+                      defender_life=defender.life if defender else None)
+    return CombatResult(damage_to_defender=r.face,
+                        life_gained_attacker=r.attacker_lifelink,
+                        life_gained_defender=r.defender_lifelink,
+                        attacker_deaths=r.dead_attackers,
+                        defender_deaths=r.dead_blockers)
 
 
 # ---------------------------------------------------------------------------

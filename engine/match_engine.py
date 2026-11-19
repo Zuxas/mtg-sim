@@ -297,7 +297,22 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     """
     Run a single match between two MatchAPLs.
     Returns MatchResult with winner, kill turn, and game data.
+
+    With a seed, the same call replays the same game: engine code that uses
+    the global `random` (zones.shuffle, card handlers) is seeded for the
+    duration of the game and the caller's global state is restored after.
     """
+    if seed is None:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    state = random.getstate()
+    random.seed(seed)
+    try:
+        return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
+    finally:
+        random.setstate(state)
+
+
+def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchResult:
     # Shallow-copy each Card so per-game mutations (power changes, tapped,
     # summoning_sickness, counters) don't leak into subsequent games when
     # the same deck list is reused across run_match_set iterations.

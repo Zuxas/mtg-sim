@@ -302,6 +302,9 @@ def run_match(apl_a: MatchAPL, deck_a: list,
     the global `random` (zones.shuffle, card handlers) is seeded for the
     duration of the game and the caller's global state is restored after.
     """
+    # ponytail: the global generator is per process, so seeded games are safe
+    # in sequence and across worker processes but not in concurrent threads.
+    # Pass a game-owned Random to every consumer if threads are ever needed.
     if seed is None:
         return _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed)
     state = random.getstate()

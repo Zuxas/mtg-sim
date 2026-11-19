@@ -110,21 +110,16 @@ class EsperBlinkMatchAPL(MatchAPL):
                         self._overlord_etb(gs, opponent)
                     elif name == FLICKERWISP and opponent:
                         self._flickerwisp_etb(gs, opponent)
-                    elif name == QUANTUM:
-                        self._draw(gs, 1)  # ETB draw
+                    # Quantum Riddler's draw is the engine handler's job.
                     break
 
         # 5. Teferi bounce + draw
         for c in list(gs.zones.hand):
             if c.name == TEFERI and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                # The engine handler does the -3 (bounce + draw) as Teferi
+                # enters. Repeating it here bounced and drew twice, and
+                # crashed when the handler had already taken the target.
                 gs.cast_spell(c)
-                if opponent:
-                    opp_nonlands = [x for x in opponent.zones.battlefield if not x.is_land()]
-                    if opp_nonlands:
-                        target = max(opp_nonlands, key=lambda x: safe_power(x))
-                        opponent.zones.battlefield.remove(target)
-                        opponent.zones.hand.append(target)
-                self._draw(gs, 1)  # Teferi -3 draw
                 break
 
         # 6. Ephemerate on Solitude/Overlord for double ETB
@@ -137,12 +132,12 @@ class EsperBlinkMatchAPL(MatchAPL):
                         opp_creatures = [x for x in opponent.zones.battlefield
                                          if not x.is_land() and x.has(Tag.CREATURE)]
                         if opp_creatures:
+                            # The engine handler blinks the creature and its
+                            # ETB fires again there. Exiling a target by hand
+                            # as well was a second removal, and crashed when
+                            # the handler had already exiled that creature.
                             gs.cast_spell(c)
-                            target = max(opp_creatures, key=lambda x: safe_power(x))
-                            opponent.zones.battlefield.remove(target)
-                            opponent.zones.exile.append(target)
-                            opponent.life += safe_power(target)  # oracle: controller gains life = power
-                            gs._log(f"  Eph-Solitude: exile {target.name} (+{safe_power(target)} life)")
+                            gs._log("  Eph-Solitude: blink for a second ETB")
                     break
 
         # 7. Fill curve

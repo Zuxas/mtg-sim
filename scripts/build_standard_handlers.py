@@ -29,6 +29,10 @@ STANDARD_SETS = {
     "ecl": "Lorwyn Eclipsed",
     "tmt": "Teenage Mutant Ninja Turtles",
     "sos": "Secrets of Strixhaven",
+    # The oracle file keeps ONE printing per card, the newest. A Standard card
+    # reprinted in a Commander or Jumpstart product shows that product's set
+    # code and used to drop out of this build, taking its handler with it.
+    "rep": "Standard-legal, newest printing in a non-Standard product",
 }
 
 # ── Load oracle DB ────────────────────────────────────────────────────────────
@@ -39,6 +43,7 @@ cards_list = raw if isinstance(raw, list) else raw.get("data", [])
 # Index by name AND by set — include DFC face names
 BY_NAME = {}
 SET_CARDS = defaultdict(list)  # set_code -> [card_dict]
+UNLISTED_SETS = defaultdict(int)  # Standard-legal expansion not in STANDARD_SETS -> card count
 
 for c in cards_list:
     set_code = c.get("set", "")
@@ -51,6 +56,11 @@ for c in cards_list:
             BY_NAME[fn] = {**c, **face}
     if set_code in STANDARD_SETS:
         SET_CARDS[set_code].append(c)
+    elif c.get("legalities", {}).get("standard") == "legal":
+        if c.get("set_type") in ("expansion", "core"):
+            UNLISTED_SETS[set_code] += 1     # a Standard set this list does not know yet
+        else:
+            SET_CARDS["rep"].append(c)
 
 print(f"Oracle DB: {len(BY_NAME)} unique names")
 print(f"Standard-legal oracle cards by set:")
@@ -60,6 +70,9 @@ for code, name in STANDARD_SETS.items():
     total_std += n
     print(f"  {code:4} {name:<40} {n:>4}")
 print(f"  {'':4} {'TOTAL':<40} {total_std:>4}")
+if UNLISTED_SETS:
+    print("  [!STALE SET LIST] Standard-legal sets missing from STANDARD_SETS (no handlers built): "
+          + ", ".join(f"{k} ({v})" for k, v in sorted(UNLISTED_SETS.items())))
 
 # ── Load ONLY hand-verified registry (not auto-generated files) ────────────────
 # We DON'T import auto-handlers here because we're regenerating them.

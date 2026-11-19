@@ -127,7 +127,18 @@ jobs:
             # " FAIL " line and used to be counted as a pass.
             if result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1); then rc=0; else rc=$?; fi
             echo "$result"
-            if [ $rc -ne 0 ] || echo "$result" | grep -q " FAIL "; then FAIL=$((FAIL+1)); else PASS=$((PASS+1)); fi
+            # Per-card lines look like "  FAIL  <card>". The old grep for " FAIL "
+            # also matched the summary "Results: 16 PASS  0 FAIL", so the gate
+            # failed every time it ran.
+            if [ $rc -ne 0 ] || echo "$result" | grep -qE "^[[:space:]]*FAIL[[:space:]]"; then
+              FAIL=$((FAIL+1))
+            elif echo "$result" | grep -q "Gemma unavailable"; then
+              # The model never answered, so nothing was verified. Not a pass.
+              echo "::error::$f was NOT verified: the local model was unavailable. Re-run when Ollama is up."
+              FAIL=$((FAIL+1))
+            else
+              PASS=$((PASS+1))
+            fi
           done
           echo "Oracle gate: $PASS PASS, $FAIL FAIL"
           if [ $FAIL -gt 0 ]; then

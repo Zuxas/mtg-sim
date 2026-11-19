@@ -352,6 +352,15 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
     hand_a_names = [c.name for c in mgs.gs_a.zones.hand]
     hand_b_names = [c.name for c in mgs.gs_b.zones.hand]
 
+    def _finish():
+        result = mgs.to_match_result()
+        result.mulligans_a = mull_a
+        result.mulligans_b = mull_b
+        result.hand_a = hand_a_names
+        result.hand_b = hand_b_names
+        result._on_play = on_play
+        return result
+
     # --- Game loop ---
     for turn_num in range(1, max_turns + 1):
         mgs.turn = turn_num
@@ -439,13 +448,15 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             gs.tap_lands()
 
             # Check if Monument to Endurance drain during tap_lands() killed opponent
-            if opp_gs.life <= 0 and not mgs.game_over:
-                mgs.game_over = True
-                mgs.winner    = active
-                mgs.win_method = 'monument_drain'
+            if mgs.check_life('monument_drain'):
+                return _finish()
 
             # --- MAIN PHASE 1 ---
             apl.main_phase_match(gs, opp_gs)
+            # SBA (#22): burn/drain/life payment in main phase ends the game now,
+            # not after the dead player has taken another turn.
+            if mgs.check_life('noncombat'):
+                return _finish()
 
             # --- INTERACTION: Reactive player responds after main phase ---
             opp_player = 'b' if active == 'a' else 'a'
@@ -453,7 +464,7 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             _tap_for_response(opp_gs)   # opponent can tap lands to respond
             for _ in range(spells_this_phase):
                 _try_reactive_interaction(opp_apl, opp_gs, gs, mgs, opp_player)
-                if mgs.game_over:
+                if mgs.check_life('noncombat'):
                     break
             if mgs.game_over:
                 result = mgs.to_match_result()
@@ -477,7 +488,7 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             if not gate_on and hasattr(opp_apl, 'pre_combat_instant'):
                 _tap_for_response(opp_gs)
                 opp_apl.pre_combat_instant(opp_gs, gs)
-                if mgs.game_over:
+                if mgs.check_life('noncombat'):
                     result = mgs.to_match_result()
                     result.mulligans_a = mull_a
                     result.mulligans_b = mull_b
@@ -594,7 +605,9 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
                 card.counters -= bonus
 
             # --- CHECK WIN ---
-            if mgs.game_over:
+            # deal_damage already labelled combat kills; check_life catches
+            # combat-window burn and life lost to attack triggers.
+            if mgs.check_life('noncombat'):
                 result = mgs.to_match_result()
                 result.mulligans_a = mull_a
                 result.mulligans_b = mull_b
@@ -606,6 +619,8 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             # --- END STEP ---
             _tap_for_response(opp_gs)   # opponent can tap for end-step instants/flash
             opp_apl.end_step_actions(opp_gs, gs)
+            if mgs.check_life('noncombat'):
+                return _finish()
 
             # Cleanup: remove temporary effects, discard to 7
             if len(gs.zones.hand) > 7:

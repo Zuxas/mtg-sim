@@ -49,6 +49,25 @@ def test_callers_global_random_is_left_alone():
         assert random.random() == expected, f"{engine.__name__} disturbed global random"
 
 
+def test_global_random_is_restored_when_a_game_raises():
+    class Boom(BorosEnergyMatchAPL):
+        def main_phase_match(self, gs, opponent):
+            raise RuntimeError("boom")
+
+    os.environ["SIM_DEBUG"] = "1"      # make the engines re-raise APL errors
+    try:
+        for engine in (match_engine, match_runner):
+            random.seed(5)
+            expected = random.Random(5).random()
+            try:
+                engine.run_match(Boom(), DECK, Boom(), DECK, seed=3)
+            except RuntimeError:
+                pass
+            assert random.random() == expected, f"{engine.__name__} left global random seeded"
+    finally:
+        del os.environ["SIM_DEBUG"]
+
+
 def test_match_engine_set_is_reproducible():
     def run():
         r = match_engine.run_match_set(BorosEnergyMatchAPL(), DECK, BorosEnergyMatchAPL(), DECK,

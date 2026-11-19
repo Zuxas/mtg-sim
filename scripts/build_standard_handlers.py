@@ -29,6 +29,10 @@ STANDARD_SETS = {
     "ecl": "Lorwyn Eclipsed",
     "tmt": "Teenage Mutant Ninja Turtles",
     "sos": "Secrets of Strixhaven",
+    # The oracle file keeps ONE printing per card, the newest. A Standard card
+    # reprinted in a Commander or Jumpstart product shows that product's set
+    # code and used to drop out of this build, taking its handler with it.
+    "rep": "Standard-legal, newest printing in a non-Standard product",
 }
 
 # ── Load oracle DB ────────────────────────────────────────────────────────────
@@ -39,6 +43,7 @@ cards_list = raw if isinstance(raw, list) else raw.get("data", [])
 # Index by name AND by set — include DFC face names
 BY_NAME = {}
 SET_CARDS = defaultdict(list)  # set_code -> [card_dict]
+UNLISTED_SETS = defaultdict(int)  # Standard-legal expansion not in STANDARD_SETS -> card count
 
 for c in cards_list:
     set_code = c.get("set", "")
@@ -51,6 +56,11 @@ for c in cards_list:
             BY_NAME[fn] = {**c, **face}
     if set_code in STANDARD_SETS:
         SET_CARDS[set_code].append(c)
+    elif c.get("legalities", {}).get("standard") == "legal":
+        if c.get("set_type") in ("expansion", "core"):
+            UNLISTED_SETS[set_code] += 1     # a Standard set this list does not know yet
+        else:
+            SET_CARDS["rep"].append(c)
 
 print(f"Oracle DB: {len(BY_NAME)} unique names")
 print(f"Standard-legal oracle cards by set:")
@@ -60,6 +70,9 @@ for code, name in STANDARD_SETS.items():
     total_std += n
     print(f"  {code:4} {name:<40} {n:>4}")
 print(f"  {'':4} {'TOTAL':<40} {total_std:>4}")
+if UNLISTED_SETS:
+    print("  [!STALE SET LIST] Standard-legal sets missing from STANDARD_SETS (no handlers built): "
+          + ", ".join(f"{k} ({v})" for k, v in sorted(UNLISTED_SETS.items())))
 
 # ── Load ONLY hand-verified registry (not auto-generated files) ────────────────
 # We DON'T import auto-handlers here because we're regenerating them.
@@ -201,6 +214,14 @@ already    = []
 skipped    = []
 
 seen = set()
+rep_unreviewed = []
+# Reviewed 2026-11-19 (Claude + Tom): the generated effect matches the card,
+# allowing the engine's usual target simplification (biggest creature).
+REP_REVIEWED = {
+    "Eerie Gravestone", "Gallant Citizen", "Last Gasp",
+    "Meteor Golem", "Murder", "Prophetic Prism", "Robotics Mastery",
+    "Selfless Police Captain", "Venomized Cat",
+}
 
 for set_code in STANDARD_SETS:
     for c in SET_CARDS[set_code]:
@@ -215,6 +236,12 @@ for set_code in STANDARD_SETS:
         # Skip basics and token-only cards
         if name in BASIC_LANDS or "Basic Land" in type_line:
             skipped.append(name); continue
+        # Reprint bucket: only cards whose generated effect was read against
+        # the card text. The parser turns "dies" / "leaves" / "whenever you
+        # cast" triggers into enters-the-battlefield effects, so an unreviewed
+        # card here would get a handler that fires at the wrong time.
+        if set_code == "rep" and name not in REP_REVIEWED:
+            rep_unreviewed.append(name); continue
         if "Token" in type_line and "Creature" in type_line and not oracle:
             skipped.append(name); continue
 
@@ -328,4 +355,7 @@ for _,_,_,sc in hand_write: by_set[sc] += 1
 for code, name in STANDARD_SETS.items():
     print(f"  {code:4} {name:<40} {by_set[code]:>4} need hand-write")
 
+if rep_unreviewed:
+    print(f"\n  [!REP UNREVIEWED] {len(rep_unreviewed)} Standard-legal reprints have no auto-handler "
+          f"until reviewed (add to REP_REVIEWED): " + ", ".join(sorted(rep_unreviewed)[:12]) + " ...")
 print(f"\nWrote: {OUT}")

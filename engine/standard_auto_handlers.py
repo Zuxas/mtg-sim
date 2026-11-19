@@ -1852,6 +1852,20 @@ _h_mica__reader_of_ruins = _etb([["draw", {"n": 1}]])
 _h_imperious_inkmage = _etb([["scry", {"n": 2}]])
 # [sos] Vigilance | Converge ? When this creature enters, you may draw X cards, where X is
 _h_transcendent_archaic = _etb([["draw", {"n": 1}]])
+# [rep] When this artifact enters, draw a card. | {1}, {T}: Add one mana of any color.
+_h_prophetic_prism = _etb([["draw", {"n": 1}]])
+# [rep] When this creature enters, draw a card.
+_h_gallant_citizen = _etb([["draw", {"n": 1}]])
+# [rep] Flash | Enchant creature | When this Aura enters, create two 1/1 colorless Robot art
+_h_robotics_mastery = _etb([["create_token", {"count": 2, "power": "1", "toughness": "1", "keywords": ["flying"]}]])
+# [rep] When this artifact enters, draw a card. | {1}{B}, Sacrifice this artifact: Mill fo
+_h_eerie_gravestone = _etb([["draw", {"n": 1}]])
+# [rep] When this creature enters, destroy target nonland permanent an opponent controls
+_h_meteor_golem = _etb([["destroy", {"target": "opp_biggest_creature"}]])
+# [rep] Deathtouch | When this creature enters, mill two cards. (Put the top two cards of 
+_h_venomized_cat = _etb([["mill", {"n": 2, "target": "self"}]])
+# [rep] This creature enters with a +1/+1 counter on it. | When this creature leaves the b
+_h_selfless_police_captain = _etb([["add_counters", {"n": 1, "target": "self"}]])
 
 # [woe] You may discard a card. If you do, draw two cards. | Create a Wicked Role token at
 _h_witch_s_mark = _spell([["draw", {"n": 2}], ["create_token", {"count": 1, "power": "0", "toughness": "1", "keywords": []}]])
@@ -2877,6 +2891,10 @@ _h_quandrix_charm = _spell([["scry", {"n": 0}], ["destroy", {"target": "opp_bigg
 _h_improvisation_capstone = _spell([["draw", {"n": 1}]])
 # [sos] All creatures get -2/-2 until end of turn. | Infusion ? If you gained life this tu
 _h_withering_curse = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}], ["damage_creature", {"n": 2, "target": "each_opp"}]])
+# [rep] Destroy target creature.
+_h_murder = _spell([["destroy", {"target": "opp_biggest_creature"}]])
+# [rep] Target creature gets -3/-3 until end of turn.
+_h_last_gasp = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 
 for _n,_f in {
     "Greta, Sweettooth Scourge": _h_greta__sweettooth_scourge,
@@ -3797,6 +3815,13 @@ for _n,_f in {
     "Mica, Reader of Ruins": _h_mica__reader_of_ruins,
     "Imperious Inkmage": _h_imperious_inkmage,
     "Transcendent Archaic": _h_transcendent_archaic,
+    "Prophetic Prism": _h_prophetic_prism,
+    "Gallant Citizen": _h_gallant_citizen,
+    "Robotics Mastery": _h_robotics_mastery,
+    "Eerie Gravestone": _h_eerie_gravestone,
+    "Meteor Golem": _h_meteor_golem,
+    "Venomized Cat": _h_venomized_cat,
+    "Selfless Police Captain": _h_selfless_police_captain,
 }.items(): ETB_EFFECTS.setdefault(_n,_f)
 
 for _n,_f in {
@@ -4312,4 +4337,6 @@ for _n,_f in {
     "Quandrix Charm": _h_quandrix_charm,
     "Improvisation Capstone": _h_improvisation_capstone,
     "Withering Curse": _h_withering_curse,
+    "Murder": _h_murder,
+    "Last Gasp": _h_last_gasp,
 }.items(): SPELL_EFFECTS.setdefault(_n,_f)

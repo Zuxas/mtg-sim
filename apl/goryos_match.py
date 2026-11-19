@@ -135,7 +135,7 @@ class GoryosMatchAPL(MatchAPL):
 
         # 3. THE COMBO: Goryo's Vengeance ({1}{B}) — reanimate from GY
         gy_targets = [c for c in gs.zones.graveyard if c.name in REANIMATE_TARGETS]
-        if gy_targets and avail >= 2:
+        if gy_targets and gs.mana_pool.can_pay("{1}{B}", 2):   # needs black, not any two lands
             for c in list(gs.zones.hand):
                 if c.name == GORYOS:
                     # Pay for Ephemerate together with Goryo's when we can, so the
@@ -145,7 +145,7 @@ class GoryosMatchAPL(MatchAPL):
                         gs.mana_pool.pay("{1}{B}{W}", 3)
                     else:
                         eph = None
-                        gs.mana_pool.pay("{1}{B}", 2) if gs.mana_pool.can_pay("{1}{B}", 2) else None
+                        gs.mana_pool.pay("{1}{B}", 2)
                     gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                     # Reanimate best target
                     target = max(gy_targets, key=lambda x: getattr(x, 'cmc', 0))

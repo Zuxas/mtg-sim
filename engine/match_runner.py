@@ -1398,10 +1398,12 @@ class ComboKillSampler:
         "bant nadu":        {3: 15, 4: 40, 5: 35, 6: 10},
     }
 
-    def __init__(self, archetype: str, rng: random.Random):
+    def __init__(self, archetype: str, rng: random.Random, dist: dict = None):
+        """dist: kill-turn distribution to use for this sampler. Callers with a
+        per-format table pass it here instead of writing into the class-level
+        KILL_DISTS, which every later sampler in the process would inherit (#25)."""
         key = archetype.lower().replace(" ", "").replace("-", "")
-        dist = None
-        for k, v in self.KILL_DISTS.items():
+        for k, v in ({} if dist else self.KILL_DISTS).items():
             if k.replace(" ", "") == key:
                 dist = v
                 break

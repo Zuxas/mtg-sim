@@ -24,20 +24,14 @@ import sqlite3
 from typing import Optional
 
 # Path to the meta-analyzer database
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "..", "mtg-meta-analyzer", "data", "mtg_meta.db"
-)
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import paths
 from data.deck import load_deck_from_text
 from engine.card_db import CardDB
 
 
 def _get_conn():
-    if not os.path.exists(DB_PATH):
-        raise FileNotFoundError(f"Meta-analyzer DB not found at {DB_PATH}")
-    return sqlite3.connect(DB_PATH)
+    return paths.connect_meta_db()   # raises FileNotFoundError if missing
 
 
 def load_saved_deck(name: str, format_name: str = None):

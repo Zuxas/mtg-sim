@@ -283,14 +283,13 @@ def get_sb_plan(
         from apl.playbook_parser import extract_sb_plans_from_html, find_playbook
         
         # Find the HTML file for this deck
-        # Playbook root: MTG_SIM_PLAYBOOK_DIR, else the sibling My-Website repo
-        import os
-        root = Path(os.environ.get("MTG_SIM_PLAYBOOK_DIR")
-                    or Path(__file__).parent.parent.parent / "My-Website")
+        # Playbook root: PLAYBOOK_DIR, else the sibling TeamResolve repo (paths.py)
+        import paths
+        root = paths.playbook_dir()
         pb_dirs = [root / fmt for fmt in ("modern", "standard", "pioneer")]
         if not any(d.exists() for d in pb_dirs):
             _warn(f"no playbook folders under {root}: no card-level sideboard plans "
-                  f"will be found there (set MTG_SIM_PLAYBOOK_DIR)")
+                  f"will be found there (set PLAYBOOK_DIR / MTG_SIM_PLAYBOOK_DIR)")
         
         deck_slug = re.sub(r"[^a-z0-9]+", "-", our_deck.lower()).strip("-")
         

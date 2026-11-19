@@ -1360,7 +1360,42 @@ class GameState:
         if name == "fabled passage":
             return self.zones.count_lands_in_play() < 4
 
-        return False  # default: untapped
+        return self._enters_tapped_by_text(card)
+
+    def _enters_tapped_by_text(self, card: Card) -> bool:
+        """Read "enters tapped" off the card instead of a name list.
+
+        The name lists above cover about 60 lands; 47 more in decks/ (surveil
+        lands, Triomes, creature lands, bounce lands, Bojuka Bog...) always
+        enter tapped and were being tapped for mana the turn they were played.
+        # ponytail: conditions it does not recognise count as untapped (the
+        # old behaviour), e.g. Starting Town's turn count.
+        """
+        import re
+        name = (card.name or "").lower()
+        text = re.sub(r"\([^)]*\)", "", (card.oracle_text or "").lower())
+        text = text.replace(name, "this land").replace("enters the battlefield tapped", "enters tapped")
+        lands = [c for c in self.zones.lands_on_battlefield() if c is not card]
+
+        def controls(kind):                       # "a swamp", "a basic land"
+            kind = kind.strip().removeprefix("an ").removeprefix("a ")
+            return any(kind.split()[0] in (c.type_line or "").lower() for c in lands)
+
+        for sentence in re.split(r"[.\n]", text):
+            sentence = sentence.strip()
+            if sentence == "this land enters tapped":
+                return True
+            m = re.fullmatch(r"this land enters tapped unless you control (.+)", sentence)
+            if m:
+                cond = m.group(1)
+                if cond == "two or more other lands":
+                    return len(lands) < 2
+                if cond.startswith(("a ", "an ")):
+                    return not any(controls(k) for k in cond.split(" or "))
+                return False
+            if sentence == "if you control two or more other lands, this land enters tapped":
+                return len(lands) >= 2
+        return False
 
     def _resolve_fetch(self, card: Card, need_mana_now: bool = True) -> bool:
         """

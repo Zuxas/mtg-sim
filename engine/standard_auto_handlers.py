@@ -2893,8 +2893,6 @@ _h_improvisation_capstone = _spell([["draw", {"n": 1}]])
 _h_withering_curse = _spell([["damage_creature", {"n": 2, "target": "opp_biggest"}], ["damage_creature", {"n": 2, "target": "each_opp"}]])
 # [rep] Destroy target creature.
 _h_murder = _spell([["destroy", {"target": "opp_biggest_creature"}]])
-# [rep] Surveil 2, then draw two cards. You lose 2 life. (To surveil 2, look at the top 
-_h_diresight = _spell([["draw", {"n": 2}], ["scry", {"n": 2}], ["lose_life", {"n": 2, "target": "self"}]])
 # [rep] Target creature gets -3/-3 until end of turn.
 _h_last_gasp = _spell([["damage_creature", {"n": 3, "target": "opp_biggest"}]])
 
@@ -4340,6 +4338,5 @@ for _n,_f in {
     "Improvisation Capstone": _h_improvisation_capstone,
     "Withering Curse": _h_withering_curse,
     "Murder": _h_murder,
-    "Diresight": _h_diresight,
     "Last Gasp": _h_last_gasp,
 }.items(): SPELL_EFFECTS.setdefault(_n,_f)

@@ -218,7 +218,7 @@ rep_unreviewed = []
 # Reviewed 2026-11-19 (Claude + Tom): the generated effect matches the card,
 # allowing the engine's usual target simplification (biggest creature).
 REP_REVIEWED = {
-    "Diresight", "Eerie Gravestone", "Gallant Citizen", "Last Gasp",
+    "Eerie Gravestone", "Gallant Citizen", "Last Gasp",
     "Meteor Golem", "Murder", "Prophetic Prism", "Robotics Mastery",
     "Selfless Police Captain", "Venomized Cat",
 }

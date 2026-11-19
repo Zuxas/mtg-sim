@@ -82,7 +82,7 @@ from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
 from engine.card_effects import LANDFALL_GROW, LANDFALL_MILL, LANDFALL_DOUBLE, LANDFALL_QUEST
 from engine.sagas import SAGA_EFFECTS
 from engine.game_state import GameState
-from engine.oracle_parser import parse_oracle
+from engine.oracle_parser import parse_oracle, own_etb_effects, _tilde
 
 # Only skip cards that have hand-written verified handlers or engine handling.
 # Do NOT skip cards that are only in auto-generated files — those we regenerate.
@@ -215,6 +215,17 @@ skipped    = []
 
 seen = set()
 rep_unreviewed = []
+guard_rows = []   # (name, set, reason, old effects, new effects, oracle)
+
+def guard_reason(oracle, name):
+    """Why a card that used to get an auto ETB handler no longer does."""
+    text = _tilde(oracle, name).lower()
+    if re.search(r"(?:~|this [a-z]+) enters with|as (?:~|this [a-z]+) enters", text):
+        return "review: enters-with / as-enters (replacement effect, not a trigger)"
+    if re.search(r"\benters\b", text):
+        return "review: something else entering triggers it"
+    return "no enters trigger on the card"
+
 # Reviewed 2026-11-19 (Claude + Tom): the generated effect matches the card,
 # allowing the engine's usual target simplification (biggest creature).
 REP_REVIEWED = {
@@ -269,8 +280,24 @@ for set_code in STANDARD_SETS:
         except Exception:
             parsed = {}
 
-        etb_efx   = parsed.get("etb", [])
         spell_efx = parsed.get("spell", [])
+
+        # ETB guard. The parser files many triggers under "etb" that are not
+        # this permanent entering (dies, leaves, becomes tapped, another
+        # creature enters, counters put on it ...), and the handler built from
+        # them fired when the card entered. Build the ETB handler only from the
+        # card's own "when ~ enters" sentences; everything else gets no
+        # auto-handler and is listed in the guard report for review.
+        old_etb = parsed.get("etb", [])
+        try:
+            etb_efx = own_etb_effects(oracle, name)
+        except Exception:
+            etb_efx = []
+        _is_perm = any(t in type_line for t in ("Creature", "Enchantment", "Artifact"))
+        if _is_perm and old_etb and etb_efx != old_etb:
+            guard_rows.append((name, set_code, "narrowed" if etb_efx else guard_reason(oracle, name),
+                               json.dumps(old_etb), json.dumps(etb_efx),
+                               ascii_safe(oracle.replace("\n", " | "))[:160]))
 
         is_creature = "Creature" in type_line
         is_spell    = any(t in type_line for t in ("Instant","Sorcery"))
@@ -354,6 +381,19 @@ by_set = defaultdict(int)
 for _,_,_,sc in hand_write: by_set[sc] += 1
 for code, name in STANDARD_SETS.items():
     print(f"  {code:4} {name:<40} {by_set[code]:>4} need hand-write")
+
+# Guard report: every card whose auto ETB handler changed or was dropped.
+import csv as _csv
+_report = REPO / "data" / "auto_etb_guard_report.csv"
+with open(_report, "w", newline="", encoding="utf-8") as _f:
+    _w = _csv.writer(_f)
+    _w.writerow(["card", "set", "result", "old_etb_effects", "new_etb_effects", "oracle"])
+    _w.writerows(sorted(guard_rows))
+_by = defaultdict(int)
+for _r in guard_rows: _by[_r[2]] += 1
+print(f"\n  [ETB GUARD] {len(guard_rows)} cards changed (see {_report.relative_to(REPO)}):")
+for _k, _v in sorted(_by.items()):
+    print(f"    {_v:>4}  {_k}")
 
 if rep_unreviewed:
     print(f"\n  [!REP UNREVIEWED] {len(rep_unreviewed)} Standard-legal reprints have no auto-handler "

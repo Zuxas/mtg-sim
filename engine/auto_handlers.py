@@ -19,7 +19,7 @@ is never clobbered.
 from __future__ import annotations
 from typing import Iterable
 
-from engine.oracle_parser import parse_oracle
+from engine.oracle_parser import parse_oracle, own_etb_effects
 from engine.effect_primitives import run_effects
 
 
@@ -80,6 +80,10 @@ def auto_register_for_cards(card_names: Iterable[str], verbose: bool = False):
                 continue
             # Route to the right registry
             if trig == "etb" or trig == "etb_or_attack":
+                # only the card's own enters trigger (see own_etb_effects)
+                effects = own_etb_effects(oracle, name)
+                if not effects:
+                    continue
                 if name in ETB_EFFECTS:
                     stats["skipped_handwritten"] += 1
                     continue

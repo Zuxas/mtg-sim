@@ -56,6 +56,7 @@ class Bo3SetResults:
     g1_wr_a:        float = 0.0     # game 1 win rate for player A
     g2_wr_a:        float = 0.0     # game 2 win rate for player A (post-board)
     g3_wr_a:        float = 0.0     # game 3 win rate for player A (post-board)
+    tied_games:     int = 0         # games that timed out dead even (coin flip, #29)
     results:        list = field(default_factory=list)
 
     def match_wr_a(self) -> float:
@@ -271,6 +272,8 @@ def run_bo3_set(apl_a: MatchAPL, deck_a: list, sb_a: dict,
     results.g2_wr_a = round(g2_a_wins / max(1, g2_total) * 100, 1)
     results.g3_wr_a = round(g3_a_wins / max(1, g3_total) * 100, 1) if g3_total else 0
     results.g3_rate = round(g3_count / max(1, n) * 100, 1)
+    results.tied_games = sum(1 for b in results.results for g in b.game_results
+                             if g.win_method.endswith('_tie'))
     results.avg_total_turns = round(
         sum(r.total_turns for r in results.results) / max(1, n), 1)
     
@@ -295,4 +298,6 @@ def print_bo3_report(results: Bo3SetResults,
         print(f"    G3 (post-board): {results.g3_wr_a}%")
     print(f"    Went to G3:      {results.g3_rate}%")
     print(f"    Avg match length: {results.avg_total_turns} turns")
+    if results.tied_games:
+        print(f"    Ties (coin flip): {results.tied_games} games")
     print()

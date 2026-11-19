@@ -187,7 +187,7 @@ class GoryosMatchAPL(MatchAPL):
         # 5. Quantum Riddler ({3}{U}{U}) — 4/6 flying, draw 1 (static: +1 draw at <=1 hand)
         for c in list(gs.zones.hand):
             if c.name == QUANTUM and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c); self._draw(gs, 1)
+                gs.cast_spell(c)      # the engine handler draws the card; once
                 gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
                 break
 

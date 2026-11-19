@@ -420,14 +420,9 @@ class BorosEnergyMatchAPL(MatchAPL):
                 if c.name == GALVANIC and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     creatures = gs.zones.creatures_on_battlefield()
                     if creatures:
-                        # Resolved by hand: the engine handler sends Galvanic's
-                        # 3 damage to the face, which the card cannot do (it
-                        # targets a creature or planeswalker), and it used to
-                        # run on top of this +3 energy.
-                        gs.mana_pool.pay(c.mana_cost, c.cmc)
-                        gs.zones.hand.remove(c)
-                        gs.zones.graveyard.append(c)
-                        gs.energy = getattr(gs, 'energy', 0) + 3
+                        # The handler grants the 3 energy and, with nothing to
+                        # shoot, keeps it. No extra energy by hand.
+                        self._cast(gs, c)
                         gs._log(f"  Galvanic: +3 energy (self-target, no opponent creatures)")
                     break
 
@@ -479,6 +474,9 @@ class BorosEnergyMatchAPL(MatchAPL):
         included), Ajani's Cat Warrior, Seasoned Pyromancer's rummage and
         Elementals. This APL used to do each of those a second time by hand.
         """
+        # ponytail: net life change. A cast that pays 2 life and gains 1 would
+        # read as no gain; nothing in this deck pays life to cast. The engine
+        # should own a life_gained_this_turn counter (see MatchAPL.own_end_step).
         before = gs.life
         ok = gs.cast_spell(card)
         if gs.life > before:

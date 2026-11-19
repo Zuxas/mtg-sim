@@ -80,6 +80,31 @@ def test_self_targeted_galvanic_gives_energy_and_no_face_damage():
     assert opp.life == 20 and gs.damage_dealt == 0
 
 
+def test_galvanic_cannot_hit_the_face_in_a_match():
+    """Any deck: with no creature to shoot, the handler keeps the energy."""
+    gs = GameState(mainboard=[], on_play=True)
+    opp = GameState(mainboard=[], on_play=False)
+    gs._match_opp = opp
+    gs.mana_pool.add("R", 1)
+    gs.zones.hand = [_card("Galvanic Discharge")]
+    gs.cast_spell(gs.zones.hand[0])
+    assert opp.life == 20 and gs.energy == 3
+    assert gs.spells_cast_this_turn == 1      # went through the cast pipeline
+
+
+def test_galvanic_pays_energy_to_kill_a_creature():
+    gs = GameState(mainboard=[], on_play=True)
+    opp = GameState(mainboard=[], on_play=False)
+    gs._match_opp = opp
+    target = _card("Guide of Souls")          # 1/2
+    opp.zones.battlefield.append(target)
+    gs.mana_pool.add("R", 1)
+    gs.zones.hand = [_card("Galvanic Discharge")]
+    gs.cast_spell(gs.zones.hand[0])
+    assert target not in opp.zones.battlefield
+    assert gs.energy == 1 and opp.life == 20
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

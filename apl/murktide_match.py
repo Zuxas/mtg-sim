@@ -153,8 +153,14 @@ class MurktideMatchAPL(MatchAPL):
                     gs.zones.graveyard.append(c)
                     gs.zones.draw(1)
                 else:
+                    # The engine handlers for Preordain and Expressive Iteration
+                    # draw the card themselves; drawing again here made every
+                    # cantrip worth two cards. Draw by hand only for a cantrip
+                    # the engine has no handler for.
+                    before = len(gs.zones.library)
                     gs.cast_spell(c)
-                    gs.zones.draw(1)
+                    if len(gs.zones.library) == before:
+                        gs.zones.draw(1)
                 break
 
         # 4. Murktide Regent — delve finisher

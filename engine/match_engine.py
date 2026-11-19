@@ -292,7 +292,7 @@ def _combat_other(side: str) -> str:
 def run_match(apl_a: MatchAPL, deck_a: list,
               apl_b: MatchAPL, deck_b: list,
               on_play: bool = True,
-              max_turns: int = 15,
+              max_turns: int = 40,   # safety cap; see test_games_play_out
               seed: int = None) -> MatchResult:
     """
     Run a single match between two MatchAPLs.
@@ -411,7 +411,22 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             skip_draw = (turn_num == 1 and
                          ((active == 'a' and on_play) or
                           (active == 'b' and not on_play)))
-            if not skip_draw and gs.zones.library:
+            if not skip_draw and not gs.zones.library:
+                # Rule 104.3c: drawing from an empty library loses the game.
+                # ponytail: draw step only; the ~300 handler sites that pop
+                # the library directly still treat an empty library as a
+                # no-op. Route them through one draw() to cover spell draws.
+                mgs.game_over = True
+                mgs.winner = 'b' if active == 'a' else 'a'
+                mgs.win_method = 'decked'
+                result = mgs.to_match_result()
+                result.mulligans_a = mull_a
+                result.mulligans_b = mull_b
+                result.hand_a = hand_a_names
+                result.hand_b = hand_b_names
+                result._on_play = on_play
+                return result
+            if not skip_draw:
                 gs.zones.hand.append(gs.zones.library.pop(0))
 
             # Let the APL declare how much mana to hold up before tapping.

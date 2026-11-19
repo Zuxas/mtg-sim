@@ -79,7 +79,12 @@ def _apply_sb(mainboard: list, sideboard: dict,
         return mainboard
     try:
         return apply_sideboard_plan(mainboard, sideboard, sb_in_raw, sb_out_raw)
-    except Exception:
+    except Exception as e:
+        import os
+        if os.environ.get("SIM_DEBUG"):
+            raise
+        from engine.sideboard import _warn
+        _warn(f"sideboarding failed ({type(e).__name__}: {e}); playing the pre-board deck")
         return mainboard  # fallback to pre-board if sb fails
 
 

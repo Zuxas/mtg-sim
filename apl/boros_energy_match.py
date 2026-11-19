@@ -465,6 +465,12 @@ class BorosEnergyMatchAPL(MatchAPL):
         """Beginning of OUR end step: Mobilize sacrifice, then Ocelot Pride."""
         # Mobilize: "Sacrifice them at the beginning of the next end step."
         # With Goblin Bombardment out, sacrifice each to it first for 1 damage.
+        # ponytail: two approximations. (1) "The next end step" is modeled as
+        # OUR next end step; Warriors made on the opponent's turn would wait a
+        # turn too long (Voice only attacks on ours, so it does not come up).
+        # A real delayed trigger needs an engine-level end-step queue.
+        # (2) Bombardment is an activated ability usable any time we have
+        # priority; here it is only used on Warriors about to be sacrificed.
         warriors = [c for c in gs.zones.battlefield if getattr(c, '_mobilize', False)]
         if warriors:
             bombard = any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield)

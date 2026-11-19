@@ -34,6 +34,7 @@ Sideboard
 2 Disdainful Stroke
 2 Exorcise
 2 Get Out
-2 Kinetic Hellion
+// UNRESOLVED 2026-11-19: '2 Kinetic Hellion' is not a card name Scryfall knows (paper or Arena).
+// It used to load silently as a blank card. Replace this line with the real card.
 2 Soul-Guide Lantern
 3 Torch the Tower

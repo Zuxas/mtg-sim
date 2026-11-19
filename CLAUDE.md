@@ -116,8 +116,10 @@ See `CONVENTIONS.md` and the upstream at https://github.com/Zuxas/claude-harness
                 tempo), Tishana's Tidebinder flash on opp end step, primer-derived
                 mulligan rules (1-lander on draw with 2 cantrips OK, mirror requires
                 cantrips)
-- Card-text audit: NO Cori-Steel (banned 2025-06-30), NO Detect Intrusion/Belion
-                (Unhinged joke cards), Flow State as sorcery, Voice as creature 1/3,
+- Card-text audit: NO Cori-Steel (banned 2025-06-30). Detect Intrusion / Belion are the
+                Arena (Through the Omenpaths) names of Spider-Sense / Hydro-Man, Fluid Felon,
+                Standard-legal; an old fuzzy lookup matched them to joke cards (#27). They are
+                still not in the Looting lists. Flow State as sorcery, Voice as creature 1/3,
                 Aven at 3 CMC (Snare misses), Monument at 3 CMC (Annul/Abrade hit),
                 Sear (4 dmg) kills Sapling Nursery 3/4 reach Treefolk tokens.
 

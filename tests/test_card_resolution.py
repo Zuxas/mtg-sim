@@ -122,6 +122,56 @@ def test_scryfall_client_works_without_requests():
         client.requests = real
 
 
+def test_arena_names_load_as_the_paper_card():
+    main, side = deck._parse_decklist("4 Kavaero, Mind-Bitten\n1 Lightning Bolt\nSideboard\n2 Detect Intrusion\n")
+    assert main == [(4, "Superior Spider-Man"), (1, "Lightning Bolt")], main
+    assert side == [(2, "Spider-Sense")], side
+
+
+class _EmptyDB:
+    _loaded = False
+    def get(self, name): return None
+
+
+class _BoltDB:
+    _loaded = True
+    def get(self, name): return BOLT if name == "Lightning Bolt" else None
+
+
+def _with_db(db, fn):
+    import engine.card_db as card_db
+    real = card_db.CardDB
+    card_db.CardDB = lambda *a, **k: db
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return fn()
+    finally:
+        card_db.CardDB = real
+
+
+def test_missing_local_data_is_an_error_not_an_api_call():
+    os.environ.pop("MTG_SIM_ALLOW_NETWORK", None)
+    calls = []
+    real = deck.get_cards_data
+    deck.get_cards_data = lambda names: calls.append(names) or {}
+    try:
+        try:
+            _with_db(_EmptyDB(), lambda: deck._get_cards_local(["Lightning Bolt"]))
+            raise AssertionError("expected FileNotFoundError")
+        except FileNotFoundError as e:
+            assert "fetch_scryfall_bulk.sh" in str(e)
+        # a name the local file lacks is left out, not looked up online
+        got = _with_db(_BoltDB(), lambda: deck._get_cards_local(["Lightning Bolt", "Nope"]))
+        assert list(got) == ["Lightning Bolt"] and calls == [], (got, calls)
+        # opting in restores the API fallback for missing names
+        os.environ["MTG_SIM_ALLOW_NETWORK"] = "1"
+        _with_db(_BoltDB(), lambda: deck._get_cards_local(["Lightning Bolt", "Nope"]))
+        assert calls == [["Nope"]], calls
+    finally:
+        deck.get_cards_data = real
+        os.environ.pop("MTG_SIM_ALLOW_NETWORK", None)
+
+
 if __name__ == "__main__":
     test_dfc_is_found_by_front_face_and_fully_populated()
     test_back_face_name_does_not_resolve_to_the_front_face()
@@ -129,4 +179,7 @@ if __name__ == "__main__":
     test_unknown_name_raises_and_names_the_card()
     test_override_loads_blank_cards_with_a_warning()
     test_carddb_does_not_match_on_substrings()
+    test_scryfall_client_works_without_requests()
+    test_arena_names_load_as_the_paper_card()
+    test_missing_local_data_is_an_error_not_an_api_call()
     print("test_card_resolution: OK")

@@ -18,7 +18,8 @@
 4 Wanderbrine Trapper
 
 Sideboard
-2 Abrupt Inquiry
+// UNRESOLVED 2026-11-19: '2 Abrupt Inquiry' is not a card name Scryfall knows (paper or Arena).
+// It used to load silently as a blank card. Replace this line with the real card.
 2 Get Lost
 2 Negate
 3 Soul-Guide Lantern

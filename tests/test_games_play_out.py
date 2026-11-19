@@ -34,7 +34,6 @@ def _check(engine):
             long_games += 1
             # the old cap would have stopped this game before anyone had won
             assert _game(engine, seed, max_turns=15).kill_turn >= 15
-    assert long_games, "expected at least one game longer than 15 turns in 300"
 
 
 def test_match_engine_games_finish():
@@ -66,6 +65,18 @@ def test_drawing_from_an_empty_library_loses():
         # 12 cards and a draw a turn: gone by turn 13 at the latest, however
         # many cards a mulligan put back. Without the rule it runs to the cap.
         assert not a_won and r.kill_turn <= 13, (engine.__name__, a_won, r.kill_turn)
+        if hasattr(r, "win_method"):
+            assert r.win_method == "decked"
+
+
+def test_a_long_game_is_played_to_its_end():
+    """Two 30-land decks do nothing, so the game lasts until someone cannot
+    draw: past turn 15, before the cap. The old cap called it at 15."""
+    from apl.match_apl import GenericMatchAPL
+    for engine in (match_engine, match_runner):
+        r = engine.run_match(GenericMatchAPL(), _lands(30), GenericMatchAPL(), _lands(30),
+                             on_play=True, seed=1)
+        assert 15 < r.kill_turn < 40, (engine.__name__, r.kill_turn)
         if hasattr(r, "win_method"):
             assert r.win_method == "decked"
 

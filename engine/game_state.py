@@ -1316,7 +1316,9 @@ class GameState:
         "blooming marsh", "concealed courtyard", "inspiring vantage",
         "botanical sanctum",
         # SOS Standard fast lands
-        "stormcarved coast",        # {U}{R}, enters tapped unless 2+ other lands
+        # Stormcarved Coast was listed here, but it is a slow land (tapped
+        # unless you control two or more OTHER lands), the opposite of a fast
+        # land. Its own text decides now (_enters_tapped_by_text).
     }
 
     def _is_fetch_land(self, card: Card) -> bool:
@@ -1378,8 +1380,13 @@ class GameState:
         lands = [c for c in self.zones.lands_on_battlefield() if c is not card]
 
         def controls(kind):                       # "a swamp", "a basic land"
-            kind = kind.strip().removeprefix("an ").removeprefix("a ")
-            return any(kind.split()[0] in (c.type_line or "").lower() for c in lands)
+            word = kind.strip().removeprefix("an ").removeprefix("a ").split()[0]
+            for c in lands:
+                # "Basic Land - Swamp": supertypes before the dash, subtypes after
+                supers, _, subs = (c.type_line or "").lower().replace("\u2014", "-").partition("-")
+                if word in (supers.split() if word == "basic" else subs.split()):
+                    return True
+            return False
 
         for sentence in re.split(r"[.\n]", text):
             sentence = sentence.strip()

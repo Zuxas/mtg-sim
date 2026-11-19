@@ -74,6 +74,24 @@ def test_unless_you_control_a_land_type():
     assert not _tapped(_land("Test Temple", BASIC_CHECK), MOUNTAIN())
 
 
+def test_land_types_are_matched_as_words_not_substrings():
+    # A land NAMED like a type, or a nonbasic with basic land types, must not
+    # count as "a Swamp" / "a basic land".
+    named = _land("Swampy Basic Hideout", type_line="Land")
+    assert _tapped(_land("Test Castle", CASTLE), named)
+    assert _tapped(_land("Test Temple", BASIC_CHECK), named)
+    em_dash = _land("Test Swamp", type_line="Basic Land \u2014 Swamp")
+    assert not _tapped(_land("Test Castle", CASTLE), em_dash)
+    assert not _tapped(_land("Test Temple", BASIC_CHECK), em_dash)
+
+
+def test_stormcarved_coast_is_a_slow_land():
+    coast = lambda: _land("Stormcarved Coast", SLOW, "Land")
+    assert _tapped(coast())
+    assert _tapped(coast(), MOUNTAIN())
+    assert not _tapped(coast(), MOUNTAIN(), PLAINS())
+
+
 def test_playing_a_tapped_land_adds_no_mana():
     gs = GameState(mainboard=[], on_play=True)
     falls = _land("Test Falls", ALWAYS, "Land - Island Mountain")

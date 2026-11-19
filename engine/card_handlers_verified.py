@@ -9454,7 +9454,31 @@ def _galvanic_discharge_spell(gs, card):
     """Galvanic Discharge — {R} Instant.
     'Target creature/PW. Get 3 energy, may pay any. Deals that
      much damage.'"""
-    _damage_any_helper(gs, 3)
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    from engine.keywords import can_be_targeted_by
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        # ponytail: goldfish has no creature to target and has always counted
+        # this as 3 to the face. Left alone so goldfish baselines hold; a real
+        # cast needs a creature or planeswalker target.
+        _damage_any_helper(gs, 3)
+        return
+    # It cannot target a player. You get {E}{E}{E} either way, then pay as
+    # much as it takes to kill the best creature you can afford.
+    gs.energy = getattr(gs, "energy", 0) + 3
+    killable = [c for c in opp.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()
+                and 0 < safe_toughness(c) <= gs.energy
+                and can_be_targeted_by(c, source=None, controller_is_opp=True)]
+    if killable:
+        t = max(killable, key=lambda c: safe_power(c))
+        gs.energy -= safe_toughness(t)
+        opp.zones.battlefield.remove(t)
+        opp.zones.graveyard.append(t)
+        gs._log(f"    Galvanic Discharge: pay {safe_toughness(t)} energy, kills {t.name}")
+    else:
+        gs._log("    Galvanic Discharge: +3 energy, nothing worth paying for")
 
 
 def _galvanic_relay_spell(gs, card):

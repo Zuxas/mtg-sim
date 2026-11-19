@@ -1621,8 +1621,17 @@ class GameState:
                     self._in_counter_window = False
                 if countered:
                     # Spell cost was paid but the spell does nothing.
-                    # Move to graveyard, skip resolution.
+                    # Move to graveyard, skip resolution. It has to leave the
+                    # hand too: it used to stay there as well, so a countered
+                    # spell could simply be cast again and one card sat in two
+                    # zones (the source of "list.remove(x): x not in list").
+                    if card in self.zones.hand:
+                        self.zones.hand.remove(card)
                     self.zones.graveyard.append(card)
+                    # It was still cast: prowess and other "whenever you cast
+                    # a noncreature spell" counts must see it.
+                    if not card.has(Tag.CREATURE):
+                        self.noncreature_spells_this_turn += 1
                     self._log(f"  [COUNTERED] {card.name}")
                     self.check_state_based_actions()
                     return True

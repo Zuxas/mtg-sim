@@ -190,7 +190,10 @@ bantairbending        borosdragons         azoriusblink
 
 Full L1 card-handler + APL/MatchAPL coverage map across all four formats.
 
-- **Standard handlers: 4218/4218 (100%)** — all 17 sets clean as of 2026-05-03.
+- **Standard handlers: 3679/4125 (89.2%)** as of 2026-11-19. The earlier 100% counted about 450
+  auto-generated enters-the-battlefield handlers for cards with no enters trigger; the build now
+  refuses those (`data/auto_etb_guard_report.csv` lists each one). Four newer Standard sets
+  (`trk`, `fra`, `msh`, `hob`) are not in the build at all.
 - **Modern:** L1-complete (292/292 handlers).
 - **Pioneer:** Big L1 backlog (57 gaps). Legacy: 3 gaps.
 - **Standard APL coverage:** 38/38 Standard decks have both APL_REGISTRY and MATCH_APL_REGISTRY entries.

@@ -30,7 +30,7 @@ def state():
 # --- Goryo's Vengeance -------------------------------------------------------
 from apl import goryos_match as G
 
-def goryo(with_ephemerate):
+def goryo(with_ephemerate, white_source=True):
     apl = G.GoryosMatchAPL()
     gs, opp = state(), state()
     fatty = card(G.GRISELBRAND, "{4}{B}{B}{B}{B}", 8, "Legendary Creature - Demon")
@@ -39,6 +39,8 @@ def goryo(with_ephemerate):
     gs.zones.hand.append(card(G.GORYOS, "{1}{B}", 2, "Instant - Arcane"))
     if with_ephemerate:
         gs.zones.hand.append(card(G.EPHEMERATE, "{W}", 1, "Instant"))
+        if white_source:
+            gs.zones.battlefield.append(card("Plains", type_line="Basic Land - Plains"))
     apl.main_phase_match(gs, opp)
     assert any(c is fatty for c in gs.zones.battlefield), "combo did not fire"
     apl.own_end_step(gs, opp)
@@ -48,6 +50,8 @@ fatty, gs = goryo(False)
 assert not any(c is fatty for c in gs.zones.battlefield) and any(c is fatty for c in gs.zones.exile)
 fatty, gs = goryo(True)
 assert any(c is fatty for c in gs.zones.battlefield), "Ephemerate should keep it"
+fatty, gs = goryo(True, white_source=False)   # Ephemerate is not free
+assert any(c is fatty for c in gs.zones.exile) and any(c.name == G.EPHEMERATE for c in gs.zones.hand)
 
 # --- Cultivator Colossus -----------------------------------------------------
 from apl import amulet_titan_match as A

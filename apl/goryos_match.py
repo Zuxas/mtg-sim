@@ -138,7 +138,14 @@ class GoryosMatchAPL(MatchAPL):
         if gy_targets and avail >= 2:
             for c in list(gs.zones.hand):
                 if c.name == GORYOS:
-                    gs.mana_pool.pay("{1}{B}", 2) if gs.mana_pool.can_pay("{1}{B}", 2) else None
+                    # Pay for Ephemerate together with Goryo's when we can, so the
+                    # generic mana does not eat the white source.
+                    eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
+                    if eph and gs.mana_pool.can_pay("{1}{B}{W}", 3):
+                        gs.mana_pool.pay("{1}{B}{W}", 3)
+                    else:
+                        eph = None
+                        gs.mana_pool.pay("{1}{B}", 2) if gs.mana_pool.can_pay("{1}{B}", 2) else None
                     gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                     # Reanimate best target
                     target = max(gy_targets, key=lambda x: getattr(x, 'cmc', 0))
@@ -158,8 +165,11 @@ class GoryosMatchAPL(MatchAPL):
                             gs.life -= 7; self._draw(gs, 7)
                             gs._log(f"    Griselbrand: pay 7 life, draw 7")
                     # EPHEMERATE to keep permanently!
-                    eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
-                    if eph:
+                    # ponytail: the real line is attack with haste, then Ephemerate in
+                    # response to the end-step exile trigger. Casting it here and
+                    # leaving the creature able to attack reaches the same board;
+                    # there is no engine blink path, so the ETB is re-fired by hand.
+                    if eph:   # paid for above; it used to be cast for free
                         gs.zones.hand.remove(eph); gs.zones.exile.append(eph)
                         self._ephemerate_rebound = True
                         self._goryo_exile = None   # blinked: it re-entered as a new object

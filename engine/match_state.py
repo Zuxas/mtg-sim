@@ -31,7 +31,7 @@ class MatchResult:
     mulligans_b:   int   = 0
     damage_by_a:   int   = 0
     damage_by_b:   int   = 0
-    win_method:    str   = ''       # 'combat', 'combo', 'timeout'
+    win_method:    str   = ''       # 'combat', 'noncombat', 'timeout', 'timeout_tie', ...
     # Opening hands (card names) snapshotted after mulligans. Set by run_match.
     hand_a:        list  = field(default_factory=list)
     hand_b:        list  = field(default_factory=list)
@@ -43,6 +43,7 @@ class MatchSetResults:
     n_games:     int   = 0
     a_wins:      int   = 0
     b_wins:      int   = 0
+    ties:        int   = 0       # timeouts at equal standing, decided by coin flip (#29)
     avg_turns:   float = 0.0
     kill_turns:  list  = field(default_factory=list)
     results:     list  = field(default_factory=list)  # list of MatchResult

@@ -16,6 +16,9 @@ from data.card import Card, Tag
 from engine.zones import Zones
 
 
+BAD_BOTTOMS = 0   # times a bottom() choice had to be corrected (#14)
+
+
 def generic_keep(hand: list[Card], mulligans_taken: int, on_play: bool) -> bool:
     lands = sum(1 for c in hand if c.is_land())
     size  = len(hand)
@@ -44,6 +47,8 @@ def take_opening_hand(
     max_mulligans:  int  = 4,
     verbose:        bool = False,
     opp_archetype:  str  = "",
+    rng=None,
+    shuffle_first:  bool = True,
 ) -> tuple[list[Card], list[Card], int]:
     """
     Simulate London Mulligan.
@@ -55,8 +60,18 @@ def take_opening_hand(
     opp_archetype is passed to keep_vs() when the APL supports it,
     enabling deck-specific mulligan logic vs specific opponents.
 
+    rng: random.Random to shuffle with (default: the global `random`). The
+    match engines pass their per-game rng so a seed reproduces the game.
+    shuffle_first=False keeps `deck` in the order given: the match engines
+    hand over a library that is already shuffled.
+
+    The kept hand always has 7 - mulligans cards (#14): if bottom_fn returns
+    too few cards, or one that is not in the hand, the hand is trimmed from
+    the end.
+
     Returns (hand, remaining_library, mulligans_taken).
     """
+    rng = rng or random
     keep_fn   = keep_fn   or generic_keep
     bottom_fn = bottom_fn or generic_bottom
 
@@ -68,7 +83,8 @@ def take_opening_hand(
         supports_opp = False
 
     library = list(deck)
-    random.shuffle(library)
+    if shuffle_first:
+        rng.shuffle(library)
     mulligans = 0
 
     while True:
@@ -89,9 +105,24 @@ def take_opening_hand(
 
         if do_keep:
             to_bottom = bottom_fn(hand, mulligans) if mulligans > 0 else []
-            for card in to_bottom:
-                hand.remove(card)
-                library.append(card)
+            for card in to_bottom[:mulligans]:
+                if card in hand:
+                    hand.remove(card)
+                    library.append(card)
+            target = max(0, 7 - mulligans)
+            if len(hand) > target:
+                # bottom_fn returned too few cards, or cards not in the hand
+                msg = (f"bottom() left {len(hand)} cards after {mulligans} mulligan(s), "
+                       f"expected {target}; trimming from the end of the hand")
+                import os
+                if os.environ.get("SIM_DEBUG"):
+                    raise ValueError(msg)
+                global BAD_BOTTOMS
+                BAD_BOTTOMS += 1
+                if BAD_BOTTOMS == 1:
+                    print(f"  [!MULLIGAN] {msg} (reported once; SIM_DEBUG=1 to raise)")
+            while len(hand) > target:
+                library.append(hand.pop())
             if verbose:
                 bottomed = [c.name for c in to_bottom]
                 print(f"  Keep {len(hand)}-card hand"
@@ -99,7 +130,7 @@ def take_opening_hand(
             break
         else:
             library.extend(hand)
-            random.shuffle(library)
+            rng.shuffle(library)
             mulligans += 1
             if verbose:
                 print(f"  Mulligan {mulligans}")

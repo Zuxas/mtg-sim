@@ -1330,132 +1330,44 @@ def _resolve_combat(gs: TwoPlayerGameState, attacker: str):
                     chosen_atk = pool.pop(0)   # one attacker per walker
                     pw_assignment[id(chosen_atk)] = pw_card
 
-    atk_dead = set()  # id() of dead attackers
-    blk_dead = set()  # id() of dead blockers
-    blk_lookup = {id(b): b for b in blockers}
-    atk_lookup = {id(a): a for a in attackers}
-    total_dmg = 0
-    lifelink_gain = 0           # attacker-side lifelink (gains attacking player)
-    defender_lifelink_gain = 0  # blocker-side lifelink (gains defending player)
-    creatures_hit_player = 0    # count of attackers that dealt damage to defending player
+    # Damage steps live in match_state.combat_damage, shared with the
+    # match_engine path (#13). KWTag-only keyword test: this runner does not
+    # fall back to oracle text.
+    from engine.match_state import combat_damage
 
-    def _is_indestructible(c):
-        return KWTag.INDESTRUCTIBLE in c.tags
+    def _has(c, kw):
+        return kw.replace(" ", "_") in c.tags
 
-    def _resolve_strike_step(strike_attackers):
-        """Resolve damage for one strike step (first-strike or regular).
-        Updates atk_dead, blk_dead, total_dmg, lifelink_gain in enclosing
-        scope. Skips attackers/blockers already dead from prior step.
+    def _divert_to_pw(atk, atk_pwr):
+        """R5: an unblocked attacker routed at an opposing planeswalker removes
+        loyalty instead of hitting the player. It is committed to the walker,
+        so it deals nothing if the walker is already gone (no trample-over-PW
+        in v1). Returns damage dealt (lifelink counts it); None = not routed."""
+        pw_target = pw_assignment.get(id(atk))
+        if pw_target is None:
+            return None
+        if (getattr(pw_target, "loyalty", 0) or 0) <= 0:
+            return 0
+        pw_target.loyalty -= atk_pwr
+        if pw_target.loyalty <= 0:
+            from engine import planeswalkers as _pw
+            dbf = gs.bf_b if attacker == "a" else gs.bf_a
+            dgy = gs.gy_b if attacker == "a" else gs.gy_a
+            if pw_target in dbf:
+                dbf.remove(pw_target)
+                dgy.append(pw_target)
+                _pw.note_pw_combat_death()
+        return atk_pwr
 
-        Phase 3.5 Stage A: handles multi-blocker assignment (menace).
-        Attacker assigns damage among blockers in list order (biggest-
-        first); deathtouch makes 1 damage lethal to each blocker.
-        """
-        nonlocal total_dmg, lifelink_gain, defender_lifelink_gain, creatures_hit_player
-        for atk in strike_attackers:
-            if id(atk) in atk_dead:
-                continue
-            atk_pwr = _safe_power(atk)
-            atk_tou = _safe_toughness(atk)
-            atk_dt  = KWTag.DEATHTOUCH in atk.tags
-            atk_ll  = KWTag.LIFELINK in atk.tags
-            atk_tr  = KWTag.TRAMPLE in atk.tags
-
-            blocker_list = assignments.get(id(atk), [])
-            # Filter out blockers already dead from prior step
-            live_blockers = [b for b in blocker_list if id(b) not in blk_dead]
-
-            if not live_blockers:
-                # R5: unblocked attacker routed at an opposing planeswalker.
-                # Combat damage removes loyalty (does NOT reduce the player's
-                # life); the attacker is committed to the walker, so it deals no
-                # face damage even if the walker is already dead (no trample-over-
-                # PW in v1). Lifelink still gains. 0-loyalty -> shared SBA.
-                if id(atk) in pw_assignment:
-                    pw_target = pw_assignment[id(atk)]
-                    if (getattr(pw_target, "loyalty", 0) or 0) > 0 and atk_pwr > 0:
-                        pw_target.loyalty -= atk_pwr
-                        if atk_ll:
-                            lifelink_gain += atk_pwr
-                        if pw_target.loyalty <= 0:
-                            from engine import planeswalkers as _pw
-                            dbf = gs.bf_b if attacker == "a" else gs.bf_a
-                            dgy = gs.gy_b if attacker == "a" else gs.gy_a
-                            if pw_target in dbf:
-                                dbf.remove(pw_target)
-                                dgy.append(pw_target)
-                                _pw.note_pw_combat_death()
-                    continue
-                # Unblocked (or all blockers died in first-strike step):
-                # full damage to defending player
-                if atk_pwr > 0:
-                    total_dmg += atk_pwr
-                    creatures_hit_player += 1   # for Enduring Curiosity trigger
-                if atk_ll:
-                    lifelink_gain += atk_pwr
-                continue
-
-            # Blocked combat -- two sequential passes over live_blockers.
-            # Pass 1: accumulate total damage TO attacker before lethality
-            # check (CR: blocker damage sums on the attacker; total >=
-            # toughness is lethal). Pre-fix bug: per-blocker check meant
-            # 2x 2/2 vs 3/4 menace attacker didn't kill it (neither blocker
-            # had 2 >= 4 individually). Hidden in BE/Murktide mirrors (no
-            # menace) but breaks Rakdos Bloodtithe Harvester etc.
-            total_damage_to_atk = 0
-            any_blocker_deathtouch = False
-            for blk in live_blockers:
-                blk_pwr = _safe_power(blk)
-                if blk_pwr > 0:
-                    total_damage_to_atk += blk_pwr
-                    if KWTag.DEATHTOUCH in blk.tags:
-                        any_blocker_deathtouch = True
-                    # Phase 3.5 Stage B: blocker-side lifelink (defender
-                    # gains life equal to blocker's damage to attacker).
-                    if KWTag.LIFELINK in blk.tags:
-                        defender_lifelink_gain += blk_pwr
-
-            # Apply combined damage to attacker
-            if total_damage_to_atk > 0 and not _is_indestructible(atk):
-                if total_damage_to_atk >= atk_tou or any_blocker_deathtouch:
-                    atk_dead.add(id(atk))
-
-            # Pass 2: attacker assigns damage among blockers in list order
-            # (biggest-first per assignment, CR 509.4 attacker chooses order)
-            damage_remaining = atk_pwr
-            for blk in live_blockers:
-                blk_tou = _safe_toughness(blk)
-                if damage_remaining > 0:
-                    # Deathtouch: 1 damage is lethal regardless of toughness
-                    damage_to_assign = 1 if atk_dt else min(damage_remaining, blk_tou)
-                    if not _is_indestructible(blk):
-                        if damage_to_assign >= blk_tou or atk_dt:
-                            blk_dead.add(id(blk))
-                    if atk_ll:
-                        lifelink_gain += damage_to_assign
-                    damage_remaining -= damage_to_assign
-
-            # Trample: excess damage after all blockers go to defending player
-            if atk_tr and damage_remaining > 0:
-                total_dmg += damage_remaining
-                if atk_ll:
-                    lifelink_gain += damage_remaining
-
-    # First-strike step: FIRST_STRIKE or DOUBLE_STRIKE attackers
-    first_strikers = [c for c in atk_sorted
-                      if KWTag.FIRST_STRIKE in c.tags
-                      or KWTag.DOUBLE_STRIKE in c.tags]
-    _resolve_strike_step(first_strikers)
-
-    # Regular step: any attacker without FIRST_STRIKE deals damage
-    # (DOUBLE_STRIKE deals damage in BOTH steps)
-    regular_strikers = [c for c in atk_sorted
-                        if KWTag.FIRST_STRIKE not in c.tags
-                        or KWTag.DOUBLE_STRIKE in c.tags]
-    _resolve_strike_step(regular_strikers)
-
-    atk_losses = [atk_lookup[i] for i in atk_dead]
-    blk_losses = [blk_lookup[i] for i in blk_dead]
+    _dmg = combat_damage(atk_sorted, assignments, has=_has,
+                         divert=_divert_to_pw if pw_assignment else None,
+                         defender_life=getattr(gs, "life_b" if attacker == "a" else "life_a", None))
+    total_dmg = _dmg.face
+    lifelink_gain = _dmg.attacker_lifelink
+    defender_lifelink_gain = _dmg.defender_lifelink
+    creatures_hit_player = _dmg.hits_on_player   # for Enduring Curiosity trigger
+    atk_losses = _dmg.dead_attackers
+    blk_losses = _dmg.dead_blockers
 
     # Restore Slickshot power after damage is resolved
     for card, orig_pwr in slickshot_boosted:

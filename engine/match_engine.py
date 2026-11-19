@@ -583,6 +583,11 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
                 combat_result = resolve_combat(
                     attackers, blocker_assignments, active, mgs)
 
+                # Lifelink happens at the same time as the damage, so the
+                # defender's gain goes in BEFORE deal_damage decides lethal.
+                if combat_result.life_gained_defender > 0:
+                    mgs.gain_life(opp_player, combat_result.life_gained_defender)
+
                 # Apply damage to defending player
                 mgs.deal_damage(active, combat_result.damage_to_defender)
 

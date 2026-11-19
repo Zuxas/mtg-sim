@@ -53,7 +53,6 @@ class BorosEnergyMatchAPL(MatchAPL):
         self._treasures = 0
         self._gained_life_this_turn = False
         self._tokens_entered = 0
-        self._mobilize_tokens = 0  # Voice of Victory Warrior tokens to sacrifice
         self._ajani_pw_active = False  # Ajani transformed into planeswalker
         self._ajani_pw_loyalty = 0
 
@@ -463,7 +462,18 @@ class BorosEnergyMatchAPL(MatchAPL):
         # 8. NOTE: Ocelot tokens happen at END STEP (in own_end_step), not here
 
     def own_end_step(self, gs: GameState, opponent: GameState):
-        """Ocelot Pride: Cat at the beginning of OUR end step if we gained life."""
+        """Beginning of OUR end step: Mobilize sacrifice, then Ocelot Pride."""
+        # Mobilize: "Sacrifice them at the beginning of the next end step."
+        # With Goblin Bombardment out, sacrifice each to it first for 1 damage.
+        warriors = [c for c in gs.zones.battlefield if getattr(c, '_mobilize', False)]
+        if warriors:
+            bombard = any(c.name == GOBLIN_BOMBARD for c in gs.zones.battlefield)
+            for w in warriors:
+                gs.zones.battlefield.remove(w)      # a token leaving play ceases to exist
+            if bombard:
+                gs.damage_dealt += len(warriors)
+            gs._log(f"  Mobilize: sacrifice {len(warriors)} Warrior(s)"
+                    + (f" to Bombardment, {len(warriors)} damage" if bombard else ""))
         self._simulate_end_step(gs)
 
     def _cast(self, gs: GameState, card) -> bool:
@@ -546,19 +556,17 @@ class BorosEnergyMatchAPL(MatchAPL):
         # Tokens will be sacrificed at end step → sacrifice to Bombardment FIRST
         if voices_attacking > 0:
             new_tokens = voices_attacking * 2
-            guides = sum(1 for c in gs.zones.battlefield if c.name == GUIDE_OF_SOULS)
-            
-            # Each token entering triggers Guide (gain life + energy)
-            life_gained = new_tokens * guides
-            gs.life += life_gained
-            gs.energy = getattr(gs, 'energy', 0) + new_tokens * guides
-            if life_gained > 0:
-                self._gained_life_this_turn = True
-            
-            # Track tokens for Bombardment sacrifice at end step
-            # DON'T add damage_dealt here — tokens go through combat normally
-            self._tokens_entered += new_tokens
-            self._mobilize_tokens = new_tokens  # track for end_step sacrifice
+            life_before = gs.life
+            for _ in range(new_tokens):
+                # Real creatures: tapped and attacking, so they deal combat
+                # damage, can be blocked and can die. Guide of Souls triggers
+                # through the engine as each one enters.
+                warrior = self._token(gs, "Warrior Token", "1", "1", "Token Creature — Warrior")
+                warrior.tapped = True
+                warrior.summoning_sickness = False
+                warrior._mobilize = True      # sacrificed in own_end_step
+                attackers.append(warrior)
+            life_gained = gs.life - life_before
             gs._log(f"  Voice Mobilize: {voices_attacking} Voices → {new_tokens} Warrior tokens (+{life_gained} life)")
         
         # Guide of Souls attack pump: pay {E}{E}{E} → +2/+2 and flying on attacker
@@ -730,13 +738,8 @@ class BorosEnergyMatchAPL(MatchAPL):
         ajani_on_board = [c for c in gs.zones.battlefield if c.name == AJANI]
         cat_died = False
         
-        if has_bombardment:
-            # ONLY sacrifice Mobilize tokens (they're forced to die at end step anyway)
-            bombard_dmg = self._mobilize_tokens
-            
-            if bombard_dmg > 0:
-                gs.damage_dealt += bombard_dmg
-                gs._log(f"  Bombardment: sac {bombard_dmg} Mobilize tokens → {bombard_dmg} face ({gs.damage_dealt} total)")
+        # Mobilize Warriors are sacrificed (to Bombardment when it is out) in
+        # own_end_step, on the turn they attacked.
         
         # 2b. Deliberately sacrifice ONE Cat to trigger Ajani transform
         # Only if Ajani is on board AND we have 2+ creatures to benefit from PW pump
@@ -767,8 +770,6 @@ class BorosEnergyMatchAPL(MatchAPL):
         # 3. Forced Mobilize sacrifice (if no Bombardment, tokens just die)
         # (Already removed from battlefield if Bombardment ate them above)
         
-        # Reset per-turn trackers
-        self._mobilize_tokens = 0
         
         # Ragavan treasure is now handled in declare_attackers on combat damage.
 

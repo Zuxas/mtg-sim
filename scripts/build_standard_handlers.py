@@ -82,7 +82,7 @@ from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
 from engine.card_effects import LANDFALL_GROW, LANDFALL_MILL, LANDFALL_DOUBLE, LANDFALL_QUEST
 from engine.sagas import SAGA_EFFECTS
 from engine.game_state import GameState
-from engine.oracle_parser import parse_oracle
+from engine.oracle_parser import parse_oracle, own_etb_effects, _tilde
 
 # Only skip cards that have hand-written verified handlers or engine handling.
 # Do NOT skip cards that are only in auto-generated files — those we regenerate.
@@ -217,33 +217,6 @@ seen = set()
 rep_unreviewed = []
 guard_rows = []   # (name, set, reason, old effects, new effects, oracle)
 
-_SELF = r"(?:this [a-z]+|~|it)"
-SELF_ETB = re.compile(rf"^when(?:ever)? {_SELF} enters(?: the battlefield)?(?: or attacks| or dies)?,", re.I)
-
-
-def _tilde(oracle, name):
-    """Oracle text with the card's own name (full, and the part before a comma) as ~."""
-    text = oracle.replace(name, "~")
-    short = name.split(",")[0].strip()
-    if short != name and len(short) > 2:
-        text = text.replace(short, "~")
-    return text
-
-
-def self_etb_text(oracle, name):
-    """The card's own 'When ~ enters, ...' sentences, with any bullet modes under them."""
-    out, keep = [], False
-    for line in _tilde(oracle, name).split("\n"):
-        if SELF_ETB.match(line.strip()):
-            keep = True
-            out.append(line)
-        elif keep and line.strip().startswith("\u2022"):
-            out.append(line)
-        else:
-            keep = False
-    return "\n".join(out)
-
-
 def guard_reason(oracle, name):
     """Why a card that used to get an auto ETB handler no longer does."""
     text = _tilde(oracle, name).lower()
@@ -316,9 +289,8 @@ for set_code in STANDARD_SETS:
         # card's own "when ~ enters" sentences; everything else gets no
         # auto-handler and is listed in the guard report for review.
         old_etb = parsed.get("etb", [])
-        own = self_etb_text(oracle, name)
         try:
-            etb_efx = parse_oracle(own).get("etb", []) if own else []
+            etb_efx = own_etb_effects(oracle, name)
         except Exception:
             etb_efx = []
         _is_perm = any(t in type_line for t in ("Creature", "Enchantment", "Artifact"))

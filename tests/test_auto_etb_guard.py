@@ -7,7 +7,6 @@ auto-generated ETB handler belongs to a card the guard reported as dropped.
 Run: python tests/test_auto_etb_guard.py
 """
 import csv
-import importlib.util
 import os
 import re
 import sys
@@ -15,14 +14,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-# The build script runs on import (it needs the bulk file), so lift the two
-# pure helpers out of its source instead.
-src = open(os.path.join(ROOT, "scripts", "build_standard_handlers.py"), encoding="utf-8").read()
-start = src.index('_SELF = r"')
-end = src.index("def guard_reason")
-ns = {"re": re}
-exec(src[start:end], ns)
-self_etb_text = ns["self_etb_text"]
+from engine.oracle_parser import own_etb_effects, self_etb_text
 
 # its own enters trigger: kept, with the modes under it
 t = self_etb_text("Flying\nWhen Starling enters, choose one —\n• Draw a card.\n• You gain 3 life.\nWard {2}",
@@ -40,6 +32,9 @@ for oracle in (
     "At the beginning of your upkeep, draw a card.",
 ):
     assert self_etb_text(oracle, "Some Card") == "", oracle
+
+assert own_etb_effects("When this creature enters, draw a card.", "Gallant Citizen")
+assert own_etb_effects("When this creature dies, create a Treasure token.", "Common Crook") == []
 
 # the committed handlers file agrees with the committed report
 report = os.path.join(ROOT, "data", "auto_etb_guard_report.csv")

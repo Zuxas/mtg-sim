@@ -380,15 +380,16 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             gs.spells_cast_this_turn = 0
             gs.innocence_drew_this_turn = False
             gs._monument_choices_this_turn = set()   # Monument to Endurance choice reset
-            # NOTE: In real MTG, mana empties at the cleanup step. We intentionally
-            # do NOT reset the mana pool here because tap_lands() auto-taps ALL
-            # lands unconditionally — there's no concept of "hold up mana" for
-            # instant-speed interaction. If we reset here, neither player has mana
-            # in any response window, eliminating all interaction. The accumulation
-            # serves as a rough proxy for held-up mana until per-land tap control
-            # is implemented. Known limitation: players can interact across multiple
-            # turns' worth of accumulated mana (slightly too much interaction).
-            # TODO: implement selective land tapping per APL (COUNTER_COST reserve)
+            # Mana does not carry from one of your turns to the next (CR 500.4).
+            # The pool used to be left alone "as a rough proxy for held-up
+            # mana", which let it pile up without limit: six lands gave 21
+            # mana on turn 6, and every unspent point was banked forever.
+            # ponytail: what you leave unspent on your own turn still floats
+            # through the opponent's turn. That is the same mana you could
+            # have held up by not tapping, so it keeps instant-speed plays
+            # working for APLs with no reserve_mana(); empty at end of turn
+            # once every APL holds lands back through reserve_mana().
+            gs.mana_pool.empty()
             # Stash opp GS on active gs so ETB handlers (Bringer's
             # Living End mass-reanimate, etc.) can reach across.
             gs._match_opp = opp_gs

@@ -355,8 +355,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         # 4. Quantum Riddler ({3}{U}{U}) — 4/6 flying, ETB draw 1
         for c in list(gs.zones.hand):
             if c.name == QUANTUM and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
-                gs.cast_spell(c)
-                self._draw(gs, 1)
+                gs.cast_spell(c)      # the engine handler draws the card
                 gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
                 break
 
@@ -375,24 +374,12 @@ class JeskaiBlinkMatchAPL(MatchAPL):
         # 6. Teferi ({1}{W}{U}) — opponents sorcery-speed, -3 bounce+draw
         for c in list(gs.zones.hand):
             if c.name == TEFERI and gs.mana_pool.can_cast(c.mana_cost, c.cmc):
+                # The engine handler does the -3 (bounce + draw) as Teferi
+                # enters. This APL used to do it again by hand: two bounces
+                # and two cards from one Teferi.
+                # ponytail: the handler picks the bounce target, so this
+                # APL's "planeswalker first" preference is gone.
                 gs.cast_spell(c)
-                if opponent:
-                    opp_nonlands = [x for x in opponent.zones.battlefield if not x.is_land()]
-                    if opp_nonlands:
-                        # Oracle: "-3: Return up to one target artifact, creature, or
-                        # enchantment to its owner's hand. Draw a card."
-                        # Priority: planeswalkers (can't kill, bounce is best answer)
-                        # > highest CMC (most expensive to re-cast) > highest power.
-                        pws = [x for x in opp_nonlands if x.has(Tag.PLANESWALKER)]
-                        if pws:
-                            target = max(pws, key=lambda x: getattr(x, 'cmc', 0))
-                        else:
-                            target = max(opp_nonlands, key=lambda x: (
-                                getattr(x, 'cmc', 0), safe_power(x)))
-                        opponent.zones.battlefield.remove(target)
-                        opponent.zones.hand.append(target)
-                        gs._log(f"  Teferi -3: bounce {target.name} + draw")
-                self._draw(gs, 1)
                 break
 
         # 7. Phlage — hardcast as removal OR escape from GY as finisher
@@ -712,10 +699,7 @@ class JeskaiBlinkMatchAPL(MatchAPL):
                         self._draw(gs, 3)
                         self._casey_discards_pending += 1
                         gs._log(f"  Casey Jones: draw 3 (discard 3 next upkeep, pending={self._casey_discards_pending})")
-                    # Quantum Riddler ETB: draw 1
-                    elif c.name == QUANTUM:
-                        self._draw(gs, 1)
-                        gs._log(f"  Quantum Riddler: 4/6 flying, draw 1")
+                    # Quantum Riddler's draw is the engine handler's job.
 
     def _blink_best_etb(self, gs, opponent):
         """Blink the best ETB creature on our battlefield.

@@ -109,6 +109,19 @@ def test_carddb_does_not_match_on_substrings():
     assert db.get("Fable") is None                         # too short to trust
 
 
+def test_scryfall_client_works_without_requests():
+    """`requests` is only for the network fallback. Without it installed the
+    module must still import (sim.py could not start on the CI runner) and a
+    lookup just finds nothing."""
+    import data.scryfall_client as client
+    real = client.requests
+    client.requests = None
+    try:
+        assert client.get_cards_data(["Lightning Bolt"]) == {}
+    finally:
+        client.requests = real
+
+
 if __name__ == "__main__":
     test_dfc_is_found_by_front_face_and_fully_populated()
     test_back_face_name_does_not_resolve_to_the_front_face()

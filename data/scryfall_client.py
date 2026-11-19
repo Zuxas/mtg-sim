@@ -16,8 +16,15 @@ Attribution: Card data from Scryfall (https://scryfall.com).
 Magic: The Gathering is (c) Wizards of the Coast.
 """
 
-import requests
 from typing import Iterable
+
+# Only the network fallback needs `requests`. A machine with the bulk oracle
+# file and no `requests` (the self-hosted CI runner) must still be able to
+# import this module, and with it sim.py.
+try:
+    import requests
+except ModuleNotFoundError:
+    requests = None
 
 _ENDPOINT = "https://api.scryfall.com/cards/collection"
 _BATCH = 75
@@ -57,6 +64,8 @@ def get_cards_data(names: Iterable[str]) -> dict:
         # The collection endpoint matches a front-face name, not "Front // Back"
         body = {"identifiers": [{"name": _front(n)} for n in batch]}
         try:
+            if requests is None:
+                raise RuntimeError("the 'requests' package is not installed")
             r = requests.post(_ENDPOINT, json=body, headers=headers, timeout=10)
             r.raise_for_status()
             payload = r.json()

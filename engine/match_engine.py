@@ -28,7 +28,7 @@ from engine.stack import (
     Stack, InteractionType, classify_card, get_burn_damage,
     resolve_interaction,
 )
-from apl.match_apl import MatchAPL, GoldfishAdapter
+from apl.match_apl import MatchAPL, GoldfishAdapter, is_instant_speed
 from apl.mulligan import take_opening_hand
 from data.card import Card, Tag
 
@@ -77,7 +77,7 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
     interaction_cards = []
     for c in hand:
         itype = classify_card(c)
-        if itype != InteractionType.NONE and (c.has(Tag.INSTANT) or c.has(Tag.SORCERY)):
+        if itype != InteractionType.NONE and is_instant_speed(c):
             # Check if we have mana to cast it
             if hasattr(c, 'cmc') and c.cmc <= reactive_gs.mana_pool.total():
                 interaction_cards.append((c, itype))
@@ -87,7 +87,9 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
     
     # Ask the APL which interaction to use
     response = reactive_apl.respond_to_spell(reactive_gs, active_gs, None)
-    if response and response in reactive_gs.zones.hand:
+    # is_instant_speed again: an APL that overrides respond_to_spell may hand
+    # back a sorcery, and this is the one place every response goes through.
+    if response and response in reactive_gs.zones.hand and is_instant_speed(response):
         itype = classify_card(response)
         
         # Pick target

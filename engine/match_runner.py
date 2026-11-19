@@ -1452,6 +1452,18 @@ def _run_match_with_combo(
         gs.turn = turn_num
         gs.land_played_a = False
 
+        def _combo_kills() -> bool:
+            if not combo_b.kills_on_turn(turn_num):
+                return False
+            result.won = False; result.kill_turn = turn_num
+            result.winner_damage = 20; result.turn_count = turn_num
+            return True
+
+        # A on the draw: the combo player's turn N comes BEFORE A's turn N, so
+        # A does not get that turn's attack first (#31).
+        if not on_play and _combo_kills():
+            return result
+
         if turn_num > 1:
             for c in gs.bf_a:
                 c.summoning_sickness = False
@@ -1474,10 +1486,8 @@ def _run_match_with_combo(
             result.winner_damage = gs.damage_to_b; result.turn_count = turn_num
             return result
 
-        # Player B combo kill check
-        if combo_b.kills_on_turn(turn_num):
-            result.won = False; result.kill_turn = turn_num
-            result.winner_damage = 20; result.turn_count = turn_num
+        # A on the play: the combo player's turn N comes after A's turn N
+        if on_play and _combo_kills():
             return result
 
     result.won = gs.damage_to_b > 0

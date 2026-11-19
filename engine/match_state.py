@@ -100,8 +100,16 @@ class MatchGameState:
         self.rng = random.Random(seed)
 
         # Each player gets a full GameState with all mechanics
-        self.gs_a = GameState(list(deck_a), on_play=True)
-        self.gs_b = GameState(list(deck_b), on_play=False)
+        # _PhaseView is a GameState whose life / damage_dealt writes can be
+        # logged in order; settle_damage() needs that. Imported here because
+        # match_runner imports this module.
+        from engine.match_runner import _PhaseView, _watch
+        self.gs_a = _PhaseView(list(deck_a), on_play=True)
+        self.gs_b = _PhaseView(list(deck_b), on_play=False)
+        # One ordered log per direction: X's damage_dealt bumps and the
+        # life changes of X's opponent.
+        self._loss_logs = {'a': _watch(self.gs_a, self.gs_b),
+                           'b': _watch(self.gs_b, self.gs_a)}
 
         # Copy mainboard into library (goldfish engine does this in run_game)
         from copy import deepcopy
@@ -145,6 +153,64 @@ class MatchGameState:
             self.game_over = True
             self.winner = source_player
             self.win_method = 'combat'
+
+    def settle_damage(self):
+        """Take damage that was only written to `damage_dealt` off the
+        opponent's life.
+
+        About 40 APL and handler sites deal noncombat damage the goldfish way
+        (`gs.damage_dealt += n`) and never touch the opponent's life, so in a
+        match it vanished: Boros Energy lost about 15 points a game (Phlage,
+        Ajani, Goblin Bombardment). Other sites write `_match_opp.life`, and
+        the shared burn helpers and deal_damage() write both. Same rule as
+        match_runner._sync_view: a damage_dealt bump next to an equal life
+        loss is one event that already landed; a bump on its own has not.
+        # ponytail: adjacency test, same ceiling as _sync_view: a goldfish-style
+        # bump of n immediately followed by an unrelated life loss of exactly n
+        # (say, the opponent's own shock land) reads as one event and the bump
+        # is dropped. This is a bridge; the real fix is one deal_damage() that
+        # every APL and handler calls, then delete this.
+        """
+        for player, log in self._loss_logs.items():
+            opp = self.gs_b if player == 'a' else self.gs_a
+            owed, i = 0, 0
+            while i < len(log):
+                kind, n = log[i]
+                if n > 0 and i + 1 < len(log) and log[i + 1] == ("life" if kind == "dmg" else "dmg", n):
+                    i += 2          # written to both channels: already applied
+                    continue
+                if kind == "dmg" and n > 0:
+                    owed += n
+                i += 1
+            del log[:]
+            if owed:
+                opp.life -= owed
+                del log[:]          # our own write is not a new event
+
+    def check_life(self, method: str = 'noncombat') -> bool:
+        """State-based action (CR 704.5a): a player at 0 or less life loses.
+
+        Combat damage sets game_over in deal_damage; this catches everything
+        else (burn, drain, life payment). Returns True if the game is over.
+
+        Both players dead at once is a draw by the rules. Nothing downstream
+        models draws (Bo3 and the set totals score any non-'a' winner for B),
+        so it is a seeded coin flip, flagged win_method='simultaneous_tie'.
+        """
+        self.settle_damage()
+        a_dead, b_dead = self.gs_a.life <= 0, self.gs_b.life <= 0
+        if self.game_over and not (a_dead and b_dead):
+            return True     # already decided (deal_damage names the winner at once)
+        if not (a_dead or b_dead):
+            return False
+        self.game_over = True
+        if a_dead and b_dead:
+            self.winner = self.rng.choice(['a', 'b'])
+            self.win_method = 'simultaneous_tie'
+        else:
+            self.winner = 'b' if a_dead else 'a'
+            self.win_method = method
+        return True
 
     def gain_life(self, player: str, amount: int):
         """Player gains life (from lifelink, etc.)."""

@@ -116,7 +116,24 @@ python tests/test_standard_apls.py
 
 Each test sets `sys.path` up to the repo root before importing, so any cwd works.
 
-CI runs `tests/test_match_engine.py` on push (see `.github/workflows/tests.yml`).
+To run them as a suite:
+
+```bash
+python scripts/run_tests.py            # fast tier (about 2 minutes, no card data or DB needed)
+python scripts/run_tests.py --all      # every script, including the tiers below
+python scripts/run_tests.py test_determinism test_menace_combat   # just these
+```
+
+The runner prints `PASS` / `FAIL` per script with its runtime, shows the tail of a failing script's output, and exits 1 if anything failed.
+
+| Tier | What | When it runs |
+|---|---|---|
+| Fast | Every `tests/test_*.py` not listed below. Deterministic, self-contained. | CI, on every push and PR (`fast-tests` job in `.github/workflows/tests.yml`) |
+| Slow | `test_run_match_set_workers` (n=10000 runs, wall-clock speedup assertion) | `--all`, locally |
+| Card data | `test_api`, `test_anchor_amulet` (need `scripts/fetch_scryfall_bulk.sh`) | `--all`, locally |
+| Meta DB | `test_modern_apls`, `test_all_modern_apls`, `test_pioneer_apls`, `test_standard_apls` (need the mtg-meta-analyzer DB) | `--all`, locally |
+
+The exclusion list, with a reason for each script, is `EXCLUDED` in `scripts/run_tests.py`. Skipped scripts are printed in every run, so a skip is never silent. A new `tests/test_*.py` joins the fast tier automatically.
 
 ## Status
 

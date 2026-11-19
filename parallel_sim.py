@@ -27,6 +27,34 @@ os.makedirs(LOG_DIR, exist_ok=True)
 # Each worker handles one matchup independently
 # ---------------------------------------------------------------------------
 
+def cell_flag(r):
+    """Suffix for a cell whose number is not this deck's (#25)."""
+    return "" if r.get("our_side_modeled", True) else "  [!COMBO MODEL]"
+
+
+def field_weighted(results):
+    """(field-weighted match win%, excluded field share).
+
+    Cells where the combo model stood Legacy Humans in for our deck
+    (our_side_modeled False) are left out and the weights renormalized over
+    the rest; their field share is returned so it can be reported. Win% is
+    None when no valid cell remains. Errored cells are skipped as before.
+    """
+    ok = [r for r in results if not r.get("error")]
+    valid = [r for r in ok if r.get("our_side_modeled", True)]
+    excluded = round(sum(r["field_pct"] for r in ok) - sum(r["field_pct"] for r in valid), 1)
+    total_w = sum(r["field_pct"] for r in valid)
+    fw = round(sum(r["match"] * r["field_pct"] for r in valid) / total_w, 1) if total_w else None
+    return fw, excluded
+
+
+def print_field_weighted(fw, excluded):
+    print(f"  Field-weighted match win%: {'unavailable' if fw is None else f'{fw:.1f}%'}")
+    if excluded:
+        print(f"  [!COMBO MODEL] {excluded:.1f}% of the field excluded: those cells are "
+              f"Legacy Humans' win rate, not this deck's")
+
+
 def _worker(task: dict) -> dict:
     """
     Worker process: simulate one matchup and return results.
@@ -184,7 +212,6 @@ def run_parallel(
     print(f"\n{'Opponent':<28} {'Field%':>6}  {'G1':>6}  {'G2':>6}  {'Match':>7}  Type")
     print("─" * 65)
 
-    total_w = weighted_match = 0
     for r in sorted(results, key=lambda x: -x.get("field_pct", 0)):
         if r.get("error"):
             print(f"  {r['opp']:<26} ERROR: {r['error']}")
@@ -192,13 +219,11 @@ def run_parallel(
         fp = r["field_pct"]
         print(f"  {r['opp']:<26} {fp:>5.1f}%  "
               f"{r['g1']:>5.1f}%  {r['g2']:>5.1f}%  "
-              f"{r['match']:>6.1f}%  {r['type']}")
-        weighted_match += r["match"] * fp
-        total_w += fp
+              f"{r['match']:>6.1f}%  {r['type']}{cell_flag(r)}")
 
     print(f"{'─'*65}")
-    if total_w > 0:
-        print(f"  Field-weighted match win%: {weighted_match/total_w:.1f}%")
+    fw, excluded = field_weighted(results)
+    print_field_weighted(fw, excluded)
     print(f"  Time: {elapsed:.0f}s on {n_cores} cores  "
           f"({n * len(tasks):,} total games)")
 
@@ -212,7 +237,9 @@ def run_parallel(
             "n_per_matchup": n,
             "cores":      n_cores,
             "elapsed_s":  round(elapsed, 1),
-            "field_weighted_match": round(weighted_match / total_w, 1) if total_w else 0,
+            "field_weighted_match": fw or 0,
+            "field_weighted_available": fw is not None,   # False: the 0 above is not a win rate
+            "excluded_field_pct": excluded,
             "results":    results,
         }, f, indent=2)
     print(f"  Saved: {out_path}")
@@ -220,7 +247,8 @@ def run_parallel(
     # Update live matrix (concurrency-safe RMW; see engine/atomic_json.py)
     from engine.atomic_json import atomic_rmw_json
     matrix_path = "data/sim_matchup_matrix.json"
-    new_row = {r["opp"]: r["g1"] for r in results if not r.get("error")}
+    new_row = {r["opp"]: r["g1"] for r in results if not r.get("error")
+               and r.get("our_side_modeled", True)}   # no stand-in cells in the matrix (#25)
     atomic_rmw_json(
         matrix_path,
         lambda matrix: matrix.update({our_deck: new_row}),

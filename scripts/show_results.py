@@ -14,7 +14,8 @@ for f in files:
     ok      = [r for r in results if not r.get('error')]
 
     print(f"\n{'='*70}")
-    print(f"  {deck} ({fmt.upper()})  —  field-weighted match win%: {fw}%  [{t}s]")
+    fw_txt = f"{fw}%" if d.get('field_weighted_available', True) else "unavailable"
+    print(f"  {deck} ({fmt.upper()})  —  field-weighted match win%: {fw_txt}  [{t}s]")
     print(f"  {len(ok)} ok / {len(errors)} errors")
     print(f"{'='*70}")
     print(f"  {'Opponent':<30} {'Field%':>6}  {'G1':>6}  {'G2':>6}  {'Match':>7}  Src")

@@ -411,6 +411,8 @@ def _run_player_turn(gs: TwoPlayerGameState, player: str, apl,
     # lifelink, trample, flying-vs-blocker, indestructible.
     # Phase 3.5 Stage B: 5-tuple return adds defender_lifelink_gain.)
     dmg, attacker_lost, defender_lost, lifelink_gain, defender_lifelink_gain, creatures_hit = _resolve_combat(gs, player)
+    if lifelink_gain > 0 and apl is not None:
+        apl._gained_life_this_turn = True   # see MatchAPL.own_end_step
     if player == "a":
         gs.damage_to_b += dmg
         gs.life_b      -= dmg

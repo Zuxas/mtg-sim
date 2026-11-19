@@ -111,6 +111,44 @@ def test_match_runner_calls_it_once_per_own_turn():
     _check_engine(match_runner)
 
 
+def _lifelink_only_game(engine):
+    """Ocelot Pride (first strike, lifelink) is the ONLY life gain in the deck:
+    the Cat can only come from the engine reporting combat lifelink."""
+    from engine.keywords import tag_keywords
+
+    def ocelot():
+        c = Card(name=OCELOT_PRIDE, mana_cost="{W}", cmc=1.0, type_line="Creature - Cat",
+                 oracle_text="First strike, lifelink", power="1", toughness="1")
+        c.tags = {Tag.CREATURE}
+        tag_keywords(c)
+        return c
+
+    def land(name, kind):
+        c = Card(name=name, mana_cost="", cmc=0.0, type_line=f"Basic Land - {kind}")
+        c.tags = {Tag.LAND}
+        return c
+
+    deck_a = [ocelot() for _ in range(36)] + [land("Plains", "Plains") for _ in range(24)]
+    deck_b = [land("Mountain", "Mountain") for _ in range(60)]
+    from apl.match_apl import GenericMatchAPL
+    a = _Spy()
+    a.max_cats = 0
+    plain_own_end = a.own_end_step
+
+    def own_end(gs, opponent):
+        plain_own_end(gs, opponent)
+        a.max_cats = max(a.max_cats, _cats(gs))
+    a.own_end_step = own_end
+    engine.run_match(a, deck_a, GenericMatchAPL(), deck_b, seed=7)
+    return a.max_cats
+
+
+def test_combat_lifelink_counts_as_life_gained_in_both_engines():
+    for engine in (match_engine, match_runner):
+        assert _lifelink_only_game(engine) > 0, (
+            f"{engine.__name__}: Ocelot Pride connected with lifelink but made no Cat")
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

@@ -544,6 +544,7 @@ def run_match(apl_a: MatchAPL, deck_a: list,
                 # Apply lifelink
                 if combat_result.life_gained_attacker > 0:
                     mgs.gain_life(active, combat_result.life_gained_attacker)
+                    apl._gained_life_this_turn = True   # see MatchAPL.own_end_step
 
                 # Remove dead creatures
                 for dead in combat_result.attacker_deaths:

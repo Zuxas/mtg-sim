@@ -504,6 +504,13 @@ class MatchAPL(BaseAPL):
         "At the beginning of your end step" triggers, on YOUR turn. Both
         engines call it for the active player before the opponent's
         end_step_actions window. Default: do nothing.
+
+        "If you gained life this turn" checks read self._gained_life_this_turn.
+        The engines set it when combat lifelink gains you life; the APL sets
+        it for its own life gain and resets it at the start of its main phase.
+        ponytail: the flag lives on the APL, so a main phase that raises
+        before the reset leaves last turn's value. Move it to an engine-owned
+        per-player field when a second deck needs it.
         """
         pass
 

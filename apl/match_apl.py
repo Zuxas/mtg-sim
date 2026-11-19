@@ -23,6 +23,13 @@ from engine.match_state import (
 from data.card import Card, Tag
 
 
+def is_instant_speed(card) -> bool:
+    """True if `card` can be cast on the opponent's turn: an instant, or
+    anything with flash. Sorcery-speed removal, burn and discard cannot (#30)."""
+    from engine.keywords import KWTag
+    return card.has(Tag.INSTANT) or KWTag.FLASH in getattr(card, "tags", ())
+
+
 class MatchAPL(BaseAPL):
     """
     Extended APL interface for two-player games.
@@ -475,9 +482,10 @@ class MatchAPL(BaseAPL):
         """
         from engine.stack import classify_card, InteractionType
         
-        # Find instants we could cast
+        # Find instants we could cast. Sorceries are not castable here: this
+        # runs on the opponent's turn (#30).
         for c in gs.zones.hand:
-            if not (c.has(Tag.INSTANT) or c.has(Tag.SORCERY)):
+            if not is_instant_speed(c):
                 continue
             if not hasattr(c, 'cmc') or c.cmc > gs.mana_pool.total():
                 continue
@@ -498,6 +506,21 @@ class MatchAPL(BaseAPL):
                 return c
         
         return None
+
+    def own_end_step(self, gs: GameState, opponent: GameState):
+        """
+        "At the beginning of your end step" triggers, on YOUR turn. Both
+        engines call it for the active player before the opponent's
+        end_step_actions window. Default: do nothing.
+
+        "If you gained life this turn" checks read self._gained_life_this_turn.
+        The engines set it when combat lifelink gains you life; the APL sets
+        it for its own life gain and resets it at the start of its main phase.
+        ponytail: the flag lives on the APL, so a main phase that raises
+        before the reset leaves last turn's value. Move it to an engine-owned
+        per-player field when a second deck needs it.
+        """
+        pass
 
     def end_step_actions(self, gs: GameState, opponent: GameState):
         """

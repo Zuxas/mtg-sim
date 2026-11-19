@@ -64,6 +64,8 @@ jobs:
         run: python tests/test_determinism.py
       - name: Menace combat tests
         run: python tests/test_menace_combat.py
+      - name: Handler sweep (every ETB/spell handler must not raise)
+        run: python tests/test_handler_sweep.py
       - name: Report failure
         if: failure()
         uses: actions/github-script@v8

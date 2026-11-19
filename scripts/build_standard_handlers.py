@@ -214,6 +214,14 @@ already    = []
 skipped    = []
 
 seen = set()
+rep_unreviewed = []
+# Reviewed 2026-11-19 (Claude + Tom): the generated effect matches the card,
+# allowing the engine's usual target simplification (biggest creature).
+REP_REVIEWED = {
+    "Diresight", "Eerie Gravestone", "Gallant Citizen", "Last Gasp",
+    "Meteor Golem", "Murder", "Prophetic Prism", "Robotics Mastery",
+    "Selfless Police Captain", "Venomized Cat",
+}
 
 for set_code in STANDARD_SETS:
     for c in SET_CARDS[set_code]:
@@ -228,6 +236,12 @@ for set_code in STANDARD_SETS:
         # Skip basics and token-only cards
         if name in BASIC_LANDS or "Basic Land" in type_line:
             skipped.append(name); continue
+        # Reprint bucket: only cards whose generated effect was read against
+        # the card text. The parser turns "dies" / "leaves" / "whenever you
+        # cast" triggers into enters-the-battlefield effects, so an unreviewed
+        # card here would get a handler that fires at the wrong time.
+        if set_code == "rep" and name not in REP_REVIEWED:
+            rep_unreviewed.append(name); continue
         if "Token" in type_line and "Creature" in type_line and not oracle:
             skipped.append(name); continue
 
@@ -341,4 +355,7 @@ for _,_,_,sc in hand_write: by_set[sc] += 1
 for code, name in STANDARD_SETS.items():
     print(f"  {code:4} {name:<40} {by_set[code]:>4} need hand-write")
 
+if rep_unreviewed:
+    print(f"\n  [!REP UNREVIEWED] {len(rep_unreviewed)} Standard-legal reprints have no auto-handler "
+          f"until reviewed (add to REP_REVIEWED): " + ", ".join(sorted(rep_unreviewed)[:12]) + " ...")
 print(f"\nWrote: {OUT}")

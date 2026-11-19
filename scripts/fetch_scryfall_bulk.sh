@@ -28,10 +28,13 @@ fetch_one() {
         echo "$out is $age_days days old (>= $STALE_DAYS) - refreshing"
     fi
 
+    # Windows installs (the self-hosted runner) ship `python`, not `python3`.
+    local PY=python3
+    command -v python3 >/dev/null 2>&1 || PY=python
     local uri
     uri=$(curl -fsSL -A "mtg-sim/1.0" \
         "https://api.scryfall.com/bulk-data" \
-        | python3 -c "
+        | "$PY" -c "
 import json, sys
 data = json.load(sys.stdin)
 for b in data['data']:

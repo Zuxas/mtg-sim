@@ -19581,7 +19581,7 @@ def _witherbloom_command(gs, card):
     from own library as self-mill proxy, return a land from GY if
     present."""
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     lands_in_gy = [c for c in gs.zones.graveyard if c.is_land()]
     if lands_in_gy:
         land = lands_in_gy[0]
@@ -22829,7 +22829,7 @@ def _quag_feast(gs, card):
     """Quag Feast — {1}{B} Sorcery.
     'Choose target C/PW/Vehicle. Mill 2, destroy if mv ≤ GY count.'"""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Quag Feast: self-mill 2 (opp target no-op)")
 
 
@@ -22876,7 +22876,7 @@ def _space_time_anomaly(gs, card):
     Goldfish: self-mill (only player modeled)."""
     n = min(gs.life, len(gs.zones.library))
     gs.zones.graveyard.extend(gs.zones.library[:n])
-    gs.zones.library = gs.zones.library[n:]
+    del gs.zones.library[:n]
     gs._log(f"  Space-Time Anomaly: self-mill {n}")
 
 
@@ -23145,7 +23145,7 @@ def _confounding_riddle(gs, card):
     if gs.zones.library:
         gs.zones.draw(1)
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     gs._log("  Confounding Riddle: draw 1, self-mill 3")
 
 
@@ -23975,7 +23975,7 @@ def _random_encounter(gs, card):
     Goldfish: self-mill 4; put creatures on BF."""
     from data.card import Tag
     milled = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     creatures = [c for c in milled if c.has(Tag.CREATURE)]
     rest = [c for c in milled if c not in creatures]
     for c in creatures:
@@ -24421,7 +24421,7 @@ def _broodspinner_etb(gs, card):
 
     Goldfish: surveil ≈ mill 2 from self library as dig proxy."""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Broodspinner ETB: 2/3 reach, surveil 2 (self-mill 2)")
 
 
@@ -25432,7 +25432,7 @@ def _rubblebelt_maverick_etb(gs, card):
 
     Goldfish: self-mill 2 as proxy."""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Rubblebelt Maverick ETB: 1/1, surveil 2 (mill 2)")
 
 
@@ -25526,7 +25526,7 @@ def _seedship_broodtender_etb(gs, card):
     """Seedship Broodtender — {B}{G} Insect Citizen (2/3).
     'ETB: mill 3. {3}{B}{G},Sac: [truncated].'"""
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     gs._log("  Seedship Broodtender ETB: 2/3, self-mill 3")
 
 
@@ -25761,7 +25761,7 @@ def _terra_magical_adept_etb(gs, card):
 
     Goldfish: mill 5 from own library; check for enchantment."""
     milled = gs.zones.library[:5]
-    gs.zones.library = gs.zones.library[5:]
+    del gs.zones.library[:5]
     enchants = [c for c in milled if "Enchantment" in (c.type_line or "")]
     rest = [c for c in milled if c not in enchants]
     if enchants:
@@ -25889,7 +25889,7 @@ def _town_greeter_etb(gs, card):
 
     Goldfish: self-mill 4; promote a land to hand."""
     milled = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     lands = [c for c in milled if c.is_land()]
     rest = [c for c in milled if c not in lands]
     if lands:
@@ -25989,7 +25989,7 @@ def _vanille_cheerful_lcie_etb(gs, card):
 
     Goldfish: self-mill 2, reanimate a permanent."""
     milled = gs.zones.library[:2]
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs.zones.graveyard.extend(milled)
 
     perms = [c for c in gs.zones.graveyard
@@ -26057,7 +26057,7 @@ def _watcher_of_the_wayside_etb(gs, card):
     """Watcher of the Wayside — {3} Artifact Creature — Golem (3/2).
     'ETB: target player mills 2, you gain 2 life.'"""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs.life += 2
     gs._log("  Watcher of the Wayside ETB: 3/2, self-mill 2, +2 life")
 
@@ -26234,7 +26234,7 @@ def _overlord_balemurk_etb(gs, card):
     clone is not modeled here; the ETB path captures the first fire."""
     from data.card import Tag
     top4 = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     gs.zones.graveyard.extend(top4)
     candidates = [c for c in gs.zones.graveyard
                   if (c.has(Tag.CREATURE) or c.has(Tag.PLANESWALKER))
@@ -27411,7 +27411,7 @@ def _doomsday_excruciator_etb(gs, card):
     self_excess = max(0, len(gs.zones.library) - keep)
     if self_excess:
         exiled = gs.zones.library[:-keep]
-        gs.zones.library = gs.zones.library[-keep:]
+        del gs.zones.library[:-keep]
         gs.zones.exile.extend(exiled)
         gs._log(f"  Doomsday Excruciator ETB: exile {self_excess} from own "
                 f"library (bottom {keep} remain)")
@@ -27420,7 +27420,7 @@ def _doomsday_excruciator_etb(gs, card):
         opp_excess = max(0, len(opp.zones.library) - keep)
         if opp_excess:
             exiled = opp.zones.library[:-keep]
-            opp.zones.library = opp.zones.library[-keep:]
+            del opp.zones.library[:-keep]
             opp.zones.exile.extend(exiled)
             gs._log(f"  Doomsday Excruciator ETB: exile {opp_excess} from opp "
                     f"library (bottom {keep} remain)")
@@ -28621,7 +28621,7 @@ def _mind_roots_spell(gs, card):
     opp = getattr(gs, "_match_opp", None)
     if opp and len(opp.zones.hand) >= 2:
         discarded = opp.zones.hand[:2]
-        opp.zones.hand = opp.zones.hand[2:]
+        del opp.zones.hand[:2]
         for c in discarded:
             if c.is_land():
                 gs.zones.battlefield.append(c)
@@ -32027,7 +32027,7 @@ def _clone_saga_etb(gs, card):
     ETB proxy: surveil 2 (look at top 2, keep best)."""
     if len(gs.zones.library) >= 2:
         top2 = gs.zones.library[:2]
-        gs.zones.library = gs.zones.library[2:]
+        del gs.zones.library[:2]
         for c in top2:
             if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
                 gs.zones.hand.append(c)
@@ -36964,7 +36964,7 @@ def _ral_zarek_guest_lecturer_etb(gs, card):
     ETB proxy: surveil 2 (look at top 2, bottom/hand) + keep loyalty."""
     if len(gs.zones.library) >= 2:
         top2 = gs.zones.library[:2]
-        gs.zones.library = gs.zones.library[2:]
+        del gs.zones.library[:2]
         for c in top2:
             if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
                 gs.zones.hand.append(c)

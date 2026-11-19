@@ -129,7 +129,7 @@ def _doomsday_excruciator_etb(gs, card):
         exile_count = len(lib) - 6
         # bottom 6 are the LAST 6 in the list (assuming draw pops front)
         exiled = lib[:exile_count]
-        g.zones.library = lib[exile_count:]
+        del lib[:exile_count]      # in place: `lib` may be shared with the match state
         g.zones.exile.extend(exiled)
         return exile_count
 

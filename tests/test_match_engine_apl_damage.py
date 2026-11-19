@@ -107,6 +107,19 @@ def test_opponents_own_life_payment_is_not_doubled():
     assert mgs.gs_b.life == 18
 
 
+def test_known_ceiling_equal_unrelated_events_are_read_as_one():
+    """Documents the bridge's limit rather than a wanted behaviour: a
+    goldfish-style bump of 2 right before the opponent's own 2-life payment
+    is indistinguishable from one dual-channel write, so the bump is dropped.
+    This test should start failing, and be deleted, when damage goes through
+    one deal_damage() call."""
+    mgs = MatchGameState(_lands(), _lands(), seed=1)
+    mgs.gs_a.damage_dealt += 2                # A pings for 2, goldfish style
+    mgs.gs_b.life -= 2                        # B's own shock land
+    mgs.settle_damage()
+    assert mgs.gs_b.life == 18                # truth would be 16
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):

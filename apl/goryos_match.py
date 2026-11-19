@@ -39,6 +39,7 @@ class GoryosMatchAPL(MatchAPL):
     def __init__(self):
         self._combo_assembled = False
         self._ephemerate_rebound = False
+        self._goryo_exile = None   # creature Goryo's Vengeance must exile at our end step
 
     def keep(self, hand, mulligans, on_play):
         """Snap keep: Goryo's + Atraxa/Griselbrand + Ephemerate. Or Psychic Frog + discard fuel."""
@@ -137,7 +138,14 @@ class GoryosMatchAPL(MatchAPL):
         if gy_targets and avail >= 2:
             for c in list(gs.zones.hand):
                 if c.name == GORYOS:
-                    gs.mana_pool.pay("{1}{B}", 2) if gs.mana_pool.can_pay("{1}{B}", 2) else None
+                    # Pay for Ephemerate together with Goryo's when we can, so the
+                    # generic mana does not eat the white source.
+                    eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
+                    if eph and gs.mana_pool.can_pay("{1}{B}{W}", 3):
+                        gs.mana_pool.pay("{1}{B}{W}", 3)
+                    else:
+                        eph = None
+                        gs.mana_pool.pay("{1}{B}", 2) if gs.mana_pool.can_pay("{1}{B}", 2) else None
                     gs.zones.hand.remove(c); gs.zones.graveyard.append(c)
                     # Reanimate best target
                     target = max(gy_targets, key=lambda x: getattr(x, 'cmc', 0))
@@ -146,6 +154,7 @@ class GoryosMatchAPL(MatchAPL):
                     target.turn_entered = gs.turn; target.summoning_sickness = False  # haste!
                     gs._log(f"  GORYO'S VENGEANCE: reanimate {target.name} (haste!)")
                     self._combo_assembled = True
+                    self._goryo_exile = target   # "Exile it at the beginning of the next end step."
                     # Atraxa ETB: look at top 10, take one of each type (simulate as draw 4)
                     if target.name == ATRAXA:
                         self._draw(gs, 4)
@@ -156,10 +165,14 @@ class GoryosMatchAPL(MatchAPL):
                             gs.life -= 7; self._draw(gs, 7)
                             gs._log(f"    Griselbrand: pay 7 life, draw 7")
                     # EPHEMERATE to keep permanently!
-                    eph = next((x for x in gs.zones.hand if x.name == EPHEMERATE), None)
-                    if eph:
+                    # ponytail: the real line is attack with haste, then Ephemerate in
+                    # response to the end-step exile trigger. Casting it here and
+                    # leaving the creature able to attack reaches the same board;
+                    # there is no engine blink path, so the ETB is re-fired by hand.
+                    if eph:   # paid for above; it used to be cast for free
                         gs.zones.hand.remove(eph); gs.zones.exile.append(eph)
                         self._ephemerate_rebound = True
+                        self._goryo_exile = None   # blinked: it re-entered as a new object
                         gs._log(f"    Ephemerate: {target.name} STAYS permanently (rebound next turn)")
                         # Re-trigger ETB on re-entry
                         if target.name == ATRAXA:
@@ -253,6 +266,14 @@ class GoryosMatchAPL(MatchAPL):
 
     def respond_to_spell(self, gs, opponent, spell): return None
     def end_step_actions(self, gs, opponent): pass
+
+    def own_end_step(self, gs, opponent):
+        """Goryo's Vengeance: exile the reanimated creature at our end step."""
+        target, self._goryo_exile = self._goryo_exile, None
+        if target is not None and any(c is target for c in gs.zones.battlefield):
+            gs.zones.battlefield[:] = [c for c in gs.zones.battlefield if c is not target]
+            gs.zones.exile.append(target)
+            gs._log(f"  Goryo's Vengeance: exile {target.name} at end step")
 
     def _play_land_if_able(self, gs):
         lands = [c for c in gs.zones.hand if c.is_land()]

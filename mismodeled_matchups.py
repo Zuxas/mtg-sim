@@ -59,6 +59,23 @@ MISMODELED_MATCHUPS = {
                "undermodeled, so we beat it far more often in sim than in reality. (Same gap behind the "
                "stale 63.5% 'Modern lock'.)",
     },
+    "izzet lesson": {
+        "direction": "UNUSABLE",
+        "sim": "~58% vs the field on match_runner, ~18% on match_engine",
+        "truth": "PT Secrets of Strixhaven: 49.4% overall",
+        "why": "the two engines disagree by 40 points and neither number is a simulated result. "
+               "On match_runner the deck wins through a proxy that deals the opponent's whole life "
+               "total when it has a card-advantage piece and a full hand; match_engine skips the "
+               "proxy, and what is left cannot represent a deck that wins by card advantage over "
+               "a long game. See issue #98.",
+    },
+    "jeskai lute": {
+        "direction": "UNUSABLE",
+        "sim": "not measured separately",
+        "truth": "unknown",
+        "why": "same win proxy as Izzet Lessons (Resonating Lute on board and a full hand deals "
+               "the opponent's whole life total on match_runner). See issue #98.",
+    },
     "uw control": {
         "direction": "INFLATED / UNVALIDATED",
         "sim": "~80-100%",
@@ -80,7 +97,10 @@ def lookup(name: str):
     key = _norm(name)
     for k, v in MISMODELED_MATCHUPS.items():
         kn = k.replace(" ", "")
-        if kn == key.replace(" ", "") or k in key or key in k:
+        # kn in the spaceless key: "izzetlessons" and "izzetlesson" are the
+        # same deck, and registry keys are written without spaces.
+        if (kn == key.replace(" ", "") or k in key or key in k
+                or kn in key.replace(" ", "")):
             return v
     return None
 

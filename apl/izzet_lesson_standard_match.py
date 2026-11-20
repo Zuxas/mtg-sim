@@ -281,7 +281,7 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
 
         # What lessons could we tutor?
         available_lessons = [
-            n for n in LESSON_CARDS
+            n for n in sorted(LESSON_CARDS)   # sorted: set order varies per process
             if n not in in_hand   # don't tutor what we have
         ]
         if not available_lessons:

@@ -104,23 +104,34 @@ def main():
     assert survival_blocking([elf], a, 6) == {id(a[0]): [elf]}
     print("PASS: double strike is counted as two hits")
 
-    # 8. Mono-Green Landfall used to return {} always.
+    # 8. Mono-Green Landfall used to return {} always; it now inherits the
+    #    default blocker.
+    from apl.match_apl import MatchAPL
     from apl.mono_green_landfall_standard_match import MonoGreenLandfallStandardMatchAPL
+    assert (MonoGreenLandfallStandardMatchAPL.declare_blockers
+            is MatchAPL.declare_blockers)
     apl = MonoGreenLandfallStandardMatchAPL()
-    a = [creature("Ogre", 5, 5)]
+    ogre, rat = creature("Ogre", 5, 5), creature("Rat", 2, 2)
     tapped = creature("Tapped", 3, 3)
     tapped.tapped = True
+    big = creature("Big", 4, 4)
 
-    class GS:
-        zones = type("Z", (), {"battlefield": [bear, elf, tapped]})()
-        life = 5
-    assert apl.declare_blockers(GS, None, a) == {id(a[0]): [elf]}
-    GS.life = 20
-    assert apl.declare_blockers(GS, None, a) == {}
-    GS.life, GS.zones.battlefield = 5, [tapped]
-    assert apl.declare_blockers(GS, None, a) == {}       # tapped creatures cannot block
-    print("PASS: Mono-Green Landfall chump-blocks lethal, races otherwise")
+    def state(life, mine, theirs):
+        me = type("GS", (), {"life": life,
+                             "zones": type("Z", (), {"battlefield": mine})()})
+        opp = type("GS", (), {"zones": type("Z", (), {"battlefield": theirs})()})
+        return me, opp
 
+    me, opp = state(20, [big, elf], [rat])
+    assert apl.declare_blockers(me, opp, [rat]) == {id(rat): [big]}   # free kill
+    me, opp = state(20, [bear, elf], [ogre])
+    assert apl.declare_blockers(me, opp, [ogre]) == {}                # no pointless chump
+    me, opp = state(5, [bear, elf], [ogre])
+    assert len(apl.declare_blockers(me, opp, [ogre])[id(ogre)]) == 1  # chump lethal
+    me, opp = state(5, [tapped], [ogre])
+    assert apl.declare_blockers(me, opp, [ogre]) == {}                # tapped cannot block
+    print("PASS: Mono-Green Landfall takes a free kill, skips a pointless "
+          "chump, chumps lethal")
 
 if __name__ == "__main__":
     main()

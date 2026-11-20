@@ -665,16 +665,28 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             # An APL that sets POST_COMBAT_IS_WIN_PROXY has a main_phase2_match
             # that awards a win instead of playing cards; the core never calls
             # it and runs the ordinary postcombat casts instead (#62).
-            # ponytail: postcombat spells get no response window yet (main 1
-            # has one); add it when the reactive trilogy moves to the core.
             post = (None if getattr(apl, 'POST_COMBAT_IS_WIN_PROXY', False)
                     else getattr(apl, 'main_phase2_match', None))
+            cast_before = gs.spells_cast_this_turn
             if post:
                 post(gs, opp_gs)
             else:
                 apl.main_phase2(gs)
             if mgs.check_life('noncombat'):
                 return _finish()
+
+            # The other player may answer postcombat spells at instant speed,
+            # once per spell cast in this phase, with the lands they really
+            # have untapped (nothing is refreshed). Counterspells are not part
+            # of this: a spell is countered as it is cast, in cast_spell.
+            # With no postcombat spell there is no extra window; the end step
+            # below gives the opponent theirs.
+            for _ in range(gs.spells_cast_this_turn - cast_before):
+                _tap_for_response(opp_gs)
+                _try_reactive_interaction(opp_apl, opp_gs, gs, mgs,
+                                          'b' if active == 'a' else 'a')
+                if mgs.check_life('noncombat'):
+                    return _finish()
 
             # --- END STEP ---
             own_end = getattr(apl, 'own_end_step', None)   # active player's own triggers

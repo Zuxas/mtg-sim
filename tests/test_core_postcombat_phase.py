@@ -10,9 +10,9 @@ Checks:
 4. An APL marked POST_COMBAT_IS_WIN_PROXY never has main_phase2_match called
    by the core: it gets the ordinary main_phase2 casts instead, and its
    wins on the core do not come from the proxy.
-5. KNOWN GAP, pinned: spells cast in the postcombat phase get no response
-   window on the core (main 1 has one). When the window is added with the
-   reactive code (#62), this check fails and must become a positive test.
+5. Postcombat spells can be answered: the other player gets an instant-speed
+   response once per spell cast in the postcombat phase, with no mana
+   refreshed, and none when no spell was cast there.
 """
 from __future__ import annotations
 import os, sys
@@ -95,11 +95,20 @@ class Caster(Spy):
 
 
 class Responder(Spy):
-    seen = []
+    """Holds an instant so the engine has a response to ask about."""
+    seen, lands = [], []
 
     def respond_to_spell(self, gs, opp, spell):
         Responder.seen.append(Caster.phase)
+        if Caster.phase == "main2":
+            Responder.lands.append((self._untapped_before, _untapped(gs)))
         return None
+
+    def main_phase_match(self, gs, opp):
+        super().main_phase_match(gs, opp)
+
+    def own_end_step(self, gs, opp):
+        self._untapped_before = _untapped(gs)
 
 
 def _play(cls, deck):
@@ -131,12 +140,23 @@ def main():
     match_engine.run_match(Caster(), deck, Responder(), deck, on_play=True,
                            max_turns=8, seed=3)
     assert Caster.postcombat_casts > 0, "spy cast nothing after combat"
-    assert "main1" in Responder.seen, Responder.seen     # main 1 has a window
-    assert "main2" not in Responder.seen, (
-        "the core now offers a response to postcombat spells: replace this "
-        "pinned gap with a positive test")
-    print(f"KNOWN GAP pinned: {Caster.postcombat_casts} postcombat spells, "
-          "no response window offered (#62)")
+    answered = Responder.seen.count("main2")
+    assert "main1" in Responder.seen, Responder.seen
+    assert 0 < answered <= Caster.postcombat_casts, (answered, Caster.postcombat_casts)
+    for before, after in Responder.lands:
+        assert after <= before, f"responder's lands untapped for the window: {Responder.lands}"
+    print(f"PASS: {answered} responses offered to {Caster.postcombat_casts} "
+          "postcombat spells, with no land untapped for them")
+
+    class Holder(Caster):             # same phases, casts nothing after combat
+        def main_phase2(self, gs):
+            Caster.phase = "main2"
+
+    Responder.seen.clear()
+    match_engine.run_match(Holder(), deck, Responder(), deck, on_play=True,
+                           max_turns=8, seed=3)
+    assert "main1" in Responder.seen and "main2" not in Responder.seen, Responder.seen
+    print("PASS: no response window when nothing is cast")
 
     from apl.izzet_lesson_standard_match import IzzetLessonStandardMatchAPL
     from apl.jeskai_lute_standard_match import JeskaiLuteMatchAPL

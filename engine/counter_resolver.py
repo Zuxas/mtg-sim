@@ -53,11 +53,16 @@ COUNTER_COST = {
 # "Counter target spell unless its controller pays {N}." Such a counter is
 # only cast when the spell's controller cannot pay: their floating mana plus
 # untapped lands, counted after the spell itself was paid for.
-# ponytail: Spell Pierce {2}, Daze {1}, Mystical Dispute {3} and Metallic
-# Rebuke {3} are still treated as hard counters below; moving them here is a
-# one-line change each but shifts Modern results, so it is its own step.
+# ponytail: this is a pilot rule, not the full rule. A player may cast one
+# into open mana to make the opponent spend it; add "cast, then the caster
+# chooses to pay" if that line of play is ever wanted.
 COUNTER_TAX = {
-    "It'll Quench Ya!": 2,
+    "It'll Quench Ya!":     2,
+    "Spell Pierce":         2,
+    "Phantom Interference": 2,
+    "Daze":                 1,
+    "Mystical Dispute":     3,
+    "Metallic Rebuke":      3,
 }
 
 
@@ -81,7 +86,7 @@ COUNTER_VALIDITY = {
     "Spider-Sense":         (_is_noncreature,                              2),  # counters instant/sorcery/triggered
     "Disrupting Shoal":     (lambda s: True,                               0),  # any spell, alt-cost
     "Counterspell":         (lambda s: True,                               2),
-    "Mystical Dispute":     (_is_noncreature,                              2),
+    "Mystical Dispute":     (lambda s: True,                               2),  # any spell; {2} less vs blue not modeled
     "Daze":                 (lambda s: True,                               1),
     "Force of Will":        (lambda s: True,                               5),
     "Force of Negation":    (_is_noncreature,                              5),

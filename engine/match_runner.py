@@ -1712,7 +1712,8 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
 
 def _run_single_match(args):
     """Module-level worker for ProcessPoolExecutor — must be picklable."""
-    game_seed, apl_a_class, apl_b_class, deck_a, deck_b, on_play, use_combo_sampler = args
+    (game_seed, apl_a_class, apl_b_class, deck_a, deck_b, on_play,
+     use_combo_sampler, engine) = args
     random.seed(game_seed)
     fresh_apl_a = apl_a_class()
     fresh_apl_b = apl_b_class()
@@ -1723,8 +1724,31 @@ def _run_single_match(args):
             fresh_apl_a, deck_a, combo_b,
             on_play=on_play, max_turns=15, rng=rng,
         )
+    if engine == "core":
+        return _run_core_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
+                               on_play, game_seed)
     return run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
                      on_play=on_play, seed=game_seed)
+
+
+def _run_core_match(apl_a, deck_a, apl_b, deck_b, on_play, seed) -> MatchResult:
+    """One game on engine.match_engine, reported in this module's MatchResult
+    shape so run_match_set aggregates both engines the same way (#62)."""
+    from engine import match_engine  # local: match_engine is the newer module
+    from apl.match_apl import MatchAPL, RemovalAwareGoldfishAdapter
+    # Same wrapping the runner applies per turn: a goldfish-only APL plays
+    # through the removal-aware adapter on either engine.
+    apl_a, apl_b = (a if isinstance(a, MatchAPL) else RemovalAwareGoldfishAdapter(a)
+                    for a in (apl_a, apl_b))
+    m = match_engine.run_match(apl_a, deck_a, apl_b, deck_b,
+                               on_play=on_play, seed=seed)
+    return MatchResult(
+        won=(m.winner == 'a'), kill_turn=m.kill_turn, turn_count=m.turn_count,
+        loser_life=m.final_life_b if m.winner == 'a' else m.final_life_a,
+        winner_damage=m.damage_by_a if m.winner == 'a' else m.damage_by_b,
+        mulligans_a=m.mulligans_a, mulligans_b=m.mulligans_b,
+        tie=m.win_method.endswith('_tie'),
+    )
 
 
 def run_match_set(
@@ -1737,12 +1761,20 @@ def run_match_set(
     seed:      int  = 42,
     mix_play_draw: bool = True,
     n_workers: int  = 1,
+    engine:    str  = "runner",
 ) -> MatchSetResults:
     """
     Run N matches between two APLs. Returns aggregated results.
     If apl_b is a known combo archetype, uses ComboKillSampler for accuracy.
     mix_play_draw=True alternates who is on the play.
+
+    engine="runner" (default) plays games on this module; engine="core" plays
+    them on engine.match_engine with the same per-game seeds and play/draw
+    order, so the two engines can be compared game for game (#62). The combo
+    sampler replaces the opponent under either engine.
     """
+    if engine not in ("runner", "core"):
+        raise ValueError(f"engine must be 'runner' or 'core', got {engine!r}")
     results = MatchSetResults(n_games=n)
     rng = random.Random(seed)
 
@@ -1780,6 +1812,10 @@ def run_match_set(
                         fresh_apl_a, deck_a, combo_b,
                         on_play=game_on_plays[i], max_turns=15, rng=combo_rng,
                     )
+                elif engine == "core":
+                    match = _run_core_match(fresh_apl_a, deck_a, fresh_apl_b,
+                                            deck_b, game_on_plays[i],
+                                            game_seeds[i])
                 else:
                     match = run_match(fresh_apl_a, deck_a, fresh_apl_b, deck_b,
                                       on_play=game_on_plays[i],
@@ -1793,7 +1829,7 @@ def run_match_set(
         else:
             game_args = [
                 (game_seeds[i], apl_a_class, apl_b_class,
-                 deck_a, deck_b, game_on_plays[i], use_combo_sampler)
+                 deck_a, deck_b, game_on_plays[i], use_combo_sampler, engine)
                 for i in range(n)
             ]
             with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:

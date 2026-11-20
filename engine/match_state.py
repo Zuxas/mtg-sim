@@ -463,6 +463,39 @@ def resolve_combat(attackers: list[Card],
 # Smart Blocking Algorithm
 # ---------------------------------------------------------------------------
 
+def can_block(blocker: Card) -> bool:
+    """Whether this creature may be declared as a blocker at all: untapped,
+    and its own text does not say it can't block."""
+    own = (getattr(blocker, 'oracle_text', '') or '').lower()
+    return (not getattr(blocker, 'tapped', False)
+            and not re.search(r"(this creature|%s) can't block\b"
+                              % re.escape(blocker.name.lower()), own))
+
+
+def legal_blockers(attacker: Card, candidates: list[Card]) -> list[Card]:
+    """The candidates that may legally block this attacker (CR 509.1b).
+
+    None for an unblockable attacker; flying needs flying or reach; per-card
+    evasion is honored. Menace is a count rule, not a per-blocker one: use
+    blockers_needed(). Protection is not modeled.
+    """
+    if has_keyword(attacker, 'unblockable'):
+        return []
+    legal = [b for b in candidates if can_block(b)]
+    if has_keyword(attacker, 'flying'):
+        legal = [b for b in legal
+                 if has_keyword(b, 'flying') or has_keyword(b, 'reach')]
+    evasion_ok = _CONDITIONAL_EVASION.get(attacker.name)
+    if evasion_ok:
+        legal = [b for b in legal if evasion_ok(attacker, b)]
+    return legal
+
+
+def blockers_needed(attacker: Card) -> int:
+    """Menace: can't be blocked except by two or more creatures."""
+    return 2 if has_keyword(attacker, 'menace') else 1
+
+
 def survival_blocking(blockers: list[Card], attackers: list[Card],
                       defender_life: int) -> dict:
     """
@@ -500,12 +533,6 @@ def survival_blocking(blockers: list[Card], attackers: list[Card],
     def value(c):
         return safe_power(c) + safe_toughness(c)
 
-    def can_block(b):
-        own = (getattr(b, 'oracle_text', '') or '').lower()
-        return (not getattr(b, 'tapped', False)
-                and not re.search(r"(this creature|%s) can't block\b"
-                                  % re.escape(b.name.lower()), own))
-
     # Cheapest first; among equals keep fliers and reach back for fliers.
     free = sorted((b for b in blockers if can_block(b)), key=lambda b: (
         has_keyword(b, 'flying') or has_keyword(b, 'reach'), value(b)))
@@ -513,15 +540,8 @@ def survival_blocking(blockers: list[Card], attackers: list[Card],
     for atk in sorted(attackers, key=lambda a: -dmg(a)):
         if through < defender_life:
             break
-        if has_keyword(atk, 'unblockable'):
-            continue
-        legal = [b for b in free
-                 if not has_keyword(atk, 'flying')
-                 or has_keyword(b, 'flying') or has_keyword(b, 'reach')]
-        evasion_ok = _CONDITIONAL_EVASION.get(atk.name)
-        if evasion_ok:
-            legal = [b for b in legal if evasion_ok(atk, b)]
-        need = 2 if has_keyword(atk, 'menace') else 1
+        legal = legal_blockers(atk, free)
+        need = blockers_needed(atk)
         if len(legal) < need:
             continue
         trample = has_keyword(atk, 'trample')
@@ -582,22 +602,16 @@ def optimal_blocking(blockers: list[Card], attackers: list[Card],
             break
         atk_pwr = safe_power(atk)
         atk_tou = safe_toughness(atk)
-        atk_flying = has_keyword(atk, 'flying')
 
-        # Filter: can this be blocked? (flying check + per-card
-        # conditional evasion)
-        valid_blockers = [b for b in available_blockers
-                          if not atk_flying
-                          or has_keyword(b, 'flying')
-                          or has_keyword(b, 'reach')]
-        # Conditional evasion registry: attacker-name -> predicate that
-        # returns True when a given blocker CAN block the attacker.
-        evasion_ok = _CONDITIONAL_EVASION.get(atk.name)
-        if evasion_ok:
-            valid_blockers = [b for b in valid_blockers
-                              if evasion_ok(atk, b)]
-        if not valid_blockers:
+        # Legal blockers only: untapped, allowed to block, flying/reach,
+        # unblockable, per-card evasion. Menace needs a second blocker.
+        valid_blockers = legal_blockers(atk, available_blockers)
+        need = blockers_needed(atk)
+        if len(valid_blockers) < need:
             continue
+        # A trampler assigns the rest of its damage to the player, so a
+        # block stops at most the blocker's toughness (1 with deathtouch).
+        trample = has_keyword(atk, 'trample')
 
         # Find best blocker for this attacker
         best = None
@@ -618,7 +632,11 @@ def optimal_blocking(blockers: list[Card], attackers: list[Card],
             elif not kills_attacker and blk_dies:
                 # Chump block — only if we're about to die
                 if lethal_incoming:
-                    score = 2 + atk_pwr  # chump the biggest
+                    stopped = atk_pwr
+                    if trample:
+                        stopped = min(atk_pwr, 1 if has_keyword(atk, 'deathtouch')
+                                      else blk_tou)
+                    score = 2 + stopped  # chump where it stops the most
                 else:
                     score = -5  # bad trade, don't chump when safe
             else:
@@ -631,7 +649,12 @@ def optimal_blocking(blockers: list[Card], attackers: list[Card],
 
         # Only assign block if the score is positive (worth blocking)
         if best and best_score > 0:
-            assignments[id(atk)] = [best]
-            available_blockers.remove(best)
+            chosen = [best]
+            if need == 2:   # menace: add the cheapest other legal blocker
+                chosen.append(min((b for b in valid_blockers if b is not best),
+                                  key=lambda b: safe_power(b) + safe_toughness(b)))
+            assignments[id(atk)] = chosen
+            for b in chosen:
+                available_blockers.remove(b)
 
     return assignments

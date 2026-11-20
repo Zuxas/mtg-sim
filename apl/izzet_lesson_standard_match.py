@@ -9,15 +9,15 @@ Key interactions vs Selesnya Landfall:
     T2: 2 damage kills Badgermole Cub (1/1 + 1 counter = 2/2). After 2 Lessons: 4 damage.
     T4+: 5-6 damage kills Mightform Harmonizer (2/3+) and Surrak (3/4+).
   Firebending Lesson ({R}): 2 damage to any creature (Kicker {4} for 6 damage).
-    Instant, kills Badgermole Cub on T1-T2, free from sideboard via Learn.
+    Instant, kills Badgermole Cub on T1-T2.
   It'll Quench Ya! ({1}{U}): Counter unless they pay {2} (Mana Leak variant).
     Best on turns 2-3 before Selesnya has mana to pay.
   Three Steps Ahead ({U} Spree): Counter mode +{1}{U} — hard counter.
   Gran-Gran ({U}): Loot on tap, noncreature spells cost {1} less with 3+ Lessons in GY.
   Monument to Endurance ({3}): Whenever you discard → draw OR create Treasure.
     Together with Gran-Gran: every loot = draw 1. Never runs out of gas.
-  Learn mechanic: when Artist's Talent / Accumulate Wisdom resolves, tutor a
-    Lesson from sideboard (Flashfreeze vs green, Firebending Lesson for more burn).
+  No card in this list has learn; Lessons are only a card type that
+    Combustion Technique, Accumulate Wisdom and Gran-Gran count in the graveyard.
 
 Win condition: exhaust Selesnya's hand with counters + removal, win via Gran-Gran
   beats or Monument damage triggers. Long game strongly favors Lessons.
@@ -44,17 +44,14 @@ ACCUM_WISDOM  = "Accumulate Wisdom"
 MONUMENT      = "Monument to Endurance"
 GRAN_GRAN_C   = GRAN_GRAN   # imported from base
 
-# Lesson cards available to tutor via Learn
-LESSON_CARDS = {FIREBEND_LES, FLASHFREEZE, NEGATE, BOOMERANG, BROADSIDE,
-                SPELL_PIERCE, "Spell Snare", "Quantum Riddler",
-                "Ral, Crackling Wit", "Stormchaser's Talent"}
-
-
 def _lessons_in_gy(gs: GameState) -> int:
     """Count Lesson cards in graveyard — scales Combustion Technique's damage."""
-    lesson_names = {FIREBEND_LES, FLASHFREEZE, NEGATE, BROADSIDE,
-                    "Spell Snare", "Quantum Riddler", "Boomerang Basics"}
-    return sum(1 for c in gs.zones.graveyard if c.name in lesson_names)
+    # By card type. The old list of seven names had five cards that are not
+    # Lessons (Flashfreeze, Negate, Broadside Barrage, Spell Snare, Quantum
+    # Riddler) and missed four that are (Accumulate Wisdom, It'll Quench Ya!,
+    # Iroh's Demonstration, Combustion Technique itself).
+    return sum(1 for c in gs.zones.graveyard
+               if "Lesson" in (getattr(c, "type_line", "") or ""))
 
 
 def _combustion_max_tgh(gs: GameState) -> int:
@@ -262,55 +259,6 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
             gs.mana_reserve = min(4, counters_in_hand * 2)
 
     # ------------------------------------------------------------------
-    # Learn mechanic: tutor best available Lesson from sideboard
-    # ------------------------------------------------------------------
-
-    def _learn(self, gs: GameState, opponent: GameState):
-        """
-        Simplified Learn: look at the opponent's threats and add the most
-        relevant Lesson from our sideboard. Called when a Learn card resolves.
-
-        Priority:
-          - vs green/white creature deck: Flashfreeze or Firebending Lesson
-          - vs blue/black control: Negate or Spell Pierce
-          - general: Firebending Lesson (more burn = more Combustion Technique damage)
-        """
-        # Build sideboard availability (cards NOT in hand or battlefield)
-        in_hand = {c.name for c in gs.zones.hand}
-        in_gy   = {c.name for c in gs.zones.graveyard}
-
-        # What lessons could we tutor?
-        available_lessons = [
-            n for n in sorted(LESSON_CARDS)   # sorted: set order varies per process
-            if n not in in_hand   # don't tutor what we have
-        ]
-        if not available_lessons:
-            return
-
-        # Pick best lesson based on opponent's threats
-        opp_green = any(c.is_land() and ('forest' in c.type_line.lower()
-                        or 'green' in (c.oracle_text or '').lower())
-                        for c in opponent.zones.battlefield)
-
-        if opp_green and FLASHFREEZE in available_lessons:
-            chosen = FLASHFREEZE
-        elif FIREBEND_LES in available_lessons:
-            chosen = FIREBEND_LES
-        elif BROADSIDE in available_lessons:
-            chosen = BROADSIDE
-        else:
-            chosen = available_lessons[0]
-
-        # Add the Lesson card to hand (simulate tutoring)
-        from data.card import Card as _C
-        lesson_card = _C(chosen, mana_cost="R" if chosen in {FIREBEND_LES, BROADSIDE} else "2R",
-                          cmc=1 if chosen in {FIREBEND_LES, SPELL_PIERCE} else 2,
-                          type_line="Instant — Lesson" if chosen == FIREBEND_LES
-                          else "Sorcery — Lesson")
-        gs.zones.hand.append(lesson_card)
-        gs._log(f"  [Learn] tutored {chosen} from sideboard")
-
-    # ------------------------------------------------------------------
     # Main phase: cast removal on threats, then card advantage spells
     # ------------------------------------------------------------------
 
@@ -449,11 +397,10 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
                         gs.mana_pool.flex += 1
                     gs._monument_choices_this_turn = choices
 
-        # 3. Learn: tutor a Lesson into hand once per turn when we have few cards
-        # or when opponent is a green/white aggro deck (grab Flashfreeze).
-        counters_in_hand = sum(1 for c in gs.zones.hand if c.name in self.COUNTER_CARDS)
-        if counters_in_hand < 2 and gs.noncreature_spells_this_turn >= 1:
-            self._learn(gs, opponent)
+        # There is no step 3. This used to "learn" once a turn: a new card
+        # was created in hand from a list of ten names. No card in this deck
+        # has learn, half the list are not Lessons, and the most common pick
+        # (Firebending Lesson) is not in the sideboard (#98).
 
     def main_phase(self, gs: GameState):
         self.main_phase_match(gs, None)

@@ -63,7 +63,7 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
     name = "Grixis Elementals"
     ARCHETYPE = "control"
 
-    # Hold 4 for Deceit {2UB}; Requiting Hex {1B} = 2 mana
+    # COUNTER_CARDS is empty, so COUNTER_COST is unused; reserve_mana decides.
     COUNTER_COST  = 4
     COUNTER_CARDS = set()
 
@@ -120,14 +120,12 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
         return (to_bottom + filler)[:n]
 
     def reserve_mana(self, gs: GameState, opponent: GameState):
-        has_deceit = any(c.name == DECEIT for c in gs.zones.hand)
-        has_hex    = any(c.name == REQUITING_HEX for c in gs.zones.hand)
-        if has_deceit:
-            gs.mana_reserve = 4
-        elif has_hex:
-            gs.mana_reserve = 2
-        else:
-            gs.mana_reserve = 0
+        # Only an instant is worth holding lands for. Deceit is a creature
+        # ({4}{U/B}{U/B}, evoke {U/B}{U/B}) with no flash: reserving for it
+        # left four lands untapped every turn for a spell that can only be
+        # cast in our own main phase. Requiting Hex is an instant for {B}.
+        has_hex = any(c.name == REQUITING_HEX for c in gs.zones.hand)
+        gs.mana_reserve = 1 if has_hex else 0
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
         self._play_land_if_able(gs)

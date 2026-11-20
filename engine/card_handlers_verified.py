@@ -31115,11 +31115,13 @@ def _flashback_spell(gs, card):
     if gy_spells:
         best = max(gy_spells, key=lambda c: getattr(c,'cmc',0) or 0)
         gs.zones.graveyard.remove(best)
-        # Re-cast it (goes through its handler)
+        # cast_spell only casts from hand, so the card goes there first. It
+        # used to be handed over straight from the graveyard: the cast was
+        # refused and the card vanished, unless an identical copy was in hand,
+        # in which case that copy was cast in its place.
+        gs.zones.hand.append(best)  # flashback = return to hand proxy
         if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
-            gs.cast_spell(best)
-        else:
-            gs.zones.hand.append(best)  # flashback = return to hand proxy
+            gs.cast_spell(best)   # re-cast it (goes through its handler)
         gs._log(f"  Flashback: grant flashback to {best.name}")
 
 

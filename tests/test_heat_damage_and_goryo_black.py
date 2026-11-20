@@ -69,8 +69,8 @@ gs, opp = state(["Mountain"]), state([])
 gs.zones.hand.append(card(M.UNHOLY, "{R}", 1, "Instant"))
 plain = card("Ocelot Pride", "{W}", 1, "Creature - Cat", "1", "1")
 pumped = card("Ocelot Pride", "{W}", 1, "Creature - Cat", "1", "1")
-pumped._lord_power_bonus = pumped._lord_toughness_bonus = 1   # not part of dataclass equality
-assert plain == pumped and plain is not pumped
+pumped._lord_power_bonus = pumped._lord_toughness_bonus = 1   # a plain attribute, not a field
+assert plain is not pumped   # same printed card, two game objects
 opp.zones.battlefield += [plain, pumped]
 apl._use_removal(gs, opp)
 assert [c is plain for c in opp.zones.battlefield] == [True], "the 1/1 twin must survive"

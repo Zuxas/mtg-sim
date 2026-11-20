@@ -64,6 +64,10 @@ def _combustion_max_tgh(gs: GameState) -> int:
 
 class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
     ARCHETYPE = "control"
+    # main_phase2_match below awards a win instead of playing cards. The core
+    # engine does not call it (engine/match_engine.py, postcombat phase); the
+    # runner still does until the owner decides whether to delete it (#62).
+    POST_COMBAT_IS_WIN_PROXY = True
 
     # R6 opt-in (Increment 1): grindy card-advantage control. Activates the gated
     # inevitability timeout tiebreaker (a card-advantage lead behind on life wins the

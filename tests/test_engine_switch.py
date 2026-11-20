@@ -71,6 +71,15 @@ def main():
     else:
         raise AssertionError("unknown engine accepted")
 
+    # The comparison report builds one complete row per pair.
+    from scripts.compare_engines import FIELDS, compare_pair
+    row = compare_pair(("a", (type(apl_a), deck_a)), ("b", (type(apl_b), deck_b)),
+                       n=4, seed=SEED)
+    assert set(row) == set(FIELDS), set(row) ^ set(FIELDS)
+    assert row["runner_crashes"] == row["core_crashes"] == 0, row["first_crash"]
+    assert row["adapted"] == "a/b", row["adapted"]   # both are goldfish APLs
+    print("PASS: compare_engines row is complete")
+
 
 if __name__ == "__main__":
     main()

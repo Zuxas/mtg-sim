@@ -91,6 +91,14 @@ def _try_reactive_interaction(reactive_apl: MatchAPL, reactive_gs: GameState,
     # back a sorcery, and this is the one place every response goes through.
     if response and response in reactive_gs.zones.hand and is_instant_speed(response):
         itype = classify_card(response)
+        # No spell is on the stack in this window (the APL was asked with
+        # spell=None), so a counterspell has nothing to target and cannot be
+        # cast. Spells are countered where they are cast: GameState.cast_spell
+        # -> counter_resolver.try_counter_spell, which checks each counter's
+        # restriction. Without this, a returned counter was paid for, put in
+        # the graveyard and did nothing.
+        if itype == InteractionType.COUNTER:
+            return
         
         # Pick target
         target = None

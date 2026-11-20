@@ -26,9 +26,10 @@ FIELDS = ["deck_a", "deck_b", "games"] + [
 ] + ["wr_gap", "gap_ci95", "same_winner_pct", "adapted", "post_combat_hook",
      "first_crash"]
 
-# Hooks the runner calls after combat that the core never calls. A deck that
-# overrides one (BaseAPL's is a no-op) plays a different game on each engine
-# before any rule differs.
+# Hooks the runner calls after combat that the core never calls. BaseAPL's
+# main_phase2 casts everything still castable, so EVERY deck loses its
+# post-combat main phase on the core; this column lists the sides that also
+# have deck-specific post-combat logic.
 POST_COMBAT_HOOKS = ("main_phase2_match", "main_phase2")
 
 

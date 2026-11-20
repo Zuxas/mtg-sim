@@ -500,7 +500,7 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
     def end_step_actions(self, gs: GameState, opponent: GameState):
         """
         At end of opponent's turn, cast cheap Lessons to grow Combustion
-        Technique's damage — Firebending Lesson on a small creature or face.
+        Technique's damage — Firebending Lesson on a creature (it cannot go face).
         Also fire Monument to Endurance looting if available mana.
         """
         _tap_done = False
@@ -517,7 +517,14 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
                          and safe_toughness(c) <= 2],
                         key=lambda c: safe_toughness(c)
                     )
-                    if targets or True:  # always fire to get Lesson in GY
+                    # "Deals 2 damage to target creature": it needs a creature
+                    # to target. With one on the other side it may still be
+                    # cast just to put a Lesson in the graveyard (2 damage
+                    # that kills nothing); with none it cannot be cast at all.
+                    legal_target = any(
+                        c.has(Tag.CREATURE) and not c.is_land()
+                        for c in opponent.zones.battlefield)
+                    if legal_target:
                         gs.mana_pool.pay(card.mana_cost, card.cmc)
                         gs.zones.hand.remove(card)
                         gs.zones.graveyard.append(card)

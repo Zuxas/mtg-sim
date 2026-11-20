@@ -24,7 +24,65 @@ FIELDS = ["deck_a", "deck_b", "games"] + [
     f"{e}_{k}" for e in ENGINES
     for k in ("wr", "play_wr", "draw_wr", "ties", "avg_turn", "max_turn", "crashes")
 ] + ["wr_gap", "gap_ci95", "same_winner_pct", "adapted", "post_combat_hook",
-     "first_crash"]
+     "first_crash"] + [
+    f"{e}_{side}_{k}" for e in ENGINES for side in "ab"
+    for k in ("combats", "attackers", "dmg", "atk_deaths", "blk_deaths")
+] + [f"{e}_spells" for e in ENGINES]
+
+# Per-game combat and casting counters, collected by wrapping each engine's
+# combat resolver and GameState.cast_spell while a pair is played. "a_dmg" is
+# combat damage a's attackers dealt to the player; "a_blk_deaths" is b's
+# blockers that died to a's attack. The runner attacks with every creature
+# that can, so its attacker count is taken just before it resolves combat.
+_COUNTS = {}
+
+
+def _install_counters():
+    from collections import Counter
+    from engine import match_engine, match_runner
+    from engine.game_state import GameState
+    from engine.keywords import KWTag
+    cur = {"eng": None}
+
+    def bump(side, attackers, dmg, atk_dead, blk_dead):
+        c = _COUNTS.setdefault(cur["eng"], Counter())
+        for k, v in (("combats", 1), ("attackers", attackers), ("dmg", dmg),
+                     ("atk_deaths", atk_dead), ("blk_deaths", blk_dead)):
+            c[f"{side}_{k}"] += v
+
+    runner_combat = match_runner._resolve_combat
+
+    def wrapped_runner(gs, attacker):
+        bf = gs.bf_a if attacker == "a" else gs.bf_b
+        n = sum(1 for c in bf if not c.is_land() and KWTag.DEFENDER not in c.tags
+                and (not getattr(c, "summoning_sickness", False)
+                     or KWTag.HASTE in c.tags))
+        out = runner_combat(gs, attacker)
+        if n:
+            bump(attacker, n, out[0], len(out[1]), len(out[2]))
+        return out
+
+    core_combat = match_engine.resolve_combat
+
+    def wrapped_core(attackers, assignments, player, mgs):
+        r = core_combat(attackers, assignments, player, mgs)
+        bump(player, len(attackers), r.damage_to_defender,
+             len(r.attacker_deaths), len(r.defender_deaths))
+        return r
+
+    cast = GameState.cast_spell
+
+    def wrapped_cast(self, card, *a, **k):
+        _COUNTS.setdefault(cur["eng"], Counter())["spells"] += 1
+        return cast(self, card, *a, **k)
+
+    match_runner._resolve_combat = wrapped_runner
+    match_engine.resolve_combat = wrapped_core
+    GameState.cast_spell = wrapped_cast
+    return cur
+
+
+_CUR = None
 
 # Hooks the runner calls after combat that the core never calls. BaseAPL's
 # main_phase2 casts everything still castable, so EVERY deck loses its
@@ -54,7 +112,12 @@ def compare_pair(a, b, n, seed):
     seeds = [rng.randint(0, 999999) for _ in range(n)]
     row = {"deck_a": a[0], "deck_b": b[0], "games": n, "first_crash": ""}
     winners = {}
+    global _CUR
+    if _CUR is None:
+        _CUR = _install_counters()
+    _COUNTS.clear()
     for eng in ENGINES:
+        _CUR["eng"] = eng
         won, turns, ties, crashes = [], [], 0, 0
         for i, s in enumerate(seeds):
             try:
@@ -82,6 +145,13 @@ def compare_pair(a, b, n, seed):
             f"{eng}_crashes": crashes,
         })
         winners[eng] = won
+        counts = _COUNTS.get(eng, {})
+        for col in FIELDS:
+            if col.startswith(eng + "_") and col[len(eng) + 1:] in (
+                    [f"{sd}_{k}" for sd in "ab" for k in
+                     ("combats", "attackers", "dmg", "atk_deaths", "blk_deaths")]
+                    + ["spells"]):
+                row[col] = round(counts.get(col[len(eng) + 1:], 0) / n, 2)
     both = [(r, c) for r, c in zip(winners["runner"], winners["core"])
             if r is not None and c is not None]
     row["same_winner_pct"] = _pct(sum(r == c for r, c in both), len(both))

@@ -88,6 +88,36 @@ def table_checks():
         "zones": type("Z", (), {"lands_on_battlefield":
                                 lambda self: [Land(False), Land(True)]})()})()
     assert _spare_mana(gs) == 2      # one floating + one untapped land
+
+    # Every "unless its controller pays {N}" counter in the table is taxed at
+    # the N printed on the card.
+    import re
+    for name, tax in COUNTER_TAX.items():
+        m = re.search(r"unless its controller pays \{(\d)\}", db.get(name)["oracle_text"])
+        assert m and int(m.group(1)) == tax, (name, tax)
+    untaxed = [n for n in COUNTER_VALIDITY if n not in COUNTER_TAX
+               and db.get(n) and "unless its controller pays" in db.get(n)["oracle_text"]]
+    assert not untaxed, f"tax counters treated as hard counters: {untaxed}"
+    assert "Counter target spell unless" in db.get("Mystical Dispute")["oracle_text"]
+    assert ok("Mystical Dispute", spell(3, creature=True))   # any spell, not only noncreature
+
+    # The same count on a real game state: lands tapped for mana are in the
+    # pool, untapped lands are not, and paying for a spell lowers the total.
+    from data.deck import load_deck_from_file
+    from engine.game_state import GameState
+    deck, _ = load_deck_from_file("decks/izzet_prowess_nick_tokyo_standard.txt")
+    real = GameState(deck)
+    import copy
+    lands = [copy.copy(c) for c in deck if c.is_land()][:4]
+    for l in lands:
+        l.tapped = False
+        real.zones.battlefield.append(l)
+    assert _spare_mana(real) == 4
+    real.mana_reserve = 1
+    real.tap_lands()                         # taps three, leaves one untapped
+    assert _spare_mana(real) == 4, _spare_mana(real)
+    real.mana_pool.pay("{2}", 2)
+    assert _spare_mana(real) == 2, _spare_mana(real)
     print("PASS: counter restrictions, the spree cost and the tax amount match "
           "the card text")
 

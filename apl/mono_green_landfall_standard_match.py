@@ -13,7 +13,7 @@ from typing import Optional
 from data.card import Card, Tag
 from engine.game_state import GameState
 from apl.match_apl import MatchAPL
-from engine.match_state import safe_power, safe_toughness
+from engine.match_state import safe_power, safe_toughness, survival_blocking
 
 # Card name constants
 LLANOWAR_ELVES        = "Llanowar Elves"
@@ -230,7 +230,12 @@ class MonoGreenLandfallStandardMatchAPL(MatchAPL):
         return attackers
 
     def declare_blockers(self, gs, opp, attackers):
-        return {}  # aggro — race, don't block
+        # Aggro: race, and block only when the attack would otherwise be
+        # lethal and chump blocks keep us alive.
+        mine = [c for c in gs.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()
+                and not getattr(c, 'tapped', False)]
+        return survival_blocking(mine, attackers, gs.life)
 
     def respond_to_spell(self, gs, opponent, spell):
         return None

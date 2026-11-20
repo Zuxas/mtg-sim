@@ -7,6 +7,7 @@ survival_blocking(blockers, attackers, life):
   - when it is lethal, the cheapest legal chump blocks that keep the
     defender alive
   - {} when no legal blocks prevent lethal
+First strike and protection are not modeled by the helper.
 """
 from __future__ import annotations
 import os, sys
@@ -70,6 +71,33 @@ def main():
     assert blocks == {id(a[0]): [wall]}, blocks
     assert face(a, blocks, 5) == 2
     print("PASS: a trampler is blocked by toughness, and only if that saves us")
+
+    # 6b. Two blockers on one trampler when one is not enough (Tom, #94).
+    a = [creature("Colossus", 8, 8, "trample")]
+    w1, w2 = creature("Wall A", 0, 3), creature("Wall B", 0, 3)
+    blocks = survival_blocking([w1, w2], a, 6)           # one Wall: 5 through, alive
+    assert len(blocks[id(a[0])]) == 1 and face(a, blocks, 6) == 5
+    blocks = survival_blocking([w1, w2], a, 5)           # needs both: 2 through
+    assert len(blocks[id(a[0])]) == 2, blocks
+    assert face(a, blocks, 5) == 2
+    assert survival_blocking([w1, w2], a, 2) == {}       # 2 through is still lethal
+    print("PASS: a second blocker is added to a trampler when that is what saves us")
+
+    # 6c. A creature that can't block is never assigned.
+    coward = creature("Coward", 1, 1)
+    coward.oracle_text = "This creature can't block."
+    a = [creature("Ogre", 5, 5)]
+    assert survival_blocking([coward], a, 5) == {}
+    assert survival_blocking([coward, bear], a, 5) == {id(a[0]): [bear]}
+    print("PASS: a creature that can't block is left out")
+
+    # 6d. An unblockable attacker is never blocked; other attackers still are.
+    sneak, ogre = creature("Sneak", 3, 3, "unblockable"), creature("Ogre", 5, 5)
+    assert survival_blocking([bear, elf], [sneak], 3) == {}
+    blocks = survival_blocking([bear, elf], [sneak, ogre], 6)   # 8 in, block the Ogre
+    assert list(blocks) == [id(ogre)], blocks
+    assert face([sneak, ogre], blocks, 6) == 3
+    print("PASS: an unblockable attacker is never assigned a blocker")
 
     # 7. Double strike counts twice.
     a = [creature("Duelist", 3, 3, "double_strike")]

@@ -472,10 +472,16 @@ def survival_blocking(blockers: list[Card], attackers: list[Card],
     cheapest legal chump blocks that leave the defender alive after combat
     damage. If no legal set of blocks prevents lethal, returns {}.
 
-    Legal: an attacker with flying needs a blocker with flying or reach, one
-    with menace needs two blockers, and per-card evasion is honored. Damage:
-    double strike counts twice; a blocked trampler still deals its power
-    minus the blocker's toughness to the player.
+    Legal: tapped creatures and creatures whose own text says they can't
+    block are left out; an unblockable attacker is never blocked; an attacker
+    with flying needs a blocker with flying or reach; one with menace needs
+    two blockers; per-card evasion is honored. Damage: double strike counts
+    twice; a blocked trampler still deals its power minus the total toughness
+    blocking it, so more blockers are added to a trampler while that is what
+    keeps the defender alive.
+
+    Not modeled: protection, and first strike killing a blocker (a chump
+    block stops the damage either way).
 
     An APL opts in by calling this from declare_blockers; the engine never
     applies it on its own.
@@ -494,13 +500,21 @@ def survival_blocking(blockers: list[Card], attackers: list[Card],
     def value(c):
         return safe_power(c) + safe_toughness(c)
 
+    def can_block(b):
+        own = (getattr(b, 'oracle_text', '') or '').lower()
+        return (not getattr(b, 'tapped', False)
+                and not re.search(r"(this creature|%s) can't block\b"
+                                  % re.escape(b.name.lower()), own))
+
     # Cheapest first; among equals keep fliers and reach back for fliers.
-    free = sorted(blockers, key=lambda b: (
+    free = sorted((b for b in blockers if can_block(b)), key=lambda b: (
         has_keyword(b, 'flying') or has_keyword(b, 'reach'), value(b)))
     assignments = {}
     for atk in sorted(attackers, key=lambda a: -dmg(a)):
         if through < defender_life:
             break
+        if has_keyword(atk, 'unblockable'):
+            continue
         legal = [b for b in free
                  if not has_keyword(atk, 'flying')
                  or has_keyword(b, 'flying') or has_keyword(b, 'reach')]
@@ -513,12 +527,21 @@ def survival_blocking(blockers: list[Card], attackers: list[Card],
         trample = has_keyword(atk, 'trample')
         if trample:      # soak with the most toughness available
             legal.sort(key=lambda b: -safe_toughness(b))
+        def soak(chosen):
+            if not trample:
+                return dmg(atk)
+            if has_keyword(atk, 'deathtouch'):   # 1 damage kills each blocker
+                return min(dmg(atk), len(chosen))
+            return min(dmg(atk), sum(safe_toughness(b) for b in chosen))
+
         chosen = legal[:need]
-        soaked = dmg(atk)
-        if trample and not has_keyword(atk, 'deathtouch'):
-            soaked = min(soaked, sum(safe_toughness(b) for b in chosen))
-        elif trample:    # deathtouch + trample: 1 damage per blocker is lethal
-            soaked = min(soaked, len(chosen))
+        # A trampler is only stopped by toughness: keep adding blockers while
+        # it is still the difference between dying and not.
+        while (trample and len(chosen) < len(legal)
+               and through - soak(chosen) >= defender_life
+               and soak(chosen) < dmg(atk)):
+            chosen = legal[:len(chosen) + 1]
+        soaked = soak(chosen)
         if soaked <= 0:
             continue
         assignments[id(atk)] = chosen

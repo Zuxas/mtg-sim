@@ -463,6 +463,71 @@ def resolve_combat(attackers: list[Card],
 # Smart Blocking Algorithm
 # ---------------------------------------------------------------------------
 
+def survival_blocking(blockers: list[Card], attackers: list[Card],
+                      defender_life: int) -> dict:
+    """
+    Blocks for a deck that would rather race. Returns {id(attacker): [blockers]}.
+
+    No blocks while the unblocked attack is not lethal. When it is, the
+    cheapest legal chump blocks that leave the defender alive after combat
+    damage. If no legal set of blocks prevents lethal, returns {}.
+
+    Legal: an attacker with flying needs a blocker with flying or reach, one
+    with menace needs two blockers, and per-card evasion is honored. Damage:
+    double strike counts twice; a blocked trampler still deals its power
+    minus the blocker's toughness to the player.
+
+    An APL opts in by calling this from declare_blockers; the engine never
+    applies it on its own.
+
+    ponytail: greedy by attacker size, not an exhaustive search. It can miss
+    a survivable assignment when evasion makes blockers scarce (it then
+    returns {} as if dead). Search all assignments if that shows up.
+    """
+    def dmg(atk):
+        return safe_power(atk) * (2 if has_keyword(atk, 'double strike') else 1)
+
+    through = sum(dmg(a) for a in attackers)
+    if through < defender_life:
+        return {}
+
+    def value(c):
+        return safe_power(c) + safe_toughness(c)
+
+    # Cheapest first; among equals keep fliers and reach back for fliers.
+    free = sorted(blockers, key=lambda b: (
+        has_keyword(b, 'flying') or has_keyword(b, 'reach'), value(b)))
+    assignments = {}
+    for atk in sorted(attackers, key=lambda a: -dmg(a)):
+        if through < defender_life:
+            break
+        legal = [b for b in free
+                 if not has_keyword(atk, 'flying')
+                 or has_keyword(b, 'flying') or has_keyword(b, 'reach')]
+        evasion_ok = _CONDITIONAL_EVASION.get(atk.name)
+        if evasion_ok:
+            legal = [b for b in legal if evasion_ok(atk, b)]
+        need = 2 if has_keyword(atk, 'menace') else 1
+        if len(legal) < need:
+            continue
+        trample = has_keyword(atk, 'trample')
+        if trample:      # soak with the most toughness available
+            legal.sort(key=lambda b: -safe_toughness(b))
+        chosen = legal[:need]
+        soaked = dmg(atk)
+        if trample and not has_keyword(atk, 'deathtouch'):
+            soaked = min(soaked, sum(safe_toughness(b) for b in chosen))
+        elif trample:    # deathtouch + trample: 1 damage per blocker is lethal
+            soaked = min(soaked, len(chosen))
+        if soaked <= 0:
+            continue
+        assignments[id(atk)] = chosen
+        for b in chosen:
+            free.remove(b)
+        through -= soaked
+    return assignments if through < defender_life else {}
+
+
 def optimal_blocking(blockers: list[Card], attackers: list[Card],
                      defender_life: int, attacker_clock: int) -> dict:
     """

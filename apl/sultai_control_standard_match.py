@@ -55,15 +55,26 @@ class SultaiControlStandardMatchAPL(AwareMatchAPL, SultaiControlAPL):
     name = "Sultai Control"
     ARCHETYPE = "control"
 
-    # No main-deck counters; Deceit bounces threats (counts as 2-mana interaction)
+    # No main-deck counters, so no lands are held back on the opponent's turn.
     COUNTER_COST  = 0
     COUNTER_CARDS = set()
 
-    MATCH_REMOVAL = {
-        DECEIT: ("2UB", None),   # bounce any permanent + draw (no size limit)
-    }
-    MATCH_BOUNCE = {DECEIT}
+    # Deceit ({4}{U/B}{U/B}, evoke {U/B}{U/B}, no flash) is not in the generic
+    # removal table: that path charged its printed six mana, put it in the
+    # graveyard, and also ran from pre_combat_instant on the opponent's turn.
+    # It is evoked for {U}{U} in our own main phase instead.
+    MATCH_REMOVAL = {}
+    MATCH_BOUNCE = set()
     MATCH_EXILE  = set()
+
+    def _match_cast_removal(self, gs: GameState, opponent: GameState):
+        if opponent is not None:
+            for name in KILL_PRIORITY:
+                target = next((c for c in opponent.zones.battlefield
+                               if c.name == name and c.has(Tag.CREATURE)), None)
+                if target is not None and self._evoke_deceit(gs, opponent, target):
+                    break
+        super()._match_cast_removal(gs, opponent)
 
     SB_PLANS = {
         "aggro": (
@@ -88,23 +99,3 @@ class SultaiControlStandardMatchAPL(AwareMatchAPL, SultaiControlAPL):
         ),
     }
 
-    def reserve_mana(self, gs: GameState, opponent: GameState):
-        # Hold up {2UB} for Deceit when a priority target is on board
-        has_deceit = any(c.name == DECEIT for c in gs.zones.hand)
-        opp_has_target = any(
-            c.name in set(KILL_PRIORITY)
-            for c in opponent.zones.battlefield
-            if c.has(Tag.CREATURE) and not c.is_land()
-        )
-        gs.mana_reserve = 4 if (has_deceit and opp_has_target) else 0
-
-    def pre_combat_instant(self, gs: GameState, opponent: GameState):
-        opp_creatures = [c for c in opponent.zones.battlefield
-                         if c.has(Tag.CREATURE) and not c.is_land()]
-        for name in KILL_PRIORITY:
-            for c in opp_creatures:
-                if c.name == name:
-                    if self._kill_with_removal(gs, opponent, c):
-                        gs._log(f"  [pre-combat] Deceit bounced {c.name}")
-                        return
-        super().pre_combat_instant(gs, opponent)

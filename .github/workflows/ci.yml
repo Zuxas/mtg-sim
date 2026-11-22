@@ -129,44 +129,53 @@ jobs:
           # minus signs, and the verifier died printing them mid-file.
           PYTHONIOENCODING: utf-8
         run: |
-          PASS=0; DISCREPANCY=0; UNVERIFIED=0
+          PASS=0; DISCREPANCY=0; VERIFIER_ERROR=0; UNVERIFIED=0; UNVERIFIED_ANY=0
           for f in ${{ steps.changed.outputs.files }}; do
             echo "--- Verifying $f ---"
-            # Fail closed: a crash (missing script, import error) prints no
-            # " FAIL " line and used to be counted as a pass.
             if result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1); then rc=0; else rc=$?; fi
             echo "$result"
-            # Classify from the verifier's output, not just its exit code, and
-            # let a real discrepancy outrank "model unavailable" for the same
-            # file (a batch can contain both). Per-card fail lines look like
-            # "  FAIL  <card>"; the leading-whitespace anchor keeps the summary
-            # "Results: .. FAIL" from matching.
-            has_fail=false; has_unavail=false
+            # Classify from three distinct signals, not the exit code alone:
+            #  - a real per-card discrepancy ("  FAIL  <card>"; the leading-
+            #    whitespace anchor keeps the "Results: .. FAIL" summary out);
+            #  - the model being unavailable ("Gemma unavailable");
+            #  - an unexpected verifier crash (a Python traceback, or a nonzero
+            #    exit with neither of the above). A crash must surface as a
+            #    verifier error -- never as a Gemma discrepancy, and never hidden
+            #    behind an earlier card's "unavailable" line.
+            has_fail=false; has_unavail=false; has_crash=false
             echo "$result" | grep -qE "^[[:space:]]*FAIL[[:space:]]" && has_fail=true
             echo "$result" | grep -q "Gemma unavailable" && has_unavail=true
-            if $has_fail || { [ $rc -ne 0 ] && ! $has_unavail; }; then
-              # A real discrepancy, or a nonzero exit that is not the unavailable path (a crash).
+            echo "$result" | grep -q "Traceback (most recent call last)" && has_crash=true
+            if [ $rc -ne 0 ] && ! $has_fail && ! $has_unavail; then has_crash=true; fi
+            # Count any file that left cards unverified, even one also classified
+            # as a discrepancy, so a mixed run is never reported as 0 unverified.
+            $has_unavail && UNVERIFIED_ANY=$((UNVERIFIED_ANY+1))
+            if $has_fail; then
               DISCREPANCY=$((DISCREPANCY+1))
-              $has_unavail && echo "::warning::$f had a discrepancy AND left some cards unverified (model went down mid-run)."
+              $has_unavail && echo "::warning::$f: discrepancy found AND some cards left unverified (model unavailable mid-run)."
+            elif $has_crash; then
+              echo "::error::$f: the oracle verifier crashed or exited unexpectedly (not a Gemma discrepancy)."
+              VERIFIER_ERROR=$((VERIFIER_ERROR+1))
             elif $has_unavail; then
-              # The model never answered, so nothing was verified. Not a pass.
               echo "::error::$f was NOT verified: the local model was unavailable. Re-run when Ollama is up."
               UNVERIFIED=$((UNVERIFIED+1))
             else
               PASS=$((PASS+1))
             fi
           done
-          echo "Oracle gate: $PASS PASS, $DISCREPANCY DISCREPANCY, $UNVERIFIED UNVERIFIED"
-          # Tell the Report-failure step which cause to describe. Discrepancy
-          # outranks unavailable; an empty reason means some other step failed.
-          if [ $DISCREPANCY -gt 0 ]; then REASON=discrepancy;
-          elif [ $UNVERIFIED -gt 0 ]; then REASON=unavailable;
+          echo "Oracle gate: $PASS PASS, $DISCREPANCY DISCREPANCY, $VERIFIER_ERROR VERIFIER_ERROR, $UNVERIFIED UNVERIFIED ($UNVERIFIED_ANY file(s) had unverified cards)"
+          # Tell the Report-failure step which cause to describe, most actionable
+          # first: a real discrepancy, then a verifier crash, then model-down.
+          # Empty reason means some other step in the job failed.
+          if   [ $DISCREPANCY -gt 0 ];    then REASON=discrepancy
+          elif [ $VERIFIER_ERROR -gt 0 ]; then REASON=verifier_error
+          elif [ $UNVERIFIED -gt 0 ];     then REASON=unavailable
           else REASON=; fi
           echo "reason=$REASON" >> "$GITHUB_OUTPUT"
-          echo "unverified=$UNVERIFIED" >> "$GITHUB_OUTPUT"
-          FAILTOTAL=$((DISCREPANCY+UNVERIFIED))
+          echo "unverified=$UNVERIFIED_ANY" >> "$GITHUB_OUTPUT"
+          FAILTOTAL=$((DISCREPANCY+VERIFIER_ERROR+UNVERIFIED))
           if [ $FAILTOTAL -gt 0 ]; then
-            echo "::error::Oracle gate failed on $FAILTOTAL APL(s): $DISCREPANCY discrepancy, $UNVERIFIED unverified."
+            echo "::error::Oracle gate failed on $FAILTOTAL APL(s): $DISCREPANCY discrepancy, $VERIFIER_ERROR verifier-error, $UNVERIFIED unverified."
             exit 1
           fi
       - name: Report failure
@@ -186,9 +195,12 @@ jobs:
             let diag;
             if (reason === 'unavailable') {
               diag = `The local model (Ollama) was unavailable, so the changed APL(s) were NOT verified. This is an infrastructure issue, not a code discrepancy — re-run the gate when Ollama is up.`;
+            } else if (reason === 'verifier_error') {
+              diag = `The oracle verifier crashed or exited unexpectedly (a traceback or unexpected exit — NOT a Gemma discrepancy). Check the run logs; this is a verifier/infrastructure problem, not necessarily an APL bug.`;
+              if (unverified !== '0') diag += ` (${unverified} APL(s) also had cards left unverified.)`;
             } else if (reason === 'discrepancy') {
-              diag = `Gemma found an oracle discrepancy (or the verifier crashed) in a changed APL. Fix before merge.`;
-              if (unverified !== '0') diag += ` Note: ${unverified} APL(s) were also left unverified because the model went down mid-run — re-check those after fixing.`;
+              diag = `Gemma found an oracle discrepancy in a changed APL. Fix before merge.`;
+              if (unverified !== '0') diag += ` Note: ${unverified} APL(s) also had cards left unverified (model unavailable mid-run) — re-check those after fixing.`;
             } else {
               diag = `The oracle gate failed. Check the run logs for the cause.`;
             }

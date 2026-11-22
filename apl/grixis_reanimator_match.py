@@ -183,8 +183,11 @@ class GrixisReanimatorMatchAPL(MatchAPL):
                     self._trigger_etb(gs, opponent, c)
         return attackers
 
-    def declare_blockers(self, gs, opp, attackers):
-        return {}
+    # Blocking is the MatchAPL default (optimal_blocking): block only when it
+    # kills the attacker and survives, trades up, or must chump a lethal
+    # attack. It never chumps a non-lethal attack, so a reanimated payoff
+    # (Abhorrent Oculus, Archon of Cruelty) is kept to win with unless the
+    # deck would otherwise die this turn. The deck used to refuse every block.
 
     def respond_to_spell(self, gs, opponent, spell):
         return None

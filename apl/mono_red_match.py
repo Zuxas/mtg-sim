@@ -162,8 +162,10 @@ class MonoRedMatchAPL(MatchAPL):
                 attackers.append(c)
         return attackers
 
-    def declare_blockers(self, gs, opp, attackers):
-        return {}  # burn never blocks — race or die
+    # Blocking is the MatchAPL default (optimal_blocking): take a block that
+    # kills the attacker for free or trades up, chump only to survive, and
+    # otherwise keep racing. The deck used to refuse every block, even a free
+    # one, which no burn pilot does.
 
     def respond_to_spell(self, gs, opponent, spell):
         return None  # no interaction

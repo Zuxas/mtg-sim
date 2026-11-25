@@ -229,8 +229,9 @@ class MonoGreenLandfallStandardMatchAPL(MatchAPL):
                 attackers.append(c)
         return attackers
 
-    def declare_blockers(self, gs, opp, attackers):
-        return {}  # aggro — race, don't block
+    # Blocking is the MatchAPL default (optimal_blocking): take a block that
+    # kills the attacker for free or trades up, chump only to survive, and
+    # otherwise keep racing. The deck used to refuse every block.
 
     def respond_to_spell(self, gs, opponent, spell):
         return None

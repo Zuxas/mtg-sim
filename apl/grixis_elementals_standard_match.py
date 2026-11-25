@@ -4,8 +4,11 @@ apl/grixis_elementals_standard_match.py -- Grixis Elementals match APL (Standard
 Filipe Sousa, European Magic Tour winner. U/B/R control with Elemental synergies.
 
 Key cards:
-  Requiting Hex {1B}:          instant exile any creature (primary removal)
-  Deceit {2UB}:                bounce permanent + draw (repeatable interaction)
+  Deceit {4}{U/B}{U/B}:        5/5 creature, evoke {U/B}{U/B}. Enters: bounce a nonland
+                                permanent if {U}{U} was spent, make the opponent discard if
+                                {B}{B} was. Evoked for {U}{U} it is a two-mana bounce.
+  Requiting Hex {B}:           instant, destroy a creature with mana value 2 or less.
+                                Not in the current list.
   Not Dead After All {B}:      protection instant -- creature that dies returns to battlefield
                                 + Wicked Role token. Keeps Sunderflock alive.
   Superior Spider-Man {2UB}:   Mind Swap: enters as copy of any GY creature
@@ -63,16 +66,37 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
     name = "Grixis Elementals"
     ARCHETYPE = "control"
 
-    # Hold 4 for Deceit {2UB}; Requiting Hex {1B} = 2 mana
+    # COUNTER_CARDS is empty, so COUNTER_COST is unused; reserve_mana decides.
     COUNTER_COST  = 4
     COUNTER_CARDS = set()
 
-    MATCH_REMOVAL = {
-        REQUITING_HEX: ("1B", None),  # instant exile, any size
-        DECEIT:        ("2UB", None), # bounce + draw
-    }
-    MATCH_BOUNCE = {DECEIT}
-    MATCH_EXILE  = {REQUITING_HEX}
+    # Deceit is not in the generic removal table: that path pays a card's
+    # printed cost and puts it in the graveyard, which for Deceit meant six
+    # mana for a bounce and no 5/5, and it also fired from pre_combat_instant
+    # on the opponent's turn. _evoke_deceit below is used in our main phase
+    # instead. Requiting Hex is not in the list, and the table could not say
+    # "mana value 2 or less" anyway (it had it exiling any creature).
+    MATCH_REMOVAL = {}
+    MATCH_BOUNCE = set()
+    MATCH_EXILE  = set()
+
+    def _evoke_deceit(self, gs, opponent, target) -> bool:
+        """Evoke Deceit for {U}{U}: return the target to its owner's hand;
+        Deceit is sacrificed. Deceit has no flash, so this is only called from
+        our own main phase, never from pre_combat_instant (which the engine
+        runs on the opponent's turn)."""
+        deceit = next((c for c in gs.zones.hand if c.name == DECEIT), None)
+        if (deceit is None or target not in opponent.zones.battlefield
+                or target.is_land() or not gs.mana_pool.can_cast("{U}{U}", 2)):
+            return False
+        gs.mana_pool.pay("{U}{U}", 2)
+        gs.zones.hand.remove(deceit)
+        gs.zones.graveyard.append(deceit)
+        gs.spells_cast_this_turn += 1
+        opponent.zones.battlefield.remove(target)
+        opponent.zones.hand.append(target)
+        gs._log(f"  Deceit evoked ({{U}}{{U}}): bounce {target.name}")
+        return True
 
     SB_PLANS = {
         "aggro": (
@@ -120,14 +144,12 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
         return (to_bottom + filler)[:n]
 
     def reserve_mana(self, gs: GameState, opponent: GameState):
-        has_deceit = any(c.name == DECEIT for c in gs.zones.hand)
-        has_hex    = any(c.name == REQUITING_HEX for c in gs.zones.hand)
-        if has_deceit:
-            gs.mana_reserve = 4
-        elif has_hex:
-            gs.mana_reserve = 2
-        else:
-            gs.mana_reserve = 0
+        # Only an instant is worth holding lands for. Deceit is a creature
+        # ({4}{U/B}{U/B}, evoke {U/B}{U/B}) with no flash: reserving for it
+        # left four lands untapped every turn for a spell that can only be
+        # cast in our own main phase. Requiting Hex is an instant for {B}.
+        has_hex = any(c.name == REQUITING_HEX for c in gs.zones.hand)
+        gs.mana_reserve = 1 if has_hex else 0
 
     def main_phase_match(self, gs: GameState, opponent: GameState):
         self._play_land_if_able(gs)
@@ -152,7 +174,8 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
         for name in KILL_PRIORITY:
             target = next((c for c in opp_creatures if c.name == name), None)
             if target:
-                if self._kill_with_removal(gs, opponent, target, prefer_exile=True):
+                if (self._evoke_deceit(gs, opponent, target)
+                        or self._kill_with_removal(gs, opponent, target, prefer_exile=True)):
                     break
 
         # Check if Bringer-type creature in GY for Spider-Man copy

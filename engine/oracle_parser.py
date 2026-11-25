@@ -1200,3 +1200,44 @@ def coverage_report(oracle_text: str, card_name: Optional[str] = None):
             if not got_trigger:
                 unparsed.append(p)
     return parsed, unparsed
+
+
+# ── Own-ETB guard ─────────────────────────────────────────────────────────────
+# TRIGGERS above files many things under "etb" that are not this permanent
+# entering (dies, leaves, becomes tapped, another creature enters, counters put
+# on it ...). A handler built from parse_oracle(...)["etb"] fires when the card
+# enters, so callers that register ETB handlers must take the effects only from
+# the card's own "When ~ enters, ..." sentences: own_etb_effects().
+_SELF = r"(?:this [a-z]+|~|it)"
+SELF_ETB = re.compile(rf"^when(?:ever)? {_SELF} enters(?: the battlefield)?(?: or attacks| or dies)?,", re.I)
+
+
+def _tilde(oracle, name):
+    """Oracle text with the card's own name (full, and the part before a comma) as ~."""
+    text = oracle.replace(name, "~")
+    short = name.split(",")[0].strip()
+    if short != name and len(short) > 2:
+        text = text.replace(short, "~")
+    return text
+
+
+def self_etb_text(oracle, name):
+    """The card's own 'When ~ enters, ...' sentences, with any bullet modes under them."""
+    out, keep = [], False
+    for line in _tilde(oracle, name).split("\n"):
+        if SELF_ETB.match(line.strip()):
+            keep = True
+            out.append(line)
+        elif keep and line.strip().startswith("\u2022"):
+            out.append(line)
+        else:
+            keep = False
+    return "\n".join(out)
+
+
+
+
+def own_etb_effects(oracle: str, name: str) -> list:
+    """ETB effects from the card's own enters trigger only ([] when it has none)."""
+    own = self_etb_text(oracle or "", name or "")
+    return parse_oracle(own).get("etb", []) if own else []

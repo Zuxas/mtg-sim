@@ -19,6 +19,19 @@ from data.scryfall_client import get_cards_data
 from data.card import Card, Tag
 from engine.keywords import tag_keywords
 
+# Through the Omenpaths (OM1) is the Arena/MTGO reskin of Marvel's Spider-Man:
+# same cards, different printed names. The oracle file only has the paper
+# names, and the APLs and handlers use those too, so decklists exported from
+# Arena are read as the paper card. Add a pair here when a list uses a new one.
+ARENA_NAMES = {
+    "Kavaero, Mind-Bitten":        "Superior Spider-Man",
+    "Detect Intrusion":            "Spider-Sense",
+    "Belion, the Parched":         "Hydro-Man, Fluid Felon",
+    "Ademi of the Silkchutes":     "Spectacular Spider-Man",
+    "Leyline Weaver":              "Spider Manifestation",
+    "Makdee and Itla, Skysnarers": "Spider-Woman, Stunning Savior",
+}
+
 # DFC / transform cards that Scryfall returns with wrong front-face data.
 DFC_CORRECTIONS = {
     "Valley of Gorgoroth": {
@@ -80,6 +93,7 @@ def _parse_decklist(text: str):
         except ValueError:
             continue
         name = parts[1].strip()
+        name = ARENA_NAMES.get(name, name)
         if in_sideboard:
             sideboard.append((qty, name))
         else:
@@ -91,55 +105,77 @@ def _parse_decklist(text: str):
 
 def _get_cards_local(names: list[str]) -> dict:
     """
-    Load card data from local CardDB (no network calls).
-    Falls back to Scryfall API for any cards not found locally.
+    Card data from the local oracle file (scripts/fetch_scryfall_bulk.sh).
+
+    No network by default: a sim that quietly asks the Scryfall API for every
+    deck it loads is slow, gets rate-limited, and gives different cards on
+    different days. A missing file is an error; a name that is not in the
+    file is left out and reported by _build_cards as unresolved. Set
+    MTG_SIM_ALLOW_NETWORK=1 to let missing names fall back to the API.
     """
-    try:
-        from engine.card_db import CardDB
-        db = CardDB()
-        result = {}
-        missing = []
-        for name in names:
-            card = db.get(name)
-            if card:
-                result[name] = {
-                    "name":         card.get("name", name),
-                    "mana_cost":    card.get("mana_cost", ""),
-                    "cmc":          float(card.get("cmc", 0)),
-                    "type_line":    card.get("type_line", ""),
-                    "oracle_text":  card.get("oracle_text", ""),
-                    "power":        card.get("power"),
-                    "toughness":    card.get("toughness"),
-                    "colors":       card.get("colors", []),
-                    "color_identity": card.get("color_identity", []),
-                    "scryfall_id":  card.get("id", ""),
-                    # Stage 1 of T1.3+T1.4 transform arc: pass through
-                    # card_faces and loyalty so _build_cards can populate
-                    # Card.front_face / back_face / loyalty for DFC cards.
-                    "card_faces":   card.get("card_faces", []),
-                    "loyalty":      card.get("loyalty"),
-                }
-            else:
-                missing.append(name)
-
-        if missing:
-            print(f"  [{len(missing)} cards not in local DB, fetching from Scryfall: {missing[:3]}...]")
-            from data.scryfall_client import get_cards_data
-            api_data = get_cards_data(missing)
-            result.update(api_data)
+    import os
+    from engine.card_db import CardDB
+    allow_network = bool(os.environ.get("MTG_SIM_ALLOW_NETWORK"))
+    db = CardDB()
+    if not db._loaded and not allow_network:
+        raise FileNotFoundError(
+            "local Scryfall data not found (data/rules_reference/scryfall_oracle_cards.json). "
+            "Run scripts/fetch_scryfall_bulk.sh once, or set MTG_SIM_ALLOW_NETWORK=1 "
+            "to look cards up on the Scryfall API instead.")
+    result = {}
+    missing = []
+    for name in names:
+        card = db.get(name)
+        if card:
+            result[name] = {
+                "name":         card.get("name", name),
+                "mana_cost":    card.get("mana_cost", ""),
+                "cmc":          float(card.get("cmc", 0)),
+                "type_line":    card.get("type_line", ""),
+                "oracle_text":  card.get("oracle_text", ""),
+                "power":        card.get("power"),
+                "toughness":    card.get("toughness"),
+                "colors":       card.get("colors", []),
+                "color_identity": card.get("color_identity", []),
+                "scryfall_id":  card.get("id", ""),
+                # Stage 1 of T1.3+T1.4 transform arc: pass through
+                # card_faces and loyalty so _build_cards can populate
+                # Card.front_face / back_face / loyalty for DFC cards.
+                "card_faces":   card.get("card_faces", []),
+                "loyalty":      card.get("loyalty"),
+            }
         else:
-            print(f"  [{len(names)} cards loaded from local DB — no network calls]")
+            missing.append(name)
 
-        return result
+    if missing and allow_network:
+        print(f"  [{len(missing)} cards not in local DB, fetching from Scryfall: {missing[:3]}...]")
+        result.update(get_cards_data(missing))
+    elif not missing:
+        print(f"  [{len(names)} cards loaded from local DB - no network calls]")
+    return result
 
-    except Exception as e:
-        # Full fallback to Scryfall API
-        print(f"  [CardDB unavailable ({e}), using Scryfall API]")
-        from scrapers.scryfall import get_cards_data
-        return get_cards_data(names)
+
+class UnresolvedCardError(ValueError):
+    """A decklist name has no card data (typo, new card, or lookup offline)."""
 
 
 def _build_cards(entries, scryfall_data: dict) -> list:
+    # A name with no data used to become a blank Card (no type, cmc 0, no P/T)
+    # and the sim ran on it without a word (#27). DFC_CORRECTIONS entries carry
+    # their own data, so they count as resolved.
+    unresolved = sorted({name for _, name in entries
+                         if not scryfall_data.get(name) and name not in DFC_CORRECTIONS})
+    if unresolved:
+        msg = (f"{len(unresolved)} card name(s) could not be resolved: "
+               + ", ".join(repr(n) for n in unresolved[:10])
+               + (" ..." if len(unresolved) > 10 else "")
+               + ". Check the spelling, refresh the local data with "
+                 "scripts/fetch_scryfall_bulk.sh, or add an Arena name to ARENA_NAMES in "
+                 "data/deck.py. Set MTG_SIM_ALLOW_UNRESOLVED=1 to load them as blank cards.")
+        import os
+        if not os.environ.get("MTG_SIM_ALLOW_UNRESOLVED"):
+            raise UnresolvedCardError(msg)
+        print(f"  [!UNRESOLVED] {msg}")
     cards = []
     for qty, name in entries:
         data = scryfall_data.get(name, {})
@@ -186,6 +222,12 @@ def _build_cards(entries, scryfall_data: dict) -> list:
 
 def load_deck_from_text(text: str):
     main_entries, side_entries = _parse_decklist(text)
+    # A list with a card nobody could identify still loads, but it is not the
+    # registered 75, so say so every time it is used.
+    marked = [l for l in text.splitlines() if l.strip().startswith("// UNRESOLVED")]
+    if marked:
+        print(f"  [!INCOMPLETE DECK] {len(marked)} line(s) marked UNRESOLVED: "
+              f"this is not the full registered list; do not treat its results as validated")
     all_names = list({name for _, name in main_entries + side_entries})
     card_data = _get_cards_local(all_names)
     mainboard = _build_cards(main_entries, card_data)

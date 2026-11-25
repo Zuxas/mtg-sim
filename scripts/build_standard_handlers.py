@@ -29,6 +29,10 @@ STANDARD_SETS = {
     "ecl": "Lorwyn Eclipsed",
     "tmt": "Teenage Mutant Ninja Turtles",
     "sos": "Secrets of Strixhaven",
+    # The oracle file keeps ONE printing per card, the newest. A Standard card
+    # reprinted in a Commander or Jumpstart product shows that product's set
+    # code and used to drop out of this build, taking its handler with it.
+    "rep": "Standard-legal, newest printing in a non-Standard product",
 }
 
 # ── Load oracle DB ────────────────────────────────────────────────────────────
@@ -39,6 +43,7 @@ cards_list = raw if isinstance(raw, list) else raw.get("data", [])
 # Index by name AND by set — include DFC face names
 BY_NAME = {}
 SET_CARDS = defaultdict(list)  # set_code -> [card_dict]
+UNLISTED_SETS = defaultdict(int)  # Standard-legal expansion not in STANDARD_SETS -> card count
 
 for c in cards_list:
     set_code = c.get("set", "")
@@ -51,6 +56,11 @@ for c in cards_list:
             BY_NAME[fn] = {**c, **face}
     if set_code in STANDARD_SETS:
         SET_CARDS[set_code].append(c)
+    elif c.get("legalities", {}).get("standard") == "legal":
+        if c.get("set_type") in ("expansion", "core"):
+            UNLISTED_SETS[set_code] += 1     # a Standard set this list does not know yet
+        else:
+            SET_CARDS["rep"].append(c)
 
 print(f"Oracle DB: {len(BY_NAME)} unique names")
 print(f"Standard-legal oracle cards by set:")
@@ -60,6 +70,9 @@ for code, name in STANDARD_SETS.items():
     total_std += n
     print(f"  {code:4} {name:<40} {n:>4}")
 print(f"  {'':4} {'TOTAL':<40} {total_std:>4}")
+if UNLISTED_SETS:
+    print("  [!STALE SET LIST] Standard-legal sets missing from STANDARD_SETS (no handlers built): "
+          + ", ".join(f"{k} ({v})" for k, v in sorted(UNLISTED_SETS.items())))
 
 # ── Load ONLY hand-verified registry (not auto-generated files) ────────────────
 # We DON'T import auto-handlers here because we're regenerating them.
@@ -69,7 +82,7 @@ from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
 from engine.card_effects import LANDFALL_GROW, LANDFALL_MILL, LANDFALL_DOUBLE, LANDFALL_QUEST
 from engine.sagas import SAGA_EFFECTS
 from engine.game_state import GameState
-from engine.oracle_parser import parse_oracle
+from engine.oracle_parser import parse_oracle, own_etb_effects, _tilde
 
 # Only skip cards that have hand-written verified handlers or engine handling.
 # Do NOT skip cards that are only in auto-generated files — those we regenerate.
@@ -201,6 +214,25 @@ already    = []
 skipped    = []
 
 seen = set()
+rep_unreviewed = []
+guard_rows = []   # (name, set, reason, old effects, new effects, oracle)
+
+def guard_reason(oracle, name):
+    """Why a card that used to get an auto ETB handler no longer does."""
+    text = _tilde(oracle, name).lower()
+    if re.search(r"(?:~|this [a-z]+) enters with|as (?:~|this [a-z]+) enters", text):
+        return "review: enters-with / as-enters (replacement effect, not a trigger)"
+    if re.search(r"\benters\b", text):
+        return "review: something else entering triggers it"
+    return "no enters trigger on the card"
+
+# Reviewed 2026-11-19 (Claude + Tom): the generated effect matches the card,
+# allowing the engine's usual target simplification (biggest creature).
+REP_REVIEWED = {
+    "Eerie Gravestone", "Gallant Citizen", "Last Gasp",
+    "Meteor Golem", "Murder", "Prophetic Prism", "Robotics Mastery",
+    "Selfless Police Captain", "Venomized Cat",
+}
 
 for set_code in STANDARD_SETS:
     for c in SET_CARDS[set_code]:
@@ -215,6 +247,12 @@ for set_code in STANDARD_SETS:
         # Skip basics and token-only cards
         if name in BASIC_LANDS or "Basic Land" in type_line:
             skipped.append(name); continue
+        # Reprint bucket: only cards whose generated effect was read against
+        # the card text. The parser turns "dies" / "leaves" / "whenever you
+        # cast" triggers into enters-the-battlefield effects, so an unreviewed
+        # card here would get a handler that fires at the wrong time.
+        if set_code == "rep" and name not in REP_REVIEWED:
+            rep_unreviewed.append(name); continue
         if "Token" in type_line and "Creature" in type_line and not oracle:
             skipped.append(name); continue
 
@@ -242,8 +280,24 @@ for set_code in STANDARD_SETS:
         except Exception:
             parsed = {}
 
-        etb_efx   = parsed.get("etb", [])
         spell_efx = parsed.get("spell", [])
+
+        # ETB guard. The parser files many triggers under "etb" that are not
+        # this permanent entering (dies, leaves, becomes tapped, another
+        # creature enters, counters put on it ...), and the handler built from
+        # them fired when the card entered. Build the ETB handler only from the
+        # card's own "when ~ enters" sentences; everything else gets no
+        # auto-handler and is listed in the guard report for review.
+        old_etb = parsed.get("etb", [])
+        try:
+            etb_efx = own_etb_effects(oracle, name)
+        except Exception:
+            etb_efx = []
+        _is_perm = any(t in type_line for t in ("Creature", "Enchantment", "Artifact"))
+        if _is_perm and old_etb and etb_efx != old_etb:
+            guard_rows.append((name, set_code, "narrowed" if etb_efx else guard_reason(oracle, name),
+                               json.dumps(old_etb), json.dumps(etb_efx),
+                               ascii_safe(oracle.replace("\n", " | "))[:160]))
 
         is_creature = "Creature" in type_line
         is_spell    = any(t in type_line for t in ("Instant","Sorcery"))
@@ -328,4 +382,20 @@ for _,_,_,sc in hand_write: by_set[sc] += 1
 for code, name in STANDARD_SETS.items():
     print(f"  {code:4} {name:<40} {by_set[code]:>4} need hand-write")
 
+# Guard report: every card whose auto ETB handler changed or was dropped.
+import csv as _csv
+_report = REPO / "data" / "auto_etb_guard_report.csv"
+with open(_report, "w", newline="", encoding="utf-8") as _f:
+    _w = _csv.writer(_f)
+    _w.writerow(["card", "set", "result", "old_etb_effects", "new_etb_effects", "oracle"])
+    _w.writerows(sorted(guard_rows))
+_by = defaultdict(int)
+for _r in guard_rows: _by[_r[2]] += 1
+print(f"\n  [ETB GUARD] {len(guard_rows)} cards changed (see {_report.relative_to(REPO)}):")
+for _k, _v in sorted(_by.items()):
+    print(f"    {_v:>4}  {_k}")
+
+if rep_unreviewed:
+    print(f"\n  [!REP UNREVIEWED] {len(rep_unreviewed)} Standard-legal reprints have no auto-handler "
+          f"until reviewed (add to REP_REVIEWED): " + ", ".join(sorted(rep_unreviewed)[:12]) + " ...")
 print(f"\nWrote: {OUT}")

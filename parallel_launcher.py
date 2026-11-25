@@ -109,7 +109,7 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     print(f"{'Opponent':<28} {'Field%':>6}  {'G1':>6}  {'G2':>6}  {'Match':>7}  Type")
     print(f"{'-'*70}")
 
-    total_w = weighted = 0
+    from parallel_sim import cell_flag, field_weighted, print_field_weighted
     for r in sorted(done, key=lambda x: -x.get("field_pct", 0)):
         if r.get("error"):
             print(f"  {'ERROR':<26} {r['field_pct']:>5.1f}%  — {r['error'][:35]}")
@@ -120,13 +120,11 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
         match = r.get("match", 0)
         mtype = r.get("type", "?")
         print(f"  {r['opp']:<26} {fp:>5.1f}%  {g1:>5.1f}%  {g2:>5.1f}%  "
-              f"{match:>6.1f}%  {mtype}")
-        weighted += match * fp
-        total_w  += fp
+              f"{match:>6.1f}%  {mtype}{cell_flag(r)}")
 
     print(f"{'-'*70}")
-    fw = weighted / total_w if total_w else 0
-    print(f"  Field-weighted match win%: {fw:.1f}%")
+    fw, excluded = field_weighted(done)
+    print_field_weighted(fw, excluded)
     print(f"  Total: {elapsed:.0f}s  |  {n * total:,} games  |  {n_cores} cores")
 
     # Save
@@ -135,7 +133,9 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     with open(out, "w") as f:
         json.dump({
             "our_deck": our_deck, "format": format_name,
-            "field_weighted_match": round(fw, 1),
+            "field_weighted_match": fw or 0,
+            "field_weighted_available": fw is not None,   # False: the 0 above is not a win rate
+            "excluded_field_pct": excluded,
             "elapsed_s": round(elapsed, 1),
             "n_per_matchup": n, "results": done,
         }, f, indent=2)
@@ -145,7 +145,8 @@ def launch_all(our_deck, format_name, field, n, cores, seed, inner_workers=1):
     from engine.atomic_json import atomic_rmw_json
     matrix_path = "data/sim_matchup_matrix.json"
     key = f"{our_deck} ({format_name})"
-    new_row = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")}
+    new_row = {r["opp"]: r.get("g1", 0) for r in done if not r.get("error")
+               and r.get("our_side_modeled", True)}   # no stand-in cells in the matrix (#25)
     atomic_rmw_json(
         matrix_path,
         lambda matrix: matrix.update({key: new_row}),

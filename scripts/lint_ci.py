@@ -209,6 +209,7 @@ def _deck_is_audit_triaged(path: Path) -> tuple[bool, str]:
     Recognized markers (case-insensitive, in first 10 lines):
       // audit:intentional      -- count is intentional (e.g. Yorion 80+)
       // audit:custom_variant   -- non-canonical count was triaged + accepted
+      // audit:incomplete       -- an unidentifiable card was removed; not the full list
 
     Returns (is_triaged, marker_text). marker_text is empty if not triaged.
 
@@ -232,6 +233,10 @@ def _deck_is_audit_triaged(path: Path) -> tuple[bool, str]:
         return (True, "audit:auto-generated")
     if "audit:stub" in blob:
         return (True, "audit:stub")
+    # A card nobody could identify was taken out (see the UNRESOLVED line in
+    # the file); the loader prints [!INCOMPLETE DECK] whenever it is used.
+    if "audit:incomplete" in blob:
+        return (True, "audit:incomplete")
     return (False, "")
 
 

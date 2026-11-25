@@ -29,6 +29,37 @@ This file grows deck by deck — currently covers:
 from __future__ import annotations
 from engine.effect_primitives import run_effects
 from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS
+from engine.keywords import KWTag
+from data.card import Tag
+
+
+def _pump_eot(card, n):
+    """+N/+N until end of turn. Uses the +1/+1 counter slot (the only P/T
+    modifier a Card has) and records the amount so GameState._end() takes it
+    back off. A +N/+0 pump therefore also gives +N toughness for the turn."""
+    card.counters = (card.counters or 0) + n
+    card._pump_until_eot = getattr(card, "_pump_until_eot", 0) + n
+
+
+def safe_power(c):
+    """Module-level so handlers can call it; imported lazily because
+    match_state imports this module's dependents."""
+    from engine.match_state import safe_power as f
+    return f(c)
+
+
+def safe_toughness(c):
+    from engine.match_state import safe_toughness as f
+    return f(c)
+
+
+def _face(gs, n):
+    """N damage to the opponent's face. Same two writes as _damage_any_helper:
+    damage_dealt for the goldfish path, _match_opp.life for the match path."""
+    gs.damage_dealt += n
+    opp = getattr(gs, "_match_opp", None)
+    if opp is not None:
+        opp.life -= n
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -9454,7 +9485,31 @@ def _galvanic_discharge_spell(gs, card):
     """Galvanic Discharge — {R} Instant.
     'Target creature/PW. Get 3 energy, may pay any. Deals that
      much damage.'"""
-    _damage_any_helper(gs, 3)
+    from data.card import Tag
+    from engine.match_state import safe_power, safe_toughness
+    from engine.keywords import can_be_targeted_by
+    opp = getattr(gs, "_match_opp", None)
+    if opp is None:
+        # ponytail: goldfish has no creature to target and has always counted
+        # this as 3 to the face. Left alone so goldfish baselines hold; a real
+        # cast needs a creature or planeswalker target.
+        _damage_any_helper(gs, 3)
+        return
+    # It cannot target a player. You get {E}{E}{E} either way, then pay as
+    # much as it takes to kill the best creature you can afford.
+    gs.energy = getattr(gs, "energy", 0) + 3
+    killable = [c for c in opp.zones.battlefield
+                if c.has(Tag.CREATURE) and not c.is_land()
+                and 0 < safe_toughness(c) <= gs.energy
+                and can_be_targeted_by(c, source=None, controller_is_opp=True)]
+    if killable:
+        t = max(killable, key=lambda c: safe_power(c))
+        gs.energy -= safe_toughness(t)
+        opp.zones.battlefield.remove(t)
+        opp.zones.graveyard.append(t)
+        gs._log(f"    Galvanic Discharge: pay {safe_toughness(t)} energy, kills {t.name}")
+    else:
+        gs._log("    Galvanic Discharge: +3 energy, nothing worth paying for")
 
 
 def _galvanic_relay_spell(gs, card):
@@ -15831,7 +15886,7 @@ def _thalias_lieutenant_etb(gs, card):
     for c in gs.zones.battlefield:
         if c is card: continue
         if c.has(Tag.CREATURE) and "Human" in (c.type_line or ""):
-            c.counters["+1/+1"] = c.counters.get("+1/+1", 0) + 1
+            c.counters = (c.counters or 0) + 1
             count += 1
     gs._log(f"  Thalia's Lieutenant: +1/+1 on {count} Humans")
 
@@ -16044,8 +16099,8 @@ def _unlicensed_hearse_etb(gs, card):
             t = opp.zones.graveyard.pop(0)
             opp.zones.exile.append(t)
             exiled += 1
-    card.counters["exiled"] = card.counters.get("exiled", 0) + exiled
-    card.power = card.toughness = card.counters["exiled"]
+    card._exiled_count = getattr(card, "_exiled_count", 0) + exiled
+    card.power = card.toughness = card._exiled_count
     gs._log(f"  Unlicensed Hearse: exile {exiled} (P/T={card.power})")
 
 
@@ -16125,7 +16180,7 @@ def _violent_outburst_spell(gs, card):
     from data.card import Tag
     for c in gs.zones.battlefield:
         if c.has(Tag.CREATURE):
-            c.counters["turn_power"] = c.counters.get("turn_power", 0) + 1
+            _pump_eot(c, 1)   # +1/+0 until end of turn
     # Cascade: find cheaper spell, cast free (model: top 3 look)
     for _ in range(3):
         if not gs.zones.library: break
@@ -16145,7 +16200,7 @@ def _violent_urge_spell(gs, card):
     from data.card import Tag
     for c in gs.zones.battlefield:
         if c.has(Tag.CREATURE):
-            c.counters["turn_power"] = c.counters.get("turn_power", 0) + 1
+            _pump_eot(c, 1)   # +1/+0 until end of turn
     gs._log("  Violent Urge: +1/+0 trample team")
 
 
@@ -16171,9 +16226,7 @@ def _walking_ballista_etb(gs, card):
      {4}: +1/+1 counter.
      Remove counter: 1 damage any target.'"""
     # Assume X=2 typical cast
-    card.counters["+1/+1"] = card.counters.get("+1/+1", 0) + 2
-    card.power = 2
-    card.toughness = 2
+    card.counters = (card.counters or 0) + 2   # printed 0/0, so this is a 2/2
     gs._log("  Walking Ballista: ETB with 2 counters")
 
 
@@ -16382,9 +16435,8 @@ def _xenagos_god_revels_etb(gs, card):
     if attackers:
         t = max(attackers, key=lambda c: safe_power(c))
         x = safe_power(t)
-        t.counters["turn_power"] = t.counters.get("turn_power", 0) + x
-        t.counters["turn_toughness"] = t.counters.get("turn_toughness", 0) + x
-        t.counters["haste"] = 1
+        _pump_eot(t, x)   # +X/+X until end of turn
+        t.tags.add(KWTag.HASTE)
         gs._log(f"  Xenagos: +{x}/+{x} haste to {t.name}")
 
 
@@ -16408,8 +16460,8 @@ def _yawgmoth_etb(gs, card):
         opp_cr = [c for c in opp.zones.battlefield if c.has(Tag.CREATURE)]
         if opp_cr:
             t = min(opp_cr, key=lambda c: c.toughness or 1)
-            t.counters["-1/-1"] = t.counters.get("-1/-1", 0) + 1
-            if (t.toughness or 1) - t.counters["-1/-1"] <= 0:
+            t.counters = (t.counters or 0) - 1
+            if t.effective_toughness() <= 0:
                 opp.zones.battlefield.remove(t)
                 opp.zones.graveyard.append(t)
         if gs.zones.library:
@@ -16830,7 +16882,7 @@ def _utopia_sprawl_etb(gs, card):
 def _mantis_rider_etb(gs, card):
     """Mantis Rider — {U}{R}{W} 3/3 Human Monk.
     'Flying, vigilance, haste.'"""
-    card.counters["haste"] = 1
+    card.tags.add(KWTag.HASTE)
     gs._log("  Mantis Rider: 3/3 flying vig haste")
 
 
@@ -16933,8 +16985,8 @@ def _monstrous_carabid_etb(gs, card):
 def _kinetic_hellion_etb(gs, card):
     """Kinetic Hellion — red aggressive body.
     'ETB with +1/+1 counters. Haste, trample.'"""
-    card.counters["+1/+1"] = card.counters.get("+1/+1", 0) + 2
-    card.counters["haste"] = 1
+    card.counters = (card.counters or 0) + 2
+    card.tags.add(KWTag.HASTE)
     gs._log("  Kinetic Hellion: 2 counters + haste")
 
 
@@ -19553,7 +19605,7 @@ def _witherbloom_command(gs, card):
     from own library as self-mill proxy, return a land from GY if
     present."""
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     lands_in_gy = [c for c in gs.zones.graveyard if c.is_land()]
     if lands_in_gy:
         land = lands_in_gy[0]
@@ -22801,7 +22853,7 @@ def _quag_feast(gs, card):
     """Quag Feast — {1}{B} Sorcery.
     'Choose target C/PW/Vehicle. Mill 2, destroy if mv ≤ GY count.'"""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Quag Feast: self-mill 2 (opp target no-op)")
 
 
@@ -22848,7 +22900,7 @@ def _space_time_anomaly(gs, card):
     Goldfish: self-mill (only player modeled)."""
     n = min(gs.life, len(gs.zones.library))
     gs.zones.graveyard.extend(gs.zones.library[:n])
-    gs.zones.library = gs.zones.library[n:]
+    del gs.zones.library[:n]
     gs._log(f"  Space-Time Anomaly: self-mill {n}")
 
 
@@ -23117,7 +23169,7 @@ def _confounding_riddle(gs, card):
     if gs.zones.library:
         gs.zones.draw(1)
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     gs._log("  Confounding Riddle: draw 1, self-mill 3")
 
 
@@ -23947,7 +23999,7 @@ def _random_encounter(gs, card):
     Goldfish: self-mill 4; put creatures on BF."""
     from data.card import Tag
     milled = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     creatures = [c for c in milled if c.has(Tag.CREATURE)]
     rest = [c for c in milled if c not in creatures]
     for c in creatures:
@@ -24393,7 +24445,7 @@ def _broodspinner_etb(gs, card):
 
     Goldfish: surveil ≈ mill 2 from self library as dig proxy."""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Broodspinner ETB: 2/3 reach, surveil 2 (self-mill 2)")
 
 
@@ -25404,7 +25456,7 @@ def _rubblebelt_maverick_etb(gs, card):
 
     Goldfish: self-mill 2 as proxy."""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs._log("  Rubblebelt Maverick ETB: 1/1, surveil 2 (mill 2)")
 
 
@@ -25498,7 +25550,7 @@ def _seedship_broodtender_etb(gs, card):
     """Seedship Broodtender — {B}{G} Insect Citizen (2/3).
     'ETB: mill 3. {3}{B}{G},Sac: [truncated].'"""
     gs.zones.graveyard.extend(gs.zones.library[:3])
-    gs.zones.library = gs.zones.library[3:]
+    del gs.zones.library[:3]
     gs._log("  Seedship Broodtender ETB: 2/3, self-mill 3")
 
 
@@ -25733,7 +25785,7 @@ def _terra_magical_adept_etb(gs, card):
 
     Goldfish: mill 5 from own library; check for enchantment."""
     milled = gs.zones.library[:5]
-    gs.zones.library = gs.zones.library[5:]
+    del gs.zones.library[:5]
     enchants = [c for c in milled if "Enchantment" in (c.type_line or "")]
     rest = [c for c in milled if c not in enchants]
     if enchants:
@@ -25861,7 +25913,7 @@ def _town_greeter_etb(gs, card):
 
     Goldfish: self-mill 4; promote a land to hand."""
     milled = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     lands = [c for c in milled if c.is_land()]
     rest = [c for c in milled if c not in lands]
     if lands:
@@ -25961,7 +26013,7 @@ def _vanille_cheerful_lcie_etb(gs, card):
 
     Goldfish: self-mill 2, reanimate a permanent."""
     milled = gs.zones.library[:2]
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs.zones.graveyard.extend(milled)
 
     perms = [c for c in gs.zones.graveyard
@@ -26029,7 +26081,7 @@ def _watcher_of_the_wayside_etb(gs, card):
     """Watcher of the Wayside — {3} Artifact Creature — Golem (3/2).
     'ETB: target player mills 2, you gain 2 life.'"""
     gs.zones.graveyard.extend(gs.zones.library[:2])
-    gs.zones.library = gs.zones.library[2:]
+    del gs.zones.library[:2]
     gs.life += 2
     gs._log("  Watcher of the Wayside ETB: 3/2, self-mill 2, +2 life")
 
@@ -26206,7 +26258,7 @@ def _overlord_balemurk_etb(gs, card):
     clone is not modeled here; the ETB path captures the first fire."""
     from data.card import Tag
     top4 = gs.zones.library[:4]
-    gs.zones.library = gs.zones.library[4:]
+    del gs.zones.library[:4]
     gs.zones.graveyard.extend(top4)
     candidates = [c for c in gs.zones.graveyard
                   if (c.has(Tag.CREATURE) or c.has(Tag.PLANESWALKER))
@@ -27383,7 +27435,7 @@ def _doomsday_excruciator_etb(gs, card):
     self_excess = max(0, len(gs.zones.library) - keep)
     if self_excess:
         exiled = gs.zones.library[:-keep]
-        gs.zones.library = gs.zones.library[-keep:]
+        del gs.zones.library[:-keep]
         gs.zones.exile.extend(exiled)
         gs._log(f"  Doomsday Excruciator ETB: exile {self_excess} from own "
                 f"library (bottom {keep} remain)")
@@ -27392,7 +27444,7 @@ def _doomsday_excruciator_etb(gs, card):
         opp_excess = max(0, len(opp.zones.library) - keep)
         if opp_excess:
             exiled = opp.zones.library[:-keep]
-            opp.zones.library = opp.zones.library[-keep:]
+            del opp.zones.library[:-keep]
             opp.zones.exile.extend(exiled)
             gs._log(f"  Doomsday Excruciator ETB: exile {opp_excess} from opp "
                     f"library (bottom {keep} remain)")
@@ -28061,7 +28113,7 @@ def _tablet_of_discovery_etb(gs, card):
         gs._log(f"  Tablet of Discovery ETB: mill {milled.name}, +1 mana proxy")
     else:
         gs._log("  Tablet of Discovery ETB: library empty")
-    gs.mana_pool = getattr(gs, 'mana_pool', 0) + 1
+    gs.mana_pool.flex += 1
 
 
 def _molten_core_maestro_etb(gs, card):
@@ -28124,7 +28176,7 @@ def _bloom_tender_etb(gs, card):
         for col in getattr(c, 'colors', []) or []:
             colors_on_bf.add(col)
     n = max(1, len(colors_on_bf))
-    gs.mana_pool = getattr(gs, 'mana_pool', 0) + n
+    gs.mana_pool.flex += n
     gs._log(f"  Bloom Tender ETB: 1/1, +{n} mana ({len(colors_on_bf)} colors on BF)")
 
 
@@ -28593,7 +28645,7 @@ def _mind_roots_spell(gs, card):
     opp = getattr(gs, "_match_opp", None)
     if opp and len(opp.zones.hand) >= 2:
         discarded = opp.zones.hand[:2]
-        opp.zones.hand = opp.zones.hand[2:]
+        del opp.zones.hand[:2]
         for c in discarded:
             if c.is_land():
                 gs.zones.battlefield.append(c)
@@ -28647,7 +28699,7 @@ def _prismari_etb(gs, card):
     Model: storm scaling = big tempo advantage proxy."""
     gs._log("  Prismari ETB: storm grant active (proxy -- big finisher)")
     # Apply a mana acceleration bonus for leftover storm copies
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
 
 
 def _silverquill_etb(gs, card):
@@ -28702,7 +28754,7 @@ def _steal_the_show_spell(gs, card):
     Model: opp draws / we ping them -- proxy: deal damage equal to our hand size."""
     hand_size = len(gs.zones.hand)
     if hand_size > 0:
-        gs.zones.life -= hand_size  # damages opp face
+        _face(gs, hand_size)  # damages opp face
         gs._log(f"  Steal the Show: {hand_size} damage to opp (hand size proxy)")
 
 
@@ -28713,7 +28765,7 @@ def _emeritus_conflict_etb(gs, card):
     """Emeritus of Conflict // Lightning Bolt -- {1}{R} Creature.
     Creature side: likely a Prowess-like 1/3. Adventure: Lightning Bolt.
     ETB proxy: 3 damage to opp (Lightning Bolt side fires on cast)."""
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Emeritus of Conflict ETB: Lightning Bolt adventure proxy -- 3 damage")
 
 
@@ -28787,7 +28839,7 @@ def _gwenom_etb(gs, card):
 def _teval_etb(gs, card):
     """Teval, Arbiter of Virtue -- {2}{B}{G}{U} (Flying, Lifelink). 'All spells have delve.'
     ETB proxy: +2 mana (delve cost savings proxy)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Teval ETB: all-spells delve static (+2 mana proxy)")
 
 
@@ -28889,7 +28941,7 @@ def _parker_luck_spell(gs, card):
     """Parker Luck -- {2}{B} Sorcery. 'End step: 2 players reveal top card.
     Controller of higher MV card loses 3 life or discards 2.'
     Model: opp loses 3 life."""
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Parker Luck: opp loses 3 life (top-card MV gamble proxy)")
 
 
@@ -28916,7 +28968,7 @@ def _collective_inferno_spell(gs, card):
     """Collective Inferno -- {3}{R}{R} Instant (Convoke). 'Deals X damage divided
     among any number of targets where X = creatures you control.'
     Model: deal 3 damage to opp face."""
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Collective Inferno: deal 3 damage (N=creatures proxy)")
 
 
@@ -28984,7 +29036,7 @@ def _goliath_daydreamer_etb(gs, card):
     """Goliath Daydreamer -- {2}{R}{R}. 'When cast i/s from hand, exile it with
     dream counter. May cast exiled cards from GY for free.'
     ETB proxy: +2 mana (exile-cast engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Goliath Daydreamer ETB: dream-exile free-cast engine (+2 mana proxy)")
 
 
@@ -29077,7 +29129,7 @@ def _dream_harvest_spell(gs, card):
 def _eternity_elevator_etb(gs, card):
     """The Eternity Elevator -- {5} Artifact. '{T}: Add {C}{C}{C}. Station: tap creature = +power counters.'
     ETB proxy: +3 mana on ETB."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  The Eternity Elevator ETB: +{C}{C}{C} (Station mana rock)")
 
 
@@ -29109,7 +29161,7 @@ def _genji_glove_etb(gs, card):
 def _raiding_schemes_etb(gs, card):
     """Raiding Schemes -- {3}{R}{G} Enchantment. 'All noncreature spells have conspire.'
     ETB proxy: +2 mana (conspire cost savings)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Raiding Schemes ETB: conspire-all static (+2 mana savings proxy)")
 
 
@@ -29146,7 +29198,7 @@ def _cryptcaller_chariot_etb(gs, card):
 def _wishing_well_etb(gs, card):
     """Wishing Well -- {3}{U} Artifact. '{T}: Put coin counter. When you do, may cast
     instant/sorcery with MV <= counters from GY.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Wishing Well ETB: coin-counter GY-cast engine (+1 mana proxy)")
 
 
@@ -29168,11 +29220,11 @@ def _kitnap_spell(gs, card):
 def _lavaleaper_etb(gs, card):
     """Lavaleaper -- {3}{R} Creature. 'All creatures have haste. When basic land tapped,
     that player adds 1 extra mana.' ETB proxy: +1 mana (basic tap bonus)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
-            c.tags.add(Tag.HASTE)
+            c.tags.add(KWTag.HASTE)
     gs._log("  Lavaleaper ETB: all creatures get haste + +1 mana proxy")
 
 
@@ -29356,7 +29408,7 @@ def _expedited_inheritance_etb(gs, card):
 def _dracogenesis_etb(gs, card):
     """Dracogenesis -- {6}{R}{R} Enchantment. 'Cast Dragon spells without paying cost.'
     ETB proxy: massive mana savings -- add 6 mana floating."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 6
+    gs.mana_pool.flex += 6
     gs._log("  Dracogenesis ETB: free-Dragon-cast static (+6 mana proxy)")
 
 
@@ -29529,7 +29581,7 @@ def _possession_engine_etb(gs, card):
 def _spinerock_tyrant_etb(gs, card):
     """Spinerock Tyrant -- {3}{R}{R} (Flying, Wither). Spell-trigger pump + ping."""
     card.counters = (card.counters or 0) + 2
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Spinerock Tyrant ETB: Wither+spell-ping proxy (+2/+0 + 3 dmg)")
 
 
@@ -29568,7 +29620,7 @@ def _gloom_ripper_etb(gs, card):
 
 def _meek_attack_etb(gs, card):
     """Meek Attack -- {2}{R} Enchantment. '{1}{R}: Cheat creature<=5 into play.'"""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Meek Attack ETB: cheat-in ability active (+1 mana proxy)")
 
 
@@ -29645,7 +29697,7 @@ def _tannuk_etb(gs, card):
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE) and c is not card:
             c.counters = (c.counters or 0) + 1
-            c.tags.add(Tag.HASTE)
+            c.tags.add(KWTag.HASTE)
     gs._log("  Tannuk ETB: haste + +1/+1 to all other creatures")
 
 
@@ -29700,7 +29752,7 @@ def _kitsune_etb(gs, card):
 def _groundchuck_etb(gs, card):
     """Groundchuck & Dirtbag -- {4}{G}{G} (Trample). 'Whenever you tap a land
     for mana, add {G}.' ETB proxy: +3 mana (double first 3 land taps)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Groundchuck & Dirtbag ETB: mana-doubling on tap (proxy +3 mana)")
 
 
@@ -29709,7 +29761,7 @@ def _groundchuck_etb(gs, card):
 def _rollercrusher_ride_spell(gs, card):
     """The Rollercrusher Ride -- {X}{2}{R}. 'Delirium: if source deals noncombat
     damage, double it.' ETB/spell proxy: deal X=2 damage to opp face."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  The Rollercrusher Ride: Delirium doubling proxy -- 2 face damage")
 
 
@@ -29871,7 +29923,7 @@ def _conspiracy_unraveler_etb(gs, card):
 def _undergrowth_recon_etb(gs, card):
     """Undergrowth Recon -- {1}{G}{G} Enchantment. 'Upkeep: return a land from GY tapped.'
     ETB proxy: land-recursion engine (proxy: +1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Undergrowth Recon ETB: upkeep land-return active (+1 mana proxy)")
 
 
@@ -30039,7 +30091,7 @@ def _gruff_triplets_etb(gs, card):
                    cmc=0, type_line="Creature — Sheep", oracle_text="Trample",
                    power="3", toughness="3", colors=["G"])
         tok.tags.add(Tag.CREATURE)
-        tok.tags.add(Tag.TRAMPLE)
+        tok.tags.add(KWTag.TRAMPLE)
         gs.zones.battlefield.append(tok)
     gs._log("  Gruff Triplets ETB: create 2 token copies (3x 3/3 trample board)")
 
@@ -30124,7 +30176,7 @@ def _krenko_buzzcrusher_etb(gs, card):
 def _hulking_raptor_etb(gs, card):
     """Hulking Raptor -- {2}{G}{G} (Ward 2). 'At beginning of first main phase, add {G}{G}.'
     Model: mana ramp trigger proxy -- +2 mana on ETB."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Hulking Raptor ETB: +{G}{G} first-main-phase proxy")
 
 
@@ -30265,7 +30317,7 @@ def _empyrean_eagle_etb(gs, card):
     ETB proxy: +1/+1 to all our other flying creatures."""
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
-        if c is not card and not c.is_land() and c.has(_Tag.CREATURE) and c.has(_Tag.FLYING):
+        if c is not card and not c.is_land() and c.has(_Tag.CREATURE) and c.has(KWTag.FLYING):
             c.counters = (c.counters or 0) + 1
     gs._log("  Empyrean Eagle ETB: +1/+1 to all friendly fliers")
 
@@ -30455,7 +30507,7 @@ def _time_stop_spell(gs, card):
 def _heraldic_banner_etb(gs, card):
     """Heraldic Banner -- {3} Artifact. 'Choose color, creatures get +1/+0. {T}: Add 1 mana.'
     ETB proxy: +1 mana + +1/+0 to all our creatures."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
@@ -30512,7 +30564,7 @@ def _savage_ventmaw_etb(gs, card):
     """Savage Ventmaw -- {4}{R}{G} Creature 4/4 (Flying).
     'Whenever attacks, add {R}{R}{R}{G}{G}{G} (don't lose at step end).'
     Model: flying + big mana on attack. ETB proxy: +3 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Savage Ventmaw ETB: flying + +3 mana attack proxy")
 
 
@@ -30548,7 +30600,7 @@ def _dictate_kruphix_etb(gs, card):
 def _cultivators_caravan_etb(gs, card):
     """Cultivator's Caravan -- {3} Artifact. {T}: Add one mana of any color. Crew 3.
     Model: mana rock. ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Cultivator's Caravan ETB: +1 mana proxy ({T}: any color)")
 
 
@@ -30703,7 +30755,7 @@ def _quilled_greatwurm_etb(gs, card):
 
 def _gilded_lotus_etb(gs, card):
     """Gilded Lotus -- {5} Artifact. {T}: Add three mana of any one color."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Gilded Lotus ETB: +3 mana (proxy tap)")
 
 
@@ -30798,7 +30850,7 @@ def _thousand_year_storm_etb(gs, card):
     """Thousand-Year Storm -- {4}{U}{R} Enchantment.
     'Whenever you cast an instant/sorcery, copy it for each other i/s cast this turn.'
     Model: storm enchantment -- proxy: +3 mana for chaining spells."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Thousand-Year Storm ETB: storm proxy (+3 mana)")
 
 
@@ -30935,7 +30987,7 @@ def _abstract_paintmage_etb(gs, card):
     """Abstract Paintmage -- {U}{R} Creature.
     'At the beginning of your first main phase, add {U}{R} for instants/sorceries.'
     Model: mana ramp trigger -- proxy: add 2 to mana pool on ETB."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Abstract Paintmage ETB: +{U}{R} mana proxy (first main phase trigger)")
 
 
@@ -31023,8 +31075,11 @@ def _pox_plague_spell(gs, card):
             opp.zones.battlefield.remove(c)
             opp.zones.graveyard.append(c)
         gs._log(f"  Pox Plague: opp discards {discard_n}, loses {len(opp_perms)//2} permanents")
-    # We also take damage (symmetric)
-    gs.zones.life -= 5
+    # Each player loses half their life, rounded down. (The old line here was
+    # `gs.zones.life -= 5`, which raised; the card text is symmetric.)
+    gs.life -= gs.life // 2
+    if opp:
+        opp.life -= opp.life // 2
 
 
 def _startled_relic_sloth_etb(gs, card):
@@ -31060,11 +31115,13 @@ def _flashback_spell(gs, card):
     if gy_spells:
         best = max(gy_spells, key=lambda c: getattr(c,'cmc',0) or 0)
         gs.zones.graveyard.remove(best)
-        # Re-cast it (goes through its handler)
+        # cast_spell only casts from hand, so the card goes there first. It
+        # used to be handed over straight from the graveyard: the cast was
+        # refused and the card vanished, unless an identical copy was in hand,
+        # in which case that copy was cast in its place.
+        gs.zones.hand.append(best)  # flashback = return to hand proxy
         if gs.mana_pool.can_cast(best.mana_cost, best.cmc):
-            gs.cast_spell(best)
-        else:
-            gs.zones.hand.append(best)  # flashback = return to hand proxy
+            gs.cast_spell(best)   # re-cast it (goes through its handler)
         gs._log(f"  Flashback: grant flashback to {best.name}")
 
 
@@ -31135,7 +31192,7 @@ def _forum_necroscribe_etb(gs, card):
 def _ark_of_hunger_etb(gs, card):
     """Ark of Hunger -- {4} Artifact. 'Whenever cards leave your GY: deal 1 to each opp + gain 1.'
     ETB proxy: deal 2 damage + gain 2 life (2 leave triggers assumed on game start)."""
-    gs.zones.life -= 2  # opp takes 2 (life is opp's life in goldfish proxy)
+    _face(gs, 2)  # opp takes 2 (life is opp's life in goldfish proxy)
     gs._log("  Ark of Hunger ETB: GY-leave drain trigger active (2-trigger proxy)")
 
 def _garrison_excavator_etb(gs, card):
@@ -31197,19 +31254,19 @@ def _nita_forum_etb(gs, card):
 def _noxious_newt_etb(gs, card):
     """Noxious Newt -- {1}{B}{G} Creature (Deathtouch). '{T}: Add {G}.'
     ETB proxy: deathtouch + mana dork."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Noxious Newt ETB: deathtouch + {G} mana dork")
 
 def _hydro_channeler_etb(gs, card):
     """Hydro-Channeler -- {1}{U} Creature. '{T}: Add {U} (i/s only). {1}{T}: Any color.'
     ETB proxy: +1 mana (flexible mana dork)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Hydro-Channeler ETB: i/s-mana dork (+1 mana proxy)")
 
 def _potioners_trove_etb(gs, card):
     """Potioner's Trove -- {2} Artifact. '{T}: Any color. {T}: Gain 2 life (if cast i/s).'
     ETB proxy: +1 mana + 2 life."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Potioner's Trove ETB: mana + life-gain artifact active")
 
 def _resonating_lute_etb(gs, card):
@@ -31223,7 +31280,7 @@ def _resonating_lute_etb(gs, card):
     front-loaded +6 mana (~3 turns of doubled instant/sorcery mana for
     a 3-4 land control board, matching the card's actual snowball power).
     Without this, the bare +2 proxy massively understated the card."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 6
+    gs.mana_pool.flex += 6
     gs._lute_active = True
     gs._log("  Resonating Lute ETB: land mana-doubling for i/s (+6 mana proxy, ongoing flag set)")
 
@@ -31231,7 +31288,7 @@ def _page_loose_leaf_etb(gs, card):
     """Page, Loose Leaf -- {2} Artifact Creature. '{T}: Add {C}.
     Grandeur: discard another Page, put creature from top into hand.'
     ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Page, Loose Leaf ETB: {C} dork + Grandeur draw trigger active")
 
 def _charging_strifeknight_etb(gs, card):
@@ -31301,7 +31358,7 @@ def _eternal_student_spell(gs, card):
                    type_line="Creature — Inkling", oracle_text="Flying",
                    power="1", toughness="1", colors=["W","B"])
         tok.tags.add(Tag.CREATURE)
-        tok.tags.add(Tag.FLYING)
+        tok.tags.add(KWTag.FLYING)
         gs.zones.battlefield.append(tok)
     gs._log("  Eternal Student: create 2 Inkling 1/1 flying tokens")
 
@@ -31336,7 +31393,7 @@ def _fear_of_infinity_etb(gs, card):
 def _leyline_of_resonance_etb(gs, card):
     """A-Leyline of Resonance -- 'May begin in play. Whenever you cast i/s, copy it.'
     ETB proxy: +2 mana (spell-copy value engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Leyline of Resonance ETB: spell-copy static (+2 mana proxy)")
 
 def _cathartic_parting_spell(gs, card):
@@ -31546,8 +31603,8 @@ def _horrid_vigor_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.DEATHTOUCH)
-        best.tags.add(Tag.INDESTRUCTIBLE)
+        best.tags.add(KWTag.DEATHTOUCH)
+        best.tags.add(KWTag.INDESTRUCTIBLE)
         gs._log(f"  Horrid Vigor: {best.name} gets deathtouch + indestructible until EOT")
 
 def _cryptid_inspector_etb(gs, card):
@@ -31654,7 +31711,7 @@ def _rumbling_rockslide_spell(gs, card):
             except (ValueError, TypeError):
                 gs._log(f"  Rumbling Rockslide: {lands} damage to {target.name}")
     else:
-        gs.zones.life -= lands
+        _face(gs, lands)
         gs._log(f"  Rumbling Rockslide: {lands} damage to opp face")
 
 def _curator_sun_etb(gs, card):
@@ -31694,7 +31751,7 @@ def _zoyowa_justice_spell(gs, card):
 def _glowcap_lantern_etb(gs, card):
     """Glowcap Lantern -- Equipment. 'Equipped creature looks at top card any time.
     Whenever equipped creature explores, draw 1.' ETB proxy: +1 mana + draw trigger active."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Glowcap Lantern ETB: explore-draw equip (+1 mana proxy)")
 
 def _malamet_veteran_etb(gs, card):
@@ -31728,17 +31785,16 @@ def _brazen_blademaster_etb(gs, card):
 def _cartographers_companion_etb(gs, card):
     """Cartographer's Companion -- 'ETB: create a Map token.'
     ETB proxy: +1 mana (Map token = explore)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Cartographer's Companion ETB: create Map token (+1 mana proxy)")
 
 def _nicanzil_etb(gs, card):
     """Nicanzil, Current Conductor -- 'When creature explores a land, may put land from hand onto BF.'
     ETB proxy: if land in hand, play it."""
     for i, c in enumerate(gs.zones.hand):
-        if c.is_land() and gs.land_drops_remaining > 0:
+        if c.is_land():   # put onto the battlefield: not a land drop
             gs.zones.hand.pop(i)
             gs.zones.battlefield.append(c)
-            gs.land_drops_remaining -= 1
             gs._log(f"  Nicanzil ETB: explore-land trigger -> play {c.name}")
             return
     gs._log("  Nicanzil ETB: explore-land trigger active")
@@ -31763,7 +31819,7 @@ def _cosmium_blast_spell(gs, card):
 def _diamond_pick_axe_etb(gs, card):
     """Diamond Pick-Axe -- Equipment (Indestructible). 'Equipped: explore when enters tapped lands.'
     ETB proxy: +1 mana (explore trigger)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Diamond Pick-Axe ETB: explore-on-tapped-land equip (+1 mana proxy)")
 
 def _waylaying_pirates_etb(gs, card):
@@ -31860,7 +31916,7 @@ def _vito_fanatic_etb(gs, card):
 def _poetic_ingenuity_etb(gs, card):
     """Poetic Ingenuity -- 'When Dinos attack, create Treasures. When 10+ Treasures sacrificed,
     create a Dino.' ETB proxy: +2 mana (treasure creation trigger)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Poetic Ingenuity ETB: Dino-attack treasure trigger (+2 mana proxy)")
 
 def _unlucky_drop_spell(gs, card):
@@ -31884,13 +31940,13 @@ def _malamet_scythe_etb(gs, card):
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
         best.counters = (best.counters or 0) + 1
-        best.tags.add(Tag.DEATHTOUCH)
+        best.tags.add(KWTag.DEATHTOUCH)
     gs._log("  Malamet Scythe ETB: attach deathtouch+pump to best creature")
 
 def _the_belligerent_etb(gs, card):
     """The Belligerent -- 'When attacks: create Treasure, look at top card, may cast.'
     ETB proxy: +1 mana + draw 1."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     if gs.zones.library:
         gs.zones.hand.append(gs.zones.library.pop(0))
     gs._log("  The Belligerent ETB: attack-Treasure+top-cast (+1 mana + draw 1)")
@@ -31967,7 +32023,7 @@ def _sunfire_torch_etb(gs, card):
 
 def _waterwind_scout_etb(gs, card):
     """Waterwind Scout -- Flying. 'ETB: create Map token.' ETB proxy: +1 mana (Map token)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Waterwind Scout ETB: flying + create Map token (+1 mana proxy)")
 
 
@@ -31997,7 +32053,7 @@ def _clone_saga_etb(gs, card):
     ETB proxy: surveil 2 (look at top 2, keep best)."""
     if len(gs.zones.library) >= 2:
         top2 = gs.zones.library[:2]
-        gs.zones.library = gs.zones.library[2:]
+        del gs.zones.library[:2]
         for c in top2:
             if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
                 gs.zones.hand.append(c)
@@ -32047,7 +32103,7 @@ def _mob_lookout_etb(gs, card):
 def _shocker_etb(gs, card):
     """Shocker, Unshakable -- First strike (your turn). 'ETB: 2 damage to each opponent.'
     ETB proxy: deal 2 damage to opp."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Shocker ETB: 2 damage to each opp")
 
 def _shriek_treblemaker_etb(gs, card):
@@ -32138,7 +32194,7 @@ def _mechanical_mobster_etb(gs, card):
 def _living_brain_etb(gs, card):
     """Living Brain, Mechanical Marvel -- 'At combat start: artifact becomes creature.'
     ETB proxy: +1 mana (artifact-animation engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Living Brain ETB: artifact-animation combat trigger (+1 mana proxy)")
 
 def _symbiote_spider_man_etb(gs, card):
@@ -32248,7 +32304,7 @@ def _close_encounter_spell(gs, card):
 def _nanoform_sentinel_etb(gs, card):
     """Nanoform Sentinel -- 'Whenever tapped, untap another target permanent.'
     ETB proxy: +1 mana (tap/untap engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Nanoform Sentinel ETB: tap-untap engine (+1 mana proxy)")
 
 def _harmonious_grovestrider_etb(gs, card):
@@ -32336,7 +32392,7 @@ def _sami_engineer_etb(gs, card):
 def _kav_landseeker_etb(gs, card):
     """Kav Landseeker -- Menace. 'ETB: create Lander token.'
     ETB proxy: menace + Lander (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Kav Landseeker ETB: menace + Lander token (+1 mana proxy)")
 
 def _hylderblade_etb(gs, card):
@@ -32374,7 +32430,7 @@ def _skystinger_etb(gs, card):
 def _bioengineered_future_etb(gs, card):
     """Bioengineered Future -- Enchantment. 'ETB: create Lander token.'
     ETB proxy: Lander (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Bioengineered Future ETB: Lander token (+1 mana proxy)")
 
 def _scrounge_eternity_spell(gs, card):
@@ -32399,7 +32455,7 @@ def _scrounge_eternity_spell(gs, card):
 def _ragost_etb(gs, card):
     """Ragost, Deft Gastronaut -- 'Artifacts are Foods. {2}{T} Sac: gain 2 life.'
     ETB proxy: +1 mana (food-artifact engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Ragost ETB: artifact-as-Food engine (+1 mana proxy)")
 
 def _roving_actuator_etb(gs, card):
@@ -32416,7 +32472,7 @@ def _virulent_silencer_etb(gs, card):
 
 def _galactic_wayfarer_etb(gs, card):
     """Galactic Wayfarer -- 'ETB: create Lander token.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Galactic Wayfarer ETB: create Lander (+1 mana proxy)")
 
 def _exosuit_savior_etb(gs, card):
@@ -32435,7 +32491,7 @@ def _exosuit_savior_etb(gs, card):
 def _weftstalker_ardent_etb(gs, card):
     """Weftstalker Ardent -- 'When another creature/artifact enters, deal 1 to each opp.'
     ETB proxy: deal 2 damage to opp (2 enter triggers this turn)."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Weftstalker Ardent ETB: enter-ping trigger (2 damage proxy)")
 
 def _red_tiger_mechan_etb(gs, card):
@@ -32469,7 +32525,7 @@ def _lightless_evangel_etb(gs, card):
 
 def _biomechan_engineer_etb(gs, card):
     """Biomechan Engineer -- 'ETB: create Lander token.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Biomechan Engineer ETB: create Lander (+1 mana proxy)")
 
 def _beamsaw_prospector_etb(gs, card):
@@ -32602,7 +32658,7 @@ def _specimen_freighter_etb(gs, card):
 def _don_raph_etb(gs, card):
     """Don & Raph, Hard Science -- Menace. 'When attacks, next noncreature spell has affinity.'
     ETB proxy: menace + +1 mana (affinity cost savings)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Don & Raph ETB: menace + affinity-spell attack trigger (+1 mana proxy)")
 
 def _turncoat_kunoichi_etb(gs, card):
@@ -32613,7 +32669,7 @@ def _turncoat_kunoichi_etb(gs, card):
 def _zoo_escapees_etb(gs, card):
     """Zoo Escapees -- 'When leaves battlefield, create Mutagen token.'
     ETB proxy: create Mutagen (+1 mana on entry)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Zoo Escapees ETB: leave-BF Mutagen trigger (+1 mana proxy)")
 
 def _april_etb(gs, card):
@@ -32626,7 +32682,7 @@ def _april_etb(gs, card):
 def _genghis_frog_etb(gs, card):
     """Genghis Frog -- Trample. 'When Mutant enters, create Mutagen token.'
     ETB proxy: trample + create Mutagen (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Genghis Frog ETB: trample + Mutant-enter Mutagen trigger (+1 mana proxy)")
 
 def _henchbots_etb(gs, card):
@@ -32691,13 +32747,13 @@ def _chrome_dome_etb(gs, card):
 def _weather_maker_etb(gs, card):
     """Weather Maker -- 'Landfall: put charge counter. {T}: act on counters.'
     ETB proxy: +1 mana (landfall mana engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Weather Maker ETB: Landfall charge-counter engine (+1 mana proxy)")
 
 def _raph_leo_etb(gs, card):
     """Raph & Leo, Sibling Rivals -- 'When attacks (first combat), untap 1-2 tapped things.'
     ETB proxy: untap 2 lands (mana ramp)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Raph & Leo ETB: attack untap 1-2 tapped (+2 mana proxy)")
 
 def _michelangelo_game_master_etb(gs, card):
@@ -32715,7 +32771,7 @@ def _shredder_unrelenting_etb(gs, card):
 def _ray_fillet_etb(gs, card):
     """Ray Fillet, Man Ray -- Flying. 'ETB: create Mutagen token.'
     ETB proxy: flying + Mutagen (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Ray Fillet ETB: flying + create Mutagen (+1 mana proxy)")
 
 def _novel_nunchaku_etb(gs, card):
@@ -32782,7 +32838,7 @@ def _rat_king_etb(gs, card):
 
 def _crustacean_commando_etb(gs, card):
     """Crustacean Commando -- 'ETB: create Mutagen token.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Crustacean Commando ETB: create Mutagen (+1 mana proxy)")
 
 def _donatello_gadget_master_etb(gs, card):
@@ -32862,7 +32918,7 @@ def _pain_101_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.DEATHTOUCH)
+        best.tags.add(KWTag.DEATHTOUCH)
         gs._log(f"  Pain 101: {best.name} gets deathtouch + death-recursion until EOT")
 
 def _raphael_attitude_etb(gs, card):
@@ -32873,7 +32929,7 @@ def _raphael_attitude_etb(gs, card):
 
 def _slithering_cryptid_etb(gs, card):
     """Slithering Cryptid -- 'ETB: create Mutagen token.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Slithering Cryptid ETB: create Mutagen (+1 mana proxy)")
 
 def _donatello_mechanic_etb(gs, card):
@@ -32943,7 +32999,7 @@ def _hylda_etb(gs, card):
         if threats:
             target = max(threats, key=lambda c: c.effective_power())
             target.tapped = True
-            gs.mana_pool.floating = gs.mana_pool.floating + 2
+            gs.mana_pool.flex += 2
             gs._log(f"  Hylda ETB: tap {target.name} + {2} mana (Elemental token proxy)")
 
 def _water_wings_spell(gs, card):
@@ -32954,7 +33010,7 @@ def _water_wings_spell(gs, card):
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
         best.power = "4"; best.toughness = "4"
-        best.tags.add(Tag.FLYING)
+        best.tags.add(KWTag.FLYING)
         gs._log(f"  Water Wings: {best.name} becomes 4/4 flying indestructible until EOT")
 
 def _ash_party_crasher_etb(gs, card):
@@ -33044,7 +33100,7 @@ def _kellans_lightblades_spell(gs, card):
             except (ValueError, TypeError):
                 gs._log(f"  Kellan's Lightblades: 3 damage to {target.name}")
     else:
-        gs.zones.life -= 3
+        _face(gs, 3)
 
 def _solitary_sanctuary_etb(gs, card):
     """ETB: tap opp creature + stun counter. ETB proxy: standard tap+stun."""
@@ -33222,7 +33278,7 @@ def _knight_of_doves_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Bird", mana_cost="", cmc=0, type_line="Creature — Bird", oracle_text="Flying", power="1", toughness="1", colors=["W"])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.FLYING)
+    tok.tags.add(KWTag.FLYING)
     gs.zones.battlefield.append(tok)
     gs._log("  Knight of Doves ETB: enchantment-GY Bird (1/1 fly proxy on ETB)")
 
@@ -33247,7 +33303,7 @@ def _agathas_champion_etb(gs, card):
 
 def _hardbristle_bandit_etb(gs, card):
     """{T}: Add any color. 'When commit crime, untap.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Hardbristle Bandit ETB: crime-untap mana dork (+1 proxy)")
 
 def _taii_wakeen_etb(gs, card):
@@ -33336,7 +33392,7 @@ def _shackle_slinger_etb(gs, card):
 
 def _double_down_etb(gs, card):
     """'When cast outlaw spell, copy it.' ETB proxy: +2 mana (copy-value engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Double Down ETB: outlaw-spell copy engine (+2 mana proxy)")
 
 def _reach_for_sky_etb(gs, card):
@@ -33352,7 +33408,7 @@ def _reach_for_sky_etb(gs, card):
 def _longhorn_sharpshooter_etb(gs, card):
     """Reach. 'When plotted, deal 2 damage to any target.' Plot {3}{R}.
     ETB proxy: reach body + deal 2 to opp."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Longhorn Sharpshooter ETB: reach + plot-ping 2 damage proxy")
 
 def _satoru_etb(gs, card):
@@ -33401,13 +33457,13 @@ def _ferocification_etb(gs, card):
 
 def _rodeo_pyromancers_etb(gs, card):
     """'When cast first spell each turn, add {R}{R}.' ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Rodeo Pyromancers ETB: first-spell {R}{R} trigger (+2 mana proxy)")
 
 def _bandits_haul_etb(gs, card):
     """Artifact. 'When commit crime, loot counter. When 4 counters: draw 4, sac.'
     ETB proxy: +1 mana (crime-counter draw engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Bandit's Haul ETB: crime-loot-counter engine (+1 mana proxy)")
 
 def _binding_negotiation_spell(gs, card):
@@ -33457,7 +33513,7 @@ def _kellan_kid_etb(gs, card):
 def _mobile_homestead_etb(gs, card):
     """Vehicle. 'Haste if control Mount. When attacks: look at top card, may put land into hand.'
     ETB proxy: +1 mana (top-land look)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Mobile Homestead ETB: haste vehicle + attack-land-draw (+1 mana proxy)")
 
 def _gila_courser_etb(gs, card):
@@ -33493,7 +33549,7 @@ def _vraska_joins_up_etb(gs, card):
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
-            c.tags.add(Tag.DEATHTOUCH)
+            c.tags.add(KWTag.DEATHTOUCH)
     gs._log("  Vraska Joins Up ETB: deathtouch to all our creatures + kill-draw trigger active")
 
 def _jace_reawakened_etb(gs, card):
@@ -33571,7 +33627,7 @@ def _tumbleweed_rising_spell(gs, card):
 
 def _jolene_pugilist_etb(gs, card):
     """'When attack with creature power 4+, create Treasure.' ETB proxy: +1 mana (Treasure)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Jolene ETB: power-4-attack Treasure trigger (+1 mana proxy)")
 
 
@@ -33736,7 +33792,7 @@ def _finneas_etb(gs, card):
 
 def _thistledown_players_etb(gs, card):
     """'When attacks, untap target nonland permanent.' ETB proxy: +1 mana (untap engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Thistledown Players ETB: attack-untap trigger (+1 mana proxy)")
 
 def _hoarders_overflow_etb(gs, card):
@@ -33908,7 +33964,7 @@ def _seedglaive_mentor_etb(gs, card):
 def _brazen_collector_etb(gs, card):
     """First strike. 'When attacks, add {R}. Until EOT, don't lose unspent mana.'
     ETB proxy: first strike + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Brazen Collector ETB: first strike + attack-{R} trigger (+1 mana proxy)")
 
 def _moonstone_harbinger_etb(gs, card):
@@ -33922,7 +33978,7 @@ def _moonstone_harbinger_etb(gs, card):
 def _drakuseth_etb(gs, card):
     """Flying. 'When attacks: deal 4 to any target + 3 to each of up to 2 targets.'
     ETB proxy: deal 10 damage split (flying + big attack trigger proxy)."""
-    gs.zones.life -= 10
+    _face(gs, 10)
     gs._log("  Drakuseth ETB: flying + attack-damage 10 total proxy")
 
 def _felidar_retreat_etb(gs, card):
@@ -33948,7 +34004,7 @@ def _gnarlback_rhino_etb(gs, card):
 
 def _firespitter_whelp_etb(gs, card):
     """Flying. 'When cast noncreature/Dragon spell, deal 1 to each opp.' ETB proxy: flying + 2 pings."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Firespitter Whelp ETB: flying + spell-ping 2 damage proxy")
 
 def _armasaur_guide_etb(gs, card):
@@ -33967,7 +34023,7 @@ def _heartfire_immolator_etb(gs, card):
 
 def _fishing_pole_etb(gs, card):
     """Equipment. Bait counters lead to drawing cards. ETB proxy: +1 mana (fishing engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Fishing Pole ETB: bait-counter fish-draw engine (+1 mana proxy)")
 
 def _dwynen_etb(gs, card):
@@ -33981,7 +34037,7 @@ def _dwynen_etb(gs, card):
 
 def _gutless_plunderer_etb(gs, card):
     """Deathtouch. 'Raid: ETB if attacked this turn, create Treasure.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Gutless Plunderer ETB: deathtouch + Raid-Treasure (+1 mana proxy)")
 
 def _vanguard_seraph_etb(gs, card):
@@ -33991,12 +34047,12 @@ def _vanguard_seraph_etb(gs, card):
 
 def _midnight_snack_etb(gs, card):
     """'Raid: end step if attacked, create Food token.' ETB proxy: +1 mana (Food)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Midnight Snack ETB: Raid-Food trigger (+1 mana proxy)")
 
 def _gorehorn_raider_etb(gs, card):
     """'Raid: ETB if attacked, deal 2 damage to target.' ETB proxy: deal 2 to opp."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Gorehorn Raider ETB: Raid-ping 2 damage proxy")
 
 def _storm_fleet_spy_etb(gs, card):
@@ -34026,14 +34082,14 @@ def _mischievous_mystic_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Faerie", mana_cost="", cmc=0, type_line="Creature — Faerie", oracle_text="Flying", power="1", toughness="1", colors=["U"])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.FLYING)
+    tok.tags.add(KWTag.FLYING)
     gs.zones.battlefield.append(tok)
     gs._log("  Mischievous Mystic ETB: flying + 2nd-draw Faerie token (draw 1 proxy)")
 
 def _mindsparker_etb(gs, card):
     """First strike. 'When opp casts W or U spell, deal 2 damage to opp.'
     ETB proxy: first strike + 2 damage proxy."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Mindsparker ETB: first strike + W/U-spell ping (2 damage proxy)")
 
 def _skyship_buccaneer_etb(gs, card):
@@ -34246,8 +34302,8 @@ def _barbed_bloodletter_etb(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.DEATHTOUCH)
-        best.tags.add(Tag.LIFELINK)
+        best.tags.add(KWTag.DEATHTOUCH)
+        best.tags.add(KWTag.LIFELINK)
     gs._log("  Barbed Bloodletter ETB: flash equip deathtouch+lifelink proxy")
 
 def _reluctant_dounguard_etb(gs, card):
@@ -34341,7 +34397,7 @@ def _gilt_leafs_embrace_etb(gs, card):
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
         best.counters = (best.counters or 0) + 2
-        best.tags.add(Tag.TRAMPLE)
+        best.tags.add(KWTag.TRAMPLE)
     gs._log("  Gilt-Leaf's Embrace ETB: flash aura +2 trample indestructible proxy")
 
 def _temporal_cleansing_spell(gs, card):
@@ -34415,7 +34471,7 @@ def _swat_away_spell(gs, card):
 def _meanders_guide_etb(gs, card):
     """'When attacks, may tap another untapped Merfolk: untap target.'
     ETB proxy: +1 mana (untap engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Meanders Guide ETB: Merfolk-tap untap-trigger (+1 mana proxy)")
 
 def _shadow_urchin_etb(gs, card):
@@ -34517,7 +34573,7 @@ def _morcants_loyalist_etb(gs, card):
 def _rimefire_torque_etb(gs, card):
     """'Choose creature type. When permanent of that type enters, create tapped treasure.'
     ETB proxy: +1 mana (Treasure engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Rimefire Torque ETB: chosen-type Treasure-on-enter (+1 mana proxy)")
 
 def _protective_response_spell(gs, card):
@@ -34526,7 +34582,7 @@ def _protective_response_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.INDESTRUCTIBLE)
+        best.tags.add(KWTag.INDESTRUCTIBLE)
         gs._log(f"  Protective Response: {best.name} gets damage prevention (indestructible proxy)")
 
 def _blight_rot_spell(gs, card):
@@ -34647,8 +34703,8 @@ def _lotusguard_disciple_etb(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE) and c is not card]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.LIFELINK)
-        best.tags.add(Tag.INDESTRUCTIBLE)
+        best.tags.add(KWTag.LIFELINK)
+        best.tags.add(KWTag.INDESTRUCTIBLE)
     gs._log("  Lotusguard Disciple ETB: flying + lifelink+indestructible grant proxy")
 
 def _lightwheel_enhancements_etb(gs, card):
@@ -34678,18 +34734,18 @@ def _sabotage_strategist_etb(gs, card):
 
 def _goblin_surveyor_etb(gs, card):
     """Trample. Start your engines! ETB proxy: trample + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Goblin Surveyor ETB: trample + Start your engines (+1 mana proxy)")
 
 def _veteran_beastrider_etb(gs, card):
     """'End step: untap each creature you control. {2}{G}{W}: creatures get +X/+X.'
     ETB proxy: +3 mana (untap engine proxy)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Veteran Beastrider ETB: end-step untap all creatures (+3 mana proxy)")
 
 def _pride_of_the_road_etb(gs, card):
     """Vigilance. Start your engines! ETB proxy: vigilance + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Pride of the Road ETB: vigilance + Start your engines (+1 mana proxy)")
 
 def _reckless_velocitaur_etb(gs, card):
@@ -34699,7 +34755,7 @@ def _reckless_velocitaur_etb(gs, card):
 
 def _unstoppable_plan_etb(gs, card):
     """'End step: untap all nonland permanents.' ETB proxy: +3 mana (untap engine)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Unstoppable Plan ETB: end-step untap all nonlands (+3 mana proxy)")
 
 def _alacrian_armory_etb(gs, card):
@@ -34717,18 +34773,18 @@ def _kolodin_etb(gs, card):
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
-            c.tags.add(Tag.HASTE)
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+            c.tags.add(KWTag.HASTE)
+    gs.mana_pool.flex += 2
     gs._log("  Kolodin ETB: haste to all + Mount-enter saddled (+2 mana proxy)")
 
 def _swiftwing_assailant_etb(gs, card):
     """Flying. Start your engines! ETB proxy: flying + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Swiftwing Assailant ETB: flying + Start your engines (+1 mana proxy)")
 
 def _pit_automaton_etb(gs, card):
     """Defender. '{T}: Add {C}{C} (for abilities only).' ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Pit Automaton ETB: defender + {C}{C} ability-mana (+2 proxy)")
 
 def _rangers_aetherhive_etb(gs, card):
@@ -34737,13 +34793,13 @@ def _rangers_aetherhive_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Thopter", mana_cost="", cmc=0, type_line="Artifact Creature — Thopter", oracle_text="Flying", power="1", toughness="1", colors=[])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.FLYING)
+    tok.tags.add(KWTag.FLYING)
     gs.zones.battlefield.append(tok)
     gs._log("  Rangers' Aetherhive ETB: vigilance + exhaust-Thopter (1/1 fly proxy)")
 
 def _risen_necroregent_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Risen Necroregent ETB: Start your engines (+1 mana proxy)")
 
 def _silken_strength_etb(gs, card):
@@ -34758,12 +34814,12 @@ def _silken_strength_etb(gs, card):
 
 def _slick_imitator_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Slick Imitator ETB: Start your engines (+1 mana proxy)")
 
 def _vnwxt_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Vnwxt ETB: Start your engines (+1 mana proxy)")
 
 def _salvation_engine_etb(gs, card):
@@ -34778,17 +34834,17 @@ def _salvation_engine_etb(gs, card):
 
 def _walking_sarcophagus_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Walking Sarcophagus ETB: Start your engines (+1 mana proxy)")
 
 def _gas_guzzler_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Gas Guzzler ETB: Start your engines (+1 mana proxy)")
 
 def _endrider_spikespitter_etb(gs, card):
     """Reach. Start your engines! ETB proxy: reach + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Endrider Spikespitter ETB: reach + Start your engines (+1 mana proxy)")
 
 def _canyon_vaulter_etb(gs, card):
@@ -34800,7 +34856,7 @@ def _thopter_fabricator_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Thopter", mana_cost="", cmc=0, type_line="Artifact Creature — Thopter", oracle_text="Flying", power="1", toughness="1", colors=[])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.FLYING)
+    tok.tags.add(KWTag.FLYING)
     gs.zones.battlefield.append(tok)
     gs._log("  Thopter Fabricator ETB: flying + 2nd-draw Thopter 1/1 proxy")
 
@@ -34826,17 +34882,17 @@ def _rise_from_wreck_spell(gs, card):
 
 def _magmakin_artillerist_etb(gs, card):
     """'When discard 1+ cards, deal that many damage to each opp.' ETB proxy: 2 damage."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Magmakin Artillerist ETB: discard-ping 2 damage proxy")
 
 def _loxodon_surveyor_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Loxodon Surveyor ETB: Start your engines (+1 mana proxy)")
 
 def _leonin_surveyor_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Leonin Surveyor ETB: Start your engines (+1 mana proxy)")
 
 def _tune_up_spell(gs, card):
@@ -34866,7 +34922,7 @@ def _dune_drifter_etb(gs, card):
 
 def _endrider_catalyzer_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Endrider Catalyzer ETB: Start your engines (+1 mana proxy)")
 
 def _trip_up_spell(gs, card):
@@ -34884,13 +34940,13 @@ def _trip_up_spell(gs, card):
 
 def _streaking_oilgorger_etb(gs, card):
     """Flying, haste. Start your engines! ETB proxy: flying haste + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Streaking Oilgorger ETB: flying haste + Start your engines (+1 mana proxy)")
 
 def _adrenaline_jockey_etb(gs, card):
     """'When any player casts spell not on their turn, deal 4 damage to target.'
     ETB proxy: 4 damage proxy (instant speed trigger)."""
-    gs.zones.life -= 4
+    _face(gs, 4)
     gs._log("  Adrenaline Jockey ETB: instant-cast 4 damage trigger (4 damage proxy)")
 
 def _interface_ace_etb(gs, card):
@@ -34925,7 +34981,7 @@ def _stall_out_spell(gs, card):
 
 def _starting_column_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Starting Column ETB: Start your engines (+1 mana proxy)")
 
 def _basri_dft_etb(gs, card):
@@ -34933,7 +34989,7 @@ def _basri_dft_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Cat", mana_cost="", cmc=0, type_line="Creature — Cat", oracle_text="Lifelink", power="1", toughness="1", colors=["W"])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.LIFELINK)
+    tok.tags.add(KWTag.LIFELINK)
     gs.zones.battlefield.append(tok)
     gs._log("  Basri DFT ETB: exert {T} Cat lifelink token proxy")
 
@@ -34950,12 +35006,12 @@ def _flood_the_engine_etb(gs, card):
 
 def _glitch_ghost_surveyor_etb(gs, card):
     """Flying. Start your engines! ETB proxy: flying + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Glitch Ghost Surveyor ETB: flying + Start your engines (+1 mana proxy)")
 
 def _mutant_surveyor_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Mutant Surveyor ETB: Start your engines (+1 mana proxy)")
 
 def _cloudspire_skycycle_etb(gs, card):
@@ -34980,7 +35036,7 @@ def _lagorin_etb(gs, card):
 
 def _zahur_etb(gs, card):
     """Start your engines! ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Zahur ETB: Start your engines (+1 mana proxy)")
 
 
@@ -35000,10 +35056,9 @@ def _arashin_sunshield_etb(gs, card):
 def _traveling_botanist_etb(gs, card):
     """'When tapped, look at top card. If land, may play it.' ETB proxy: play 1 land from top."""
     for i, c in enumerate(gs.zones.library):
-        if c.is_land() and gs.land_drops_remaining > 0:
+        if c.is_land():   # put onto the battlefield: not a land drop
             gs.zones.library.pop(i)
             gs.zones.battlefield.append(c)
-            gs.land_drops_remaining -= 1
             gs._log(f"  Traveling Botanist ETB: tap-to-play {c.name}")
             return
     gs._log("  Traveling Botanist ETB: tap-land-play trigger active")
@@ -35151,7 +35206,7 @@ def _mardu_monument_etb(gs, card):
 def _dragonbroods_relic_etb(gs, card):
     """{T}, tap untapped creature: add any color. {5 colors}: win the game (proxy: draw 5).
     ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Dragonbroods' Relic ETB: any-color mana + 5-color win-con (+1 mana proxy)")
 
 def _rite_of_renewal_spell(gs, card):
@@ -35247,7 +35302,7 @@ def _twin_bolt_spell(gs, card):
             except (ValueError, TypeError):
                 gs._log(f"  Twin Bolt: 2 damage to {target.name}")
     else:
-        gs.zones.life -= 2
+        _face(gs, 2)
 
 def _sultai_monument_etb(gs, card):
     """'ETB: search for basic Swamp/Forest/Island, put in hand.' ETB proxy: draw 1 land."""
@@ -35286,7 +35341,7 @@ def _kin_tree_nurturer_etb(gs, card):
 def _kheru_goldkeeper_etb(gs, card):
     """Flying. 'When 1+ cards leave your GY during your turn, create Treasure.'
     ETB proxy: flying + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Kheru Goldkeeper ETB: flying + GY-leave Treasure (+1 mana proxy)")
 
 def _marshal_lost_etb(gs, card):
@@ -35328,8 +35383,8 @@ def _alethas_legacy_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.DEATHTOUCH)
-        best.tags.add(Tag.INDESTRUCTIBLE)
+        best.tags.add(KWTag.DEATHTOUCH)
+        best.tags.add(KWTag.INDESTRUCTIBLE)
         gs._log(f"  Alesha's Legacy: {best.name} gets deathtouch + indestructible until EOT")
 
 def _descendant_of_storms_etb(gs, card):
@@ -35355,7 +35410,7 @@ def _veteran_ice_climber_etb(gs, card):
 
 def _iridescent_tiger_etb(gs, card):
     """'ETB if cast: add {W}{U}{B}{R}{G}.' ETB proxy: +5 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 5
+    gs.mana_pool.flex += 5
     gs._log("  Iridescent Tiger ETB: cast trigger {W}{U}{B}{R}{G} (+5 mana proxy)")
 
 def _zurgos_vanguard_etb(gs, card):
@@ -35378,7 +35433,7 @@ def _all_out_assault_etb(gs, card):
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
             c.counters = (c.counters or 0) + 1
-            c.tags.add(Tag.DEATHTOUCH)
+            c.tags.add(KWTag.DEATHTOUCH)
     gs._log("  All-Out Assault ETB: +1/+1 + deathtouch to all our creatures")
 
 def _flamehold_grappler_etb(gs, card):
@@ -35388,7 +35443,7 @@ def _flamehold_grappler_etb(gs, card):
 
 def _sandskitter_outrider_etb(gs, card):
     """Menace. 'ETB: create Treasure.' ETB proxy: menace + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Sandskitter Outrider ETB: menace + create Treasure (+1 mana proxy)")
 
 def _jeskai_brushmaster_etb(gs, card):
@@ -35435,7 +35490,7 @@ def _synchronized_charge_spell(gs, card):
 def _felothar_etb(gs, card):
     """Trample. 'ETB/attacks: may sac nonland perm. When you do, draw 1 + create Warrior.'
     ETB proxy: trample + +1 mana + draw 1."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
     gs._log("  Felothar ETB: trample + sac-draw1-Warrior proxy (draw 1 + +1 mana)")
 
@@ -35461,7 +35516,7 @@ def _dog_walker_etb(gs, card):
 
 def _nervous_gardener_etb(gs, card):
     """Disguise. ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Nervous Gardener ETB: Disguise land-search (+1 mana proxy)")
 
 def _gearbane_orangutan_etb(gs, card):
@@ -35493,7 +35548,9 @@ def _private_eye_etb(gs, card):
 def _case_locked_hothouse_etb(gs, card):
     """'Play extra land each turn. To solve: control 7+ lands -- get free green spells.'
     ETB proxy: +1 mana (extra land play)."""
-    gs.land_drops_remaining = max(gs.land_drops_remaining, 2)
+    # ponytail: GameState has one land_played flag, no drop counter. Re-opening
+    # the drop gives the extra land only on the turn this enters.
+    gs.land_played = False
     gs._log("  Case of the Locked Hothouse ETB: extra land-play active")
 
 def _agency_outfitter_etb(gs, card):
@@ -35517,7 +35574,7 @@ def _convenient_target_etb(gs, card):
         threats = [c for c in opp.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
         if threats:
             target = max(threats, key=lambda c: c.effective_power())
-            target.tags.add(Tag.MENACE)
+            target.tags.add(KWTag.MENACE)
             gs._log(f"  Convenient Target ETB: suspect {target.name} (menace proxy)")
 
 def _candlestick_etb(gs, card):
@@ -35535,14 +35592,14 @@ def _yarus_etb(gs, card):
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
-            c.tags.add(Tag.HASTE)
+            c.tags.add(KWTag.HASTE)
             c.counters = (c.counters or 0) + 2
     gs._log("  Yarus ETB: haste + Disguise-flip pump +2 to all creatures")
 
 def _kylox_mkm_etb(gs, card):
     """Menace, ward {2}, haste. 'When attacks, sac any creatures, deal their power as damage.'
     ETB proxy: menace haste + 2 damage."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Kylox ETB: menace ward haste + attack-sacrifice-ping (2 damage proxy)")
 
 def _unscrupulous_agent_etb(gs, card):
@@ -35631,7 +35688,7 @@ def _projektor_inspector_etb(gs, card):
 def _crime_novelist_etb(gs, card):
     """'When sac artifact, +1/+1 on this + add {R}.' ETB proxy: +2 + +1 mana."""
     card.counters = (card.counters or 0) + 2
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Crime Novelist ETB: artifact-sac pump (+2 + {R} proxy)")
 
 def _crimestopper_sprite_etb(gs, card):
@@ -35643,7 +35700,7 @@ def _crimestopper_sprite_etb(gs, card):
 def _wispdrinker_vampire_etb(gs, card):
     """Flying. 'When another power<=2 creature enters, each opp loses 1 life.'
     ETB proxy: flying + 2 life drain proxy."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Wispdrinker Vampire ETB: flying + power<=2-enter drain (2 damage proxy)")
 
 def _flourishing_bloom_kin_etb(gs, card):
@@ -35675,7 +35732,7 @@ def _marketwatch_phantom_etb(gs, card):
     """'When another power<=2 enters, this gains flying until EOT.'
     ETB proxy: +1 (flying trigger proxy)."""
     from data.card import Tag as _Tag
-    card.tags.add(Tag.FLYING)
+    card.tags.add(KWTag.FLYING)
     gs._log("  Marketwatch Phantom ETB: power<=2-enter flying-gain (flying proxy)")
 
 def _sumala_sentry_etb(gs, card):
@@ -35701,7 +35758,7 @@ def _karlov_watchdog_etb(gs, card):
 
 def _pyrotechnic_performer_etb(gs, card):
     """Disguise {R}. ETB proxy: +2/+2 (face-up flip deals 2 damage)."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Pyrotechnic Performer ETB: Disguise face-up 2 damage proxy")
 
 def _izoni_mkm_etb(gs, card):
@@ -35733,7 +35790,7 @@ def _krovod_haunch_etb(gs, card):
 def _rune_brand_juggler_etb(gs, card):
     """'ETB: suspect up to one creature you control (gains menace, can't block).'
     ETB proxy: self-suspect for menace."""
-    card.tags.add(Tag.MENACE) if hasattr(card, 'tags') else None
+    card.tags.add(KWTag.MENACE) if hasattr(card, 'tags') else None
     gs._log("  Rune-Brand Juggler ETB: suspect creature trigger active")
 
 def _magnetic_snuffler_etb(gs, card):
@@ -35752,7 +35809,7 @@ def _krenko_baron_etb(gs, card):
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
             c.counters = (c.counters or 0) + 1
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Krenko Baron ETB: haste + Goblin-lord +1 + attack-investigate (+1 mana proxy)")
 
 def _extract_confession_spell(gs, card):
@@ -35769,7 +35826,7 @@ def _extract_confession_spell(gs, card):
 
 def _meddling_youths_etb(gs, card):
     """Haste. 'When attack with 3+ creatures, investigate.' ETB proxy: haste + Clue (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Meddling Youths ETB: haste + 3-attack-investigate (+1 mana proxy)")
 
 def _surveillance_monitor_etb(gs, card):
@@ -35779,7 +35836,7 @@ def _surveillance_monitor_etb(gs, card):
 
 def _forensic_gadgeteer_etb(gs, card):
     """'When cast artifact spell, investigate.' ETB proxy: create Clue (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Forensic Gadgeteer ETB: artifact-cast-investigate (+1 mana proxy)")
 
 def _seasoned_consultant_etb(gs, card):
@@ -35852,7 +35909,7 @@ def _culvert_ambusher_etb(gs, card):
 
 def _innocent_bystander_etb(gs, card):
     """'When dealt 3+ damage, investigate.' ETB proxy: create Clue (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Innocent Bystander ETB: damage-investigate (+1 mana proxy)")
 
 def _curious_cadaver_etb(gs, card):
@@ -35863,7 +35920,7 @@ def _curious_cadaver_etb(gs, card):
 def _frantic_scapegoat_etb(gs, card):
     """Haste. 'ETB: suspect it. Whenever another creature dies: unsuspect.'
     ETB proxy: haste + menace (suspect self)."""
-    card.tags.add(Tag.MENACE) if hasattr(card, 'tags') else None
+    card.tags.add(KWTag.MENACE) if hasattr(card, 'tags') else None
     gs._log("  Frantic Scapegoat ETB: haste + self-suspect menace proxy")
 
 def _voja_etb(gs, card):
@@ -35877,7 +35934,7 @@ def _voja_etb(gs, card):
 
 def _homicide_investigator_etb(gs, card):
     """'When nontoken creatures die, investigate.' ETB proxy: create Clue (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Homicide Investigator ETB: death-investigate (+1 mana proxy)")
 
 def _jaded_analyst_etb(gs, card):
@@ -35889,12 +35946,12 @@ def _jaded_analyst_etb(gs, card):
 def _judith_mkm_etb(gs, card):
     """'When cast i/s, choose: that spell gains deathtouch/lifelink OR deal 1 to all opps.'
     ETB proxy: deal 2 damage (2 i/s proxy)."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Judith MKM ETB: i/s-trigger deathtouch/lifelink or ping (2 damage proxy)")
 
 def _vannifar_mkm_etb(gs, card):
     """'Beginning of combat: cloak from hand OR investigate.' ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Vannifar MKM ETB: cloak-or-investigate trigger (+1 mana proxy)")
 
 def _lead_pipe_etb(gs, card):
@@ -35931,7 +35988,7 @@ def _vengeful_tracker_etb(gs, card):
 
 def _goblin_maskmaker_etb(gs, card):
     """'When attacks, face-down spells cost {1} less.' ETB proxy: +1 mana (cost reduction)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Goblin Maskmaker ETB: attack-face-down-cost-reduction (+1 mana proxy)")
 
 
@@ -35994,7 +36051,7 @@ def _rufus_shinra_etb(gs, card):
     from data.card import Card, Tag
     tok = Card(name="Darkstar", mana_cost="", cmc=0, type_line="Creature — Nightmare", oracle_text="Flying", power="3", toughness="3", colors=["B"])
     tok.tags.add(Tag.CREATURE)
-    tok.tags.add(Tag.FLYING)
+    tok.tags.add(KWTag.FLYING)
     gs.zones.battlefield.append(tok)
     gs._log("  Rufus Shinra ETB: attack-create Darkstar 3/3 flying proxy")
 
@@ -36005,7 +36062,7 @@ def _magitek_scythe_etb(gs, card):
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
         best.counters = (best.counters or 0) + 2
-        best.tags.add(Tag.DEATHTOUCH)
+        best.tags.add(KWTag.DEATHTOUCH)
     gs._log("  Magitek Scythe ETB: +2/+0 deathtouch equip proxy")
 
 def _ultima_weapon_etb(gs, card):
@@ -36074,7 +36131,7 @@ def _ice_flan_etb(gs, card):
 
 def _slash_of_light_spell(gs, card):
     """'Deal damage = number of creatures + lands you control.' Model: deal 6 damage (3+3 proxy)."""
-    gs.zones.life -= 6
+    _face(gs, 6)
     gs._log("  Slash of Light: deal 6 damage (creatures+lands proxy)")
 
 def _qutrub_forayer_etb(gs, card):
@@ -36103,7 +36160,7 @@ def _cloud_of_darkness_etb(gs, card):
 
 def _ether_etb(gs, card):
     """{T}, exile: add {U}. 'When next cast i/s, copy it.' ETB proxy: +1 mana + copy trigger."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Ether ETB: {T} for {U} + next-i/s-copy (+2 mana proxy)")
 
 def _balthier_fran_etb(gs, card):
@@ -36147,8 +36204,8 @@ def _vincents_limit_break_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.DEATHTOUCH)
-        best.tags.add(Tag.TRAMPLE)
+        best.tags.add(KWTag.DEATHTOUCH)
+        best.tags.add(KWTag.TRAMPLE)
         gs._log(f"  Vincent's Limit Break: {best.name} gets deathtouch + trample until EOT")
 
 def _quistis_etb(gs, card):
@@ -36180,7 +36237,7 @@ def _stuck_summoners_etb(gs, card):
 def _gaius_etb(gs, card):
     """'ETB: each player sacs a token OR target opp loses 2 life.'
     ETB proxy: opp loses 2 life."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Gaius van Baelsar ETB: each-sac-token OR opp loses 2 life proxy")
 
 def _garnet_etb(gs, card):
@@ -36228,7 +36285,7 @@ def _retrieve_esper_spell(gs, card):
 def _prima_vista_etb(gs, card):
     """Flying Vehicle. 'When cast noncreature spell with 4+ mana, get an extra crew trigger.'
     ETB proxy: flying + +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  The Prima Vista ETB: flying vehicle + 4-mana-spell crew bonus (+2 mana proxy)")
 
 def _summon_fat_chocobo_etb(gs, card):
@@ -36246,7 +36303,7 @@ def _summon_cerberus_etb(gs, card):
     ETB proxy: draw 2 + 3 damage to opp."""
     for _ in range(2):
         if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Summon: G.F. Cerberus ETB: Saga draw 2 + 3 damage proxy")
 
 def _ultros_etb(gs, card):
@@ -36323,14 +36380,14 @@ def _firion_etb(gs, card):
     from data.card import Tag as _Tag
     for c in gs.zones.battlefield:
         if not c.is_land() and c.has(_Tag.CREATURE):
-            c.tags.add(Tag.HASTE)
+            c.tags.add(KWTag.HASTE)
     if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
     gs._log("  Firion ETB: equipped-haste + Equipment-enter draw 1")
 
 def _prompto_etb(gs, card):
     """Haste. 'Selfie Shot: when cast noncreature spell with 4+ mana, deal 3 damage to any target.'
     ETB proxy: haste + 3 damage."""
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Prompto ETB: haste + Selfie Shot 3 damage proxy")
 
 def _lightning_fin_etb(gs, card):
@@ -36384,7 +36441,9 @@ def _zodiark_etb(gs, card):
 
 def _zell_etb(gs, card):
     """'Play extra land each turn. +1/+0 per land.' ETB proxy: extra land play + +3."""
-    gs.land_drops_remaining = max(gs.land_drops_remaining, 2)
+    # ponytail: GameState has one land_played flag, no drop counter. Re-opening
+    # the drop gives the extra land only on the turn this enters.
+    gs.land_played = False
     card.counters = (card.counters or 0) + 3
     gs._log("  Zell ETB: extra land-play + +3/+0 (3 lands proxy)")
 
@@ -36430,7 +36489,7 @@ def _gran_gran_etb(gs, card):
 
 def _fire_sages_etb(gs, card):
     """Firebending 1: when attacks, add {R}. ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Fire Sages ETB: Firebending 1 attack +{R} (+1 mana proxy)")
 
 def _sandbender_scavengers_etb(gs, card):
@@ -36464,23 +36523,23 @@ def _firebending_student_etb(gs, card):
 
 def _jeong_jeong_etb(gs, card):
     """Firebending 1. ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Jeong Jeong ETB: Firebending 1 (+1 mana proxy)")
 
 def _fire_lord_azula_etb(gs, card):
     """Firebending 2. ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Fire Lord Azula ETB: Firebending 2 (+2 mana proxy)")
 
 def _zuko_etb(gs, card):
     """Firebending 3. ETB proxy: +3 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Zuko ETB: Firebending 3 (+3 mana proxy)")
 
 def _cat_gator_etb(gs, card):
     """Lifelink. 'ETB: deal damage = number of Swamps you control.'
     ETB proxy: lifelink + 2 damage (2 Swamps proxy)."""
-    gs.zones.life -= 2
+    _face(gs, 2)
     gs._log("  Cat-Gator ETB: lifelink + Swamp-count damage (2 damage proxy)")
 
 def _ty_lee_etb(gs, card):
@@ -36490,7 +36549,7 @@ def _ty_lee_etb(gs, card):
 
 def _rough_rhino_cavalry_etb(gs, card):
     """Firebending 2. ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Rough Rhino Cavalry ETB: Firebending 2 (+2 mana proxy)")
 
 def _sokka_etb(gs, card):
@@ -36501,7 +36560,7 @@ def _sokka_etb(gs, card):
 
 def _vindictive_warden_etb(gs, card):
     """Menace. Firebending 1. ETB proxy: menace + +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Vindictive Warden ETB: menace + Firebending 1 (+1 mana proxy)")
 
 def _pirate_peddlers_etb(gs, card):
@@ -36516,15 +36575,15 @@ def _enter_avatar_state_spell(gs, card):
     friends = [c for c in gs.zones.battlefield if not c.is_land() and c.has(_Tag.CREATURE)]
     if friends:
         best = max(friends, key=lambda c: c.effective_power())
-        best.tags.add(Tag.FLYING)
-        best.tags.add(Tag.TRAMPLE)
-        best.tags.add(Tag.HASTE)
-        best.tags.add(Tag.INDESTRUCTIBLE)
+        best.tags.add(KWTag.FLYING)
+        best.tags.add(KWTag.TRAMPLE)
+        best.tags.add(KWTag.HASTE)
+        best.tags.add(KWTag.INDESTRUCTIBLE)
         gs._log(f"  Enter the Avatar State: {best.name} gains flying+trample+haste+indestructible")
 
 def _sun_warriors_etb(gs, card):
     """Firebending X where X = creatures you control. ETB proxy: +3 mana (3 creatures)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Sun Warriors ETB: Firebending X creatures attack (+3 mana proxy)")
 
 def _combustion_man_etb(gs, card):
@@ -36542,13 +36601,13 @@ def _combustion_man_etb(gs, card):
 
 def _fire_nation_cadets_etb(gs, card):
     """'Firebending 2 if Lesson in your GY.' ETB proxy: +2 mana (Lesson assumed in GY)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Fire Nation Cadets ETB: Firebending 2 if Lesson in GY (+2 mana proxy)")
 
 def _bumi_bash_spell(gs, card):
     """'Deal damage = number of lands you control to target creature OR deal 4 to each opp.'
     Model: deal 4 to each opp face."""
-    gs.zones.life -= 4
+    _face(gs, 4)
     gs._log("  Bumi Bash: deal 4 to each opponent (land-count proxy)")
 
 def _airbender_reversal_spell(gs, card):
@@ -36644,7 +36703,7 @@ def _jet_etb(gs, card):
 
 def _azula_cunning_etb(gs, card):
     """Firebending 2. ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Azula Cunning Usurper ETB: Firebending 2 (+2 mana proxy)")
 
 def _glider_staff_etb(gs, card):
@@ -36673,18 +36732,18 @@ def _momo_etb(gs, card):
 
 def _azula_hunt_etb(gs, card):
     """Firebending 2. ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Azula On the Hunt ETB: Firebending 2 (+2 mana proxy)")
 
 def _uncle_iroh_etb(gs, card):
     """Firebending 1. ETB proxy: +1 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Uncle Iroh ETB: Firebending 1 (+1 mana proxy)")
 
 def _hei_bai_etb(gs, card):
     """'When ETB/attacks, may sac another creature/artifact: deal damage = its power to any target.'
     ETB proxy: deal 3 damage."""
-    gs.zones.life -= 3
+    _face(gs, 3)
     gs._log("  Hei Bai ETB: ETB/attack-sac-damage (3 damage proxy)")
 
 def _suki_kyoshi_etb(gs, card):
@@ -36722,14 +36781,14 @@ def _long_feng_etb(gs, card):
 
 def _fire_lord_zuko_etb(gs, card):
     """'Firebending X = power.' ETB proxy: +X mana (assume power 3)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  Fire Lord Zuko ETB: Firebending X power (power=3 proxy, +3 mana)")
 
 def _ran_shaw_etb(gs, card):
     """Flying, Firebending 2. 'ETB if cast with 3+ creatures: deal 5 damage to each creature.'
     ETB proxy: flying + +2 mana + 5 damage to each opp creature."""
     from data.card import Tag as _Tag
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     opp = getattr(gs, "_match_opp", None)
     if opp:
         for c in list(opp.zones.battlefield):
@@ -36771,7 +36830,7 @@ def _master_pakku_etb(gs, card):
 
 def _fire_nation_raider_etb(gs, card):
     """'Raid: ETB if attacked, create Clue token.' ETB proxy: create Clue (+1 mana)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Fire Nation Raider ETB: Raid-Clue (+1 mana proxy)")
 
 def _mai_etb(gs, card):
@@ -36781,14 +36840,14 @@ def _mai_etb(gs, card):
 
 def _cat_owl_etb(gs, card):
     """Flying. 'When attacks, untap target artifact or creature.' ETB proxy: flying + untap engine."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Cat-Owl ETB: flying + attack-untap (+1 mana proxy)")
 
 def _sokka_boomeranger_etb(gs, card):
     """'ETB: discard up to 2, draw that many. When cast spell, investigate.'
     ETB proxy: loot + Clue (+1 mana)."""
     if gs.zones.library: gs.zones.hand.append(gs.zones.library.pop(0))
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Sokka Bold Boomeranger ETB: ETB loot + spell-investigate (+1 mana proxy)")
 
 def _the_unagi_etb(gs, card):
@@ -36813,12 +36872,12 @@ def _appa_etb(gs, card):
 
 def _the_boulder_etb(gs, card):
     """'When attacks, earthbend X = creatures you control.' ETB proxy: +3 mana (3 creatures)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 3
+    gs.mana_pool.flex += 3
     gs._log("  The Boulder ETB: attack-earthbend X creatures (+3 mana proxy)")
 
 def _zhao_etb(gs, card):
     """Firebending 2. ETB proxy: +2 mana."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 2
+    gs.mana_pool.flex += 2
     gs._log("  Zhao ETB: Firebending 2 (+2 mana proxy)")
 
 def _otter_penguin_etb(gs, card):
@@ -36904,10 +36963,10 @@ def _mana_sculpt_spell(gs, card):
         top = opp.stack[-1]
         opp.stack.pop()
         gained = getattr(top, "cmc", 2) or 2
-        gs.mana_pool.floating = gs.mana_pool.floating + gained
+        gs.mana_pool.flex += gained
         gs._log(f"  Mana Sculpt: counter {top.name} + gain {gained} mana (Wizard refund)")
     else:
-        gs.mana_pool.floating = gs.mana_pool.floating + 2
+        gs.mana_pool.flex += 2
         gs._log("  Mana Sculpt: goldfish +2 mana proxy (no stack target)")
 
 
@@ -36931,7 +36990,7 @@ def _ral_zarek_guest_lecturer_etb(gs, card):
     ETB proxy: surveil 2 (look at top 2, bottom/hand) + keep loyalty."""
     if len(gs.zones.library) >= 2:
         top2 = gs.zones.library[:2]
-        gs.zones.library = gs.zones.library[2:]
+        del gs.zones.library[:2]
         for c in top2:
             if 'Creature' in (c.type_line or '') or 'Land' in (c.type_line or ''):
                 gs.zones.hand.append(c)
@@ -37049,7 +37108,7 @@ def _worldwalker_helm_etb(gs, card):
     """Worldwalker Helm -- {1} Equipment. 'When creating artifact tokens, also create a Map token.
     Equip: equipped creature can move artifact tokens to other creatures.'
     ETB proxy: +1 mana (Map token = explore proxy)."""
-    gs.mana_pool.floating = gs.mana_pool.floating + 1
+    gs.mana_pool.flex += 1
     gs._log("  Worldwalker Helm ETB: Map-token doubler equip (+1 mana proxy)")
 
 

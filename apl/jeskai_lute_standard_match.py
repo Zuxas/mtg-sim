@@ -30,6 +30,10 @@ class JeskaiLuteMatchAPL(JeskaiControlStandardMatchAPL):
     inevitability proxy when card-advantage engine is online."""
     name = "Jeskai Lute Control"
     ARCHETYPE = "control"
+    # main_phase2_match below awards a win instead of playing cards. The core
+    # engine does not call it (engine/match_engine.py, postcombat phase); the
+    # runner still does until the owner decides whether to delete it (#62).
+    POST_COMBAT_IS_WIN_PROXY = True
 
     # Suppress under opposing spell-lock or hand-disruption attrition
     _SUPPRESSING_LOCK_PIECES = {

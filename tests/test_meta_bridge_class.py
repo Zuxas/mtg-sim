@@ -36,13 +36,16 @@ def _db():
 
 
 def _with_db(fn):
-    old = meta_bridge.DB_PATH
-    meta_bridge.DB_PATH = _db()
+    old = os.environ.get("MTG_META_DB")
+    os.environ["MTG_META_DB"] = _db()
     meta_bridge.get_real_field.cache_clear()
     try:
         fn()
     finally:
-        meta_bridge.DB_PATH = old
+        if old is None:
+            os.environ.pop("MTG_META_DB", None)
+        else:
+            os.environ["MTG_META_DB"] = old
         meta_bridge.get_real_field.cache_clear()
 
 
@@ -72,15 +75,18 @@ def test_field_summary_rows():
 
 
 def test_no_db_falls_back_quietly():
-    old = meta_bridge.DB_PATH
-    meta_bridge.DB_PATH = os.path.join(tempfile.mkdtemp(), "missing.db")
+    old = os.environ.get("MTG_META_DB")
+    os.environ["MTG_META_DB"] = os.path.join(tempfile.mkdtemp(), "missing.db")
     meta_bridge.get_real_field.cache_clear()
     try:
         b = MetaBridge("modern")
         assert b.real_matchup_matrix() == {}
         assert b.field_shares(top_n=3)          # format_config estimates
     finally:
-        meta_bridge.DB_PATH = old
+        if old is None:
+            os.environ.pop("MTG_META_DB", None)
+        else:
+            os.environ["MTG_META_DB"] = old
         meta_bridge.get_real_field.cache_clear()
 
 

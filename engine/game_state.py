@@ -675,6 +675,13 @@ class GameState:
             self.zones.graveyard.append(card)
             self._log(f"  EOT: sacrificed {card.name} (Mobilize)")
 
+        # "Until end of turn" pumps wear off (card_handlers_verified._pump_eot)
+        for card in self.zones.battlefield:
+            bonus = getattr(card, "_pump_until_eot", 0)
+            if bonus:
+                card.counters -= bonus
+                card._pump_until_eot = 0
+
         # Revert Mutavault / Restless lands back to non-creature lands
         for card in self.zones.battlefield:
             if not getattr(card, "_revert_at_eot", False):
@@ -798,7 +805,7 @@ class GameState:
         if spec is None:
             return False
         warp_cost_str, warp_cmc = spec
-        if not self.mana_pool.can_cast(warp_cost_str, warp_cmc):
+        if not self.can_pay_mana(warp_cost_str, warp_cmc):
             return False
         if card not in self.zones.hand:
             return False
@@ -816,7 +823,7 @@ class GameState:
                 and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
             return False
         # Pay the warp cost (cheaper than full)
-        self.mana_pool.pay(warp_cost_str, warp_cmc)
+        self.pay_mana(warp_cost_str, warp_cmc)
         self.spells_cast_this_turn += 1
         # Card enters battlefield normally as a creature
         self.zones.play_from_hand(card)
@@ -1147,6 +1154,23 @@ class GameState:
     # APL-facing actions
     # -----------------------------------------------------------------------
 
+    def can_pay_mana(self, mana_cost: str, cmc: float) -> bool:
+        """Can this player pay the cost right now? Unlike mana_pool.can_cast,
+        this knows the life total, so a Phyrexian pip cannot be paid with life
+        the player does not have (#16)."""
+        self.mana_pool.life_available = self.life
+        return self.mana_pool.can_cast(mana_cost, cmc)
+
+    def pay_mana(self, mana_cost: str, cmc: float) -> bool:
+        """Pay a cost from the pool and take any Phyrexian life off the player.
+        The one place a real mana cost is paid: cast_spell, warp, counterspells
+        and the reactive windows all come through here."""
+        self.mana_pool.life_available = self.life
+        if not self.mana_pool.pay(mana_cost, cmc):
+            return False
+        self.life -= self.mana_pool.life_paid
+        return True
+
     def tap_lands(self):
         """
         Tap untapped lands for mana, then tap mana dorks.
@@ -1167,7 +1191,7 @@ class GameState:
         if reserve <= 0:
             for land in untapped:
                 land.tapped = True
-                self.mana_pool.add_land(land.type_line, land.name)
+                self.mana_pool.add_land(land.type_line, land.name, land.oracle_text or "")
         else:
             # Sort: basics (single-type) first, duals/flex last
             def _tap_priority(land):
@@ -1180,7 +1204,7 @@ class GameState:
             n_tap = max(0, len(ordered) - reserve)
             for land in ordered[:n_tap]:
                 land.tapped = True
-                self.mana_pool.add_land(land.type_line, land.name)
+                self.mana_pool.add_land(land.type_line, land.name, land.oracle_text or "")
             if len(ordered) > n_tap:
                 held = [l.name for l in ordered[n_tap:]]
                 self._log(f"  tap_lands: held {held} untapped (reserve={reserve})")
@@ -1316,7 +1340,9 @@ class GameState:
         "blooming marsh", "concealed courtyard", "inspiring vantage",
         "botanical sanctum",
         # SOS Standard fast lands
-        "stormcarved coast",        # {U}{R}, enters tapped unless 2+ other lands
+        # Stormcarved Coast was listed here, but it is a slow land (tapped
+        # unless you control two or more OTHER lands), the opposite of a fast
+        # land. Its own text decides now (_enters_tapped_by_text).
     }
 
     def _is_fetch_land(self, card: Card) -> bool:
@@ -1360,7 +1386,47 @@ class GameState:
         if name == "fabled passage":
             return self.zones.count_lands_in_play() < 4
 
-        return False  # default: untapped
+        return self._enters_tapped_by_text(card)
+
+    def _enters_tapped_by_text(self, card: Card) -> bool:
+        """Read "enters tapped" off the card instead of a name list.
+
+        The name lists above cover about 60 lands; 47 more in decks/ (surveil
+        lands, Triomes, creature lands, bounce lands, Bojuka Bog...) always
+        enter tapped and were being tapped for mana the turn they were played.
+        # ponytail: conditions it does not recognise count as untapped (the
+        # old behaviour), e.g. Starting Town's turn count.
+        """
+        import re
+        name = (card.name or "").lower()
+        text = re.sub(r"\([^)]*\)", "", (card.oracle_text or "").lower())
+        text = text.replace(name, "this land").replace("enters the battlefield tapped", "enters tapped")
+        lands = [c for c in self.zones.lands_on_battlefield() if c is not card]
+
+        def controls(kind):                       # "a swamp", "a basic land"
+            word = kind.strip().removeprefix("an ").removeprefix("a ").split()[0]
+            for c in lands:
+                # "Basic Land - Swamp": supertypes before the dash, subtypes after
+                supers, _, subs = (c.type_line or "").lower().replace("\u2014", "-").partition("-")
+                if word in (supers.split() if word == "basic" else subs.split()):
+                    return True
+            return False
+
+        for sentence in re.split(r"[.\n]", text):
+            sentence = sentence.strip()
+            if sentence == "this land enters tapped":
+                return True
+            m = re.fullmatch(r"this land enters tapped unless you control (.+)", sentence)
+            if m:
+                cond = m.group(1)
+                if cond == "two or more other lands":
+                    return len(lands) < 2
+                if cond.startswith(("a ", "an ")):
+                    return not any(controls(k) for k in cond.split(" or "))
+                return False
+            if sentence == "if you control two or more other lands, this land enters tapped":
+                return len(lands) >= 2
+        return False
 
     def _resolve_fetch(self, card: Card, need_mana_now: bool = True) -> bool:
         """
@@ -1449,7 +1515,7 @@ class GameState:
         enters_tapped = self._enters_tapped(best)
         if not enters_tapped:
             best.tapped = True
-            self.mana_pool.add_land(best.type_line, best.name)
+            self.mana_pool.add_land(best.type_line, best.name, best.oracle_text or "")
         else:
             best.tapped = True
 
@@ -1496,7 +1562,7 @@ class GameState:
                       f"{self.zones.count_lands_in_play()} total)")
         else:
             card.tapped = True  # tap immediately for mana
-            self.mana_pool.add_land(card.type_line, card.name)
+            self.mana_pool.add_land(card.type_line, card.name, card.oracle_text or "")
             self._log(f"  Land: {card.name} "
                       f"({self.zones.count_lands_in_play()} total)")
 
@@ -1513,7 +1579,7 @@ class GameState:
         # Effective cost after any per-card reductions ('this spell
         # costs {X} less' — Hearth Elemental, Eddymurk Crab, etc.)
         effective_cmc = _effective_cmc(card, self)
-        if not self.mana_pool.can_cast(card.mana_cost, effective_cmc):
+        if not self.can_pay_mana(card.mana_cost, effective_cmc):
             return False
         # ── High Noon lock (symmetric: both players limited to 1 spell/turn) ──
         # 'Each player can't cast more than one spell each turn.'
@@ -1537,7 +1603,7 @@ class GameState:
                 and any(c.name == "Voice of Victory" for c in opp.zones.battlefield)):
             self._log(f"  [Voice of Victory lock] {card.name} blocked (opp's turn)")
             return False
-        self.mana_pool.pay(card.mana_cost, effective_cmc)
+        self.pay_mana(card.mana_cost, effective_cmc)
         self.spells_cast_this_turn += 1
         # Cosmogrand Zenith — 'Whenever you cast your second spell
         # each turn, create two 1/1 white Human Soldier tokens OR
@@ -1579,8 +1645,17 @@ class GameState:
                     self._in_counter_window = False
                 if countered:
                     # Spell cost was paid but the spell does nothing.
-                    # Move to graveyard, skip resolution.
+                    # Move to graveyard, skip resolution. It has to leave the
+                    # hand too: it used to stay there as well, so a countered
+                    # spell could simply be cast again and one card sat in two
+                    # zones (the source of "list.remove(x): x not in list").
+                    if card in self.zones.hand:
+                        self.zones.hand.remove(card)
                     self.zones.graveyard.append(card)
+                    # It was still cast: prowess and other "whenever you cast
+                    # a noncreature spell" counts must see it.
+                    if not card.has(Tag.CREATURE):
+                        self.noncreature_spells_this_turn += 1
                     self._log(f"  [COUNTERED] {card.name}")
                     self.check_state_based_actions()
                     return True

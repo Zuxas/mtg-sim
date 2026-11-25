@@ -6,7 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# Naming any permission sets every other one to none, so read access to the
+# repo has to be spelled out. Jobs that push ask for more themselves.
 permissions:
+  contents: read
   issues: write
 
 jobs:
@@ -57,10 +60,15 @@ jobs:
           python-version: '3.x'
       - name: Install dependencies
         run: pip install requests
+      # Decks load from the local Scryfall copy only.
+      - name: Fetch Scryfall bulk data
+        run: bash scripts/fetch_scryfall_bulk.sh
       - name: Determinism tests (4 checks)
         run: python tests/test_determinism.py
       - name: Menace combat tests
         run: python tests/test_menace_combat.py
+      - name: Handler sweep (every ETB/spell handler must not raise)
+        run: python tests/test_handler_sweep.py
       - name: Report failure
         if: failure()
         uses: actions/github-script@v8
@@ -100,8 +108,10 @@ jobs:
         id: changed
         shell: bash
         run: |
+          # One line, space-separated: a multi-line value written as key=value
+          # is an invalid output command and failed the step for 2+ APLs.
           FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD \
-            | grep -E "^apl/.*_match\.py$" || true)
+            | grep -E "^apl/.*_match\.py$" | tr '\n' ' ' || true)
           echo "files=$FILES" >> $GITHUB_OUTPUT
           if [ -z "$FILES" ]; then
             echo "No match APLs changed -- oracle gate skipped"
@@ -110,30 +120,91 @@ jobs:
             echo "$FILES"
           fi
       - name: Oracle verify changed APLs
+        id: verify
         if: steps.changed.outputs.files != ''
         shell: bash
         env:
           HARNESS_ROOT: ${{ vars.HARNESS_ROOT || 'E:/vscode ai project/harness' }}
+          # Windows defaults stdout to cp1252; Gemma's verdicts contain arrows and
+          # minus signs, and the verifier died printing them mid-file.
+          PYTHONIOENCODING: utf-8
         run: |
-          PASS=0; FAIL=0
+          PASS=0; DISCREPANCY=0; VERIFIER_ERROR=0; UNVERIFIED=0; UNVERIFIED_ANY=0
           for f in ${{ steps.changed.outputs.files }}; do
             echo "--- Verifying $f ---"
-            result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1)
+            if result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1); then rc=0; else rc=$?; fi
             echo "$result"
-            if echo "$result" | grep -q " FAIL "; then FAIL=$((FAIL+1)); else PASS=$((PASS+1)); fi
+            # Classify from three distinct signals, not the exit code alone:
+            #  - a real per-card discrepancy ("  FAIL  <card>"; the leading-
+            #    whitespace anchor keeps the "Results: .. FAIL" summary out);
+            #  - the model being unavailable ("Gemma unavailable");
+            #  - an unexpected verifier crash (a Python traceback, or a nonzero
+            #    exit with neither of the above). A crash must surface as a
+            #    verifier error -- never as a Gemma discrepancy, and never hidden
+            #    behind an earlier card's "unavailable" line.
+            has_fail=false; has_unavail=false; has_crash=false
+            echo "$result" | grep -qE "^[[:space:]]*FAIL[[:space:]]" && has_fail=true
+            echo "$result" | grep -q "Gemma unavailable" && has_unavail=true
+            echo "$result" | grep -q "Traceback (most recent call last)" && has_crash=true
+            if [ $rc -ne 0 ] && ! $has_fail && ! $has_unavail; then has_crash=true; fi
+            # Count any file that left cards unverified, even one also classified
+            # as a discrepancy, so a mixed run is never reported as 0 unverified.
+            $has_unavail && UNVERIFIED_ANY=$((UNVERIFIED_ANY+1))
+            if $has_fail; then
+              DISCREPANCY=$((DISCREPANCY+1))
+              $has_unavail && echo "::warning::$f: discrepancy found AND some cards left unverified (model unavailable mid-run)."
+            elif $has_crash; then
+              echo "::error::$f: the oracle verifier crashed or exited unexpectedly (not a Gemma discrepancy)."
+              VERIFIER_ERROR=$((VERIFIER_ERROR+1))
+            elif $has_unavail; then
+              echo "::error::$f was NOT verified: the local model was unavailable. Re-run when Ollama is up."
+              UNVERIFIED=$((UNVERIFIED+1))
+            else
+              PASS=$((PASS+1))
+            fi
           done
-          echo "Oracle gate: $PASS PASS, $FAIL FAIL"
-          if [ $FAIL -gt 0 ]; then
-            echo "::error::Oracle gate failed on $FAIL APL(s)."
+          echo "Oracle gate: $PASS PASS, $DISCREPANCY DISCREPANCY, $VERIFIER_ERROR VERIFIER_ERROR, $UNVERIFIED UNVERIFIED ($UNVERIFIED_ANY file(s) had unverified cards)"
+          # Tell the Report-failure step which cause to describe, most actionable
+          # first: a real discrepancy, then a verifier crash, then model-down.
+          # Empty reason means some other step in the job failed.
+          if   [ $DISCREPANCY -gt 0 ];    then REASON=discrepancy
+          elif [ $VERIFIER_ERROR -gt 0 ]; then REASON=verifier_error
+          elif [ $UNVERIFIED -gt 0 ];     then REASON=unavailable
+          else REASON=; fi
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          echo "unverified=$UNVERIFIED_ANY" >> "$GITHUB_OUTPUT"
+          FAILTOTAL=$((DISCREPANCY+VERIFIER_ERROR+UNVERIFIED))
+          if [ $FAILTOTAL -gt 0 ]; then
+            echo "::error::Oracle gate failed on $FAILTOTAL APL(s): $DISCREPANCY discrepancy, $VERIFIER_ERROR verifier-error, $UNVERIFIED unverified."
             exit 1
           fi
       - name: Report failure
         if: failure()
         uses: actions/github-script@v8
+        env:
+          REASON: ${{ steps.verify.outputs.reason }}
+          UNVERIFIED: ${{ steps.verify.outputs.unverified }}
         with:
           script: |
             const title = `[CI] oracle-gate failed — mtg-sim`;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            // The verify step tells us why it failed. An outage is infrastructure,
+            // not an APL bug, so it must not read as "fix the code before merge".
+            const reason = process.env.REASON || '';
+            const unverified = process.env.UNVERIFIED || '0';
+            let diag;
+            if (reason === 'unavailable') {
+              diag = `The local model (Ollama) was unavailable, so the changed APL(s) were NOT verified. This is an infrastructure issue, not a code discrepancy — re-run the gate when Ollama is up.`;
+            } else if (reason === 'verifier_error') {
+              diag = `The oracle verifier crashed or exited unexpectedly (a traceback or unexpected exit — NOT a Gemma discrepancy). Check the run logs; this is a verifier/infrastructure problem, not necessarily an APL bug.`;
+              if (unverified !== '0') diag += ` (${unverified} APL(s) also had cards left unverified.)`;
+            } else if (reason === 'discrepancy') {
+              diag = `Gemma found an oracle discrepancy in a changed APL. Fix before merge.`;
+              if (unverified !== '0') diag += ` Note: ${unverified} APL(s) also had cards left unverified (model unavailable mid-run) — re-check those after fixing.`;
+            } else {
+              diag = `The oracle gate failed. Check the run logs for the cause.`;
+            }
+            const reasonTag = reason || 'see logs';
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               labels: 'needs-fix', state: 'open',
@@ -143,13 +214,13 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: existing.number,
-                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} (${reasonTag}) — [run](${runUrl})\n\n${diag}`,
               });
             } else {
               await github.rest.issues.create({
                 owner: context.repo.owner, repo: context.repo.repo,
                 title, labels: ['needs-fix'],
-                body: `**Job:** oracle-gate\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nGemma found oracle discrepancy in a changed APL. Fix before merge.`,
+                body: `**Job:** oracle-gate\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\n${diag}`,
               });
             }
 
@@ -158,13 +229,24 @@ jobs:
     runs-on: self-hosted
     needs: tests
     # Run on every push to main so the generated file stays in sync with
-    # oracle_parser.py. Also catches Scryfall bulk updates.
+    # oracle_parser.py.
     if: github.event_name == 'push'
+    permissions:
+      contents: write   # pushes the regenerated file
+      issues: write
     steps:
       - uses: actions/checkout@v5
         with:
           # Need write access to auto-commit the regenerated file
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Keep gitignored files between runs on the self-hosted runner. The
+          # default (clean: true) deleted the Scryfall bulk the build reads.
+          clean: false
+      # Downloads the bulk if it is missing, refreshes it if it is more than
+      # 7 days old, and does nothing otherwise.
+      - name: Fetch or refresh Scryfall bulk data
+        shell: bash
+        run: bash scripts/fetch_scryfall_bulk.sh
       - name: Regenerate standard_auto_handlers.py
         shell: bash
         run: python scripts/build_standard_handlers.py
@@ -179,7 +261,8 @@ jobs:
             TOTAL=$(python -c "import sys; sys.path.insert(0, '.'); from engine.card_effects import ETB_EFFECTS, SPELL_EFFECTS; print(len(ETB_EFFECTS) + len(SPELL_EFFECTS))" 2>/dev/null || echo "?")
             git add engine/standard_auto_handlers.py
             git commit -m "auto: regenerate standard_auto_handlers.py (total handlers: $TOTAL)"
-            git push
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
       - name: Report failure
         if: failure()
@@ -211,19 +294,44 @@ jobs:
     name: Goldfish baseline guard
     runs-on: self-hosted
     needs: tests
-    if: |
-      github.event_name == 'pull_request' &&
-      (contains(github.event.pull_request.changed_files, 'engine/') ||
-       contains(github.event.pull_request.changed_files, 'apl/boros_energy'))
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v5
-      - name: Boros Energy goldfish baseline
+        with:
+          fetch-depth: 0
+      # pull_request.changed_files is a COUNT, so the old contains() test on
+      # it was always false and this job never ran. Ask git for the paths.
+      - name: Did the engine or Boros Energy change?
+        id: changed
         shell: bash
         run: |
-          result=$(python sim.py "Boros Energy" --n 1000 --seed 42 2>&1)
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD \
+              | grep -qE "^(engine/|apl/boros_energy)"; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          else
+            echo "run=false" >> $GITHUB_OUTPUT
+            echo "No engine/ or apl/boros_energy changes -- goldfish guard skipped"
+          fi
+      # Skips when the runner's copy is under 7 days old.
+      - name: Fetch or refresh Scryfall bulk data
+        if: steps.changed.outputs.run == 'true'
+        shell: bash
+        run: bash scripts/fetch_scryfall_bulk.sh
+      - name: Boros Energy goldfish baseline
+        if: steps.changed.outputs.run == 'true'
+        shell: bash
+        run: |
+          # sim.py takes --deck <file>; the old positional "Boros Energy" was
+          # rejected by argparse, so this step could never have passed.
+          result=$(PYTHONIOENCODING=utf-8 python sim.py --deck decks/boros_energy_modern.txt \
+            --n 1000 --seed 42 --no-chart --no-claude 2>&1) || { echo "$result"; exit 1; }
           echo "$result"
-          avg=$(echo "$result" | grep -oP "avg.*?(\d+\.\d+)" | grep -oP "\d+\.\d+" | head -1)
+          avg=$(echo "$result" | grep -i "avg kill turn" | grep -oE "[0-9]+\.[0-9]+" | head -1)
           echo "Avg kill turn: $avg"
+          if [ -z "$avg" ]; then
+            echo "::error::could not read the average kill turn from sim.py output"
+            exit 1
+          fi
           python -c "
           avg = float('$avg')
           if avg < 4.0 or avg > 5.2:

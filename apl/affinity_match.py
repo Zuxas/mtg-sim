@@ -163,10 +163,8 @@ class IzzetAffinityMatchAPL(AwareMatchAPL):
                 if gs.mana_pool.can_cast(c.mana_cost, c.cmc):
                     gs.cast_spell(c)
                     _on_artifact_enter()
-                    # Oracle ETB: mill 4 cards (library -> GY, fills GY for delirium)
-                    for _ in range(min(4, len(gs.zones.library))):
-                        card = gs.zones.library.pop(0)
-                        gs.zones.graveyard.append(card)
+                    # The engine handler mills the four cards; doing it again
+                    # here milled eight.
                     gs._log(f"  Emry ETB: affinity, mill 4 -> GY ({len(gs.zones.graveyard)} in GY)")
                 gs.mana_pool.cost_reduction = 0
                 avail = gs.mana_pool.total()

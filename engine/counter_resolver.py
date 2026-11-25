@@ -38,8 +38,44 @@ def _is_artifact_or_enchantment(spell):
     return spell.has(Tag.ARTIFACT) or spell.has(Tag.ENCHANTMENT)
 
 
+def _is_red_or_green(spell):
+    colors = getattr(spell, 'colors', None) or []
+    return 'R' in colors or 'G' in colors
+
+
+# What a counter really costs when that is not its printed mana cost.
+# Three Steps Ahead is {U} with spree; its counter mode adds {1}{U}.
+COUNTER_COST = {
+    "Three Steps Ahead": ("{1}{U}{U}", 3),
+}
+
+
+# "Counter target spell unless its controller pays {N}." Such a counter is
+# only cast when the spell's controller cannot pay: their floating mana plus
+# untapped lands, counted after the spell itself was paid for.
+# ponytail: this is a pilot rule, not the full rule. A player may cast one
+# into open mana to make the opponent spend it; add "cast, then the caster
+# chooses to pay" if that line of play is ever wanted.
+COUNTER_TAX = {
+    "It'll Quench Ya!":     2,
+    "Spell Pierce":         2,
+    "Phantom Interference": 2,
+    "Daze":                 1,
+    "Mystical Dispute":     3,
+    "Metallic Rebuke":      3,
+}
+
+
+def _spare_mana(gs) -> int:
+    return gs.mana_pool.total() + sum(
+        1 for l in gs.zones.lands_on_battlefield() if not l.tapped)
+
+
 # (validity_predicate, base_cost_cmc, name_for_log)
 COUNTER_VALIDITY = {
+    "It'll Quench Ya!":     (lambda s: True,                               2),
+    "Three Steps Ahead":    (lambda s: True,                               3),
+    "Flashfreeze":          (_is_red_or_green,                             2),
     "Spell Snare":          (lambda s: getattr(s, 'cmc', 0) == 2,         1),
     "Spell Pierce":         (_is_noncreature,                              1),
     "Negate":               (_is_noncreature,                              2),
@@ -50,7 +86,7 @@ COUNTER_VALIDITY = {
     "Spider-Sense":         (_is_noncreature,                              2),  # counters instant/sorcery/triggered
     "Disrupting Shoal":     (lambda s: True,                               0),  # any spell, alt-cost
     "Counterspell":         (lambda s: True,                               2),
-    "Mystical Dispute":     (_is_noncreature,                              2),
+    "Mystical Dispute":     (lambda s: True,                               2),  # any spell; {2} less vs blue not modeled
     "Daze":                 (lambda s: True,                               1),
     "Force of Will":        (lambda s: True,                               5),
     "Force of Negation":    (_is_noncreature,                              5),
@@ -118,7 +154,7 @@ def _tap_lands_for_response(gs):
     gs._response_pool_filled_turn = getattr(gs, 'turn', 0)
     for land in gs.zones.lands_on_battlefield():
         try:
-            gs.mana_pool.add_land(land.type_line or "", land.name or "")
+            gs.mana_pool.add_land(land.type_line or "", land.name or "", land.oracle_text or "")
         except Exception:
             gs.mana_pool.add("C", 1)
 
@@ -144,6 +180,9 @@ def try_counter_spell(opp_apl, opp_gs, my_gs, spell) -> bool:
         validity_fn, base_cmc = COUNTER_VALIDITY[c.name]
         if not validity_fn(spell):
             continue
+        tax = COUNTER_TAX.get(c.name)
+        if tax and _spare_mana(my_gs) >= tax:
+            continue    # the caster would simply pay
         candidates.append((c, base_cmc))
 
     if not candidates:
@@ -157,7 +196,9 @@ def try_counter_spell(opp_apl, opp_gs, my_gs, spell) -> bool:
 
     for counter, counter_cmc in candidates:
         # Affordability check
-        if not opp_gs.mana_pool.can_cast(counter.mana_cost, counter.cmc):
+        cost, cost_cmc = COUNTER_COST.get(counter.name,
+                                          (counter.mana_cost, counter.cmc))
+        if not opp_gs.mana_pool.can_cast(cost, cost_cmc):
             # Try Phantom Interference's counter mode {1}{U} if it's
             # the {U} Spree base (handled by cmc==2 in card_db)
             continue
@@ -174,7 +215,7 @@ def try_counter_spell(opp_apl, opp_gs, my_gs, spell) -> bool:
         # the window, so the counter spell itself won't trigger one)
         opp_gs._in_counter_window = True
         try:
-            opp_gs.mana_pool.pay(counter.mana_cost, counter.cmc)
+            opp_gs.pay_mana(cost, cost_cmc)
             opp_gs.zones.hand.remove(counter)
             opp_gs.zones.graveyard.append(counter)
             opp_gs.spells_cast_this_turn += 1

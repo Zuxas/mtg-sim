@@ -44,7 +44,11 @@ class Tag:
 # Card dataclass
 # ---------------------------------------------------------------------------
 
-@dataclass
+# eq=False: a card is a game object, not a value. Two Ocelot Prides are two
+# permanents, and `zone.remove(card)` must take out THAT one. With the default
+# dataclass equality it took out the first card whose fields matched, and
+# bonuses kept as plain attributes (lord bonus, mobilize flag) are not fields.
+@dataclass(eq=False)
 class Card:
     # Core identity (from Scryfall)
     name: str

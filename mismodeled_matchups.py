@@ -59,6 +59,15 @@ MISMODELED_MATCHUPS = {
                "undermodeled, so we beat it far more often in sim than in reality. (Same gap behind the "
                "stale 63.5% 'Modern lock'.)",
     },
+    "uw control": {
+        "direction": "INFLATED / UNVALIDATED",
+        "sim": "~80-100%",
+        "truth": "no primer cell (unknown)",
+        "why": "the UW Control APL does not function as a control deck against aggro: measured over "
+               "200 games vs Izzet Prowess it wins 3, the game lasts 5 turns, and it dies holding "
+               "6.5 cards having cast about 2 spells (Solitude never; a sweeper once in 8 games). "
+               "Every deck beats it, so the cell says nothing about the real matchup.",
+    },
 }
 
 

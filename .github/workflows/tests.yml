@@ -31,3 +31,37 @@ jobs:
             -not -path "./__pycache__/*" \
             -not -path "*/__pycache__/*" \
             | xargs python -m py_compile
+
+  fast-tests:
+    name: Fast deterministic tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Decks load from the local Scryfall copy only (no per-deck API calls).
+      # One bulk download, kept for a week by the cache.
+      - name: Week number (cache key)
+        id: week
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+      - name: Cache Scryfall bulk data
+        uses: actions/cache@v4
+        with:
+          path: data/rules_reference/scryfall_*.json
+          key: scryfall-bulk-${{ steps.week.outputs.week }}
+      - name: Fetch or refresh Scryfall bulk data
+        run: bash scripts/fetch_scryfall_bulk.sh
+
+      # Every tests/test_*.py except the slow / card-data / meta-DB tiers
+      # listed in scripts/run_tests.py. Prints PASS/FAIL per script.
+      - name: Run fast tier
+        run: python scripts/run_tests.py

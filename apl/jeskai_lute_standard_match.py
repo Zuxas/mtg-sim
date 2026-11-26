@@ -26,78 +26,8 @@ NO_MORE_LIES = "No More Lies"
 
 
 class JeskaiLuteMatchAPL(JeskaiControlStandardMatchAPL):
-    """Lute control variant. Inherits Jeskai Control sequencing but adds
-    inevitability proxy when card-advantage engine is online."""
+    """Lute control variant. Inherits Jeskai Control sequencing. Wins via
+    card advantage; the inevitability win-proxy was removed (flagged
+    [!MISMODEL] until hand advantage is modeled -- see #74)."""
     name = "Jeskai Lute Control"
     ARCHETYPE = "control"
-    # main_phase2_match below awards a win instead of playing cards. The core
-    # engine does not call it (engine/match_engine.py, postcombat phase); the
-    # runner still does until the owner decides whether to delete it (#62).
-    POST_COMBAT_IS_WIN_PROXY = True
-
-    # Suppress under opposing spell-lock or hand-disruption attrition
-    _SUPPRESSING_LOCK_PIECES = {
-        "High Noon", "Voice of Victory", "Kutzil, Malamet Exemplar",
-    }
-
-    def main_phase2_match(self, gs: GameState, opponent: GameState):
-        """Inevitability proxy: once Lute is on board + we have 5+ cards in
-        hand + opponent's clock isn't lethal next turn, declare game won.
-
-        Lute provides 2x mana for instants/sorceries + draws extra cards;
-        Stock Up draws 5 / keeps 2; Jeskai Revelation can be flashbacked.
-        Real-world this engine grinds opp out of resources. Sim can't model
-        the recursive card advantage, so we use a proxy.
-
-        Conditions to fire:
-          T5+ AND Lute on board AND hand size >= 5 AND we have life cushion
-          T6+ AND Lute on board AND hand size >= 4
-
-        Suppress when:
-          - opp has High Noon / Voice of Victory (we can't cast our spells)
-          - opp has dealt 14+ damage (we're on the back foot)
-        """
-        if gs.turn < 5:
-            return
-
-        # Suppression: opp lock pieces
-        if opponent is not None:
-            for c in opponent.zones.battlefield:
-                if c.name in self._SUPPRESSING_LOCK_PIECES:
-                    return
-
-        bf_names = {c.name for c in gs.zones.battlefield}
-        lute_active = LUTE in bf_names
-        if not lute_active:
-            return
-
-        hand_size = len(gs.zones.hand)
-        my_life   = gs.life
-
-        # Suppression: we're being killed quickly (life pressure)
-        # If we're at 6 life or below, we can't durdle to inevitability
-        if my_life <= 6:
-            return
-
-        # Suppression: opp has lethal-ish board this turn
-        if opponent is not None:
-            opp_power = sum(
-                (c.effective_power() if hasattr(c, 'effective_power') else 0)
-                for c in opponent.zones.battlefield
-                if not c.is_land() and c.has(Tag.CREATURE)
-                and not getattr(c, 'tapped', False)
-            )
-            if opp_power >= my_life - 2:
-                return
-
-        cond_t5 = gs.turn >= 5 and hand_size >= 5
-        cond_t6 = gs.turn >= 6 and hand_size >= 4
-        cond_t7 = gs.turn >= 7 and hand_size >= 3
-
-        if cond_t5 or cond_t6 or cond_t7:
-            opp_life = opponent.life if opponent is not None else 20
-            if opp_life > 0:
-                gs.damage_dealt += opp_life + 1
-                gs._log(f"  [Lute] CA engine inevitability T{gs.turn}: "
-                        f"hand={hand_size} life={my_life} opp_life={opp_life} "
-                        f"-> declare win")

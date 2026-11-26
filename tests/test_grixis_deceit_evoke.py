@@ -63,5 +63,26 @@ def main():
     print("PASS: Deceit is not cast in the opponent's turn window")
 
 
+def sultai_control():
+    """Sultai Control had the same table entry; it now evokes Deceit in its
+    own main phase and leaves it alone on the opponent's turn."""
+    from apl.sultai_control_standard_match import (
+        KILL_PRIORITY, SultaiControlStandardMatchAPL)
+    apl = SultaiControlStandardMatchAPL()
+    assert DECEIT not in apl.MATCH_REMOVAL
+
+    gs, opp, deceit, target = state(pool_u=6, pool_b=6)
+    target.name = KILL_PRIORITY[0]
+    apl.pre_combat_instant(gs, opp)
+    assert gs.zones.hand == [deceit] and opp.zones.battlefield == [target]
+
+    apl._match_cast_removal(gs, opp)
+    assert gs.zones.graveyard == [deceit] and opp.zones.hand == [target]
+    assert gs.mana_pool.total() == 10                 # two mana, not six
+    print("PASS: Sultai Control evokes Deceit for two mana in its own main "
+          "phase only")
+
+
 if __name__ == "__main__":
+    sultai_control()
     main()

@@ -129,15 +129,10 @@ class IzzetSpellementalsStandardMatchAPL(AwareMatchAPL, IzzetProwessAPL):
     # ---------------------------------------------------------------------------
 
     def reserve_mana(self, gs: GameState, opponent: GameState):
-        # Check for Sunderflock opportunity (board reset)
-        has_sunderflock = any(c.name == SUNDERFLOCK for c in gs.zones.hand)
-        opp_has_nonelements = any(
-            c.has(Tag.CREATURE) and not c.is_land()
-            for c in opponent.zones.battlefield
-        )
-        if has_sunderflock and opp_has_nonelements:
-            gs.mana_reserve = 4   # hold up for Sunderflock cost after discount
-            return
+        # Lands are held back only for instants. Sunderflock is a creature
+        # with no flash: holding four lands "for its cost" kept them out of
+        # the pool in our own main phase, where it has to be cast, so the
+        # reserve made Sunderflock harder to cast, not easier.
         has_counter = any(c.name in self.COUNTER_CARDS for c in gs.zones.hand)
         gs.mana_reserve = self.COUNTER_COST if has_counter else 0
 

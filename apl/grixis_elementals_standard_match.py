@@ -73,30 +73,12 @@ class GrixisElementalsStandardMatchAPL(AwareMatchAPL):
     # Deceit is not in the generic removal table: that path pays a card's
     # printed cost and puts it in the graveyard, which for Deceit meant six
     # mana for a bounce and no 5/5, and it also fired from pre_combat_instant
-    # on the opponent's turn. _evoke_deceit below is used in our main phase
-    # instead. Requiting Hex is not in the list, and the table could not say
+    # on the opponent's turn. AwareMatchAPL._evoke_deceit is used in our main
+    # phase instead. Requiting Hex is not in the list, and the table could not say
     # "mana value 2 or less" anyway (it had it exiling any creature).
     MATCH_REMOVAL = {}
     MATCH_BOUNCE = set()
     MATCH_EXILE  = set()
-
-    def _evoke_deceit(self, gs, opponent, target) -> bool:
-        """Evoke Deceit for {U}{U}: return the target to its owner's hand;
-        Deceit is sacrificed. Deceit has no flash, so this is only called from
-        our own main phase, never from pre_combat_instant (which the engine
-        runs on the opponent's turn)."""
-        deceit = next((c for c in gs.zones.hand if c.name == DECEIT), None)
-        if (deceit is None or target not in opponent.zones.battlefield
-                or target.is_land() or not gs.mana_pool.can_cast("{U}{U}", 2)):
-            return False
-        gs.mana_pool.pay("{U}{U}", 2)
-        gs.zones.hand.remove(deceit)
-        gs.zones.graveyard.append(deceit)
-        gs.spells_cast_this_turn += 1
-        opponent.zones.battlefield.remove(target)
-        opponent.zones.hand.append(target)
-        gs._log(f"  Deceit evoked ({{U}}{{U}}): bounce {target.name}")
-        return True
 
     SB_PLANS = {
         "aggro": (

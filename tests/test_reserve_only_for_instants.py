@@ -43,5 +43,35 @@ def main():
     print("PASS: lands are reserved only for the instant")
 
 
+def other_decks():
+    """The same defect in two more decks (found by auditing every reserve rule
+    against the card data)."""
+    from apl.izzet_spellementals_standard_match import (
+        SUNDERFLOCK, IzzetSpellementalsStandardMatchAPL)
+    from apl.sultai_control_standard_match import (
+        KILL_PRIORITY, SultaiControlStandardMatchAPL)
+    from data.card import Card, Tag
+    db = CardDB()
+    flock = db.get(SUNDERFLOCK)
+    assert "Creature" in flock["type_line"] and "Flash" not in flock["oracle_text"]
+
+    def opp_with(name):
+        c = Card(name=name, mana_cost="{1}", cmc=1, type_line="Creature",
+                 power="2", toughness="2")
+        c.tags = {Tag.CREATURE}
+        return type("GS", (), {"zones": type("Z", (), {"battlefield": [c]})()})()
+
+    gs = _GS(SUNDERFLOCK)
+    IzzetSpellementalsStandardMatchAPL().reserve_mana(gs, opp_with("Bear"))
+    assert gs.mana_reserve == 0, gs.mana_reserve
+    print("PASS: Izzet Spellementals holds no lands for Sunderflock")
+
+    gs = _GS(DECEIT)
+    SultaiControlStandardMatchAPL().reserve_mana(gs, opp_with(KILL_PRIORITY[0]))
+    assert gs.mana_reserve == 0, gs.mana_reserve
+    print("PASS: Sultai Control holds no lands for Deceit")
+
+
 if __name__ == "__main__":
+    other_decks()
     main()

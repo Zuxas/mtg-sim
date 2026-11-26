@@ -314,6 +314,31 @@ class AwareMatchAPL(MatchAPL):
     # Core removal dispatcher
     # ---------------------------------------------------------------------------
 
+    def _evoke_deceit(self, gs, opponent, target) -> bool:
+        """Evoke Deceit for {U}{U}: return the target nonland permanent to its
+        owner's hand; Deceit is sacrificed.
+
+        Deceit is {4}{U/B}{U/B} with evoke {U/B}{U/B} and no flash, so call
+        this only from our own main phase, never from pre_combat_instant
+        (the engine runs that on the opponent's turn).
+
+        ponytail: moves the cards directly instead of going through
+        cast_spell, so an evoked Deceit cannot be countered and does not
+        count as a creature entering. Evoke belongs in the engine.
+        """
+        deceit = next((c for c in gs.zones.hand if c.name == "Deceit"), None)
+        if (deceit is None or target not in opponent.zones.battlefield
+                or target.is_land() or not gs.mana_pool.can_cast("{U}{U}", 2)):
+            return False
+        gs.mana_pool.pay("{U}{U}", 2)
+        gs.zones.hand.remove(deceit)
+        gs.zones.graveyard.append(deceit)
+        gs.spells_cast_this_turn += 1
+        opponent.zones.battlefield.remove(target)
+        opponent.zones.hand.append(target)
+        gs._log(f"  Deceit evoked ({{U}}{{U}}): bounce {target.name}")
+        return True
+
     def _kill_with_removal(self, gs: GameState, opponent: GameState,
                             target: Card, prefer_exile: bool = False) -> bool:
         """

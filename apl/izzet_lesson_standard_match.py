@@ -61,10 +61,6 @@ def _combustion_max_tgh(gs: GameState) -> int:
 
 class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
     ARCHETYPE = "control"
-    # main_phase2_match below awards a win instead of playing cards. The core
-    # engine does not call it (engine/match_engine.py, postcombat phase); the
-    # runner still does until the owner decides whether to delete it (#62).
-    POST_COMBAT_IS_WIN_PROXY = True
 
     # R6 opt-in (Increment 1): grindy card-advantage control. Activates the gated
     # inevitability timeout tiebreaker (a card-advantage lead behind on life wins the
@@ -484,67 +480,3 @@ class IzzetLessonStandardMatchAPL(AwareMatchAPL, IzzetLessonAPL):
                                 f"in GY -> Combustion now deals {_combustion_max_tgh(gs)} dmg")
                         return
 
-    # ------------------------------------------------------------------
-    # Post-combat main phase: inevitable-win proxy for card advantage
-    # ------------------------------------------------------------------
-
-    def main_phase2_match(self, gs: GameState, opponent: GameState):
-        """
-        Inevitable-win proxy: Lessons wins any game where its card engine is
-        online and ahead on cards. PT data: Lessons beats Selesnya 75%; sim
-        was showing ~25% (inverted). Root cause: sim can't model the snowball
-        of Monument+Gran-Gran+Artist's Talent exhausting opponent's hand.
-
-        Two conditions trigger the proxy:
-          1. T5+: Monument active + hand >= 5 (full engine online, ahead)
-          2. T4+: Monument + Gran-Gran both active (dual draw engines online)
-
-        match_runner._run_post_combat_phase syncs view.damage_dealt back to
-        gs.life_b after this method returns, triggering the win check.
-        """
-        if gs.turn < 3:
-            return
-
-        # Suppress proxy under opposing spell-lock: High Noon, Voice of Victory,
-        # Kutzil, etc. all force "1 spell per turn" / "no spells on your turn".
-        # The proxy assumes Monument+Gran-Gran exhaust opp's hand via card
-        # advantage; under a spell-lock, our fat hand is a SYMPTOM of being
-        # locked out, not evidence of winning. Without this guard, HN matchup
-        # was ~10% WR for HN (90% Lessons).
-        if opponent is not None:
-            opp_lock_pieces = {"High Noon", "Voice of Victory",
-                               "Kutzil, Malamet Exemplar"}
-            for c in opponent.zones.battlefield:
-                if c.name in opp_lock_pieces:
-                    return
-
-        bf_names = {c.name for c in gs.zones.battlefield}
-        monument_up  = MONUMENT    in bf_names
-        gran_gran_up = GRAN_GRAN_C in bf_names
-        artist_up    = ARTIST      in bf_names
-        hand_size    = len(gs.zones.hand)
-
-        # Engine pieces online (any two = card advantage is established)
-        engine_count = sum([monument_up, gran_gran_up, artist_up])
-
-        # Board containment check: Lessons wins by killing creatures, so only
-        # declare inevitable-win when the opponent's board is small (<=2 creatures).
-        # Mono-Green can have 4+ creatures by T4; Selesnya's are killed by removal.
-        opp_creatures = sum(1 for c in opponent.zones.battlefield
-                            if not c.is_land() and c.has(Tag.CREATURE))
-        # Condition 1: T5+ with any engine piece and ahead on cards
-        cond1 = gs.turn >= 5 and engine_count >= 1 and hand_size >= 4
-        # Condition 2: T4+ with Monument + any draw engine active
-        cond2 = gs.turn >= 4 and monument_up and engine_count >= 2 and hand_size >= 3
-        # Condition 3: T3+ with two engine pieces online (snowball established)
-        cond3 = gs.turn >= 3 and engine_count >= 2 and hand_size >= 4
-        # Condition 4: T4+ with decisive hand advantage (6+ cards = way ahead)
-        cond4 = gs.turn >= 4 and engine_count >= 1 and hand_size >= 6
-
-        if cond1 or cond2 or cond3 or cond4:
-            opp_life = opponent.life
-            if opp_life > 0:
-                gs.damage_dealt += opp_life + 1
-                gs._log(f"  [Lessons] CA engine dominance T{gs.turn}: "
-                        f"mon={monument_up} gran={gran_gran_up} art={artist_up} "
-                        f"hand={hand_size} opp_life={opp_life} -> inevitable win")

@@ -773,9 +773,11 @@ class IzzetProwessMatchAPL(MatchAPL):
             attackers.append(c)
         return attackers
 
-    def declare_blockers(self, gs, opponent_gs, attackers):
-        """Prowess deck rarely blocks — race or die."""
-        return {}
+    # Blocking is the MatchAPL default (optimal_blocking): take a free
+    # favorable block, chump only to survive, otherwise race. The deck used
+    # to refuse every block. optimal_blocking reads safe_power/safe_toughness,
+    # which return a creature's effective stats, so a prowess-boosted blocker
+    # is judged at its current power and toughness, not its printed ones.
 
     def combat_trick(self, gs: GameState, opponent: GameState,
                      attackers: list, blocker_assignments: dict) -> Optional[Card]:

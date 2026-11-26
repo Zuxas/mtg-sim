@@ -45,3 +45,14 @@ with contextlib.redirect_stdout(buf):
                          "results": [good]})
 assert "55.0% field-weighted" in buf.getvalue()
 print("reader: OK")
+
+# Izzet Lessons and Jeskai Lute are flagged under every name the drivers use,
+# and their near-namesakes are not.
+from mismodeled_matchups import lookup
+
+for name in ("Izzet Lessons", "izzetlesson", "izzetlessons", "Jeskai Lute Control", "jeskailute"):
+    assert lookup(name) and lookup(name)["direction"] == "UNUSABLE", name
+for name in ("Izzet Prowess", "izzetprowessstandard", "Izzet Spellementals",
+             "Jeskai Control", "jeskaicontrol", "Jeskai Blink"):
+    assert lookup(name) is None, name
+print("lessons flagged: OK")

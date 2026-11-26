@@ -158,17 +158,22 @@ def main():
     assert "main1" in Responder.seen and "main2" not in Responder.seen, Responder.seen
     print("PASS: no response window when nothing is cast")
 
+    # The Izzet Lessons / Jeskai Lute win proxies were removed in #115: neither
+    # the POST_COMBAT_IS_WIN_PROXY flag nor a main_phase2_match method should
+    # exist on them, and the core engine must still play real games. (The
+    # engine's flag-handling itself is covered by SpyProxy above.)
     from apl.izzet_lesson_standard_match import IzzetLessonStandardMatchAPL
     from apl.jeskai_lute_standard_match import JeskaiLuteMatchAPL
     for cls in (IzzetLessonStandardMatchAPL, JeskaiLuteMatchAPL):
-        assert cls.POST_COMBAT_IS_WIN_PROXY is True
-        cls.main_phase2_match = lambda *a, **k: (_ for _ in ()).throw(
-            AssertionError("core called the proxy"))
+        assert not getattr(cls, "POST_COMBAT_IS_WIN_PROXY", False), (
+            f"{cls.__name__} is still marked a win proxy")
+        assert not hasattr(cls, "main_phase2_match"), (
+            f"{cls.__name__} still has the win-proxy method")
     ldeck, _ = load_deck_from_file("decks/izzet_lesson_standard.txt")
     for seed in range(10):
         match_engine.run_match(IzzetLessonStandardMatchAPL(), ldeck,
                                Spy(), deck, on_play=seed % 2 == 0, seed=seed)
-    print("PASS: Izzet Lessons plays 10 core games without the proxy firing")
+    print("PASS: Izzet Lessons plays 10 core games; win proxy removed (#115)")
 
 
 if __name__ == "__main__":

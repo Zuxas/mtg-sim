@@ -120,6 +120,7 @@ jobs:
             echo "$FILES"
           fi
       - name: Oracle verify changed APLs
+        id: verify
         if: steps.changed.outputs.files != ''
         shell: bash
         env:
@@ -128,38 +129,82 @@ jobs:
           # minus signs, and the verifier died printing them mid-file.
           PYTHONIOENCODING: utf-8
         run: |
-          PASS=0; FAIL=0
+          PASS=0; DISCREPANCY=0; VERIFIER_ERROR=0; UNVERIFIED=0; UNVERIFIED_ANY=0
           for f in ${{ steps.changed.outputs.files }}; do
             echo "--- Verifying $f ---"
-            # Fail closed: a crash (missing script, import error) prints no
-            # " FAIL " line and used to be counted as a pass.
             if result=$(python "$HARNESS_ROOT/scripts/verify_oracle.py" --batch "$f" 2>&1); then rc=0; else rc=$?; fi
             echo "$result"
-            # Per-card lines look like "  FAIL  <card>". The old grep for " FAIL "
-            # also matched the summary "Results: 16 PASS  0 FAIL", so the gate
-            # failed every time it ran.
-            if [ $rc -ne 0 ] || echo "$result" | grep -qE "^[[:space:]]*FAIL[[:space:]]"; then
-              FAIL=$((FAIL+1))
-            elif echo "$result" | grep -q "Gemma unavailable"; then
-              # The model never answered, so nothing was verified. Not a pass.
+            # Classify from three distinct signals, not the exit code alone:
+            #  - a real per-card discrepancy ("  FAIL  <card>"; the leading-
+            #    whitespace anchor keeps the "Results: .. FAIL" summary out);
+            #  - the model being unavailable ("Gemma unavailable");
+            #  - an unexpected verifier crash (a Python traceback, or a nonzero
+            #    exit with neither of the above). A crash must surface as a
+            #    verifier error -- never as a Gemma discrepancy, and never hidden
+            #    behind an earlier card's "unavailable" line.
+            has_fail=false; has_unavail=false; has_crash=false
+            echo "$result" | grep -qE "^[[:space:]]*FAIL[[:space:]]" && has_fail=true
+            echo "$result" | grep -q "Gemma unavailable" && has_unavail=true
+            echo "$result" | grep -q "Traceback (most recent call last)" && has_crash=true
+            if [ $rc -ne 0 ] && ! $has_fail && ! $has_unavail; then has_crash=true; fi
+            # Count any file that left cards unverified, even one also classified
+            # as a discrepancy, so a mixed run is never reported as 0 unverified.
+            $has_unavail && UNVERIFIED_ANY=$((UNVERIFIED_ANY+1))
+            if $has_fail; then
+              DISCREPANCY=$((DISCREPANCY+1))
+              $has_unavail && echo "::warning::$f: discrepancy found AND some cards left unverified (model unavailable mid-run)."
+            elif $has_crash; then
+              echo "::error::$f: the oracle verifier crashed or exited unexpectedly (not a Gemma discrepancy)."
+              VERIFIER_ERROR=$((VERIFIER_ERROR+1))
+            elif $has_unavail; then
               echo "::error::$f was NOT verified: the local model was unavailable. Re-run when Ollama is up."
-              FAIL=$((FAIL+1))
+              UNVERIFIED=$((UNVERIFIED+1))
             else
               PASS=$((PASS+1))
             fi
           done
-          echo "Oracle gate: $PASS PASS, $FAIL FAIL"
-          if [ $FAIL -gt 0 ]; then
-            echo "::error::Oracle gate failed on $FAIL APL(s)."
+          echo "Oracle gate: $PASS PASS, $DISCREPANCY DISCREPANCY, $VERIFIER_ERROR VERIFIER_ERROR, $UNVERIFIED UNVERIFIED ($UNVERIFIED_ANY file(s) had unverified cards)"
+          # Tell the Report-failure step which cause to describe, most actionable
+          # first: a real discrepancy, then a verifier crash, then model-down.
+          # Empty reason means some other step in the job failed.
+          if   [ $DISCREPANCY -gt 0 ];    then REASON=discrepancy
+          elif [ $VERIFIER_ERROR -gt 0 ]; then REASON=verifier_error
+          elif [ $UNVERIFIED -gt 0 ];     then REASON=unavailable
+          else REASON=; fi
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          echo "unverified=$UNVERIFIED_ANY" >> "$GITHUB_OUTPUT"
+          FAILTOTAL=$((DISCREPANCY+VERIFIER_ERROR+UNVERIFIED))
+          if [ $FAILTOTAL -gt 0 ]; then
+            echo "::error::Oracle gate failed on $FAILTOTAL APL(s): $DISCREPANCY discrepancy, $VERIFIER_ERROR verifier-error, $UNVERIFIED unverified."
             exit 1
           fi
       - name: Report failure
         if: failure()
         uses: actions/github-script@v8
+        env:
+          REASON: ${{ steps.verify.outputs.reason }}
+          UNVERIFIED: ${{ steps.verify.outputs.unverified }}
         with:
           script: |
             const title = `[CI] oracle-gate failed — mtg-sim`;
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            // The verify step tells us why it failed. An outage is infrastructure,
+            // not an APL bug, so it must not read as "fix the code before merge".
+            const reason = process.env.REASON || '';
+            const unverified = process.env.UNVERIFIED || '0';
+            let diag;
+            if (reason === 'unavailable') {
+              diag = `The local model (Ollama) was unavailable, so the changed APL(s) were NOT verified. This is an infrastructure issue, not a code discrepancy — re-run the gate when Ollama is up.`;
+            } else if (reason === 'verifier_error') {
+              diag = `The oracle verifier crashed or exited unexpectedly (a traceback or unexpected exit — NOT a Gemma discrepancy). Check the run logs; this is a verifier/infrastructure problem, not necessarily an APL bug.`;
+              if (unverified !== '0') diag += ` (${unverified} APL(s) also had cards left unverified.)`;
+            } else if (reason === 'discrepancy') {
+              diag = `Gemma found an oracle discrepancy in a changed APL. Fix before merge.`;
+              if (unverified !== '0') diag += ` Note: ${unverified} APL(s) also had cards left unverified (model unavailable mid-run) — re-check those after fixing.`;
+            } else {
+              diag = `The oracle gate failed. Check the run logs for the cause.`;
+            }
+            const reasonTag = reason || 'see logs';
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               labels: 'needs-fix', state: 'open',
@@ -169,13 +214,13 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner, repo: context.repo.repo,
                 issue_number: existing.number,
-                body: `Recurred ${new Date().toISOString().slice(0,10)} — [run](${runUrl})`,
+                body: `Recurred ${new Date().toISOString().slice(0,10)} (${reasonTag}) — [run](${runUrl})\n\n${diag}`,
               });
             } else {
               await github.rest.issues.create({
                 owner: context.repo.owner, repo: context.repo.repo,
                 title, labels: ['needs-fix'],
-                body: `**Job:** oracle-gate\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\nGemma found oracle discrepancy in a changed APL. Fix before merge.`,
+                body: `**Job:** oracle-gate\n**Branch:** ${context.ref.replace('refs/heads/','')}\n**Commit:** \`${context.sha.slice(0,7)}\`\n**Run:** [View logs](${runUrl})\n\n${diag}`,
               });
             }
 

@@ -11,12 +11,12 @@ class AzoriusAggroStandardMatchAPL(MatchAPL, AzoriusAggroAPL):
     ATTACK_ALL_IN = True
     SB_PLANS = {
         "control": (
-            ["2 Negate", "2 Spell Pierce", "2 Abrupt Inquiry"],
+            ["2 Negate", "2 Spell Pierce", "2 Kutzil's Flanker"],
             ["2 Get Lost", "4 Floodpits Drowner"],
         ),
         "aggro": (
             ["2 Get Lost", "2 Temporary Lockdown", "2 Tishana's Tidebinder"],
-            ["4 Silvergill Mentor", "2 Abrupt Inquiry"],
+            ["4 Silvergill Mentor", "2 Kutzil's Flanker"],
         ),
         "combo": (
             ["3 Soul-Guide Lantern", "2 Negate", "2 Spell Pierce"],
@@ -28,6 +28,6 @@ class AzoriusAggroStandardMatchAPL(MatchAPL, AzoriusAggroAPL):
         ),
         "tempo": (
             ["2 Get Lost", "2 Spell Pierce", "2 Tishana's Tidebinder"],
-            ["4 Silvergill Mentor", "2 Abrupt Inquiry"],
+            ["4 Silvergill Mentor", "2 Kutzil's Flanker"],
         ),
     }

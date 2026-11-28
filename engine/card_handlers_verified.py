@@ -8905,12 +8905,12 @@ def _fatal_push_spell(gs, card):
     from engine.match_state import safe_power
     opp = getattr(gs, "_match_opp", None)
     if opp is None: return
-    # Base threshold CMC <= 2. The engine has no "a permanent left the
-    # battlefield under my control this turn" signal yet, so Revolt (CMC <= 4)
-    # cannot be checked. Using the base threshold under-models the Revolt upside
-    # -- the safe direction for an opponent-removal spell -- and removes the
-    # illegal 3-4-MV kills the old hardcoded <= 4 allowed with no Revolt active.
-    # Full Revolt tracking is the per-turn event-flag follow-up.
+    # PARTIAL MODEL (#123): Revolt is NOT tracked -- this uses the base threshold
+    # only, so it misses legitimate Revolt kills (MV 3-4 when a permanent left the
+    # battlefield this turn), under-modeling Dimir removal. That is a different
+    # bias from the old hardcoded <= 4 (which made illegal no-Revolt kills), not a
+    # full fix. The engine has no "a permanent left the battlefield under my
+    # control this turn" signal yet; full Revolt tracking is #123.
     thresh = 2
     targets = [c for c in opp.zones.battlefield
                if c.has(Tag.CREATURE) and not c.is_land()
@@ -14504,13 +14504,13 @@ def _searing_blaze_spell(gs, card):
     from data.card import Tag
     from engine.match_state import safe_power, safe_toughness
     opp = getattr(gs, "_match_opp", None)
-    # Landfall: 3/3 only if the caster played a land this turn, else base 1/1.
-    # gs.land_played is the per-turn land-drop flag, reset at the caster's turn
-    # start by both match engines (match_engine.py / match_runner.py). It misses
-    # fetch-land ETB landfall and reads stale on a reactive-turn cast after the
-    # caster made a land drop on a prior turn -- both covered by the per-turn
-    # event-flag follow-up -- but it is correct for the dominant on-your-turn
-    # case and far better than the old always-on 3/3.
+    # PARTIAL MODEL (#123): Landfall is APPROXIMATED by the per-turn land-drop
+    # flag gs.land_played (reset at the caster's turn start by both match engines).
+    # Correct for the dominant on-your-turn cast and far better than the old
+    # always-on 3/3, but two cases are still wrong and need #123's real
+    # "land entered this turn" flag: (1) a fetch-land ETB grants landfall with no
+    # land *played*, read here as 1/1; (2) on a reactive-turn cast, a land the
+    # caster played on a PRIOR turn reads stale-True and wrongly grants 3/3.
     big = getattr(gs, "land_played", False)
     dmg = 3 if big else 1
     if opp is not None:

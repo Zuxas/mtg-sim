@@ -8905,10 +8905,16 @@ def _fatal_push_spell(gs, card):
     from engine.match_state import safe_power
     opp = getattr(gs, "_match_opp", None)
     if opp is None: return
-    # Assume revolt often triggers
+    # Base threshold CMC <= 2. The engine has no "a permanent left the
+    # battlefield under my control this turn" signal yet, so Revolt (CMC <= 4)
+    # cannot be checked. Using the base threshold under-models the Revolt upside
+    # -- the safe direction for an opponent-removal spell -- and removes the
+    # illegal 3-4-MV kills the old hardcoded <= 4 allowed with no Revolt active.
+    # Full Revolt tracking is the per-turn event-flag follow-up.
+    thresh = 2
     targets = [c for c in opp.zones.battlefield
                if c.has(Tag.CREATURE) and not c.is_land()
-               and getattr(c, 'cmc', 99) <= 4]
+               and getattr(c, 'cmc', 99) <= thresh]
     if not targets: return
     t = max(targets, key=lambda c: safe_power(c))
     opp.zones.battlefield.remove(t)
@@ -14498,18 +14504,27 @@ def _searing_blaze_spell(gs, card):
     from data.card import Tag
     from engine.match_state import safe_power, safe_toughness
     opp = getattr(gs, "_match_opp", None)
+    # Landfall: 3/3 only if the caster played a land this turn, else base 1/1.
+    # gs.land_played is the per-turn land-drop flag, reset at the caster's turn
+    # start by both match engines (match_engine.py / match_runner.py). It misses
+    # fetch-land ETB landfall and reads stale on a reactive-turn cast after the
+    # caster made a land drop on a prior turn -- both covered by the per-turn
+    # event-flag follow-up -- but it is correct for the dominant on-your-turn
+    # case and far better than the old always-on 3/3.
+    big = getattr(gs, "land_played", False)
+    dmg = 3 if big else 1
     if opp is not None:
-        # Assume landfall — 3 dmg
         cr = [c for c in opp.zones.battlefield
               if c.has(Tag.CREATURE) and not c.is_land()
-              and safe_toughness(c) <= 3]
+              and safe_toughness(c) <= dmg]
         if cr:
             t = max(cr, key=lambda c: safe_power(c))
             opp.zones.battlefield.remove(t)
             opp.zones.graveyard.append(t)
-        opp.life -= 3
-    gs.damage_dealt += 3
-    gs._log("  Searing Blaze: 3 to opp + 3 to creature")
+        opp.life -= dmg
+    gs.damage_dealt += dmg
+    gs._log(f"  Searing Blaze: {dmg} to opp + {dmg} to creature"
+            + ("" if big else " (no landfall)"))
 
 
 def _searing_blood_spell(gs, card):

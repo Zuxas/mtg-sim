@@ -8905,10 +8905,14 @@ def _fatal_push_spell(gs, card):
     from engine.match_state import safe_power
     opp = getattr(gs, "_match_opp", None)
     if opp is None: return
-    # Assume revolt often triggers
+    # Revolt (a permanent left the battlefield under our control this turn)
+    # is not tracked yet -- there is no central leave-the-battlefield hook
+    # (#118). Use the base CMC<=2: strictly correct for the non-revolt case
+    # and never an illegal 3-4 MV kill. The revolt upside is the deferred
+    # follow-up once LTB tracking exists.
     targets = [c for c in opp.zones.battlefield
                if c.has(Tag.CREATURE) and not c.is_land()
-               and getattr(c, 'cmc', 99) <= 4]
+               and getattr(c, 'cmc', 99) <= 2]
     if not targets: return
     t = max(targets, key=lambda c: safe_power(c))
     opp.zones.battlefield.remove(t)
@@ -14497,19 +14501,22 @@ def _searing_blaze_spell(gs, card):
      Landfall: 3 and 3 instead.'"""
     from data.card import Tag
     from engine.match_state import safe_power, safe_toughness
+    # Landfall gates the big mode: 3/3 only if a land entered under our
+    # control this turn, else the base 1/1 (#119). _land_entered_this_turn
+    # is set in card_effects.on_landfall and reset at turn start.
+    dmg = 3 if getattr(gs, "_land_entered_this_turn", False) else 1
     opp = getattr(gs, "_match_opp", None)
     if opp is not None:
-        # Assume landfall — 3 dmg
         cr = [c for c in opp.zones.battlefield
               if c.has(Tag.CREATURE) and not c.is_land()
-              and safe_toughness(c) <= 3]
+              and safe_toughness(c) <= dmg]
         if cr:
             t = max(cr, key=lambda c: safe_power(c))
             opp.zones.battlefield.remove(t)
             opp.zones.graveyard.append(t)
-        opp.life -= 3
-    gs.damage_dealt += 3
-    gs._log("  Searing Blaze: 3 to opp + 3 to creature")
+        opp.life -= dmg
+    gs.damage_dealt += dmg
+    gs._log(f"  Searing Blaze: {dmg} to opp + {dmg} to creature")
 
 
 def _searing_blood_spell(gs, card):

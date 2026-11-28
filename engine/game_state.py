@@ -181,6 +181,7 @@ class GameState:
         self.noncreature_spells_this_turn = 0  # for prowess
         self.spells_cast_this_turn = 0  # total — for Cosmogrand Zenith
         self.innocence_drew_this_turn = False  # Enduring Innocence 1/turn
+        self._land_entered_this_turn = False  # Landfall gate (#119)
         self._log_lines   = []
         self._verbose     = False
 
@@ -194,6 +195,7 @@ class GameState:
         self.noncreature_spells_this_turn = 0
         self.spells_cast_this_turn = 0
         self.innocence_drew_this_turn = False
+        self._land_entered_this_turn = False
         self.mana_pool.empty()
         self._log_lines   = []
 
@@ -289,6 +291,7 @@ class GameState:
         self.noncreature_spells_this_turn = 0
         self.spells_cast_this_turn = 0
         self.innocence_drew_this_turn = False
+        self._land_entered_this_turn = False  # reset Landfall gate (#119)
         # Reset until-end-of-turn battle-cry grants (Reckless Pyrosurfer
         # landfall instances) accumulated last turn.
         for c in self.zones.battlefield:

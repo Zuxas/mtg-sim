@@ -476,6 +476,11 @@ LANDFALL_QUEST = {
 def on_landfall(gs):
     """Called by play_land after a land resolves. Fires each
     registered landfall trigger. Verified effects only."""
+    # A land entered under our control this turn. Single canonical hook for
+    # both the goldfish and match paths (both play lands through
+    # GameState.play_land -> on_landfall), so instants with a Landfall mode
+    # (e.g. Searing Blaze) can gate on it. Reset at turn start. (#119)
+    gs._land_entered_this_turn = True
     for c in list(gs.zones.battlefield):
         if c.is_land():
             continue

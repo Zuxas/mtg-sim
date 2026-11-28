@@ -415,6 +415,7 @@ def _run_match(apl_a, deck_a, apl_b, deck_b, on_play, max_turns, seed) -> MatchR
             gs.noncreature_spells_this_turn = 0
             gs.spells_cast_this_turn = 0
             gs.innocence_drew_this_turn = False
+            gs._land_entered_this_turn = False  # reset Landfall gate (#119)
             gs._monument_choices_this_turn = set()   # Monument to Endurance choice reset
             # Mana does not carry from one of your turns to the next (CR 500.4).
             # The pool used to be left alone "as a rough proxy for held-up
